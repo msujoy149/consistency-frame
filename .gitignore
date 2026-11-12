@@ -1,0 +1,43 @@
+# Dependencies and local installs
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Environment and secrets — never commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+secrets/
+
+# Generated media and model weights — never commit these
+*.mp3
+*.mp4
+*.wav
+*.webm
+*.mov
+*.png
+*.jpg
+*.jpeg
+*.webp
+models/
+*.bin
+*.gguf
+*.safetensors
+.huggingface/
+hf-cache/
+
+# Character data — private by default, never in this public repo
+characters/*/
+!characters/.gitkeep
+!characters/README.md
+
+# Build and editor artefacts
+.DS_Store
+*.log
+dist/
+build/

@@ -1,0 +1,6 @@
+[submodule "components/voicestudio"]
+	path = components/voicestudio
+	url = https://github.com/debpalash/VoiceStudio
+[submodule "components/openmontage"]
+	path = components/openmontage
+	url = https://github.com/OpenMontageInc/OpenMontage
