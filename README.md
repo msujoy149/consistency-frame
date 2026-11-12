@@ -25,7 +25,8 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 86 named, checkable systems covering identity, voice, performance,
+and 86 numbered entries (75 distinct systems, each named and checkable)
+covering identity, voice, performance,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
 follow and a human can check.
@@ -51,7 +52,7 @@ Per-platform install details are in
 | Platform | How the skills load |
 | --- | --- |
 | Claude Code | Plugin marketplace: `.claude-plugin/marketplace.json` |
-| Codex | Plugin: `.codex-plugin/plugin.json`, skills in `.agents/skills/` |
+| Codex | Plugin marketplace: `.agents/plugins/marketplace.json` (plugin manifest: `plugin.json` at the root; `.codex-plugin/plugin.json` kept for compatibility) |
 | ChatGPT | Upload the `skills/` folder via the Skills tab |
 | Gemini CLI | Extension: `gemini-extension.json` |
 | Antigravity | Skills in `.agents/skills/`, rules in `AGENTS.md` / `GEMINI.md` |
@@ -73,11 +74,17 @@ Per-platform install details are in
 5. **Get the episode.** The assistant generates with the registered
    characters and voices, runs the QC checklist, and delivers.
 
-## Features — 86 systems
+## Features — 86 numbered entries (75 distinct systems)
 
-The complete system is 86 named systems, grouped in four layers. The
-skill files in `skills/` are the source of truth; the `docs/` folder
-describes each system in full.
+The complete system is 86 numbered entries across the skills and
+docs — 75 distinct systems. (The 11 professional systems are listed
+twice: once in the production-systems skill and once in
+docs/01-production-systems.md, so 11 + 18 + 3 + 7 + 36 = 75 distinct
+systems, 86 listed entries.) They are grouped in four layers: a
+character and voice foundation, humanized production, professional
+production, and language, captions, and format. The skill files in
+`skills/` are the source of truth; the `docs/` folder describes each
+system in full.
 
 ### Character consistency — the foundation
 
@@ -179,8 +186,9 @@ filmed, not generated:
   registry, seam continuity, drift measurement, LoRA training, ageing
   variants, provenance log, cost tracking, backup/versioning,
   multi-series namespaces, child safety, audio mastering (−14 LUFS),
-  localisation/dubbing, distribution package, rights and consent,
-  audience feedback loop.
+  localisation/dubbing, distribution package ("Made for Kids" is set
+  only when the content is for children or the user asks for it),
+  rights and consent, audience feedback loop.
 - **7 additional systems** (`docs/04-additional-systems.md`): private
   character data separation, multi-character no-overlap, episode intake
   checklist, demo project (on demand), script template with automatic
@@ -197,13 +205,16 @@ filmed, not generated:
 - **Captions are opt-in.** The assistant asks at generation time; the
   default is no baked-in captions. If wanted, captions in any language
   the user requests.
+- **Per-character language.** In one video each character may speak a
+  different language; dialogue, voice, and lip-sync follow that
+  character's language — never force all characters into one language.
 - **Format on demand.** 16:9, 9:16, 1:1, 4:5, or any ratio; short or
   long video; any platform, not only YouTube. Composed for that ratio
   from the start, never cropped afterwards.
-- **Audience declaration.** "Made for Kids" is set only when the content
-  is for children or the user requests it — never assumed. The system is
-  content-agnostic: kids animation, adult animation, and videos from
-  real photos of adults all work the same way.
+
+The system is content-agnostic: kids animation, adult animation, and
+videos from real photos of adults all work the same way. Full rules:
+[`docs/03-language-captions-format.md`](docs/03-language-captions-format.md).
 
 ## Character registration
 
@@ -230,18 +241,19 @@ separate private overlay (see
 
 ## Voice
 
-Voice work runs through VoiceStudio, bundled as a submodule
-(`components/voicestudio`), with the OmniVoice model for zero-shot voice
+Voice work runs through VoiceStudio, bundled as a component
+(`components/voicestudio`, cloned by `setup.sh`), with the OmniVoice model for zero-shot voice
 cloning across 600+ languages.
 
 - The OmniVoice model weights (~3.2 GB) are **not** bundled in this
-  repo. `setup.sh` downloads them from the original Hugging Face source
-  (`k2-fsa/OmniVoice`) at install time.
+  repo. `setup.sh` walks you through downloading them from the original
+  Hugging Face source (`k2-fsa/OmniVoice`) at install time — you run the
+  download step yourself.
 - The OmniVoice model is licensed **CC-BY-NC (noncommercial)**. Do not
   use that model for commercial work; use a commercial voice provider
   instead. The notice is kept intact wherever the model is used.
-- Long-form video runs through OpenMontage, bundled as a submodule
-  (`components/openmontage`), which stitches short clips into long
+- Long-form video runs through OpenMontage, bundled as a component
+  (`components/openmontage`, cloned by `setup.sh`), which stitches short clips into long
   episodes.
 
 ## Project and series register
@@ -288,7 +300,8 @@ submitting, keep licence and attribution. See
 This project's own work — the consistency system, skills, prompts, and
 instructions — is licensed under the **Apache License 2.0** (see
 `LICENSE`). Bundled components keep their own licences: VoiceStudio and
-OpenMontage are **AGPL-3.0** (included as submodules, licences intact),
+OpenMontage are **AGPL-3.0** (included as bundled components, cloned by
+`setup.sh`, licences intact),
 and the OmniVoice model is **CC-BY-NC (noncommercial)** (downloaded at
 install, weights not bundled). Nothing is reverse-engineered or
 re-licensed; attribution is stated plainly wherever someone else's work

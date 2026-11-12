@@ -29,7 +29,7 @@ Generate a character's voice once, save the output, and reuse it as reference au
 The repo ships with a bundled local voice engine, VoiceStudio, built on OmniVoice:
 
 - OmniVoice is a zero-shot voice-cloning text-to-speech model supporting 600+ languages.
-- The installer downloads the OmniVoice model weights from Hugging Face (k2-fsa/OmniVoice). The weights are NOT bundled in the repository — they are fetched at install time.
+- The model weights are downloaded by the user at install time — `setup.sh` walks you through installing them from Hugging Face (k2-fsa/OmniVoice). The weights are NOT bundled in the repository.
 - The OmniVoice model is licensed CC-BY-NC (noncommercial). Commercial use of that model needs a different voice provider. Do not use the bundled OmniVoice weights for commercial voice work; if a project is commercial, switch the voice lane to a provider whose licence covers commercial use, and record that choice in the project notes.
 - Check any new text-to-speech or voice component's licence for compatibility before adding it.
 

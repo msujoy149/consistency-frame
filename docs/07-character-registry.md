@@ -15,10 +15,10 @@ Each character lives in their own folder inside the private overlay (see
 characters/<character-id>/
   character.yaml        # name, unique ID, age, gender, look, voice profile, seed
   reference-front.jpg   # front view
-  reference-34.jpg      # three-quarter view
-  reference-full.jpg    # full body
+  reference-three-quarter.jpg
+  reference-full-body.jpg
   reference-expressions.jpg  # expression sheet
-  voice-reference.wav   # voice reference audio
+  voice-reference.mp3   # voice reference audio
 ```
 
 `character.yaml` records, at minimum:

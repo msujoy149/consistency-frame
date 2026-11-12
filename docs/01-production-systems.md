@@ -5,6 +5,11 @@ professional series. They apply to every project unless the user says
 otherwise. Nothing here is optional decoration: each system exists because
 skipping it is visible on screen.
 
+Counting note: these 11 systems also appear as Part A of the
+production-systems skill. Together with the 18 extended, 3
+language/captions/format, 7 additional, and 36 humanization systems,
+the repo holds 75 distinct systems, presented as 86 numbered entries.
+
 ## Production Priority Hierarchy
 
 When different instructions compete, follow this order. A lower priority

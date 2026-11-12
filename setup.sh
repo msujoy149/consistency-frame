@@ -3,13 +3,12 @@
 #
 # Installs the bundled components and the skills:
 #   1. Fetches the bundled components (VoiceStudio for voice, OpenMontage
-#      for long-form video) — by plain git clone, after attempting a
-#      submodule update for checkouts that carry gitlinks. Their original
+#      for long-form video) — by plain git clone. Their original
 #      AGPL-3.0 licences stay intact inside each component.
 #      (A plain clone is the reliable path: the GitHub push that
 #      publishes this repo carries files only, so the tree has no
-#      submodule gitlinks for `git submodule update` to act on.
-#      setup.sh therefore clones any missing component itself.)
+#      submodule gitlinks. setup.sh therefore clones any missing
+#      component itself.)
 #   2. Copies skills/ into .agents/skills/ so any platform that reads
 #      skills from that directory picks them up automatically.
 #   3. Walks you through downloading the OmniVoice voice model
@@ -39,11 +38,9 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 1
 fi
 
-# A checkout that carries submodule gitlinks gets them from this step;
-# a plain file-based checkout (the published repo) has none, so the
-# direct clones below do the real work.
+# The published tree carries no submodule links, so the installs below
+# are plain git clones — the only path that works in this repo.
 echo "-- Installing bundled components (VoiceStudio + OpenMontage) --"
-git submodule update --init --recursive 2>/dev/null || true
 
 clone_component() {
   local name="$1" url="$2" dir="$3"
@@ -52,8 +49,9 @@ clone_component() {
     return 0
   fi
   if [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
-    echo "-- $name already present --"
-    return 0
+    echo "WARNING: $dir exists but is not a git checkout. Remove it and run ./setup.sh again to re-clone $name:"
+    echo "  rm -rf $dir"
+    return 1
   fi
   echo "-- Cloning $name (bundled component) --"
   mkdir -p "$(dirname "$dir")"
@@ -71,6 +69,9 @@ clone_component "OpenMontage" "https://github.com/OpenMontageInc/OpenMontage" "c
 
 # 2. Skills -------------------------------------------------------------
 echo "-- Installing skills into .agents/skills/ --"
+# .agents/skills holds only copies of skills/, so clearing it first
+# keeps a re-run exact (no stale skills left behind).
+rm -rf .agents/skills
 mkdir -p .agents/skills
 cp -r skills/* .agents/skills/
 echo "Installed skills: $(ls .agents/skills | tr '\n' ' ')"
@@ -79,16 +80,34 @@ echo "Installed skills: $(ls .agents/skills | tr '\n' ' ')"
 if [ -d "components/voicestudio" ]; then
   echo "-- VoiceStudio found. Setting up its API (needs bun + uv) --"
   if command -v bun >/dev/null 2>&1; then
-    (cd components/voicestudio && bun install >/dev/null 2>&1 || true)
-    echo "VoiceStudio dependencies installed. Model download is next:"
-    echo "  Start the backend, then install the OmniVoice model:"
-    echo "    cd components/voicestudio && bun run dev:api"
-    echo "    curl -X POST http://127.0.0.1:3900/models/install \\"
-    echo "      -H 'Content-Type: application/json' \\"
-    echo "      -d '{\"repo_id\": \"k2-fsa/OmniVoice\"}'"
-    echo "  NOTE: OmniVoice (k2-fsa/OmniVoice) is CC-BY-NC — noncommercial."
-    echo "  Do not use that model for commercial work; use a commercial"
-    echo "  voice provider instead."
+    # `bun run setup:api` needs uv on PATH; it is often in ~/.local/bin.
+    if ! command -v uv >/dev/null 2>&1 && [ -x "$HOME/.local/bin/uv" ]; then
+      export PATH="$HOME/.local/bin:$PATH"
+    fi
+    voice_ok=1
+    (cd components/voicestudio && bun install) || { echo "WARNING: bun install failed for VoiceStudio."; voice_ok=0; }
+    if command -v uv >/dev/null 2>&1; then
+      echo "-- Installing the VoiceStudio Python API (setup:api; downloads about 1 GB, takes a few minutes) --"
+      (cd components/voicestudio && bun run setup:api) || { echo "WARNING: setup:api failed. Run it manually: cd components/voicestudio && bun run setup:api"; voice_ok=0; }
+    else
+      echo "uv is not installed, so the VoiceStudio Python API cannot be set up here."
+      echo "Install uv (https://docs.astral.sh/uv/getting-started/installation/), then run:"
+      echo "  cd components/voicestudio && bun run setup:api"
+      voice_ok=0
+    fi
+    if [ "$voice_ok" = 1 ]; then
+      echo "VoiceStudio dependencies installed. Model download is next:"
+      echo "  Start the backend, then install the OmniVoice model:"
+      echo "    cd components/voicestudio && bun run dev:api"
+      echo "    curl -X POST http://127.0.0.1:3900/models/install \\"
+      echo "      -H 'Content-Type: application/json' \\"
+      echo "      -d '{\"repo_id\": \"k2-fsa/OmniVoice\"}'"
+      echo "  NOTE: OmniVoice (k2-fsa/OmniVoice) is CC-BY-NC — noncommercial."
+      echo "  Do not use that model for commercial work; use a commercial"
+      echo "  voice provider instead."
+    else
+      echo "VoiceStudio is only partly set up (see the warnings above). Fix the failed step, then run ./setup.sh again."
+    fi
   else
     echo "bun is not installed, so VoiceStudio cannot be set up here."
     echo "Install bun (https://bun.sh), then run this script again, or"

@@ -5,11 +5,43 @@ semantic-style versioning: small updates bump the minor number (2.1,
 2.2), big breaking changes bump the major number (3.0). Every release
 lists what changed.
 
+## [Unreleased]
+
+### Fixed
+
+- Audit fixes (deep review of the first release). The "86 systems"
+  count is now explained everywhere it appears: 75 distinct systems,
+  86 numbered entries, because the 11 professional systems are listed
+  both in the production-systems skill and in docs/01.
+- The Claude Code marketplace now points at the repository root (the
+  plugin directory). Codex gains the missing
+  `.agents/plugins/marketplace.json` (with the correct source shape —
+  the plugin was not discoverable without it), a current-format
+  `plugin.json` at the repository root, and `./`-prefixed paths in its
+  plugin manifests.
+- `setup.sh` now installs the VoiceStudio Python API (`bun run
+  setup:api`), not only the JavaScript dependencies; it reports a
+  failed install instead of claiming success, and it warns (instead of
+  claiming "already present") when a component directory exists but is
+  not a git checkout.
+- Model-download wording corrected everywhere: `setup.sh` walks you
+  through downloading the OmniVoice weights; it does not download them
+  itself.
+- "Submodule" wording corrected to bundled components cloned by
+  `setup.sh` (the published tree carries no submodule links).
+- Character-registry file names in docs/07 now match
+  characters/README.md. The language section now lists the actual third
+  rule (per-character language) and links docs/03; the Made-for-Kids
+  rule is noted under the distribution package where it belongs.
+- `.gitignore` now covers the install outputs `.agents/skills/` and
+  `components/` (the Codex marketplace manifest
+  `.agents/plugins/marketplace.json` stays tracked).
+
 ## [2.0] — 2026-11-12 — First release
 
-The first public release. The complete system: **86 systems** for
+The first public release. The complete system: **86 numbered entries (75 distinct systems)** for
 consistent characters, consistent voices, and human-feeling video, in
-any AI platform.
+any AI platform. The 11 professional systems are listed twice — once in the production-systems skill and once in docs/01 — so 11 + 18 + 3 + 7 + 36 = 75 distinct systems, 86 listed entries.
 
 ### Included
 
@@ -76,10 +108,12 @@ any AI platform.
 - **Portable install** — Agent Skills standard (`skills/` as the source
   of truth) with thin per-platform manifests for Claude Code, Codex,
   Gemini CLI, and Antigravity, plus a Muse path (clone + `./setup.sh`).
-  VoiceStudio and OpenMontage bundled as submodules; OmniVoice weights
-  downloaded at install from Hugging Face with the CC-BY-NC notice.
+  VoiceStudio and OpenMontage bundled as components, fetched by
+  setup.sh (the published tree carries no submodule links); OmniVoice
+  weights downloaded by the user at install time from Hugging Face with
+  the CC-BY-NC notice.
 - **Docs** — full system documentation in `docs/`, including the two
   background research reports in `docs/research/`.
 - **Licence** — this project's own work under Apache-2.0; VoiceStudio
-  and OpenMontage under AGPL-3.0 (submodules, licences intact);
+  and OpenMontage under AGPL-3.0 (bundled components, licences intact);
   OmniVoice model under CC-BY-NC (noncommercial).

@@ -20,7 +20,7 @@ The skills in this repository are:
 - `humanized-production` — the 36 humanization systems (performance,
   micro-motion, sound, editing, film finish, backgrounds).
 - `production-systems` — the 11 professional systems, the 18 extended
-  systems, the additional systems, and the language, captions, and
+  systems, the 7 additional systems, and the language, captions, and
   format rules.
 
 Use the one-command install for your platform below. After installing,
@@ -32,27 +32,35 @@ never part of the install — it lives in the private overlay described in
 
 ## Claude Code
 
-Skills are installed into `.claude/skills/` via the plugin marketplace
-manifest.
+Install the plugin from the marketplace. The marketplace name and the
+plugin name are both `consistency-frame`:
 
-```bash
-# Add the Consistency Frame marketplace, then install the plugin.
-# Follow the marketplace steps in the repository README for the exact
-# plugin name and manifest URL.
+```text
+/plugin marketplace add msujoy149/consistency-frame
+/plugin install consistency-frame@consistency-frame
 ```
 
-The plugin manifest places each skill folder under `.claude/skills/`
-in the project (or the user's global Claude Code skills directory).
+The marketplace manifest is `.claude-plugin/marketplace.json`; the
+plugin manifest is `.claude-plugin/plugin.json` at the repository root,
+and the plugin's skills load from the plugin's own `skills/` folders.
+Nothing needs to be copied into `.claude/skills/` by hand.
 
 ## Codex
 
-Skills are installed into `.agents/skills/` (project) and
-`~/.agents/skills` (global) via the plugin manifest.
+Install the plugin from the marketplace. The marketplace manifest is
+`.agents/plugins/marketplace.json`; the plugin manifest is `plugin.json`
+at the repository root (`.codex-plugin/plugin.json` is the same plugin
+in the older compatibility layout). The marketplace name and the plugin
+name are both `consistency-frame`:
 
 ```bash
-# Install the Consistency Frame plugin from the marketplace manifest,
-# following the repository README for the exact plugin name.
+codex plugin marketplace add msujoy149/consistency-frame
 ```
+
+Then, inside a Codex session, open `/plugins`, select the
+`consistency-frame` marketplace, and install the plugin. The plugin's
+skills then load from the plugin's own `skills/` folders. (Running
+`./setup.sh` additionally copies the skills into `.agents/skills/`.)
 
 ## ChatGPT
 

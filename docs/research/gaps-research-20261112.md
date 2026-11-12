@@ -70,13 +70,13 @@ Sources: Claude/Codex paths and marketplaces — https://github.com/gitguardian/
 One skill folder per skill (or one skill per system module), with per-platform manifests pointing at the same content — do not fork the text per host (the google/elephant-goldfish-model repo is the exemplar: shared `skills/` + `agents/` + `resources/`, thin per-harness manifests).
 
 ```
-flick-consistency/
+consistency-frame/
 ├── README.md                  # install commands for every platform
 ├── AGENTS.md                  # standing instructions (Claude Code, Codex, Antigravity read this)
 ├── CLAUDE.md                  # optional Claude-specific pointer (Claude Code prefers CLAUDE.md over AGENTS.md)
 ├── GEMINI.md                  # same content pointer for Gemini CLI / Antigravity
 ├── skills/
-│   └── flick-consistency/
+│   └── consistency-frame/
 │       ├── SKILL.md           # required: name + description frontmatter + instructions
 │       ├── scripts/           # optional helpers
 │       ├── references/        # character registry, style bible, QC checklists, etc.
@@ -87,7 +87,7 @@ flick-consistency/
 │       └── marketplace.json   # Codex marketplace pointer
 ├── .claude-plugin/
 │   └── marketplace.json       # Claude Code marketplace registry
-├── plugins/flick-consistency/
+├── plugins/consistency-frame/
 │   ├── .claude-plugin/plugin.json   # Claude plugin manifest
 │   └── .codex-plugin/plugin.json    # Codex plugin manifest (skills: ./skills/)
 ├── gemini-extension.json      # Gemini CLI extension manifest (name must match dir name)

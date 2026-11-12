@@ -7,6 +7,8 @@ description: The professional production layer for series video-making. Covers t
 
 These systems make the difference between an acceptable video and a professional series. Apply them in every project unless the user says otherwise. They sit alongside the `character-consistency`, `voice-consistency`, and `humanized-production` skills: characters and voices stay fixed, humanization makes each frame feel real, and these systems make the whole series hold together.
 
+Counting note: this skill lists 39 numbered entries (11 + 18 + 7 + 3). Together with the 36 humanization systems, the repo holds 75 distinct systems, presented as 86 numbered entries — the 11 professional systems in Part A below are also listed in docs/01-production-systems.md.
+
 ## Part A — 11 Professional Production Systems
 
 ### A1. Visual Style Bible

@@ -1,3 +1,8 @@
+# NOTE: the published tree carries no submodule links (gitlinks) — the
+# GitHub push that publishes this repo carries files only, so
+# `git submodule update` does nothing here. This file documents the
+# canonical component sources only; setup.sh clones them directly
+# with plain git clone.
 [submodule "components/voicestudio"]
 	path = components/voicestudio
 	url = https://github.com/debpalash/VoiceStudio

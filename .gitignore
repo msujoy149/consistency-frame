@@ -1,5 +1,8 @@
 # Dependencies and local installs
 node_modules/
+# Install outputs — created by setup.sh, never committed
+.agents/skills/
+components/
 .venv/
 venv/
 __pycache__/
