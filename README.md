@@ -1,6 +1,6 @@
 # Consistency Frame
 
-**One install. Same characters, same voices, every episode — in any AI platform.**
+**An open-source, portable system for AI video production: the same characters and voices in every scene and episode, in any AI platform.**
 
 Consistency Frame is a portable system for making videos whose characters
 stay the same in every scene and whose voices stay the same in every
