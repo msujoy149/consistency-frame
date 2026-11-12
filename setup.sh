@@ -2,9 +2,14 @@
 # Consistency Frame — one-command installer (v2.0)
 #
 # Installs the bundled components and the skills:
-#   1. Clones the git submodules (VoiceStudio for voice, OpenMontage
-#      for long-form video) — their original AGPL-3.0 licences stay
-#      intact inside each submodule.
+#   1. Fetches the bundled components (VoiceStudio for voice, OpenMontage
+#      for long-form video) — by plain git clone, after attempting a
+#      submodule update for checkouts that carry gitlinks. Their original
+#      AGPL-3.0 licences stay intact inside each component.
+#      (A plain clone is the reliable path: the GitHub push that
+#      publishes this repo carries files only, so the tree has no
+#      submodule gitlinks for `git submodule update` to act on.
+#      setup.sh therefore clones any missing component itself.)
 #   2. Copies skills/ into .agents/skills/ so any platform that reads
 #      skills from that directory picks them up automatically.
 #   3. Walks you through downloading the OmniVoice voice model
@@ -12,7 +17,7 @@
 #      CC-BY-NC — noncommercial).
 #
 # Usage:
-#   git clone --recurse-submodules https://github.com/msujoy149/consistency-frame.git
+#   git clone https://github.com/msujoy149/consistency-frame.git
 #   cd consistency-frame
 #   ./setup.sh
 #
@@ -27,18 +32,42 @@ cd "$REPO_ROOT"
 
 echo "== Consistency Frame 2.0 — setup =="
 
-# 1. Submodules ---------------------------------------------------------
+# 1. Bundled components --------------------------------------------------
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "ERROR: not inside a git checkout. Clone the repo first:"
-  echo "  git clone --recurse-submodules https://github.com/msujoy149/consistency-frame.git"
+  echo "  git clone https://github.com/msujoy149/consistency-frame.git"
   exit 1
 fi
 
+# A checkout that carries submodule gitlinks gets them from this step;
+# a plain file-based checkout (the published repo) has none, so the
+# direct clones below do the real work.
 echo "-- Installing bundled components (VoiceStudio + OpenMontage) --"
-git submodule update --init --recursive || {
-  echo "WARNING: submodule checkout failed (network?). You can retry with:"
-  echo "  git submodule update --init --recursive"
+git submodule update --init --recursive 2>/dev/null || true
+
+clone_component() {
+  local name="$1" url="$2" dir="$3"
+  if [ -d "$dir/.git" ]; then
+    echo "-- $name already present --"
+    return 0
+  fi
+  if [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
+    echo "-- $name already present --"
+    return 0
+  fi
+  echo "-- Cloning $name (bundled component) --"
+  mkdir -p "$(dirname "$dir")"
+  if git clone --depth 1 "$url" "$dir"; then
+    echo "-- $name ready --"
+  else
+    echo "WARNING: could not clone $name from $url (network?). Retry later:"
+    echo "  git clone $url $dir"
+    return 1
+  fi
 }
+
+clone_component "VoiceStudio" "https://github.com/debpalash/VoiceStudio" "components/voicestudio" || true
+clone_component "OpenMontage" "https://github.com/OpenMontageInc/OpenMontage" "components/openmontage" || true
 
 # 2. Skills -------------------------------------------------------------
 echo "-- Installing skills into .agents/skills/ --"
@@ -66,7 +95,8 @@ if [ -d "components/voicestudio" ]; then
     echo "follow components/voicestudio README instructions manually."
   fi
 else
-  echo "VoiceStudio submodule is empty — run 'git submodule update --init --recursive' first."
+  echo "VoiceStudio is not installed — run ./setup.sh again, or clone it:"
+  echo "  git clone https://github.com/debpalash/VoiceStudio components/voicestudio"
 fi
 
 # 4. OpenMontage (long-form video) ---------------------------------------
@@ -77,7 +107,8 @@ if [ -d "components/openmontage" ]; then
   echo "  this script. Add provider keys to components/openmontage/.env"
   echo "  only when you need a paid image/video provider.)"
 else
-  echo "OpenMontage submodule is empty — run 'git submodule update --init --recursive' first."
+  echo "OpenMontage is not installed — run ./setup.sh again, or clone it:"
+  echo "  git clone https://github.com/OpenMontageInc/OpenMontage components/openmontage"
 fi
 
 echo ""

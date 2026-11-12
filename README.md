@@ -33,16 +33,17 @@ follow and a human can check.
 ## Install — one command
 
 ```bash
-git clone --recurse-submodules https://github.com/msujoy149/consistency-frame.git
+git clone https://github.com/msujoy149/consistency-frame.git
 cd consistency-frame
 ./setup.sh
 ```
 
-`setup.sh` installs the bundled components (VoiceStudio for voice,
-OpenMontage for long-form video) and copies the skills into
-`.agents/skills/`, so any platform that reads skills from that directory
-picks them up automatically. It also walks you through downloading the
-voice model (see [Voice](#voice)).
+`setup.sh` fetches and installs the bundled components (VoiceStudio for
+voice, OpenMontage for long-form video) automatically — no separate
+install is needed — and copies the skills into `.agents/skills/`, so any
+platform that reads skills from that directory picks them up
+automatically. It also walks you through downloading the voice model
+(see [Voice](#voice)).
 
 Per-platform install details are in
 [`docs/06-installation.md`](docs/06-installation.md). In short:

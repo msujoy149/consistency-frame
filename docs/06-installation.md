@@ -96,9 +96,11 @@ cd consistency-frame
 ```
 
 `setup.sh` installs the bundled components and copies `skills/` into
-`.agents/skills/`. Character data is not installed by the setup script —
-it is linked in separately from the private overlay (see "Character
-Registry").
+`.agents/skills/`. The two components (VoiceStudio for voice,
+OpenMontage for video) are fetched automatically by `setup.sh` — no
+separate install is needed. Character data is not installed by the setup
+script — it is linked in separately from the private overlay (see
+"Character Registry").
 
 ## Generic installers
 
