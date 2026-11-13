@@ -25,7 +25,7 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 115 numbered entries (104 distinct systems, each named and checkable)
+and 116 numbered entries (105 distinct systems, each named and checkable)
 covering identity, voice, performance, camera direction,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
@@ -158,18 +158,18 @@ their PATH changes take effect.
 5. **Get the episode.** The assistant generates with the registered
    characters and voices, runs the QC checklist, and delivers.
 
-## Features — 115 numbered entries (104 distinct systems)
+## Features — 116 numbered entries (105 distinct systems)
 
-The complete system is 115 numbered entries across the skills and
-docs — 104 distinct systems. (Eleven of the 12 professional systems are listed
+The complete system is 116 numbered entries across the skills and
+docs — 105 distinct systems. (Eleven of the 12 professional systems are listed
 twice: once in the production-systems skill and once in
 docs/01-production-systems.md — the script-driven automatic camera angles
 system is numbered in the skill only, and the video regeneration, cinematic
-power, live-action & VFX, emotional performance, user-supplied voice cloning, and on-demand resource management systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 + 6 + 7 + 1 + 1 = 104 distinct
-systems, 115 listed entries.) They are grouped in ten layers: a
+power, live-action & VFX, emotional performance, user-supplied voice cloning, on-demand resource management, and language authenticity systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 + 6 + 7 + 1 + 1 + 1 = 105 distinct
+systems, 116 listed entries.) They are grouped in eleven layers: a
 character and voice foundation, humanized production, professional
 production, language, captions, and format, agency advertising, video
-regeneration, cinematic power, live-action & VFX, emotional performance, and on-demand resources. The skill files in
+regeneration, cinematic power, live-action & VFX, emotional performance, on-demand resources, and language authenticity. The skill files in
 `skills/` are the source of truth; the `docs/` folder describes each
 system in full.
 
@@ -406,6 +406,16 @@ Full rules: [`docs/12-emotional-performance.md`](docs/12-emotional-performance.m
 
 Full rules: [`docs/13-resource-management.md`](docs/13-resource-management.md).
 
+### Language authenticity — 1 system
+
+- **Native patterns, never textbook speech.** Every language is spoken the way its native speakers speak it: US English carries the American tone and everyday phrasing, Bengali the Bengali tone and idiom, Hindi the Hindi tone and idiom. If a listener cannot tell which language's speakers the voice belongs to, the pattern is wrong.
+- **Native register.** Casual scripts sound casual the way natives are casual — including colloquial and slang words the way native speakers actually use them. Authenticity changes how a line is spoken, never what it says.
+- **Multi-language delivery.** The same video in N languages means N complete versions — dialogue, voice, lip-sync, and on-screen text all in that version's language. Asked separately, the videos are delivered separately.
+- **One voice across languages.** The same character voice profile speaks each language; the voice stays recognizably the same character.
+- **Lip-sync follows the language's sounds.** English, Bengali, and Hindi move the mouth differently. Every line's mouth movement is verified against its own audio track; a talking character with a still mouth is a defect, never a delivery.
+
+Full rules: [`docs/14-language-authenticity.md`](docs/14-language-authenticity.md).
+
 ## Character registration
 
 Registering a character takes all three of these, in one go:
@@ -491,6 +501,7 @@ and `description`, plus the full instructions):
 | `live-action-vfx` | Live-action human performance, VFX integration of CG creatures, water and wetness continuity, practical locations and set extension, stunt and action choreography, real-animal performance |
 | `emotional-performance` | Musical performance and stagecraft, crowd as a living character, intimate drama and emotional arc, age performance, instrument performance sync, music as story and memory, cultural authenticity and object storytelling |
 | `resource-management` | Load only what the phase needs: voice plugin for voice work, video plugin for video assembly, working memory for the current phase; stop rules and the quality guard |
+| `language-authenticity` | Native patterns per language (US English, Bengali, Hindi), multi-language delivery, one voice across languages, lip-sync matched to the language's sounds |
 
 `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` are thin pointers to
 `skills/` — one source of truth, read by every platform.

@@ -37,6 +37,10 @@ versions of these rules.
   voice plugin for voice work, video plugin for video assembly,
   working memory for the current phase; stop rules and the quality
   guard.
+- `skills/language-authenticity/` — every language spoken the way its
+  native speakers speak it (US English, Bengali, Hindi); the same video
+  in every language asked for, separately on request; one voice across
+  languages; lip-sync matched to the language's sounds.
 
 ## Rules that always apply
 
@@ -62,4 +66,5 @@ Full system documentation lives in `docs/`. Install instructions are in
 `docs/10-cinematic-power.md`, and live-action and VFX in
 `docs/11-live-action-vfx.md`, and emotional performance in
 `docs/12-emotional-performance.md`, and on-demand resources in
-`docs/13-resource-management.md`.
+`docs/13-resource-management.md`, and language authenticity in
+`docs/14-language-authenticity.md`.
