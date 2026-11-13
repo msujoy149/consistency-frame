@@ -33,6 +33,10 @@ versions of these rules.
   stagecraft, crowd as a living character, intimate drama and
   emotional arc, age performance, instrument performance sync, music
   as story and memory, cultural authenticity and object storytelling.
+- `skills/resource-management/` — load only what the phase needs:
+  voice plugin for voice work, video plugin for video assembly,
+  working memory for the current phase; stop rules and the quality
+  guard.
 
 ## Rules that always apply
 
@@ -57,4 +61,5 @@ Full system documentation lives in `docs/`. Install instructions are in
 `docs/09-video-regeneration.md`, and cinematic power in
 `docs/10-cinematic-power.md`, and live-action and VFX in
 `docs/11-live-action-vfx.md`, and emotional performance in
-`docs/12-emotional-performance.md`.
+`docs/12-emotional-performance.md`, and on-demand resources in
+`docs/13-resource-management.md`.

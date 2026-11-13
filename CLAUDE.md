@@ -29,6 +29,10 @@ the source of truth. Read them and follow them.
   stagecraft, crowd as a living character, intimate drama and
   emotional arc, age performance, instrument performance sync, music
   as story and memory, cultural authenticity and object storytelling.
+- `skills/resource-management/` — load only what the phase needs:
+  voice plugin for voice work, video plugin for video assembly,
+  working memory for the current phase; stop rules and the quality
+  guard.
 
 Character identity and voice are fixed once registered. The user's
 explicit instructions and script outrank everything else. Character

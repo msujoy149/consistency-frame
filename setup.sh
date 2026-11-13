@@ -19,10 +19,10 @@
 # Usage:
 #   git clone https://github.com/msujoy149/consistency-frame.git
 #   cd consistency-frame
-#   ./setup.sh
+#   bash setup.sh
 #
 # In Muse (Meta's personal app, which has no skill-install flow):
-#   clone this repo into your workspace and run ./setup.sh here,
+#   clone this repo into your workspace and run bash setup.sh here,
 #   exactly like OpenMontage and VoiceStudio are installed.
 
 set -euo pipefail
@@ -50,7 +50,7 @@ clone_component() {
     return 0
   fi
   if [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
-    echo "WARNING: $dir exists but is not a git checkout. Remove it and run ./setup.sh again to re-clone $name:"
+    echo "WARNING: $dir exists but is not a git checkout. Remove it and run bash setup.sh again to re-clone $name:"
     echo "  rm -rf $dir"
     return 1
   fi
@@ -68,7 +68,7 @@ clone_component() {
   if (cd "$dir" && git fetch --depth 1 origin "$pin" && git checkout "$pin"); then
     echo "-- $name ready (pinned to ${pin:0:7}) --"
   else
-    echo "WARNING: could not check out pinned commit $pin for $name. Removing the clone; run ./setup.sh again to retry."
+    echo "WARNING: could not check out pinned commit $pin for $name. Removing the clone; run bash setup.sh again to retry."
     rm -rf "$dir"
     return 1
   fi
@@ -120,7 +120,7 @@ if [ -d "components/voicestudio" ]; then
       echo "  Do not use that model for commercial work; use a commercial"
       echo "  voice provider instead."
     else
-      echo "VoiceStudio is only partly set up (see the warnings above). Fix the failed step, then run ./setup.sh again."
+      echo "VoiceStudio is only partly set up (see the warnings above). Fix the failed step, then run bash setup.sh again."
     fi
   else
     echo "bun is not installed, so VoiceStudio cannot be set up here."
@@ -128,7 +128,7 @@ if [ -d "components/voicestudio" ]; then
     echo "follow components/voicestudio README instructions manually."
   fi
 else
-  echo "VoiceStudio is not installed — run ./setup.sh again."
+  echo "VoiceStudio is not installed — run bash setup.sh again."
 fi
 
 # 4. OpenMontage (long-form video) ---------------------------------------
@@ -151,7 +151,7 @@ if [ -d "components/openmontage" ]; then
     echo "  cd components/openmontage && make setup"
   fi
 else
-  echo "OpenMontage is not installed — run ./setup.sh again."
+  echo "OpenMontage is not installed — run bash setup.sh again."
 fi
 
 echo ""
