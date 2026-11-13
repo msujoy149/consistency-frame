@@ -34,11 +34,26 @@ Small things the AI creates itself — the emotion in a line, the tone of a repl
 
 ## "Do it yourself" — the explicit permission, never bare
 
-When the repo has no instruction at all for something, it explicitly says "do it yourself" — that is permission, not an error and not a stop. But the permission is NEVER bare: it always carries the quality commands with it — do it CORRECTLY, do it CINEMATICALLY, do it HUMAN-GENERATED (human-feeling, never robotic), and do it according to the TASK (the need and the script decide the details). This path is ONLY when no skill has the command; if a skill has it, build from the skill.
+When the repo has no instruction at all for something, it explicitly says "do it yourself" — that is permission, not an error and not a stop. But the permission is NEVER bare: it always carries the quality commands with it, AND the main flow — "do it yourself, following this flow, step by step." The flow is what keeps the work correct: the AI follows the repo's order and improvises only the details inside each step (emotion, tone, phrasing), never the video itself. Without the flow, "do it yourself" could produce any video; with the flow, it produces the right video. The quality commands: do it CORRECTLY, do it CINEMATICALLY, do it HUMAN-GENERATED (human-feeling, never robotic), and do it according to the TASK (the need and the script decide the details). This path is ONLY when no skill has the command; if a skill has it, build from the skill.
+
+**The main flow — the repo's order for every video, handed over with the permission:**
+
+1. Read the script and the user's instructions. The script decides. If an essential detail is missing, ask the smallest necessary clarification — never guess at something that could make the wrong video.
+2. Lock what is fixed before generating anything: character identity from the approved reference (face, structure, hands, feet); voice (tags + seed + reference audio); one locked visual style; each character's language. Nothing fixed is ever redesigned.
+3. Break the script into beats and plan the shots from the beats. Storyboard and shot list first; the angle follows the beat — establishing shot, main action, reaction shot, closing shot. With no script, write the story as beats first, then direct the angles from those beats.
+4. Decide the voice/video order for this project and keep it: voice first, then video matched to it — or video first, then voice. One order, followed consistently through the whole project.
+5. Generate shot by shot, line by line, from the script. Dialogue in each character's language, in natural spoken language, short lines with pauses; lip-sync matched to the sounds of that language. Apply the standing defect list; keep the locked style and the scene's colour grade.
+6. Keep continuity while generating: story bible and continuity tracker; no overlap between characters; check each shot against the fixed reference as you go — a drifted face is regenerated fresh, never inpainted; clip boundaries must match.
+7. Add the sound: ambience and room tone, foley on visible beats, dialogue, music ducked under dialogue; scene music follows the scene's emotion. Master to −14 LUFS, true peak below −1 dBTP.
+8. Run the QC checklist before delivery: faces, voices, emotions, dialogue exact, no defects, clothing, sound matched, no contradiction with the story bible or the continuity tracker. Never deliver a failed check without telling the user what failed.
+9. Deliver in the requested format, and get approval. Aspect ratio and platform as asked. The user approves before anything is locked in.
+10. If the work grows into a system, save it: generate it as a new skill from the generation command above so the repo now has it.
 
 ## The common core — one instruction for any new task
 
 For a NEW kind of task — for example animation: make a small animation, or make an animated cartoon from a given video or script — do NOT hunt through the skills one by one looking for a matching skill. The repo distills the main common rules from ALL its skills into ONE core instruction and gives that to the AI: "do the work this way." The core is short — it does not explain everything in detail — but it carries the universal rules that apply to ALL videos, the same in every chat and session: human-like, never robotic; no overlap between characters; lip-sync (the mouth moves with the voice, matching the sounds of the language); fixed character identity and fixed voice per character; the script decides; physical realism and continuity; QC before delivery; rights and consent for real people. If the new task later grows into a full system, generate it as a new skill from the generation command above so the repo now has it.
+
+The core carries the rules; the main flow above carries the order — a "do it yourself" command hands over both, so the work is the right video, not any video.
 
 ## Scope
 

@@ -17,7 +17,8 @@ and why. For a new kind of task, the repo gives one distilled common core
 instead of hunting for a skill (see the `command-authority` skill, §8);
 when the repo has no instruction at all it says "do it yourself" — never
 bare, always with the quality commands (correct, cinematic,
-human-generated, per the need and the script).
+human-generated, per the need and the script) and the main flow (the
+step-by-step order for every video, in §7).
 
 ## Skills (source of truth)
 
