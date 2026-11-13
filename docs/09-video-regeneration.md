@@ -6,7 +6,7 @@ The reference is the user's own uploaded video, used as the analysis source. The
 
 Nothing in this workflow replaces the existing systems. Characters in the regenerated video are registered characters: identity anchoring, 100% reference fidelity, face-consistency correction, angle-matched verification, and the expression library (`docs/07-character-registry.md`) all still apply, unchanged. Outfits follow the outfit-consistency rules. Camera angles follow the script-driven automatic camera angles system (A12 in the `production-systems` skill): each shot's angle is chosen from its beat, whether the script is supplied or generated. Voices follow the voice-consistency rules. This document adds only the regeneration workflow on top of that foundation.
 
-Counting note: this 1 system is part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, and 5 cinematic power systems, the repo holds 89 distinct systems, presented as 100 numbered entries.
+Counting note: this 1 system is part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 5 cinematic power, and 6 live-action & VFX systems, the repo holds 95 distinct systems, presented as 106 numbered entries.
 
 ## Folder layout
 

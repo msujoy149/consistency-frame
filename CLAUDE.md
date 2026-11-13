@@ -21,6 +21,10 @@ the source of truth. Read them and follow them.
 - `skills/cinematic-power/` — style lock, animal and creature
   performance, music-beat editing and synchronized ensemble, trailer
   structure, scale and colour scripting.
+- `skills/live-action-vfx/` — live-action human performance, VFX
+  integration of CG creatures in live footage, water, wetness and
+  underwater continuity, practical locations and set extension,
+  live-action stunt and action choreography, real-animal performance.
 
 Character identity and voice are fixed once registered. The user's
 explicit instructions and script outrank everything else. Character

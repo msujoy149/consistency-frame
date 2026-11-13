@@ -25,7 +25,7 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 100 numbered entries (89 distinct systems, each named and checkable)
+and 106 numbered entries (95 distinct systems, each named and checkable)
 covering identity, voice, performance, camera direction,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
@@ -156,18 +156,18 @@ their PATH changes take effect.
 5. **Get the episode.** The assistant generates with the registered
    characters and voices, runs the QC checklist, and delivers.
 
-## Features — 100 numbered entries (89 distinct systems)
+## Features — 106 numbered entries (95 distinct systems)
 
-The complete system is 100 numbered entries across the skills and
-docs — 89 distinct systems. (Eleven of the 12 professional systems are listed
+The complete system is 106 numbered entries across the skills and
+docs — 95 distinct systems. (Eleven of the 12 professional systems are listed
 twice: once in the production-systems skill and once in
 docs/01-production-systems.md — the script-driven automatic camera angles
-system is numbered in the skill only, and the video regeneration and cinematic
-power systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 = 89 distinct
-systems, 100 listed entries.) They are grouped in seven layers: a
+system is numbered in the skill only, and the video regeneration, cinematic
+power, and live-action & VFX systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 + 6 = 95 distinct
+systems, 106 listed entries.) They are grouped in eight layers: a
 character and voice foundation, humanized production, professional
 production, language, captions, and format, agency advertising, video
-regeneration, and cinematic power. The skill files in
+regeneration, cinematic power, and live-action & VFX. The skill files in
 `skills/` are the source of truth; the `docs/` folder describes each
 system in full.
 
@@ -372,6 +372,17 @@ Full rules: [`docs/09-video-regeneration.md`](docs/09-video-regeneration.md).
 
 Full rules: [`docs/10-cinematic-power.md`](docs/10-cinematic-power.md).
 
+### Live-action & VFX — 6 systems
+
+- **Live-action human performance.** A real body performs: micro-expressions, breath, fatigue, weight; effort shows where the action is hard; the face in the close-up matches the body in the wide shot.
+- **VFX integration — CG creatures in live footage.** The creature shares the live plate's light, casts shadows and reflections, gets wet when the scene is wet; the actor's eyeline hits the creature's eyes; scale is fixed; contact is real.
+- **Water, wetness, and underwater continuity.** The wet state (hair, skin, clothes, salt, sand) is tracked across cuts and changes only when the story changes it; underwater shots hold a fixed look with water-driven movement.
+- **Practical locations and set extension.** The real place is extended with CG and the seam never shows — one light, one haze, one water line; the actor walks from the built set into the extension without the join ever being noticed.
+- **Live-action stunt and action choreography.** Action is planned beat by beat and shot to look unplanned; the camera hides the safety, never the impact; the character stays readable through the fastest action.
+- **Real-animal performance.** A real animal does what it does — many takes, cut around its real behaviour, comic timing made in the edit; CG touch-up only where the animal cannot perform, preserving its real body.
+
+Full rules: [`docs/11-live-action-vfx.md`](docs/11-live-action-vfx.md).
+
 ## Character registration
 
 Registering a character takes all three of these, in one go:
@@ -454,6 +465,7 @@ and `description`, plus the full instructions):
 | `agency-advertising` | Brand kit, ad formats, campaign variants, client isolation, AI disclosure and likeness safety, product/service consistency, client approval |
 | `video-regeneration` | Reference analysis, new-not-duplicate remake, character/object continuity, physical interactions, cinematography, storyboard, audio, QC, output requirements |
 | `cinematic-power` | Style lock, animal and creature performance, music-beat editing and synchronized ensemble, trailer structure, scale and colour scripting |
+| `live-action-vfx` | Live-action human performance, VFX integration of CG creatures, water and wetness continuity, practical locations and set extension, stunt and action choreography, real-animal performance |
 
 `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` are thin pointers to
 `skills/` — one source of truth, read by every platform.

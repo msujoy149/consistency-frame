@@ -25,6 +25,10 @@ versions of these rules.
 - `skills/cinematic-power/` — style lock, animal and creature
   performance, music-beat editing and synchronized ensemble, trailer
   structure, scale and colour scripting.
+- `skills/live-action-vfx/` — live-action human performance, VFX
+  integration of CG creatures in live footage, water, wetness and
+  underwater continuity, practical locations and set extension,
+  live-action stunt and action choreography, real-animal performance.
 
 ## Rules that always apply
 
@@ -47,4 +51,5 @@ Full system documentation lives in `docs/`. Install instructions are in
 `docs/07-character-registry.md`, and the advertising layer in
 `docs/08-agency-advertising.md`, and video regeneration in
 `docs/09-video-regeneration.md`, and cinematic power in
-`docs/10-cinematic-power.md`.
+`docs/10-cinematic-power.md`, and live-action and VFX in
+`docs/11-live-action-vfx.md`.
