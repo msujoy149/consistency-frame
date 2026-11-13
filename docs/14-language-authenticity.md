@@ -2,7 +2,7 @@
 
 Every language in a video is spoken the way its native speakers speak it — never flattened into stiff, generic, textbook speech. US English sounds American, Bengali sounds Bengali, Hindi sounds Hindi. If the user asks for the same video in three languages, deliver it in all three; if asked separately, deliver separate videos. And the mouth must move with the words: a talking character with a still mouth is a defect, never a delivery.
 
-Counting note: this 1 system is part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, and 1 on-demand resource management, and 1 realistic person video, 1 2D explainer animation, and 1 command authority systems, the repo holds 108 distinct systems, presented as 119 numbered entries.
+Counting note: this 1 system is part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, and 1 on-demand resource management, and 1 realistic person video, 1 2D explainer animation, 1 command authority, and 1 kids & family animation systems, the repo holds 109 distinct systems, presented as 120 numbered entries.
 
 ## The native-pattern rule
 

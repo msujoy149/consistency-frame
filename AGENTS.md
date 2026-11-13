@@ -62,6 +62,11 @@ and why.
   use the repo's skills first for every video; a missing system is
   generated only after checking the repo's notes, then saved as a new
   skill and reported to the user.
+- `skills/kids-family-animation/` — professional kids & family animation:
+  short-form videos for children and young audiences across 14 animation
+  methods, one locked visual style, a full camera decision system, 3D and
+  2D craft, ten story templates, short-form structure, animation QC, and
+  a permanent reference library.
 
 ## Rules that always apply
 
@@ -91,4 +96,5 @@ Full system documentation lives in `docs/`. Install instructions are in
 `docs/14-language-authenticity.md`, and realistic person video in
 `docs/15-realistic-person.md`, and 2D explainer animation in
 `docs/16-explainer-animation.md`, and command authority in
-`docs/17-command-authority.md`.
+`docs/17-command-authority.md`, and kids & family animation in
+`docs/18-kids-family-animation.md`.

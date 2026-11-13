@@ -4,7 +4,7 @@ A short video that teaches one idea through simple scenes and visual metaphors. 
 
 This is not anime, not 3D CG, not live-action, not a music video, not a trailer. Anime and 3D CG styles live in the cinematic-power skill's style lock; this is its own type: flat 2D vector, thick black outlines, flat colour fills, warm neutral backgrounds, a small palette. The camera moves slowly — continuous push-ins inside scenes, slow pans between ideas — and scenes flow by camera movement, not by hard cuts. Faces change (stressed, tired, smiling, worried, angry, confident) while the bodies stay simple: expression carries the meaning.
 
-Counting note: this 1 system is part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, 1 on-demand resource management, 1 language authenticity, and 1 realistic person video systems, the repo holds 108 distinct systems, presented as 119 numbered entries.
+Counting note: this 1 system is part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, 1 on-demand resource management, 1 language authenticity, 1 realistic person video, 1 2D explainer animation, 1 command authority, and 1 kids & family animation systems, the repo holds 109 distinct systems, presented as 120 numbered entries.
 
 ## Style lock
 

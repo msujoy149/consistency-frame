@@ -2,7 +2,7 @@
 
 This repo is the command master. After a user installs it, videos are made WITH PERMISSION from the repo — the assistant reads and uses the repo's skills FIRST for every video, before generating anything itself. A skill that exists in the repo is used, not reinvented; a missing system is generated only after checking the repo's notes, then saved as a new skill and reported to the user.
 
-Counting note: this 1 system is part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, 1 on-demand resource management, 1 language authenticity, 1 realistic person video, and 1 2D explainer animation systems, the repo holds 108 distinct systems, presented as 119 numbered entries.
+Counting note: this 1 system is part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, 1 on-demand resource management, 1 language authenticity, 1 realistic person video, 1 2D explainer animation, and 1 kids & family animation systems, the repo holds 109 distinct systems, presented as 120 numbered entries.
 
 ## Order of work for every video
 

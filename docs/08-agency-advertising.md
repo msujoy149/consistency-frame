@@ -6,7 +6,7 @@ The model is a synthetic person with no real existence. It is introduced once â€
 
 Nothing in this layer replaces the character system. Registration, 100% reference fidelity, identity anchoring, face-consistency correction, angle-matched verification, and the expression library all still apply, unchanged, to every ad. The seven systems below add only the advertising layer on top.
 
-Counting note: these 7 systems are part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, and 1 on-demand resource management, and 1 language authenticity, and 1 realistic person video, 1 2D explainer animation, and 1 command authority systems, the repo holds 108 distinct systems, presented as 119 numbered entries.
+Counting note: these 7 systems are part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, and 1 on-demand resource management, and 1 language authenticity, and 1 realistic person video, 1 2D explainer animation, 1 command authority, and 1 kids & family animation systems, the repo holds 109 distinct systems, presented as 120 numbered entries.
 
 ## Folder layout
 

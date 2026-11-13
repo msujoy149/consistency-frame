@@ -12,8 +12,7 @@ production-systems skill also appear here. The twelfth — script-driven
 automatic camera angles (A12) — is numbered in the skill only and
 cross-referenced from §2 below. Together with the 18 extended, 3
 language/captions/format, 7 additional, 36 humanization, 7 agency
-advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, and 1 on-demand resource management, and 1 language authenticity, and 1 realistic person video, 1 2D explainer animation, and 1 command authority systems, the repo holds 108
-distinct systems, presented as 119 numbered entries.
+advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, and 1 on-demand resource management, and 1 language authenticity, and 1 realistic person video, 1 2D explainer animation, 1 command authority, and 1 kids & family animation systems, the repo holds 109 distinct systems, presented as 120 numbered entries.
 
 ## Production Priority Hierarchy
 

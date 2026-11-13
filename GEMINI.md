@@ -48,6 +48,11 @@ the source of truth. Read them and follow them.
   use the repo's skills first for every video; a missing system is
   generated only after checking the repo's notes, then saved as a new
   skill and reported to the user.
+- `skills/kids-family-animation/` — professional kids & family animation:
+  short-form videos for children and young audiences across 14 animation
+  methods, one locked visual style, a full camera decision system, 3D and
+  2D craft, ten story templates, short-form structure, animation QC, and
+  a permanent reference library.
 
 Character identity and voice are fixed once registered. The user's
 explicit instructions and script outrank everything else. Character

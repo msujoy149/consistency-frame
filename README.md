@@ -25,7 +25,7 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 119 numbered entries (108 distinct systems, each named and checkable)
+and 120 numbered entries (109 distinct systems, each named and checkable)
 covering identity, voice, performance, camera direction,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
@@ -160,18 +160,17 @@ their PATH changes take effect.
 
 **Command authority.** This repo commands the assistant: for every video the assistant reads and uses the repo's skills first, and only generates a missing system itself after checking the repo's notes on it (see [`skills/command-authority/SKILL.md`](skills/command-authority/SKILL.md)).
 
-## Features — 119 numbered entries (108 distinct systems)
+## Features — 120 numbered entries (109 distinct systems)
 
-The complete system is 119 numbered entries across the skills and
-docs — 108 distinct systems. (Eleven of the 12 professional systems are listed
+The complete system is 120 numbered entries across the skills and
+docs — 109 distinct systems. (Eleven of the 12 professional systems are listed
 twice: once in the production-systems skill and once in
 docs/01-production-systems.md — the script-driven automatic camera angles
 system is numbered in the skill only, and the video regeneration, cinematic
-power, live-action & VFX, emotional performance, user-supplied voice cloning, on-demand resource management, language authenticity, realistic person video, 2D explainer animation, and command authority systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 + 6 + 7 + 1 + 1 + 1 + 1 + 1 + 1 = 108 distinct
-systems, 119 listed entries.) They are grouped in fourteen layers: a
+power, live-action & VFX, emotional performance, user-supplied voice cloning, on-demand resource management, language authenticity, realistic person video, 2D explainer animation, command authority, and kids & family animation systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 + 6 + 7 + 1 + 1 + 1 + 1 + 1 + 1 + 1 = 109 distinct systems, 120 listed entries.) They are grouped in fifteen layers: a
 character and voice foundation, humanized production, professional
 production, language, captions, and format, agency advertising, video
-regeneration, cinematic power, live-action & VFX, emotional performance, on-demand resources, language authenticity, realistic person video, 2D explainer animation, and command authority. The skill files in
+regeneration, cinematic power, live-action & VFX, emotional performance, on-demand resources, language authenticity, realistic person video, 2D explainer animation, command authority, and kids & family animation. The skill files in
 `skills/` are the source of truth; the `docs/` folder describes each
 system in full.
 
@@ -444,6 +443,17 @@ Full rules: [`docs/16-explainer-animation.md`](docs/16-explainer-animation.md).
 - **Applies to everything.** Every skill in the repo, including future ones, and every platform the repo is installed on.
 
 Full rules: [`docs/17-command-authority.md`](docs/17-command-authority.md).
+
+### Kids & family animation — 1 system
+
+- **Professional short-form animation for children.** Funny, warm, curious, or exciting — never frightening, crude, or age-inappropriate. Original stories, characters, dialogue, and music; reference videos teach technique only.
+- **Fourteen methods, one locked style.** AI animation, AI-assisted 3D, traditional 3D CGI, stylised 3D, photorealistic 3D, traditional 2D, 2D digital, 2D/3D hybrid, anime-inspired, cartoon character, stop-motion-inspired, game-engine, real footage with animated characters, and other professional techniques — one method per project, held across every scene.
+- **Full camera decision system.** Angles, shot sizes, movement, lens and perspective, composition, and an 8-question system for every scene — the camera follows the story, the emotion, and the physical action.
+- **3D and 2D craft.** Modelling, rigging, animation principles (squash and stretch, anticipation, follow-through, weight, walk cycles), lighting and rendering — plus an honest AI reproduction strategy that never pretends an AI model performs real 3D rigging. 2D craft: line weight, shape language, smear frames, parallax, anime framing.
+- **Ten story templates and a short-form structure.** Funny animal, cute animal adventures, friendship, family, mystery and surprise, cartoon vehicle adventures, fantasy adventures, moral stories, funny character interactions, educational entertainment — built for vertical Shorts with a first-second hook, escalation, payoff, and replay potential.
+- **Animation QC and a permanent reference library.** Character, camera, animation, visual, audio, and story QC before delivery; a reference library of verified production knowledge in ten areas, updated continuously from new links — a trend becomes a permanent rule only after verification.
+
+Full rules: [`docs/18-kids-family-animation.md`](docs/18-kids-family-animation.md).
 
 ## Character registration
 

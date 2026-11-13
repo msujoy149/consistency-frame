@@ -4,7 +4,7 @@ A real person's photo becomes a realistic video of that person moving and speaki
 
 This is not 2D or 3D animation, and not live-action footage of a real shoot. Animation styles (2D anime, 3D stylized CG) live in the cinematic-power skill's style lock; real filmed performance lives in the live-action skill. The realistic person video is its own type: a still photo of a real person, made to move and speak like that person. A talking person with a still mouth is a defect, never a delivery. Realism target 100%, with 99.9% as the floor.
 
-Counting note: this 1 system is part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, 1 on-demand resource management, and 1 language authenticity, 1 2D explainer animation, and 1 command authority systems, the repo holds 108 distinct systems, presented as 119 numbered entries.
+Counting note: this 1 system is part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, 1 on-demand resource management, and 1 language authenticity, 1 2D explainer animation, 1 command authority, and 1 kids & family animation systems, the repo holds 109 distinct systems, presented as 120 numbered entries.
 
 ## Intake
 
