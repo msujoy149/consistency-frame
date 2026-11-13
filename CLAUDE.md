@@ -15,6 +15,9 @@ the source of truth. Read them and follow them.
 - `skills/agency-advertising/` — brand kit, ad formats, campaign
   variants, client isolation, AI disclosure, product consistency,
   client approval.
+- `skills/video-regeneration/` — reference analysis, new-not-duplicate
+  remake, character/object continuity, physical interactions,
+  cinematography, storyboard, audio, QC, output requirements.
 
 Character identity and voice are fixed once registered. The user's
 explicit instructions and script outrank everything else. Character

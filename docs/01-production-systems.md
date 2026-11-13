@@ -11,9 +11,9 @@ Counting note: eleven of the twelve systems in Part A of the
 production-systems skill also appear here. The twelfth — script-driven
 automatic camera angles (A12) — is numbered in the skill only and
 cross-referenced from §2 below. Together with the 18 extended, 3
-language/captions/format, 7 additional, 36 humanization, and 7 agency
-advertising systems, the repo holds 83 distinct systems, presented as
-94 numbered entries.
+language/captions/format, 7 additional, 36 humanization, 7 agency
+advertising, and 1 video regeneration systems, the repo holds 84
+distinct systems, presented as 95 numbered entries.
 
 ## Production Priority Hierarchy
 

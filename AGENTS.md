@@ -19,6 +19,9 @@ versions of these rules.
 - `skills/agency-advertising/` — brand kit, ad formats, campaign
   variants, client isolation, AI disclosure, product consistency,
   client approval.
+- `skills/video-regeneration/` — reference analysis, new-not-duplicate
+  remake, character/object continuity, physical interactions,
+  cinematography, storyboard, audio, QC, output requirements.
 
 ## Rules that always apply
 
@@ -39,4 +42,5 @@ versions of these rules.
 Full system documentation lives in `docs/`. Install instructions are in
 `docs/06-installation.md`. The character registry is documented in
 `docs/07-character-registry.md`, and the advertising layer in
-`docs/08-agency-advertising.md`.
+`docs/08-agency-advertising.md`, and video regeneration in
+`docs/09-video-regeneration.md`.

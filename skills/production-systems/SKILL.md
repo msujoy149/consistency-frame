@@ -7,7 +7,7 @@ description: The professional production layer for series video-making. Covers t
 
 These systems make the difference between an acceptable video and a professional series. Apply them in every project unless the user says otherwise. They sit alongside the `character-consistency`, `voice-consistency`, and `humanized-production` skills: characters and voices stay fixed, humanization makes each frame feel real, and these systems make the whole series hold together.
 
-Counting note: this skill lists 40 numbered entries (12 + 18 + 7 + 3). Together with the 36 humanization systems and the 7 agency advertising systems, the repo holds 83 distinct systems, presented as 94 numbered entries — eleven of the 12 professional systems in Part A below are also listed in docs/01-production-systems.md; the camera-angles system (A12) is numbered here only, and docs/01 §2 cross-references it.
+Counting note: this skill lists 40 numbered entries (12 + 18 + 7 + 3). Together with the 36 humanization systems, the 7 agency advertising systems, and the 1 video regeneration system, the repo holds 84 distinct systems, presented as 95 numbered entries — eleven of the 12 professional systems in Part A below are also listed in docs/01-production-systems.md; the camera-angles system (A12) is numbered here only, and docs/01 §2 cross-references it.
 
 ## Part A — 12 Professional Production Systems
 
@@ -53,7 +53,7 @@ Decide the order for each project before starting: voice first, then video match
 
 ### A11. Episode QC Checklist
 
-Before delivering any episode, check it against the list: character faces and heights correct; voices correct for each character; emotions match the script; dialogue exact; no extra fingers, merged faces, or broken objects; clothing correct for the scene; sound and music present and matched; no contradiction with the story bible or the continuity tracker. Do not deliver an episode that fails a check without telling the user what failed. Inspect the beginning, middle, and ending, plus character appearances, facial identity consistency, important actions, hand-object interactions, character-to-character interactions, scene transitions, and audio and lip-sync where inspectable. Do not claim frame-by-frame inspection unless it was actually performed, and do not claim a video is completely defect-free without sufficient verification.
+Before delivering any episode, check it against the list: character faces and heights correct; voices correct for each character; emotions match the script; dialogue exact; no extra fingers, merged faces, or broken objects; clothing correct for the scene; sound and music present and matched; no contradiction with the story bible or the continuity tracker. Do not deliver an episode that fails a check without telling the user what failed. Inspect the beginning, middle, and ending, plus character appearances, facial identity consistency, important actions, hand-object interactions, character-to-character interactions, scene transitions, and audio and lip-sync where inspectable. Do not claim frame-by-frame inspection unless it was actually performed, and do not claim a video is completely defect-free without sufficient verification. Video regeneration has its own QC pass (see the `video-regeneration` skill, Section 8), which reuses this checklist plus the regeneration-specific checks — handovers, object transfers, and frame-by-frame comparison against the reference.
 
 ### A12. Script-Driven Automatic Camera Angles
 

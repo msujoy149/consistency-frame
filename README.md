@@ -25,7 +25,7 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 94 numbered entries (83 distinct systems, each named and checkable)
+and 95 numbered entries (84 distinct systems, each named and checkable)
 covering identity, voice, performance, camera direction,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
@@ -156,16 +156,18 @@ their PATH changes take effect.
 5. **Get the episode.** The assistant generates with the registered
    characters and voices, runs the QC checklist, and delivers.
 
-## Features — 94 numbered entries (83 distinct systems)
+## Features — 95 numbered entries (84 distinct systems)
 
-The complete system is 94 numbered entries across the skills and
-docs — 83 distinct systems. (Eleven of the 12 professional systems are listed
+The complete system is 95 numbered entries across the skills and
+docs — 84 distinct systems. (Eleven of the 12 professional systems are listed
 twice: once in the production-systems skill and once in
 docs/01-production-systems.md — the script-driven automatic camera angles
-system is numbered in the skill only — so 12 + 18 + 3 + 7 + 36 + 7 = 83 distinct
-systems, 94 listed entries.) They are grouped in five layers: a
+system is numbered in the skill only, and the video regeneration system is
+numbered in its own skill only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 = 84 distinct
+systems, 95 listed entries.) They are grouped in six layers: a
 character and voice foundation, humanized production, professional
-production, language, captions, and format, and agency advertising. The skill files in
+production, language, captions, and format, agency advertising, and video
+regeneration. The skill files in
 `skills/` are the source of truth; the `docs/` folder describes each
 system in full.
 
@@ -345,6 +347,21 @@ The model is a registered character created through the Character
 Generator; this layer adds only the advertising rules on top. Full
 rules: [`docs/08-agency-advertising.md`](docs/08-agency-advertising.md).
 
+### Video regeneration — 1 system
+
+- **Video regeneration.** The user uploads a video and asks for it to be
+  regenerated: the system first analyses the reference in full (story,
+  scenes in order, characters, objects, camera, light, sound), then
+  creates a NEW original video that preserves the reference's core story,
+  emotional impact, narrative structure, and creative direction — with
+  only minor or explicitly requested changes. Character and object
+  continuity, physically correct handovers and interactions, cinematic
+  realism, a storyboard before generation, original audio, and a mandatory
+  QC pass before delivery. The reference is the user's own uploaded video;
+  the output is an alternative version, never a frame-for-frame copy.
+
+Full rules: [`docs/09-video-regeneration.md`](docs/09-video-regeneration.md).
+
 ## Character registration
 
 Registering a character takes all three of these, in one go:
@@ -425,6 +442,7 @@ and `description`, plus the full instructions):
 | `humanized-production` | The 36 humanization systems |
 | `production-systems` | The 12 professional + 18 extended + 7 additional systems, plus language, captions, and format rules |
 | `agency-advertising` | Brand kit, ad formats, campaign variants, client isolation, AI disclosure and likeness safety, product/service consistency, client approval |
+| `video-regeneration` | Reference analysis, new-not-duplicate remake, character/object continuity, physical interactions, cinematography, storyboard, audio, QC, output requirements |
 
 `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` are thin pointers to
 `skills/` — one source of truth, read by every platform.

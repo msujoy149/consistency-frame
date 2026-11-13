@@ -113,6 +113,21 @@ angles is part of the generated script. Realism target: aim for 100%
   A12 in the production-systems skill, cross-referenced from docs/01 §2.
   Counts updated everywhere: 83 distinct systems, 94 numbered entries.
 
+- Video regeneration — a new skill (`skills/video-regeneration/SKILL.md`)
+  and doc (`docs/09-video-regeneration.md`): the user uploads a reference
+  video and the system first analyses it in full (story, scenes in order,
+  characters, objects, camera, light, sound), then creates a NEW original
+  video preserving the reference's core story, emotional impact, narrative
+  structure, and creative direction, with only minor or explicitly
+  requested changes. Covers character and object continuity, physically
+  correct handovers and interactions (no merging, passing through, or
+  disappearing objects), cinematic realism, a storyboard before generation,
+  original audio, a mandatory QC pass before delivery, and output
+  requirements (aspect ratio, pacing, duration, clips when the model
+  limit is shorter). The reference is the user's own uploaded video; the
+  output is an alternative version, never a frame-for-frame copy.
+  Counts updated everywhere: 84 distinct systems, 95 numbered entries.
+
 ### Fixed
 
 - Audit fixes (deep review of the first release). The "86 systems"
