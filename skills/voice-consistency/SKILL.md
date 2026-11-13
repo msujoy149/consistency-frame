@@ -1,6 +1,6 @@
 ---
 name: voice-consistency
-description: Keeps every character's voice identical across all episodes, like their visual identity. Covers fixed per-character voice profiles, generating once and reusing reference audio, the bundled VoiceStudio/OmniVoice local engine and its licence limits, script-driven emotional performance, single-pass multi-speaker dialogue, the non-verbal voice layer, voice-drift measurement, ageing and state variants, code-switching and dialect handling, distance and space in voice, and dialogue-first mixing.
+description: Keeps every character's voice identical across all episodes, like their visual identity. Covers fixed per-character voice profiles, generating once and reusing reference audio, the bundled VoiceStudio/OmniVoice local engine and its licence limits, script-driven emotional performance, single-pass multi-speaker dialogue, the non-verbal voice layer, voice-drift measurement, ageing and state variants, code-switching and dialect handling, distance and space in voice, dialogue-first mixing, and user-supplied voice cloning.
 ---
 
 # Voice Consistency
@@ -102,3 +102,23 @@ Master the final audio of every video to one consistent loudness: target −14 L
 ## 12. Web-Series Voices
 
 A web series typically has 5–10 characters. Each of them needs a DISTINCT voice that stays consistent across all episodes — distinct enough that a listener can tell who is speaking without seeing the screen, and stable enough that episode 1 and episode 10 sound like the same people. Keep one voice profile per character, one reference audio per character, and one prosody fingerprint per character, and check all of them in the episode quality-control checklist before delivery.
+
+## 13. User-Supplied Voice Cloning
+
+A user may supply a real person's voice — their own, or someone else's — as a character's voice. This is the voice parallel of the character generator's user-supplied picture rule: a supplied voice is used exactly as given, not redesigned. The workflow is record, clone, verify, lock.
+
+**Intake — what the user supplies.** A clean recording of the person's voice, in the language the character will speak; whose voice it is; which character it belongs to (name + ID); and the words spoken in the recording, where the engine asks for a transcript (ref_text). Do not start cloning until all four are known. If any piece is missing, ask once for it.
+
+**Recording requirements.** Quiet room, no background music, no background noise, no other voices. Clear, natural speech at a normal pace — not whispered, not shouted, not read in a monotone. A few seconds minimum; longer is better — a longer clean recording clones more accurately. Keep the transcript of the recording with the supplied audio, because the cloning engine may ask for the reference text (ref_text) alongside the reference audio (ref_audio). If a recording is noisy, too short, or muffled, say so plainly and ask for a re-recording. Never build a character's permanent voice from a bad recording.
+
+**Cloning — VoiceStudio Voice Cloning / OmniVoice zero-shot.** Clone with the bundled engine: the supplied recording is the reference audio (ref_audio), plus its transcript (ref_text) where the engine asks for it. Use the character's fixed profile from §1 (tags and seed) — the clone replaces the generated voice, not the profile. Generate a test line first: one line of the character's own dialogue, in the character's language, before locking anything.
+
+**Verification — confirm it sounds like that person.** Play the test line back and confirm with the user that it sounds like that person before locking. If it does not match, re-record (longer, cleaner) and try again. Never lock a bad clone. A clone is locked only on the user's explicit approval.
+
+**Locking — the voice is fixed forever.** Save the approved recording and the fixed profile in the character's own folder. They become that character's voice reference forever. Every line in every episode is generated from that reference, under §2. Never regenerate the character's voice from scratch. Never swap voices between characters. One person's recording belongs to one character only, unless the user explicitly asks for a change.
+
+**Multi-voice — one recording per person per character.** Five people means five recordings and five characters: one reference audio per person, one character per reference. Each character keeps their own profile, reference audio, and prosody fingerprint (§12). Check all of them in the episode QC checklist before delivery.
+
+**Consent and privacy.** Clone a real person's voice only with that person's permission, for the agreed use; the person can withdraw it. Never make a real person say something they never said without a clear label. Keep a consent record for every voice used — who gave it, for what use, and when. These are the same real-person safeguards and consent records that govern real photos (Section 25 item 17 and Section 30 item 30.34); they apply to real voices in full. Voice data stays private in the character's own folder. Never commit a voice recording to the public repository.
+
+**Drift — checked against the original recording.** Every line and every episode is checked against the ORIGINAL supplied recording under §7 (speaker-embedding similarity plus the prosody fingerprint). If similarity falls below the project's threshold, regenerate the line — do not accept drift.

@@ -25,7 +25,7 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 113 numbered entries (102 distinct systems, each named and checkable)
+and 114 numbered entries (103 distinct systems, each named and checkable)
 covering identity, voice, performance, camera direction,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
@@ -158,15 +158,15 @@ their PATH changes take effect.
 5. **Get the episode.** The assistant generates with the registered
    characters and voices, runs the QC checklist, and delivers.
 
-## Features — 113 numbered entries (102 distinct systems)
+## Features — 114 numbered entries (103 distinct systems)
 
-The complete system is 113 numbered entries across the skills and
-docs — 102 distinct systems. (Eleven of the 12 professional systems are listed
+The complete system is 114 numbered entries across the skills and
+docs — 103 distinct systems. (Eleven of the 12 professional systems are listed
 twice: once in the production-systems skill and once in
 docs/01-production-systems.md — the script-driven automatic camera angles
 system is numbered in the skill only, and the video regeneration, cinematic
-power, live-action & VFX, and emotional performance systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 + 6 + 7 = 102 distinct
-systems, 113 listed entries.) They are grouped in nine layers: a
+power, live-action & VFX, emotional performance, and user-supplied voice cloning systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 + 6 + 7 + 1 = 103 distinct
+systems, 114 listed entries.) They are grouped in nine layers: a
 character and voice foundation, humanized production, professional
 production, language, captions, and format, agency advertising, video
 regeneration, cinematic power, live-action & VFX, and emotional performance. The skill files in
