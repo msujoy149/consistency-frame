@@ -18,6 +18,11 @@ characters/<character-id>/
   reference-three-quarter.jpg
   reference-full-body.jpg
   reference-expressions.jpg  # expression sheet
+  expressions/              # expression library — one file per expression
+                            # (<expression-name>.jpg); grows on demand, see
+                            # "Expression Auto-Generation and Library"
+  model-sheet.jpg           # turnaround (front/side/back) + detail panels
+                            # (face, hands, feet) — the identity anchor
   voice-reference.mp3   # voice reference audio
 ```
 
@@ -66,7 +71,7 @@ always remain separate.
 
 A character name visibly written ON the image is NOT mandatory. If the
 user gives photos and says in the message whose they are (for example,
-"these are Serena's pictures"), that binds the images to that character.
+"these are <character-name>'s pictures"), that binds the images to that character.
 
 - A name written on the image is recommended, because it makes
   identification more reliable.
@@ -90,6 +95,48 @@ user gives photos and says in the message whose they are (for example,
   overwrite one character's record with another's, and never reset the
   whole registry when adding a new character.
 
+## Character Generator — Two Ways to Create a Character
+
+A character enters the registry in one of two ways. Both end in the
+same place: a registered character with a name, a unique ID, an
+approved reference, and explicit authorization (see "Registration
+Rules").
+
+### 1. User-supplied reference
+
+When the user gives a picture and says "use this as my character",
+use exactly that picture — that character — as the reference. Do not
+reinterpret it, redraw it, or replace it with a generated look. The
+supplied picture IS the character; the registration rules then apply
+(name + unique ID + explicit authorization) before it becomes
+permanent.
+
+### 2. AI-generated on request
+
+The user does NOT have to supply all reference pictures. When asked,
+the AI generates a character itself — from the user's description —
+and SHOWS it to the user first ("this is how the character looks
+now") for review. The user may ask for changes, and the AI shows the
+revised version again.
+
+Only if the user likes it and says "done — use this one" (explicit
+approval to use that generated version) does it become the registered
+character under that name and ID. From then on, forever, that
+character keeps the same structure in every scene and episode —
+structure locked from the approved version; clothing and props still
+vary per scene (see "Identity Structure: Fixed vs. Scene-Variable"
+and "Identity Anchoring").
+
+### Approval gate
+
+No generated character becomes permanent without the user's explicit
+"done" approval. A generated character shown for review is a draft,
+not a registration. After approval it enters the Character Registry
+like any registered character: name + unique ID + approved reference
+image + authorization. A generated character is never silently
+substituted for an approved one, and an approved character is never
+quietly replaced by a new generation.
+
 ## Identity Resolution
 
 A name in a script resolves to that character's ID + reference image +
@@ -97,8 +144,8 @@ voice + prompt block. Each character is resolved separately, so faces
 don't merge.
 
 - Recognize character names naturally within sentences, scripts, and
-  dialogue — for example, "Robin is walking through a beautiful garden"
-  or "Robin meets Daniel near the railway station." The intended
+  dialogue — for example, "<character-name> is walking through a beautiful garden"
+  or "<character-name> meets <another-character-name> near the railway station." The intended
   registered character is identified without requiring the user to repeat
   technical identification instructions.
 - Never confuse two characters or substitute one character for another.
@@ -133,6 +180,28 @@ changes. Do not generate a different-looking person simply because the
 scene or clothing has changed. Character identity takes priority over
 stylistic variation.
 
+## Outfit Consistency — Script-Driven
+
+Clothing is scene-variable, but it is never random. Outfits follow the
+script and the user's instruction — nothing else.
+
+1. **Selected outfit stays consistent.** The outfit the user selects
+   or gives for a character is used exactly as-is in every scene,
+   until the user says to change it.
+2. **Scene-driven change allowed.** When the script clearly needs it
+   (for example, the character goes swimming, so the outfit changes
+   for that scene), the outfit may change for that scene.
+3. **After a change, the new outfit holds.** The changed outfit then
+   stays consistent in that context — it does not change randomly
+   again.
+4. **Script-driven only.** An outfit changes only on the user's word
+   or a clear scene need — never randomly, never by the AI's own
+   choice.
+
+The current outfit per character per scene is recorded in the wardrobe
+registry (docs/02-extended-systems.md, item 4); the continuity tracker
+and the QC check verify clothing against it in every shot.
+
 ## 100% Reference Fidelity
 
 The character is built 100% from the reference image(s) provided.
@@ -149,6 +218,136 @@ The character is built 100% from the reference image(s) provided.
   generated interpretation.
 - Never modify or delete an existing character record without the user's
   explicit authorization.
+
+## Identity Anchoring
+
+Every generation of a registered character reuses the same approved
+reference: the same reference images, the same turnaround + detail
+sheet, the same fixed prompt block, and the same seed. The identity is
+never rebuilt from a fresh interpretation, and a new render is never
+treated as the reference.
+
+The structure must stay 100% identical across scenes and episodes —
+face, eyes, nose, mouth, hands, feet, proportions, height. If a render
+drifts from the sheet, regenerate against the sheet; do not accept the
+drift and do not quietly update the stored identity to match it.
+
+## Turnaround and Detail Reference Sheet
+
+Every registered character gets one turnaround + detail sheet, built
+from the reference images and stored in the character's folder as
+`model-sheet.jpg`. It is the identity anchor for every scene:
+
+- **Turnaround:** head-turn views — front, 3/4 left, left profile,
+  back, right profile, 3/4 right.
+- **Expression sheet:** twelve expressions — Neutral, Smile, Laugh,
+  Excited, Curious, Surprised, Worried, Determined, Sad, Tearful,
+  Angry, Thinking.
+- **Detail panels:** close-ups of the face, hands, and feet.
+
+Check every new scene against this sheet, not only against a single
+photo, so the face, height, and body stay the same from every angle.
+The sheet is built once from the approved references; it is updated
+only when the user explicitly authorizes a change to the stored
+identity, and the change is recorded.
+
+## Face-Consistency Correction Method
+
+When a face drifts, fix it with this loop — it is the method that
+works. Use it for every generation, not only after a drift is noticed.
+
+1. **Definitive reference.** One user-approved image per character is
+   the anchor. EVERY generation re-uses it as an identity reference —
+   never generate a character without it.
+2. **Front-facing for face-critical shots.** For shots where the face
+   matters, the face is toward the camera, looking directly at it. A
+   fully visible face anchors identity; profile and three-quarter
+   angles drift the face more, so use them only when the script needs
+   them.
+3. **Explicit no-change instruction in every prompt.** Every prompt
+   states it: face and structure 100% identical; do not change the
+   face.
+4. **Fresh generation, never edit, when the face drifts.** Never
+   continue from a drifted image — never edit, inpaint, or "fix" the
+   drifted render. Regenerate from the approved reference.
+5. **Verify before delivering.** Compare the new face against the
+   definitive reference before delivering; if it drifted, repeat the
+   loop.
+
+## Reference Matching and Angle-Matched Verification
+
+### Reference matching is mandatory
+
+Every generation is matched against the approved reference FIRST,
+then made. No exceptions. Before generating a shot, re-inject the
+reference images, the turnaround + detail sheet, the fixed prompt
+block, and the seed (see "Identity Anchoring"), and check the planned
+shot against them.
+
+### Script-driven angle and expression
+
+The angle (front, back, profile) and the expression (laughing, sad,
+determined, and so on) follow the script and the prompt — whoever
+instructs decides. The script chooses the angle and the expression;
+the reference anchors the identity inside that choice. This is
+explicit: the angle and expression are never chosen at random, and
+never defaulted to a "safe" front view when the script asks for
+something else.
+
+### Angle-matched verification
+
+When verifying a generated shot, compare it against the reference
+sheet's MATCHING-angle view — not against the front view only. The
+character sheet carries head-turn views: front, 3/4 left, left
+profile, back, right profile, 3/4 right. A left-profile shot is
+verified against the left-profile view; a back shot against the back
+view.
+
+Compare an expression against the sheet's MATCHING expression panel.
+The expression sheet carries twelve expressions: Neutral, Smile,
+Laugh, Excited, Curious, Surprised, Worried, Determined, Sad,
+Tearful, Angry, Thinking. A laughing shot is verified against the
+Laugh panel; a sad shot against the Sad panel.
+
+This complements the front-facing anchor rule ("Face-Consistency
+Correction Method"): the front view anchors the identity, the script
+chooses the angle and expression, and the matching reference panel
+anchors the identity inside that angle and expression. If the matching
+panel does not exist yet, build it from the approved reference before
+verifying against it.
+
+## Expression Auto-Generation and Library
+
+Not every expression is in the supplied references — the system
+handles that gap automatically.
+
+1. **Generate the missing ones.** If the user does not supply all
+   expressions, the assistant generates the missing ones itself —
+   from the character's definitive reference, keeping face and
+   structure 100% identical, changing only the expression. Each
+   generated expression is verified against the definitive reference
+   before it is saved (see "Face-Consistency Correction Method" and
+   "Reference Matching and Angle-Matched Verification").
+2. **Save each one into the expression library.** Each generated
+   expression is saved into that character's expression library in
+   the character's folder:
+   `characters/<character-id>/expressions/<expression-name>.jpg` —
+   using the canonical expression names (neutral, smile, laugh,
+   excited, curious, surprised, worried, determined, sad, tearful,
+   angry, thinking). The library lives with the character's data, in
+   the private overlay — never in the public repository.
+3. **Reuse, never regenerate twice.** Next time the same expression
+   is needed, the assistant REUSES the saved one — never regenerates
+   it. Check the library first; generate only what is missing.
+4. **The library grows on demand.** The library grows one expression
+   at a time, as scripts need them. A new expression is generated,
+   verified, and saved the first time a script asks for it; after
+   that it is part of the character's stored set.
+5. **The library persists across sessions.** The saved library is
+   what later work draws from. It must stay in the character's
+   folder, visible and available to the assistant in later sessions,
+   and it must survive across sessions — it is part of the character
+   record, backed up with it.
 
 ## Character Recall
 

@@ -15,25 +15,53 @@ characters/
     reference-three-quarter.jpg
     reference-full-body.jpg
     reference-expressions.jpg
+    expressions/              # expression library — one file per expression
+                            # (<expression-name>.jpg); grows on demand
+    model-sheet.jpg           # turnaround (front/side/back) + detail panels
+                            # (face, hands, feet) — the identity anchor
     voice-reference.mp3     # voice reference audio
 ```
 
 `character.yaml` example:
 
 ```yaml
-id: char-riya-001
-name: Riya
-age: 8
-gender: female
+id: char-001
+name: <character-name>
+age: <age>
+gender: <gender>
 look: >
-  8-year-old Bengali girl, round cheerful face, big dark eyes,
-  shoulder-length black hair, same face in every shot
+  <fixed identity description: face, eyes, nose, mouth, hair,
+  build, height, distinctive features — the same in every shot>
 voice:
-  tags: "child, female, high pitch"
-  seed: 11
-  language: bn
+  tags: "<voice tags>"
+  seed: <seed>
+  language: <language-code>
   ref_audio: voice-reference.mp3
 ```
+
+## Turnaround and detail reference sheet
+
+Every registered character gets one turnaround + detail sheet, built
+from the reference images — the identity anchor for every scene:
+
+- **Turnaround:** head-turn views — front, 3/4 left, left profile,
+  back, right profile, 3/4 right.
+- **Expression sheet:** twelve expressions — Neutral, Smile, Laugh,
+  Excited, Curious, Surprised, Worried, Determined, Sad, Tearful,
+  Angry, Thinking.
+- **Detail panels:** close-ups of the face, hands, and feet.
+
+Check every new scene against this sheet, not only against a single
+photo, so the face, height, and body stay the same from every angle.
+The sheet is stored in the character's folder as `model-sheet.jpg`. If
+a new render does not match the sheet, the registration or the render
+is wrong — fix it before any video uses that character.
+
+Expressions the user did not supply are generated from the definitive
+reference (face and structure unchanged), saved per character under
+`expressions/<expression-name>.jpg`, and reused from then on — never
+generated twice. See "Expression Auto-Generation and Library" in
+`docs/07-character-registry.md`.
 
 ## Registration rules
 
@@ -42,13 +70,18 @@ Registering a character takes all three of these, in one go:
 1. **Reference image(s)** — 3–4 photos (front, 3/4, full body,
    expressions). Clear, well-lit, face to camera, neutral expression.
    A name written on the image is **not** mandatory: if you give photos
-   and say in your message whose they are ("these are Serena's
-   pictures"), that binds them. A name on the image is required only
+   and say in your message whose they are ("these are
+   <character-name>'s pictures"), that binds them. A name on the image is required only
    when several characters' images are uploaded together in one batch.
 2. **Name + unique ID** in the message. A duplicate name with a
    different ID stops the registration and asks you first.
 3. **Explicit authorisation** — e.g. "Register this character
    permanently." Uploading an image alone does not register a character.
+
+A character can also be created the other way round: ask the AI to
+generate one and show it to you first — it only becomes permanent
+when you say "done — use this one". See "Character Generator" in
+`docs/07-character-registry.md`.
 
 ## How identity is resolved
 
@@ -61,6 +94,13 @@ height, and structure.
 
 Identity structure is fixed — eyes, nose, mouth, face, hands, feet stay
 the same in every scene — while clothing and props change with the scene.
+
+Identity anchoring: every generation reuses the same approved
+reference — the same reference images, the same turnaround + detail
+sheet, the same fixed prompt block, and the same seed. The identity is
+never rebuilt from a fresh interpretation. The structure must stay 100%
+identical across scenes and episodes; if it drifts, regenerate against
+the sheet.
 
 ## Private overlay (read this before adding a character)
 

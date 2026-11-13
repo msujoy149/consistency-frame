@@ -59,6 +59,88 @@ Per-platform install details are in
 | Muse (Meta) | Clone into the workspace and run `./setup.sh` |
 | Any other tool | `npx skills add msujoy149/consistency-frame` or `gh skill install msujoy149/consistency-frame` |
 
+## Local install — Mac, Windows, Linux
+
+To install on your own computer (not only inside an AI platform), use a
+terminal. The full per-OS guide — prerequisites, what `setup.sh` does,
+the voice-model download, verification, and troubleshooting — is in
+[`docs/06-installation.md`](docs/06-installation.md).
+
+> Honest note: the Linux path below was verified end-to-end on a Linux
+> machine. The Mac and Windows commands were checked against the
+> official installer docs (brew.sh, bun.sh, astral.sh/uv, git-scm.com,
+> Microsoft Learn) — no Mac or Windows machine was available here to
+> run them on.
+
+### Mac
+
+```bash
+# Homebrew (skip if you already have it)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+# Prerequisites (Python comes via uv — no separate Python install needed)
+brew install git bun uv node ffmpeg
+# Consistency Frame
+git clone https://github.com/msujoy149/consistency-frame.git
+cd consistency-frame
+./setup.sh
+```
+
+### Linux (Ubuntu / Debian)
+
+```bash
+# Prerequisites
+sudo apt update && sudo apt install -y git curl unzip ffmpeg
+# Node.js 22 LTS (Ubuntu's own nodejs package is old — use NodeSource)
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+# bun and uv (official installers; open a new terminal afterwards so PATH picks them up)
+curl -fsSL https://bun.com/install | bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# Consistency Frame
+git clone https://github.com/msujoy149/consistency-frame.git
+cd consistency-frame
+./setup.sh
+```
+
+### Windows — WSL (recommended)
+
+```powershell
+# PowerShell as Administrator: install WSL + Ubuntu, then restart
+wsl --install
+```
+
+Then open Ubuntu and follow the Linux steps above. This is the
+recommended Windows path: `setup.sh` is a bash script, and WSL gives it
+a real Linux shell. Git Bash does not always ship `make`, which
+OpenMontage's setup needs.
+
+### Windows — Git Bash
+
+```powershell
+# PowerShell as Administrator: Git, Node.js LTS, FFmpeg
+winget install --id Git.Git -e --source winget
+winget install --id OpenJS.NodeJS.LTS -e --source winget
+winget install --id Gyan.FFmpeg -e --source winget
+# PowerShell: bun and uv
+powershell -c "irm bun.sh/install.ps1 | iex"
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Then in Git Bash:
+
+```bash
+git clone https://github.com/msujoy149/consistency-frame.git
+cd consistency-frame
+./setup.sh
+```
+
+Notes: the `Git.Git` winget package is not maintained by the Git for
+Windows project and may lag the latest official release — the installer
+from git-scm.com is the alternative. If `make --version` reports nothing
+in Git Bash, the OpenMontage step in `setup.sh` will say so; use WSL for
+that step. Close and reopen the terminal after installing bun/uv so
+their PATH changes take effect.
+
 ## Quick start
 
 1. **Install** (above) and run `./setup.sh`.
@@ -99,9 +181,25 @@ system in full.
   several are more reliable.
 - **Character recall.** Ask any time and the system shows the character
   exactly as stored, so you can check face, height, and structure.
+- **Turnaround and detail reference sheet.** Every character gets one
+  sheet — front, side, and back views plus close-ups of face, hands,
+  and feet — built from the reference images and stored as
+  `model-sheet.jpg`. Every new scene is checked against it, so the
+  face, height, and body stay the same from every angle.
+- **Identity anchoring.** Every generation reuses the same approved
+  reference — the same reference images, the same sheet, the same fixed
+  prompt block, and the same seed. The identity is never rebuilt from a
+  fresh interpretation; the structure stays 100% identical across
+  scenes and episodes.
+- **Expression library.** Expressions the user did not supply are
+  generated from the definitive reference (face and structure
+  unchanged), saved per character, and reused — never generated twice.
 - **Fixed structure, variable clothing.** Eyes, nose, mouth, face, hands,
   and feet stay the same in every scene. Clothing and props change with
-  the scene.
+  the scene — but never randomly: the outfit the user selects stays
+  exactly as-is until the user says to change it, or the script clearly
+  needs a change (for example, swimming), and the new outfit then holds
+  in that context.
 - **Multi-character scenes, no overlap.** 3–5 characters together is
   fine. Natural contact is allowed — a hand on a shoulder, holding
   hands, touching hair — but one character or object must never go
@@ -223,14 +321,25 @@ Registering a character takes all three of these, in one go:
 1. **Reference image(s)** — 3–4 photos (front, 3/4, full body,
    expressions). Clear, well-lit, face to camera, neutral expression.
    A name written on the image is **not** mandatory: if you give photos
-   and say in your message whose they are ("these are Serena's
-   pictures"), that binds them. A name on the image is required only
+   and say in your message whose they are ("these are
+   <character-name>'s pictures"), that binds them. A name on the image is required only
    when several characters' images are uploaded together in one batch.
-2. **Name + unique ID** in the message — e.g. `riya` with ID
-   `char-riya-001`. A duplicate name with a different ID stops the
+2. **Name + unique ID** in the message — e.g. `<character-name>` with ID
+   `char-001`. A duplicate name with a different ID stops the
    registration and asks you first.
 3. **Explicit authorisation** — e.g. "Register this character
    permanently." Uploading an image alone does not register a character.
+
+### Two ways to create a character
+
+- **You supply the picture.** Give a picture and say "use this as my
+  character" — that picture, exactly as given, is the character.
+- **The AI generates it.** You do not have to supply all pictures:
+  ask the AI to generate the character, it shows it to you first, and
+  only when you say "done — use this one" does it become your
+  registered character. From then on it keeps the same structure in
+  every scene and episode — locked from the approved version, while
+  clothing and props still vary per scene.
 
 Everything about a character — images, voice, prompt block — lives in
 that character's own folder. Character data is **private by default**

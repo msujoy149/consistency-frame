@@ -3,7 +3,8 @@
 #
 # Installs the bundled components and the skills:
 #   1. Fetches the bundled components (VoiceStudio for voice, OpenMontage
-#      for long-form video) — by plain git clone. Their original
+#      for long-form video) — by plain git clone, pinned to a tested
+#      commit (VoiceStudio 2f2f5a9, OpenMontage fecb9a1). Their original
 #      AGPL-3.0 licences stay intact inside each component.
 #      (A plain clone is the reliable path: the GitHub push that
 #      publishes this repo carries files only, so the tree has no
@@ -43,7 +44,7 @@ fi
 echo "-- Installing bundled components (VoiceStudio + OpenMontage) --"
 
 clone_component() {
-  local name="$1" url="$2" dir="$3"
+  local name="$1" url="$2" dir="$3" pin="$4"
   if [ -d "$dir/.git" ]; then
     echo "-- $name already present --"
     return 0
@@ -53,19 +54,32 @@ clone_component() {
     echo "  rm -rf $dir"
     return 1
   fi
-  echo "-- Cloning $name (bundled component) --"
+  echo "-- Cloning $name (bundled component, pinned to ${pin:0:7}) --"
   mkdir -p "$(dirname "$dir")"
-  if git clone --depth 1 "$url" "$dir"; then
-    echo "-- $name ready --"
-  else
+  if ! git clone --depth 1 "$url" "$dir"; then
     echo "WARNING: could not clone $name from $url (network?). Retry later:"
     echo "  git clone $url $dir"
     return 1
   fi
+  # A --depth 1 clone only has the default branch tip, so fetch the
+  # pinned commit explicitly, then check it out. The fetch needs the
+  # FULL 40-character SHA: a short SHA is read as a ref name and fails
+  # with "couldn't find remote ref".
+  if (cd "$dir" && git fetch --depth 1 origin "$pin" && git checkout "$pin"); then
+    echo "-- $name ready (pinned to ${pin:0:7}) --"
+  else
+    echo "WARNING: could not check out pinned commit $pin for $name. Removing the clone; run ./setup.sh again to retry."
+    rm -rf "$dir"
+    return 1
+  fi
 }
 
-clone_component "VoiceStudio" "https://github.com/debpalash/VoiceStudio" "components/voicestudio" || true
-clone_component "OpenMontage" "https://github.com/OpenMontageInc/OpenMontage" "components/openmontage" || true
+# Pinned commits (verified to exist upstream, 2026-11-13).
+# Full 40-character SHAs — see the note in clone_component above.
+# VoiceStudio 2f2f5a9b0e982c6147efc6baaeae62936f29b79b,
+# OpenMontage fecb9a1e3cc23ef84de30b272059457a427f16f8.
+clone_component "VoiceStudio" "https://github.com/debpalash/VoiceStudio" "components/voicestudio" "2f2f5a9b0e982c6147efc6baaeae62936f29b79b" || true
+clone_component "OpenMontage" "https://github.com/OpenMontageInc/OpenMontage" "components/openmontage" "fecb9a1e3cc23ef84de30b272059457a427f16f8" || true
 
 # 2. Skills -------------------------------------------------------------
 echo "-- Installing skills into .agents/skills/ --"
@@ -114,20 +128,30 @@ if [ -d "components/voicestudio" ]; then
     echo "follow components/voicestudio README instructions manually."
   fi
 else
-  echo "VoiceStudio is not installed — run ./setup.sh again, or clone it:"
-  echo "  git clone https://github.com/debpalash/VoiceStudio components/voicestudio"
+  echo "VoiceStudio is not installed — run ./setup.sh again."
 fi
 
 # 4. OpenMontage (long-form video) ---------------------------------------
 if [ -d "components/openmontage" ]; then
-  echo "-- OpenMontage found. Run its own setup when you need it: --"
-  echo "    cd components/openmontage && make setup"
-  echo "  (Needs Python 3.12, Node, and ffmpeg; no API keys are set by"
-  echo "  this script. Add provider keys to components/openmontage/.env"
-  echo "  only when you need a paid image/video provider.)"
+  echo "-- OpenMontage found. Running its own setup (make setup; downloads the Node + Python dependencies, takes a few minutes) --"
+  echo "  (Needs Python 3.10+ — uv provides it if installed — plus Node and ffmpeg."
+  echo "  No API keys are set by this script. Add provider keys to"
+  echo "  components/openmontage/.env only when you need a paid provider.)"
+  if command -v make >/dev/null 2>&1; then
+    if (cd components/openmontage && make setup); then
+      echo "OpenMontage set up."
+    else
+      echo "WARNING: OpenMontage 'make setup' failed. Run it manually to see the error:"
+      echo "  cd components/openmontage && make setup"
+    fi
+  else
+    echo "WARNING: 'make' is not installed, so OpenMontage cannot be set up here."
+    echo "On macOS/Linux install it with your package manager; on Windows use WSL"
+    echo "(Git Bash does not always ship make). Then run:"
+    echo "  cd components/openmontage && make setup"
+  fi
 else
-  echo "OpenMontage is not installed — run ./setup.sh again, or clone it:"
-  echo "  git clone https://github.com/OpenMontageInc/OpenMontage components/openmontage"
+  echo "OpenMontage is not installed — run ./setup.sh again."
 fi
 
 echo ""

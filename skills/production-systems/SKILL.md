@@ -71,7 +71,7 @@ For each registered character, keep a model sheet — front view, three-quarter 
 
 ### B4. Wardrobe, Prop, and Location Registry
 
-Record every outfit, prop, and location a character uses, with the episode and scene where it appeared. A character wears the outfit the scene requires, and an outfit, prop, or location never changes by accident between shots. Wrinkles, stains, wear, fit, and layering persist across shots; fabric creases change with pose, not randomly per shot.
+Record every outfit, prop, and location a character uses, with the episode and scene where it appeared. A character wears the outfit the scene requires, and an outfit, prop, or location never changes by accident between shots. Wrinkles, stains, wear, fit, and layering persist across shots; fabric creases change with pose, not randomly per shot. Outfit consistency is script-driven (see the `character-consistency` skill): the outfit the user selects or gives stays exactly as-is until the user says to change it; when the script clearly needs a change (for example, swimming), the outfit changes for that scene and the new outfit then holds in that context. An outfit changes only on the user's word or a clear scene need — never randomly.
 
 ### B5. Clip-Boundary Seam Continuity
 

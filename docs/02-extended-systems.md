@@ -67,6 +67,17 @@ and scene where it appeared.
 - When a new outfit, prop, or location is introduced, log it on first use
   so later episodes can reuse it exactly.
 
+Outfit consistency is script-driven (full rule in
+docs/07-character-registry.md, "Outfit Consistency — Script-Driven"):
+
+- The outfit the user selects or gives stays exactly as-is in every
+  scene, until the user says to change it.
+- When the script clearly needs it (for example, swimming), the outfit
+  may change for that scene — and the new outfit then stays consistent
+  in that context; it does not change randomly again.
+- An outfit changes only on the user's word or a clear scene need —
+  never randomly, never by the AI's own choice.
+
 ## 5. Clip-Boundary Seam Continuity
 
 Videos are built in clips. The last frame of one clip must match the first

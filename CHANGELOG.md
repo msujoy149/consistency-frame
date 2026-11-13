@@ -7,6 +7,73 @@ lists what changed.
 
 ## [Unreleased]
 
+### Added
+
+- Local install on Mac, Windows, and Linux via the terminal: a "Local
+  install" section in the README and a full per-OS guide in
+  docs/06-installation.md — exact commands per OS (Mac: Homebrew +
+  `brew install git bun uv node ffmpeg`; Linux: apt + NodeSource +
+  official bun/uv installers; Windows: Git Bash path with winget +
+  PowerShell installers, and a WSL path), prerequisites, what
+  `setup.sh` does, the OmniVoice model download step, verification,
+  and troubleshooting. The Linux path was verified end-to-end on a
+  Linux machine; Mac/Windows commands were checked against official
+  installer docs only — no Mac or Windows machine was available to run
+  them on.
+- `setup.sh` now pins the bundled components to tested commits
+  (VoiceStudio `2f2f5a9`, OpenMontage `fecb9a1`, using their full
+  40-character SHAs — a short SHA fails the fetch with "couldn't find
+  remote ref") and runs OpenMontage's `make setup` instead of only
+  printing the command; a missing `make` or a failed step is reported
+  honestly, not claimed as success.
+- Generic character-consistency system, documented as a reusable
+  template in docs/07-character-registry.md, skills/
+  character-consistency/SKILL.md, characters/README.md, and the
+  README: registration (name + unique ID + reference image(s) +
+  explicit authorization, all required; an image alone does not
+  register), structure fixed / clothing and props variable per scene,
+  turnaround + detail reference sheet (front/side/back views, face/
+  hands/feet close-ups, stored as `model-sheet.jpg`) as the identity
+  anchor for every scene, and identity anchoring (the same approved
+  reference reused in every generation; structure 100% identical
+  across scenes and episodes).
+- Character Generator — two ways to create a character: a
+  user-supplied picture used exactly as given, or an AI-generated
+  character shown to the user first and registered only on explicit
+  "done" approval, after which its structure is locked from the
+  approved version. No generated character becomes permanent without
+  that approval.
+- Privacy scrub: all example character names in the repo replaced
+  with generic placeholders (`<character-name>`, `char-001`); no
+  character pictures or real character data in the repo.
+- Outfit consistency — script-driven: the outfit the user selects
+  stays exactly as-is until the user says to change it; a scene-driven
+  change (for example, swimming) is allowed, and the new outfit then
+  holds in that context. Outfits change only on the user's word or a
+  clear scene need — never randomly. Documented in the
+  character-consistency skill, docs/07, the wardrobe registry
+  (docs/02, production-systems skill), and the README.
+- Face-consistency correction method: one user-approved image as the
+  definitive reference reused in every generation, front-facing for
+  face-critical shots, an explicit no-change instruction in every
+  prompt, fresh regeneration (never editing) when the face drifts, and
+  verification against the reference before delivery.
+- Reference matching is mandatory for every generation, angles and
+  expressions follow the script explicitly, and verification is
+  angle-matched: a shot is compared against the sheet's matching
+  head-turn view (front, 3/4 left, left profile, back, right profile,
+  3/4 right) and its matching expression panel (twelve expressions),
+  instead of comparing every angle against the front view only. The
+  turnaround sheet now carries those six head-turn views and twelve
+  expression panels.
+- Expression auto-generation and library: missing expressions are
+  generated from the definitive reference (face and structure 100%
+  identical), saved per character under
+  `characters/<character-id>/expressions/<expression-name>`, and reused
+  from then on — never regenerated twice. The library grows on demand
+  as scripts need new expressions, and persists across sessions as
+  part of the character record.
+
 ### Fixed
 
 - Audit fixes (deep review of the first release). The "86 systems"
