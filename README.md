@@ -25,7 +25,7 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 117 numbered entries (106 distinct systems, each named and checkable)
+and 119 numbered entries (108 distinct systems, each named and checkable)
 covering identity, voice, performance, camera direction,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
@@ -158,18 +158,20 @@ their PATH changes take effect.
 5. **Get the episode.** The assistant generates with the registered
    characters and voices, runs the QC checklist, and delivers.
 
-## Features — 117 numbered entries (106 distinct systems)
+**Command authority.** This repo commands the assistant: for every video the assistant reads and uses the repo's skills first, and only generates a missing system itself after checking the repo's notes on it (see [`skills/command-authority/SKILL.md`](skills/command-authority/SKILL.md)).
 
-The complete system is 117 numbered entries across the skills and
-docs — 106 distinct systems. (Eleven of the 12 professional systems are listed
+## Features — 119 numbered entries (108 distinct systems)
+
+The complete system is 119 numbered entries across the skills and
+docs — 108 distinct systems. (Eleven of the 12 professional systems are listed
 twice: once in the production-systems skill and once in
 docs/01-production-systems.md — the script-driven automatic camera angles
 system is numbered in the skill only, and the video regeneration, cinematic
-power, live-action & VFX, emotional performance, user-supplied voice cloning, on-demand resource management, language authenticity, and realistic person video systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 + 6 + 7 + 1 + 1 + 1 + 1 = 106 distinct
-systems, 117 listed entries.) They are grouped in twelve layers: a
+power, live-action & VFX, emotional performance, user-supplied voice cloning, on-demand resource management, language authenticity, realistic person video, 2D explainer animation, and command authority systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 + 6 + 7 + 1 + 1 + 1 + 1 + 1 + 1 = 108 distinct
+systems, 119 listed entries.) They are grouped in fourteen layers: a
 character and voice foundation, humanized production, professional
 production, language, captions, and format, agency advertising, video
-regeneration, cinematic power, live-action & VFX, emotional performance, on-demand resources, language authenticity, and realistic person video. The skill files in
+regeneration, cinematic power, live-action & VFX, emotional performance, on-demand resources, language authenticity, realistic person video, 2D explainer animation, and command authority. The skill files in
 `skills/` are the source of truth; the `docs/` folder describes each
 system in full.
 
@@ -424,6 +426,24 @@ Full rules: [`docs/14-language-authenticity.md`](docs/14-language-authenticity.m
 - **Realism, not animation.** Real skin, hair, and cloth behaviour, natural light, no plastic skin, no cartoon look. Realism target 100%, 99.9% as the floor. This is not 2D/3D animation and not live-action footage of a real shoot — it is a realistic video generated from a still photo.
 
 Full rules: [`docs/15-realistic-person.md`](docs/15-realistic-person.md).
+
+### 2D explainer animation — 1 system
+
+- **One idea, told in simple pictures.** A short video that teaches one idea through simple scenes and visual metaphors — flat 2D cartoon / stick-figure explainer, vertical short-form. It is not anime, not 3D CG, not live-action, not a music video, not a trailer.
+- **Style lock.** Flat 2D vector, thick black outlines, flat colour fills, warm neutral backgrounds, a small palette. Two character designs, kept apart: a fuller cartoon figure for the real person, simple stick figures for abstract ideas.
+- **Metaphor system.** Every abstract idea becomes a character or a place — internal conflict is two figures arguing inside the brain, an obstacle is a mountain with a face, the brain itself is a friendly thinking companion. A viewer who mutes the video still gets the idea.
+- **Structure and camera.** One idea per scene, ~10 s per scene, 4–6 scenes for a short video. Slow continuous push-ins inside scenes, slow pans between ideas; scenes flow by camera movement, not by hard cuts.
+- **Almost no on-screen text.** The story is told by visuals and expression; labels only where one word says the whole idea.
+
+Full rules: [`docs/16-explainer-animation.md`](docs/16-explainer-animation.md).
+
+### Command authority — 1 system
+
+- **The repo commands, the assistant follows.** After install, every video is made by reading and using the repo's skills first — a skill that exists in the repo is used, never reinvented. Never generate on your own while ignoring the repo.
+- **Missing skill fallback.** If a needed skill is not in the repo, check the repo's comments and notes about that topic first and follow them; only if the repo gives no comment, generate the system yourself in the repo's skill format, save it as a new skill, and tell the user plainly what was added and why.
+- **Applies to everything.** Every skill in the repo, including future ones, and every platform the repo is installed on.
+
+Full rules: [`docs/17-command-authority.md`](docs/17-command-authority.md).
 
 ## Character registration
 

@@ -4,7 +4,7 @@ This document describes the live-action and VFX layer of Consistency Frame: the 
 
 Nothing in this layer replaces the existing systems. The visual style bible, script-driven camera angles (A12), editing rhythm, script-driven colour grading, the character registry, the cinematic-power layer, and the episode QC checklist all still apply, unchanged. The six systems below add only the live-action and VFX layer on top.
 
-Counting note: these 6 systems are part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 7 emotional performance, 1 user-supplied voice cloning, and 1 on-demand resource management, and 1 language authenticity, and 1 realistic person video systems, the repo holds 106 distinct systems, presented as 117 numbered entries.
+Counting note: these 6 systems are part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 7 emotional performance, 1 user-supplied voice cloning, and 1 on-demand resource management, and 1 language authenticity, and 1 realistic person video, 1 2D explainer animation, and 1 command authority systems, the repo holds 108 distinct systems, presented as 119 numbered entries.
 
 ## 1. Live-Action Human Performance
 

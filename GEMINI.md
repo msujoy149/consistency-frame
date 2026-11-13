@@ -40,6 +40,14 @@ the source of truth. Read them and follow them.
 - `skills/realistic-person/` — a real person's photo becomes a realistic
   moving, speaking person: the face never changes, movement and speech
   are natural, lip-sync follows the language's sounds.
+- `skills/explainer-animation/` — 2D flat cartoon / stick-figure explainer
+  that teaches one idea through simple scenes and visual metaphors: flat
+  2D vector, thick black outlines, small palette, two character designs
+  kept apart, one idea per scene, almost no on-screen text.
+- `skills/command-authority/` — the repo is the command master: read and
+  use the repo's skills first for every video; a missing system is
+  generated only after checking the repo's notes, then saved as a new
+  skill and reported to the user.
 
 Character identity and voice are fixed once registered. The user's
 explicit instructions and script outrank everything else. Character

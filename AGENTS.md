@@ -5,6 +5,16 @@ characters and voices that feel human-made. The skills in `skills/` are
 the source of truth. Read them and follow them; do not invent your own
 versions of these rules.
 
+## Command authority
+
+This repo is the command master: for every video, read and use the
+repo's skills first — a skill that exists in the repo is used, never
+reinvented. If a needed skill is not in the repo, check the repo's
+comments and notes about that topic first and follow them; only if the
+repo gives no comment, generate the system yourself in the repo's skill
+format, save it as a new skill, and tell the user plainly what was added
+and why.
+
 ## Skills (source of truth)
 
 - `skills/character-consistency/` — character registry, identity
@@ -44,6 +54,14 @@ versions of these rules.
 - `skills/realistic-person/` — a real person's photo becomes a realistic
   moving, speaking person: the face never changes, movement and speech
   are natural, lip-sync follows the language's sounds.
+- `skills/explainer-animation/` — 2D flat cartoon / stick-figure explainer
+  that teaches one idea through simple scenes and visual metaphors: flat
+  2D vector, thick black outlines, small palette, two character designs
+  kept apart, one idea per scene, almost no on-screen text.
+- `skills/command-authority/` — the repo is the command master: read and
+  use the repo's skills first for every video; a missing system is
+  generated only after checking the repo's notes, then saved as a new
+  skill and reported to the user.
 
 ## Rules that always apply
 
@@ -71,4 +89,6 @@ Full system documentation lives in `docs/`. Install instructions are in
 `docs/12-emotional-performance.md`, and on-demand resources in
 `docs/13-resource-management.md`, and language authenticity in
 `docs/14-language-authenticity.md`, and realistic person video in
-`docs/15-realistic-person.md`.
+`docs/15-realistic-person.md`, and 2D explainer animation in
+`docs/16-explainer-animation.md`, and command authority in
+`docs/17-command-authority.md`.
