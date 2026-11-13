@@ -83,7 +83,11 @@ A12) reads the script beat first — story function, emotion, relationship
 between the characters, and what the viewer must notice — and lets that
 decide the angle; the angle plan is written into the shot list before
 generation. A12 gives the full shot grammar, the beat-to-angle mapping,
-lens language, and the continuity rules.
+lens language, and the continuity rules. It also covers the case
+where the user gives no script: the system first writes the story
+as beats, then directs the angles from those beats, so the angle
+decision is mandatory whether the script is supplied or generated —
+never skipped, never left to chance, never decided after generation.
 
 ## 3. Negative Prompt Library
 

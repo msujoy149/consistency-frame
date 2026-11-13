@@ -104,7 +104,11 @@ lists what changed.
   across cuts, human-camera imperfection (faint handheld sway, a breath
   of focus hunting, framing corrected mid-shot — subtle, never
   distracting), one angle logic per beat planned in the shot list before
-  generation, and user override wins. Realism target: aim for 100%
+  generation, and user override wins. It also covers no-script
+mode: when the system generates the story itself, it first writes
+the story as beats and then directs the angles from those beats, so
+the angle decision is mandatory in both modes and the shot list with
+angles is part of the generated script. Realism target: aim for 100%
   realistic, human-generated feeling; 99.9% is the floor. Documented as
   A12 in the production-systems skill, cross-referenced from docs/01 §2.
   Counts updated everywhere: 83 distinct systems, 94 numbered entries.

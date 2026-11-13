@@ -77,7 +77,9 @@ The camera angle is never random and never decorative. For every shot, read the 
 
 **9. User override.** Any angle the user names for any shot wins. When the user gives no angle, this system decides — automatically, from the script, every time.
 
-**Check:** every shot in the shot list has an angle justified by its beat (story function, emotion, relationship, what the viewer must notice); no angle chosen by rotation or habit; no unmotivated camera movement; the 180-degree rule and eyelines hold across cuts.
+**10. No-script mode — the system writes, then directs.** When the user gives no script and asks the system to generate the story itself, this system still applies — in full, without exception. The system must FIRST write the story as beats, each beat carrying its story function, emotion, character relationship, and what the viewer must notice, and THEN choose the angle for each beat from those beats, exactly as in the normal script-driven flow. The angle decision is mandatory in both modes — user-supplied script AND system-generated story. It is never skipped, never left to chance, never decided after generation. When the system writes the script, the shot list with angles is part of the script it delivers — the story and its camera direction are generated together, beat by beat. If the system cannot identify a beat's emotion or function, it must ask the user or state its assumption explicitly — it must not silently default to a generic angle.
+
+**Check:** every shot in the shot list has an angle justified by its beat (story function, emotion, relationship, what the viewer must notice); no angle chosen by rotation or habit; no unmotivated camera movement; the 180-degree rule and eyelines hold across cuts; in no-script mode the beats are written before the angles and the shot list with angles is part of the delivered script.
 
 ## Part B — 18 Extended Production Systems
 
