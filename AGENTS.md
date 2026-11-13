@@ -91,7 +91,10 @@ step-by-step order for every video, in §7).
 
 ## Docs
 
-Full system documentation lives in `docs/`. Install instructions are in
+Full system documentation lives in `docs/`. The core systems are in
+`docs/01-production-systems.md`, `docs/02-extended-systems.md`,
+`docs/03-language-captions-format.md`, `docs/04-additional-systems.md`,
+and `docs/05-humanization-systems.md`. Install instructions are in
 `docs/06-installation.md`. The character registry is documented in
 `docs/07-character-registry.md`, and the advertising layer in
 `docs/08-agency-advertising.md`, and video regeneration in
