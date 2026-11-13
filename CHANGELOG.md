@@ -73,6 +73,25 @@ lists what changed.
   from then on — never regenerated twice. The library grows on demand
   as scripts need new expressions, and persists across sessions as
   part of the character record.
+- Agency advertising layer — seven new systems for using a registered
+  AI-generated model as an agency spokesperson across ads (skill:
+  skills/agency-advertising/SKILL.md; doc:
+  docs/08-agency-advertising.md): brand kit (model + logo + colours +
+  tagline + fonts + voice tone, locked per brand), ad formats (9:16,
+  1:1, 16:9, hook in the first 3 seconds, clear CTA, platform safe
+  zones), campaign variants (6s / 15s / 30s cut-downs from one master,
+  A/B variants changing one thing at a time, tracked per variant ID),
+  client isolation (per-client workspaces; model, brand kit, and voice
+  checked against the client's workspace before every generation), AI
+  disclosure and likeness safety (platform disclosure on every ad,
+  likeness check at registration and after drift, never remove
+  watermarks or provenance), product/service consistency (product
+  shots, wording, prices, and claims locked per campaign), and client
+  approval workflow (draft → review → approved → publish; every
+  revision a new version; approval recorded per version). The model
+  itself is a registered character created through the Character
+  Generator; this layer adds only the advertising rules on top. Counts
+  updated everywhere: 82 distinct systems, 93 numbered entries.
 
 ### Fixed
 

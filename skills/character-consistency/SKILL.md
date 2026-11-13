@@ -123,6 +123,8 @@ Only when the user says "done — use this one" does the generated character bec
 
 No generated character becomes permanent without the user's explicit "done" approval. A generated character shown for review is a draft, not a registration. After approval it enters the registry like any registered character. Never silently substitute a generated character for an approved one, and never quietly replace an approved character with a new generation.
 
+**Advertising use.** A generated character can also be the face of an agency's advertising — one model, introduced once, reused across ads for a business's services. The registration and identity rules above do not change; the advertising layer (brand kit, ad formats, campaign variants, client isolation, disclosure, product consistency, client approval) is in the `agency-advertising` skill.
+
 ## 13. Outfit Consistency — Script-Driven
 
 Clothing is scene-variable, but it is never random. Outfits follow the

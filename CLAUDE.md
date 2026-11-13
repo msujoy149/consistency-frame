@@ -12,6 +12,9 @@ the source of truth. Read them and follow them.
 - `skills/humanized-production/` — the 36 humanization systems.
 - `skills/production-systems/` — the 11 professional + 18 extended + 7
   additional systems, plus language, captions, and format rules.
+- `skills/agency-advertising/` — brand kit, ad formats, campaign
+  variants, client isolation, AI disclosure, product consistency,
+  client approval.
 
 Character identity and voice are fixed once registered. The user's
 explicit instructions and script outrank everything else. Character

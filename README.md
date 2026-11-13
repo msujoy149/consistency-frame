@@ -25,7 +25,7 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 86 numbered entries (75 distinct systems, each named and checkable)
+and 93 numbered entries (82 distinct systems, each named and checkable)
 covering identity, voice, performance,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
@@ -156,15 +156,15 @@ their PATH changes take effect.
 5. **Get the episode.** The assistant generates with the registered
    characters and voices, runs the QC checklist, and delivers.
 
-## Features — 86 numbered entries (75 distinct systems)
+## Features — 93 numbered entries (82 distinct systems)
 
-The complete system is 86 numbered entries across the skills and
-docs — 75 distinct systems. (The 11 professional systems are listed
+The complete system is 93 numbered entries across the skills and
+docs — 82 distinct systems. (The 11 professional systems are listed
 twice: once in the production-systems skill and once in
-docs/01-production-systems.md, so 11 + 18 + 3 + 7 + 36 = 75 distinct
-systems, 86 listed entries.) They are grouped in four layers: a
+docs/01-production-systems.md, so 11 + 18 + 3 + 7 + 36 + 7 = 82 distinct
+systems, 93 listed entries.) They are grouped in five layers: a
 character and voice foundation, humanized production, professional
-production, and language, captions, and format. The skill files in
+production, language, captions, and format, and agency advertising. The skill files in
 `skills/` are the source of truth; the `docs/` folder describes each
 system in full.
 
@@ -314,6 +314,34 @@ The system is content-agnostic: kids animation, adult animation, and
 videos from real photos of adults all work the same way. Full rules:
 [`docs/03-language-captions-format.md`](docs/03-language-captions-format.md).
 
+### Agency advertising — 7 systems
+
+- **Brand kit.** The model plus the brand's logo, colours, tagline,
+  fonts, and voice tone profile, locked together in one kit per brand
+  — the single source of truth for every ad.
+- **Ad formats.** 9:16 Reels/Shorts/TikTok, 1:1 feed, 16:9 YouTube,
+  composed for the ratio from the start; hook inside the first 3
+  seconds, clear CTA at the end, safe zones kept clear of platform UI.
+- **Campaign variants.** One master ad cut down to 6s / 15s / 30s,
+  same model, voice, and brand kit; A/B variants change one thing at
+  a time and are tracked per variant ID.
+- **Client isolation.** Per-client workspaces; the model, brand kit,
+  and voice are checked against the client's workspace before every
+  generation — one client's assets never appear in another client's ad.
+- **AI disclosure and likeness safety.** Every ad carries the
+  platform's AI-generated disclosure; the model's face must not
+  resemble any real person; watermarks and provenance are never
+  removed.
+- **Product/service consistency.** Product shots, wording, prices, and
+  claims are locked per campaign and identical across all its ads.
+- **Client approval workflow.** Draft → client review → approved →
+  publish; every revision is a new version, approvals are recorded per
+  version, and only the approved version is published.
+
+The model is a registered character created through the Character
+Generator; this layer adds only the advertising rules on top. Full
+rules: [`docs/08-agency-advertising.md`](docs/08-agency-advertising.md).
+
 ## Character registration
 
 Registering a character takes all three of these, in one go:
@@ -393,6 +421,7 @@ and `description`, plus the full instructions):
 | `voice-consistency` | Voice profiles, VoiceStudio/OmniVoice, single-pass dialogue, voice drift, code-switching |
 | `humanized-production` | The 36 humanization systems |
 | `production-systems` | The 11 professional + 18 extended + 7 additional systems, plus language, captions, and format rules |
+| `agency-advertising` | Brand kit, ad formats, campaign variants, client isolation, AI disclosure and likeness safety, product/service consistency, client approval |
 
 `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` are thin pointers to
 `skills/` — one source of truth, read by every platform.

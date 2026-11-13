@@ -7,8 +7,9 @@ skipping it is visible on screen.
 
 Counting note: these 11 systems also appear as Part A of the
 production-systems skill. Together with the 18 extended, 3
-language/captions/format, 7 additional, and 36 humanization systems,
-the repo holds 75 distinct systems, presented as 86 numbered entries.
+language/captions/format, 7 additional, 36 humanization, and 7 agency
+advertising systems, the repo holds 82 distinct systems, presented as
+93 numbered entries.
 
 ## Production Priority Hierarchy
 

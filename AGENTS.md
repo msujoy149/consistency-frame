@@ -16,6 +16,9 @@ versions of these rules.
   (performance, micro-motion, sound, editing, film finish, backgrounds).
 - `skills/production-systems/` — the 11 professional + 18 extended + 7
   additional systems, plus language, captions, and format rules.
+- `skills/agency-advertising/` — brand kit, ad formats, campaign
+  variants, client isolation, AI disclosure, product consistency,
+  client approval.
 
 ## Rules that always apply
 
@@ -35,4 +38,5 @@ versions of these rules.
 
 Full system documentation lives in `docs/`. Install instructions are in
 `docs/06-installation.md`. The character registry is documented in
-`docs/07-character-registry.md`.
+`docs/07-character-registry.md`, and the advertising layer in
+`docs/08-agency-advertising.md`.

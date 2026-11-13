@@ -137,6 +137,13 @@ image + authorization. A generated character is never silently
 substituted for an approved one, and an approved character is never
 quietly replaced by a new generation.
 
+**Advertising use.** A generated character can also be the face of
+an agency's advertising — one model, introduced once, reused across
+ads for a business's services. The registration and identity rules
+above do not change; the advertising layer is documented in
+`docs/08-agency-advertising.md` (skill:
+`skills/agency-advertising/SKILL.md`).
+
 ## Identity Resolution
 
 A name in a script resolves to that character's ID + reference image +
