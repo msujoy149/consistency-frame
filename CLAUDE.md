@@ -25,6 +25,10 @@ the source of truth. Read them and follow them.
   integration of CG creatures in live footage, water, wetness and
   underwater continuity, practical locations and set extension,
   live-action stunt and action choreography, real-animal performance.
+- `skills/emotional-performance/` — musical performance and
+  stagecraft, crowd as a living character, intimate drama and
+  emotional arc, age performance, instrument performance sync, music
+  as story and memory, cultural authenticity and object storytelling.
 
 Character identity and voice are fixed once registered. The user's
 explicit instructions and script outrank everything else. Character

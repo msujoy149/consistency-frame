@@ -72,7 +72,7 @@ Note: this measurement approach is an inference drawn from face-embedding drift 
 
 ## 8. Voice Ageing and State Variants
 
-Keep per-character voice variants for age, illness, whisper/shout, tiredness, and cold — the voice parallel of visual ageing variants. When the story jumps in time, the voice changes only in the ways time or state would change it, deliberately and consistently, and the change is recorded in the continuity tracker. A time jump never silently creates a different voice.
+Keep per-character voice variants for age, illness, whisper/shout, tiredness, and cold — the voice parallel of visual ageing variants. Age performance — movement, voice, face, and memory at a character's age — is covered by the `emotional-performance` skill; the voice here must match the age that skill describes and stay the same for that character across episodes. When the story jumps in time, the voice changes only in the ways time or state would change it, deliberately and consistently, and the change is recorded in the continuity tracker. A time jump never silently creates a different voice.
 
 Decide the order for each project before starting: voice first, then video matched to the voice; or video first, then voice matched to the video. Follow one order consistently inside a project. Dialogue timing must match the mouth: a line must not finish long before or after the character stops speaking. If lip-sync is not supported on the platform, say so honestly instead of promising it.
 

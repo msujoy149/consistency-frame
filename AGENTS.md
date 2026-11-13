@@ -29,6 +29,10 @@ versions of these rules.
   integration of CG creatures in live footage, water, wetness and
   underwater continuity, practical locations and set extension,
   live-action stunt and action choreography, real-animal performance.
+- `skills/emotional-performance/` — musical performance and
+  stagecraft, crowd as a living character, intimate drama and
+  emotional arc, age performance, instrument performance sync, music
+  as story and memory, cultural authenticity and object storytelling.
 
 ## Rules that always apply
 
@@ -52,4 +56,5 @@ Full system documentation lives in `docs/`. Install instructions are in
 `docs/08-agency-advertising.md`, and video regeneration in
 `docs/09-video-regeneration.md`, and cinematic power in
 `docs/10-cinematic-power.md`, and live-action and VFX in
-`docs/11-live-action-vfx.md`.
+`docs/11-live-action-vfx.md`, and emotional performance in
+`docs/12-emotional-performance.md`.

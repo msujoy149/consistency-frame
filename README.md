@@ -25,7 +25,7 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 106 numbered entries (95 distinct systems, each named and checkable)
+and 113 numbered entries (102 distinct systems, each named and checkable)
 covering identity, voice, performance, camera direction,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
@@ -156,18 +156,18 @@ their PATH changes take effect.
 5. **Get the episode.** The assistant generates with the registered
    characters and voices, runs the QC checklist, and delivers.
 
-## Features — 106 numbered entries (95 distinct systems)
+## Features — 113 numbered entries (102 distinct systems)
 
-The complete system is 106 numbered entries across the skills and
-docs — 95 distinct systems. (Eleven of the 12 professional systems are listed
+The complete system is 113 numbered entries across the skills and
+docs — 102 distinct systems. (Eleven of the 12 professional systems are listed
 twice: once in the production-systems skill and once in
 docs/01-production-systems.md — the script-driven automatic camera angles
 system is numbered in the skill only, and the video regeneration, cinematic
-power, and live-action & VFX systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 + 6 = 95 distinct
-systems, 106 listed entries.) They are grouped in eight layers: a
+power, live-action & VFX, and emotional performance systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 + 6 + 7 = 102 distinct
+systems, 113 listed entries.) They are grouped in nine layers: a
 character and voice foundation, humanized production, professional
 production, language, captions, and format, agency advertising, video
-regeneration, cinematic power, and live-action & VFX. The skill files in
+regeneration, cinematic power, live-action & VFX, and emotional performance. The skill files in
 `skills/` are the source of truth; the `docs/` folder describes each
 system in full.
 
@@ -383,6 +383,18 @@ Full rules: [`docs/10-cinematic-power.md`](docs/10-cinematic-power.md).
 
 Full rules: [`docs/11-live-action-vfx.md`](docs/11-live-action-vfx.md).
 
+### Emotional performance — 7 systems
+
+- **Musical performance and stagecraft.** A live performance on stage: the song has an arc — nervous start, finding the groove, the crowd won over, triumph — and the staging follows it: the lighting brightens as the song builds, the performer's body loosens, the crowd's energy rises. The stage is a warm island in a cool night.
+- **Crowd as a living character.** Hundreds of distinct people, never a copy-paste — each different in face, hat, clothes, age — reacting in waves: a gasp spreads, applause rises, the crowd leans in. The crowd's mood is the scene's barometer; reaction shots cut between the performer and individual crowd faces.
+- **Intimate drama and emotional arc.** A long scene between two people, held for minutes on their faces. The emotional turn is slow — no response, a flicker, recognition, tears, joy — built from micro-expressions, pauses, and silence; the camera stays close and still and lets the faces do the work; the arc is planned beat by beat in the shot list.
+- **Age performance.** Age changes everything: movement slow, trembling, frail; voice slow, thin, frail; face with deep wrinkles, drooping lids, cloudy eyes; mind with memory loss, then a flicker of recognition. The very old act mostly with their eyes and hands. Different ages perform differently in the same scene.
+- **Instrument performance sync.** When a character plays an instrument, the hands must play the music you hear: fingers on the frets match the notes, strumming matches the rhythm. Hand close-ups are checked against the audio; the instrument is a hero prop, the same look every time it appears.
+- **Music as story and memory.** The song IS the plot: it unlocks a memory, changes a mind, heals a family. It starts small — one voice, one instrument — and the room joins it emotionally, each face changing at a different moment. The music is never background; it is the scene's action.
+- **Cultural authenticity and object storytelling.** One culture, held in every shot — festival, flowers, banners, dress, family house, food — never generic. Props carry history and plot: a torn photograph, a hero instrument, a drawer that hides the truth. An object's damage and reveal are planned beats, and its state matches the story's state at every cut.
+
+Full rules: [`docs/12-emotional-performance.md`](docs/12-emotional-performance.md).
+
 ## Character registration
 
 Registering a character takes all three of these, in one go:
@@ -466,6 +478,7 @@ and `description`, plus the full instructions):
 | `video-regeneration` | Reference analysis, new-not-duplicate remake, character/object continuity, physical interactions, cinematography, storyboard, audio, QC, output requirements |
 | `cinematic-power` | Style lock, animal and creature performance, music-beat editing and synchronized ensemble, trailer structure, scale and colour scripting |
 | `live-action-vfx` | Live-action human performance, VFX integration of CG creatures, water and wetness continuity, practical locations and set extension, stunt and action choreography, real-animal performance |
+| `emotional-performance` | Musical performance and stagecraft, crowd as a living character, intimate drama and emotional arc, age performance, instrument performance sync, music as story and memory, cultural authenticity and object storytelling |
 
 `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` are thin pointers to
 `skills/` — one source of truth, read by every platform.
