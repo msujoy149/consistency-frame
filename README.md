@@ -25,8 +25,8 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 93 numbered entries (82 distinct systems, each named and checkable)
-covering identity, voice, performance,
+and 94 numbered entries (83 distinct systems, each named and checkable)
+covering identity, voice, performance, camera direction,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
 follow and a human can check.
@@ -156,13 +156,14 @@ their PATH changes take effect.
 5. **Get the episode.** The assistant generates with the registered
    characters and voices, runs the QC checklist, and delivers.
 
-## Features — 93 numbered entries (82 distinct systems)
+## Features — 94 numbered entries (83 distinct systems)
 
-The complete system is 93 numbered entries across the skills and
-docs — 82 distinct systems. (The 11 professional systems are listed
+The complete system is 94 numbered entries across the skills and
+docs — 83 distinct systems. (Eleven of the 12 professional systems are listed
 twice: once in the production-systems skill and once in
-docs/01-production-systems.md, so 11 + 18 + 3 + 7 + 36 + 7 = 82 distinct
-systems, 93 listed entries.) They are grouped in five layers: a
+docs/01-production-systems.md — the script-driven automatic camera angles
+system is numbered in the skill only — so 12 + 18 + 3 + 7 + 36 + 7 = 83 distinct
+systems, 94 listed entries.) They are grouped in five layers: a
 character and voice foundation, humanized production, professional
 production, language, captions, and format, and agency advertising. The skill files in
 `skills/` are the source of truth; the `docs/` folder describes each
@@ -272,10 +273,12 @@ filmed, not generated:
   strategy per model.** All 36 are in
   [`docs/05-humanization-systems.md`](docs/05-humanization-systems.md).
 
-### Professional production — 11 + 18 + 7 systems
+### Professional production — 12 + 18 + 7 systems
 
-- **11 professional systems** (`docs/01-production-systems.md`): visual
-  style bible, camera language and shot list, negative prompt library,
+- **12 professional systems** (`docs/01-production-systems.md` and the
+  production-systems skill): visual
+  style bible, camera language and shot list, script-driven automatic camera
+  angles, negative prompt library,
   sound design system, music and theme, story bible, episode continuity
   tracker, dialogue writing rules, reference photo quality rules,
   lip-sync and dubbing workflow, episode QC checklist.
@@ -420,7 +423,7 @@ and `description`, plus the full instructions):
 | `character-consistency` | Registry, identity resolution, prompt builder, reference fidelity, recall, multi-character scenes |
 | `voice-consistency` | Voice profiles, VoiceStudio/OmniVoice, single-pass dialogue, voice drift, code-switching |
 | `humanized-production` | The 36 humanization systems |
-| `production-systems` | The 11 professional + 18 extended + 7 additional systems, plus language, captions, and format rules |
+| `production-systems` | The 12 professional + 18 extended + 7 additional systems, plus language, captions, and format rules |
 | `agency-advertising` | Brand kit, ad formats, campaign variants, client isolation, AI disclosure and likeness safety, product/service consistency, client approval |
 
 `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` are thin pointers to

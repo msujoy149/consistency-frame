@@ -10,7 +10,7 @@ the source of truth. Read them and follow them.
 - `skills/voice-consistency/` — voice profiles, VoiceStudio/OmniVoice,
   single-pass dialogue, voice drift, code-switching.
 - `skills/humanized-production/` — the 36 humanization systems.
-- `skills/production-systems/` — the 11 professional + 18 extended + 7
+- `skills/production-systems/` — the 12 professional + 18 extended + 7
   additional systems, plus language, captions, and format rules.
 - `skills/agency-advertising/` — brand kit, ad formats, campaign
   variants, client isolation, AI disclosure, product consistency,

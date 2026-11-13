@@ -14,7 +14,7 @@ versions of these rules.
   single-pass dialogue, voice drift, code-switching.
 - `skills/humanized-production/` — the 36 humanization systems
   (performance, micro-motion, sound, editing, film finish, backgrounds).
-- `skills/production-systems/` — the 11 professional + 18 extended + 7
+- `skills/production-systems/` — the 12 professional + 18 extended + 7
   additional systems, plus language, captions, and format rules.
 - `skills/agency-advertising/` — brand kit, ad formats, campaign
   variants, client isolation, AI disclosure, product consistency,

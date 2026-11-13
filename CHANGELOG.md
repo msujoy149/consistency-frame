@@ -92,6 +92,22 @@ lists what changed.
   itself is a registered character created through the Character
   Generator; this layer adds only the advertising rules on top. Counts
   updated everywhere: 82 distinct systems, 93 numbered entries.
+- Script-driven automatic camera angles: the angle for every shot is
+  decided automatically from the script beat — story function, emotion,
+  character relationship, and what the viewer must notice — never by
+  habit or rotation; full shot grammar (wide, medium, close-up, extreme
+  close-up, over-the-shoulder, POV, low / high / bird's-eye / worm's-eye,
+  Dutch tilt, two-shot, group wide), a beat-to-angle mapping (emotion
+  always wins over the table), motivated movement only, lens language
+  (35mm for place and togetherness, 50mm for honest human presence,
+  85mm for intimacy), the 180-degree rule and eyeline/action continuity
+  across cuts, human-camera imperfection (faint handheld sway, a breath
+  of focus hunting, framing corrected mid-shot — subtle, never
+  distracting), one angle logic per beat planned in the shot list before
+  generation, and user override wins. Realism target: aim for 100%
+  realistic, human-generated feeling; 99.9% is the floor. Documented as
+  A12 in the production-systems skill, cross-referenced from docs/01 §2.
+  Counts updated everywhere: 83 distinct systems, 94 numbered entries.
 
 ### Fixed
 

@@ -19,7 +19,7 @@ The skills in this repository are:
   drift, code-switching.
 - `humanized-production` — the 36 humanization systems (performance,
   micro-motion, sound, editing, film finish, backgrounds).
-- `production-systems` — the 11 professional systems, the 18 extended
+- `production-systems` — the 12 professional systems, the 18 extended
   systems, the 7 additional systems, and the language, captions, and
   format rules.
 

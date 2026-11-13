@@ -3,13 +3,17 @@
 These eleven systems are what turn an acceptable generated video into a
 professional series. They apply to every project unless the user says
 otherwise. Nothing here is optional decoration: each system exists because
-skipping it is visible on screen.
+skipping it is visible on screen. A twelfth professional system —
+script-driven automatic camera angles — is numbered in the
+production-systems skill (A12) and cross-referenced from §2 below.
 
-Counting note: these 11 systems also appear as Part A of the
-production-systems skill. Together with the 18 extended, 3
+Counting note: eleven of the twelve systems in Part A of the
+production-systems skill also appear here. The twelfth — script-driven
+automatic camera angles (A12) — is numbered in the skill only and
+cross-referenced from §2 below. Together with the 18 extended, 3
 language/captions/format, 7 additional, 36 humanization, and 7 agency
-advertising systems, the repo holds 82 distinct systems, presented as
-93 numbered entries.
+advertising systems, the repo holds 83 distinct systems, presented as
+94 numbered entries.
 
 ## Production Priority Hierarchy
 
@@ -72,6 +76,14 @@ For each scene, follow a simple shot plan:
 
 Do not rely on a single framing for everything. A scene shot entirely in
 one framing feels flat, no matter how good the characters look.
+
+Which angle each shot uses is not chosen here by habit. The
+script-driven automatic camera angles system (production-systems skill,
+A12) reads the script beat first — story function, emotion, relationship
+between the characters, and what the viewer must notice — and lets that
+decide the angle; the angle plan is written into the shot list before
+generation. A12 gives the full shot grammar, the beat-to-angle mapping,
+lens language, and the continuity rules.
 
 ## 3. Negative Prompt Library
 

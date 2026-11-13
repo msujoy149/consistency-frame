@@ -1,15 +1,15 @@
 ---
 name: production-systems
-description: The professional production layer for series video-making. Covers the 11 professional production systems, the 18 extended systems, the 7 additional systems, the language, captions and format rules, and the production priority hierarchy — described in enough detail that an AI following this skill alone can apply them.
+description: The professional production layer for series video-making. Covers the 12 professional production systems, the 18 extended systems, the 7 additional systems, the language, captions and format rules, and the production priority hierarchy — described in enough detail that an AI following this skill alone can apply them.
 ---
 
 # Production Systems
 
 These systems make the difference between an acceptable video and a professional series. Apply them in every project unless the user says otherwise. They sit alongside the `character-consistency`, `voice-consistency`, and `humanized-production` skills: characters and voices stay fixed, humanization makes each frame feel real, and these systems make the whole series hold together.
 
-Counting note: this skill lists 39 numbered entries (11 + 18 + 7 + 3). Together with the 36 humanization systems and the 7 agency advertising systems, the repo holds 82 distinct systems, presented as 93 numbered entries — the 11 professional systems in Part A below are also listed in docs/01-production-systems.md.
+Counting note: this skill lists 40 numbered entries (12 + 18 + 7 + 3). Together with the 36 humanization systems and the 7 agency advertising systems, the repo holds 83 distinct systems, presented as 94 numbered entries — eleven of the 12 professional systems in Part A below are also listed in docs/01-production-systems.md; the camera-angles system (A12) is numbered here only, and docs/01 §2 cross-references it.
 
-## Part A — 11 Professional Production Systems
+## Part A — 12 Professional Production Systems
 
 ### A1. Visual Style Bible
 
@@ -17,7 +17,7 @@ Every project has one fixed visual style: a colour palette, a lighting mood, and
 
 ### A2. Camera Language and Shot List
 
-Decide the camera language before generating: when to use a close-up (emotion, dialogue), a medium shot (conversation), and a wide shot (place, action). Use the same language across episodes. For each scene, follow a simple shot plan: establishing shot, main action, reaction shot, closing shot. Do not rely on a single framing for everything. Choose camera movements and shot compositions according to the actual scene; every shot must have a visual purpose. Use wide shots, medium shots, close-ups, over-the-shoulder shots, tracking shots, establishing shots, appropriate angles, balanced framing, natural perspective, realistic depth of field, proper subject focus, professional lighting, natural shadows, accurate reflections, and realistic environmental details.
+Decide the camera language before generating: when to use a close-up (emotion, dialogue), a medium shot (conversation), and a wide shot (place, action). Use the same language across episodes. For each scene, follow a simple shot plan: establishing shot, main action, reaction shot, closing shot. Do not rely on a single framing for everything. Choose camera movements and shot compositions according to the actual scene; every shot must have a visual purpose. Use wide shots, medium shots, close-ups, over-the-shoulder shots, tracking shots, establishing shots, appropriate angles, balanced framing, natural perspective, realistic depth of field, proper subject focus, professional lighting, natural shadows, accurate reflections, and realistic environmental details. Which angle each shot uses is decided by the script beat — see A12.
 
 ### A3. Negative Prompt Library
 
@@ -54,6 +54,30 @@ Decide the order for each project before starting: voice first, then video match
 ### A11. Episode QC Checklist
 
 Before delivering any episode, check it against the list: character faces and heights correct; voices correct for each character; emotions match the script; dialogue exact; no extra fingers, merged faces, or broken objects; clothing correct for the scene; sound and music present and matched; no contradiction with the story bible or the continuity tracker. Do not deliver an episode that fails a check without telling the user what failed. Inspect the beginning, middle, and ending, plus character appearances, facial identity consistency, important actions, hand-object interactions, character-to-character interactions, scene transitions, and audio and lip-sync where inspectable. Do not claim frame-by-frame inspection unless it was actually performed, and do not claim a video is completely defect-free without sufficient verification.
+
+### A12. Script-Driven Automatic Camera Angles
+
+The camera angle is never random and never decorative. For every shot, read the script beat first — what is happening, what the character feels, what the story needs the viewer to feel — and let that decide the angle automatically. The user may override any choice, but the AI never picks an angle by habit, by rotation, or because it is a favourite shot.
+
+**1. Read the beat before choosing the angle.** For each shot, identify (a) the story function — establish, reveal, confront, comfort, decide; (b) the feeling character's emotion; (c) the relationship between the characters in frame; (d) what the viewer must notice. The angle follows from those four — never from a fixed rotation or a favourite shot.
+
+**2. Shot grammar.** The vocabulary: wide / establishing (place, scale, isolation); medium (action, body language); close-up (emotion, reaction); extreme close-up (a meaningful detail — eyes, hands, an object); over-the-shoulder (conversation, point of view); POV; low angle (power, threat, awe); high angle (vulnerability, smallness, loss of control); bird's-eye (fate, pattern); worm's-eye (overwhelm); Dutch tilt (unease — use sparingly); two-shot (relationship); group wide (dynamics).
+
+**3. Beat-to-angle mapping.** Automatic defaults; emotion always wins over the table. Power / dominance / threat → low angle, slow push-in. Vulnerability / fear / defeat → high angle, slightly wider. Intimacy / confession / tenderness → close-up, eye-level, still. Isolation / loneliness → wide shot, character small in frame. Tension / something wrong → slow push-in or a small Dutch tilt, brief. Revelation / realisation → dolly-in to close-up as it lands. Conversation → shot-reverse-shot with matched eyelines, over-the-shoulder for the listener. Action / urgency → tracking shot, handheld energy, shorter cuts. Memory / dream / wonder → slow crane or gentle float. Comedy / lightness → wider, eye-level.
+
+**4. Motivated movement only.** The camera moves only when the story moves — following a character, revealing something, or matching a change in emotion. No movement for its own sake; a static shot is right whenever nothing in the beat asks for movement.
+
+**5. Lens language.** The lens follows the beat too: wider lens (35mm) for place and togetherness, normal (50mm) for honest human presence, longer lens (85mm) for intimacy and isolating the face from the background. Never change lens character inside one continuous moment without a story reason.
+
+**6. Continuity across cuts.** Hold the 180-degree rule — never cross the line of action without a clear establishing re-set. Match eyelines in shot-reverse-shot; match on action; keep screen direction consistent so the viewer never has to re-find where anyone is.
+
+**7. Realism — human camera, not perfect camera.** Allow the small human imperfections that make footage feel shot rather than rendered: a faint handheld sway in intimate scenes, a breath of focus hunting when reframing, slightly imperfect framing corrected mid-shot. Subtle: noticeable enough to feel human, never enough to distract. See the `humanized-production` skill (30.14 Camera Imperfection). This serves the repo's overall realism target: aim for 100% realistic, human-generated feeling; 99.9% is the floor — never leave any part visibly artificial when a better choice exists.
+
+**8. Angle holds within a beat, changes with the beat.** One beat, one angle logic — no new angle mid-beat without a story reason. The angle plan is written into the shot list before generation, so every angle is decided from the script, not during generation. See A2 and docs/01 §2.
+
+**9. User override.** Any angle the user names for any shot wins. When the user gives no angle, this system decides — automatically, from the script, every time.
+
+**Check:** every shot in the shot list has an angle justified by its beat (story function, emotion, relationship, what the viewer must notice); no angle chosen by rotation or habit; no unmotivated camera movement; the 180-degree rule and eyelines hold across cuts.
 
 ## Part B — 18 Extended Production Systems
 
