@@ -4,7 +4,7 @@ This document describes the emotional-performance layer of Consistency Frame: th
 
 Nothing in this layer replaces the existing systems. The visual style bible, script-driven camera angles (A12), editing rhythm, script-driven colour grading, the character registry, one voice per character fixed across episodes, the cinematic-power layer, and the episode QC checklist all still apply, unchanged. The seven systems below add only the emotional-performance layer on top.
 
-Counting note: these 7 systems are part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 1 user-supplied voice cloning, and 1 on-demand resource management, and 1 language authenticity systems, the repo holds 105 distinct systems, presented as 116 numbered entries.
+Counting note: these 7 systems are part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 1 user-supplied voice cloning, and 1 on-demand resource management, and 1 language authenticity, and 1 realistic person video systems, the repo holds 106 distinct systems, presented as 117 numbered entries.
 
 ## 1. Musical Performance & Stagecraft
 

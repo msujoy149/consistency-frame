@@ -25,7 +25,7 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 116 numbered entries (105 distinct systems, each named and checkable)
+and 117 numbered entries (106 distinct systems, each named and checkable)
 covering identity, voice, performance, camera direction,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
@@ -158,18 +158,18 @@ their PATH changes take effect.
 5. **Get the episode.** The assistant generates with the registered
    characters and voices, runs the QC checklist, and delivers.
 
-## Features — 116 numbered entries (105 distinct systems)
+## Features — 117 numbered entries (106 distinct systems)
 
-The complete system is 116 numbered entries across the skills and
-docs — 105 distinct systems. (Eleven of the 12 professional systems are listed
+The complete system is 117 numbered entries across the skills and
+docs — 106 distinct systems. (Eleven of the 12 professional systems are listed
 twice: once in the production-systems skill and once in
 docs/01-production-systems.md — the script-driven automatic camera angles
 system is numbered in the skill only, and the video regeneration, cinematic
-power, live-action & VFX, emotional performance, user-supplied voice cloning, on-demand resource management, and language authenticity systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 + 6 + 7 + 1 + 1 + 1 = 105 distinct
-systems, 116 listed entries.) They are grouped in eleven layers: a
+power, live-action & VFX, emotional performance, user-supplied voice cloning, on-demand resource management, language authenticity, and realistic person video systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 + 6 + 7 + 1 + 1 + 1 + 1 = 106 distinct
+systems, 117 listed entries.) They are grouped in twelve layers: a
 character and voice foundation, humanized production, professional
 production, language, captions, and format, agency advertising, video
-regeneration, cinematic power, live-action & VFX, emotional performance, on-demand resources, and language authenticity. The skill files in
+regeneration, cinematic power, live-action & VFX, emotional performance, on-demand resources, language authenticity, and realistic person video. The skill files in
 `skills/` are the source of truth; the `docs/` folder describes each
 system in full.
 
@@ -415,6 +415,15 @@ Full rules: [`docs/13-resource-management.md`](docs/13-resource-management.md).
 - **Lip-sync follows the language's sounds.** English, Bengali, and Hindi move the mouth differently. Every line's mouth movement is verified against its own audio track; a talking character with a still mouth is a defect, never a delivery.
 
 Full rules: [`docs/14-language-authenticity.md`](docs/14-language-authenticity.md).
+
+### Realistic person video — 1 system
+
+- **From a photo to a real moving person.** The user supplies a real person's photo — clear, well-lit, face to camera — and the video shows that person moving and speaking naturally, like a normal real person. The photo is used exactly as given; the face, structure, hands, and feet never change — only movement and speech are added.
+- **Natural movement, never posed.** Walks, gestures, head turns, blinks, posture shifts — the way a real person moves, never stiff or cartoonish.
+- **Natural speech in the person's own language.** The person speaks following that language's native pattern, with lip-sync matched to the language's sounds. A talking person with a still mouth is a defect, never a delivery.
+- **Realism, not animation.** Real skin, hair, and cloth behaviour, natural light, no plastic skin, no cartoon look. Realism target 100%, 99.9% as the floor. This is not 2D/3D animation and not live-action footage of a real shoot — it is a realistic video generated from a still photo.
+
+Full rules: [`docs/15-realistic-person.md`](docs/15-realistic-person.md).
 
 ## Character registration
 

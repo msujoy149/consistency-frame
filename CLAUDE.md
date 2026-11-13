@@ -37,6 +37,9 @@ the source of truth. Read them and follow them.
   native speakers speak it (US English, Bengali, Hindi); the same video
   in every language asked for, separately on request; one voice across
   languages; lip-sync matched to the language's sounds.
+- `skills/realistic-person/` — a real person's photo becomes a realistic
+  moving, speaking person: the face never changes, movement and speech
+  are natural, lip-sync follows the language's sounds.
 
 Character identity and voice are fixed once registered. The user's
 explicit instructions and script outrank everything else. Character

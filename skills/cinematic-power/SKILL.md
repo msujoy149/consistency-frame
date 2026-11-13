@@ -58,6 +58,8 @@ Rules:
 
 ## 4. Trailer & Teaser Structure — Built, Not Summarized
 
+A trailer or teaser is the cinematic system used inside a web-series or episode production — when a web series or episode needs cinematic video, the series and the trailer/teaser work together as one skill. It is not a standalone video type.
+
 A trailer is built, not summarized. It has six beats, in this order:
 
 1. **Open on wonder.** A striking image, no explanation. The audience feels the world before they understand it.

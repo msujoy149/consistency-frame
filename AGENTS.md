@@ -41,6 +41,9 @@ versions of these rules.
   native speakers speak it (US English, Bengali, Hindi); the same video
   in every language asked for, separately on request; one voice across
   languages; lip-sync matched to the language's sounds.
+- `skills/realistic-person/` — a real person's photo becomes a realistic
+  moving, speaking person: the face never changes, movement and speech
+  are natural, lip-sync follows the language's sounds.
 
 ## Rules that always apply
 
@@ -67,4 +70,5 @@ Full system documentation lives in `docs/`. Install instructions are in
 `docs/11-live-action-vfx.md`, and emotional performance in
 `docs/12-emotional-performance.md`, and on-demand resources in
 `docs/13-resource-management.md`, and language authenticity in
-`docs/14-language-authenticity.md`.
+`docs/14-language-authenticity.md`, and realistic person video in
+`docs/15-realistic-person.md`.

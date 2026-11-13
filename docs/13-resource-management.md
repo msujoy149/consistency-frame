@@ -2,7 +2,7 @@
 
 When a job runs, only the resources that job needs are loaded. Audio work loads the audio side. Video work loads the video side. When neither is running, only the assistant's own working memory is in use. Never open everything at once "just in case" and fill the machine's memory. Use resources slowly and carefully, only as needed — and never at the cost of the work. The work must stay beautiful.
 
-Counting note: this 1 system is part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, and 1 user-supplied voice cloning, and 1 language authenticity systems, the repo holds 105 distinct systems, presented as 116 numbered entries.
+Counting note: this 1 system is part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, and 1 user-supplied voice cloning, and 1 language authenticity, and 1 realistic person video systems, the repo holds 106 distinct systems, presented as 117 numbered entries.
 
 ## The three loads
 
