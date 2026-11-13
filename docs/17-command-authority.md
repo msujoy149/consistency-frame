@@ -1,6 +1,6 @@
 # Command Authority — Repo First, Self-Generate Only When Missing
 
-This repo is the command master. After a user installs it, videos are made WITH PERMISSION from the repo — the assistant reads and uses the repo's skills FIRST for every video, before generating anything itself. A skill that exists in the repo is used, not reinvented; a missing system is generated from the repo's own generation command, then saved as a new skill and reported to the user.
+This repo is the command master. After a user installs it, videos are made WITH PERMISSION from the repo — the assistant reads and uses the repo's skills FIRST for every video, before generating anything itself. A skill that exists in the repo is used, not reinvented; a missing system is first written and saved as a new skill, and the video is then made by following that skill (the skill-first loop) — and reported to the user.
 
 Counting note: this 1 system is part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, 1 on-demand resource management, 1 language authenticity, 1 realistic person video, 1 2D explainer animation, and 1 kids & family animation systems, the repo holds 109 distinct systems, presented as 120 numbered entries.
 
@@ -16,7 +16,7 @@ Never generate on your own while ignoring the repo.
 
 ## Missing skill fallback
 
-If a needed skill is NOT in the repo, check the repo's comments and notes about that topic FIRST — the README, the docs, AGENTS.md, and the skill descriptions. If the repo has a comment on it, follow the comment. If the repo gives no comment, the repo issues a generation command (see below): generate the needed system from that command, in the repo's skill format, save it as a new skill in `skills/` so the repo now has it, and tell the user plainly what was added and why. Never silently invent a system that contradicts a repo skill or a repo comment.
+If a needed skill is NOT in the repo, check the repo's comments and notes about that topic FIRST — the README, the docs, AGENTS.md, and the skill descriptions. If the repo has a comment on it, follow the comment. If the repo gives no comment, the repo issues a generation command (see below): generate the needed system from that command, in the repo's skill format, save it as a new skill in `skills/` so the repo now has it, and tell the user plainly what was added and why. The order is fixed by the skill-first loop below: the skill is written and saved BEFORE any video is generated from it. Never silently invent a system that contradicts a repo skill or a repo comment.
 
 ## The generation command
 
@@ -54,6 +54,22 @@ When the repo has no instruction at all for something, it explicitly says "do it
 For a NEW kind of task — for example animation: make a small animation, or make an animated cartoon from a given video or script — do NOT hunt through the skills one by one looking for a matching skill. The repo distills the main common rules from ALL its skills into ONE core instruction and gives that to the AI: "do the work this way." The core is short — it does not explain everything in detail — but it carries the universal rules that apply to ALL videos, the same in every chat and session: human-like, never robotic; no overlap between characters; lip-sync (the mouth moves with the voice, matching the sounds of the language); fixed character identity and fixed voice per character; the script decides; physical realism and continuity; QC before delivery; rights and consent for real people. If the new task later grows into a full system, generate it as a new skill from the generation command above so the repo now has it.
 
 The core carries the rules; the main flow above carries the order — a "do it yourself" command hands over both, so the work is the right video, not any video.
+
+## The skill-first loop — a missing skill is written first, the video follows it
+
+The missing-skill fallback and the generation command say a missing skill is generated and saved. The loop fixes the ORDER, because the order is what makes the video correct: a skill written after the video is only a record of what was improvised. A skill written BEFORE the video is what the video is made by. When a skill is missing, the repo runs this loop, in this exact order — never skipped, never reordered:
+
+1. Detect the gap: no skill has the command for the thing being made.
+2. Check the repo's comments and notes first — the README, the docs, AGENTS.md, and the skill descriptions. If the repo has a comment on it, follow the comment.
+3. Write the new skill FIRST. If the repo gives no comment, build the missing system from the script's need, the common core, the main flow, and the generation command — in the repo's skill format: YAML frontmatter with name and description, numbered sections, and citations to the existing systems it builds on. Save it in `skills/` BEFORE generating any video.
+4. Then make the video by following that new skill exactly — the normal skill-first path. Never improvise the video from the generation command alone.
+5. Run the QC checklist before delivery. The user approves before anything is locked in.
+6. Tell the user plainly what was added and why.
+7. Keep the repo's own numbers true. When a new skill is actually added this way, update the counts, the README, docs/01, the CHANGELOG, and the plugin manifests (which list every skill) — so the repo's own numbers never go stale.
+
+The guarantee: with this loop, no video is ever improvised — every video is made by following some skill — and every gap is closed permanently the first time it appears. The next time the same kind of video is asked for, the skill is already there, and the work takes the ordinary skill-first path.
+
+What this loop is NOT: it does not change "do it yourself". Small work with no repo instruction at all still takes that path — quality commands plus the main flow. The loop is only for a genuinely missing SYSTEM — a skill the repo does not have.
 
 ## Scope
 

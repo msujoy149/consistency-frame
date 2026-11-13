@@ -13,7 +13,9 @@ reinvented. If a needed skill is not in the repo, check the repo's
 comments and notes about that topic first and follow them; only if the
 repo gives no comment, generate the system yourself in the repo's skill
 format, save it as a new skill, and tell the user plainly what was added
-and why. For a new kind of task, the repo gives one distilled common core
+and why — and the skill is written and saved FIRST, before any video is
+generated from it (the skill-first loop, command-authority §9), so no
+video is ever improvised. For a new kind of task, the repo gives one distilled common core
 instead of hunting for a skill (see the `command-authority` skill, §8);
 when the repo has no instruction at all it says "do it yourself" — never
 bare, always with the quality commands (correct, cinematic,

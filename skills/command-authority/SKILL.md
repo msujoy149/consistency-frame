@@ -1,6 +1,6 @@
 ---
 name: command-authority
-description: "The repo is the command master — after install, every video is made by reading and using the repo's skills first. A skill that exists is used, never reinvented; a missing system is generated from the repo's own generation command and saved as a new skill; light details are delegated with direction from the repo; a new task type starts from the distilled common core; and when the repo has no instruction at all it says 'do it yourself' — never bare, always with the quality commands and the main flow attached."
+description: "The repo is the command master — after install, every video is made by reading and using the repo's skills first. A skill that exists is used, never reinvented; a missing system is generated from the repo's own generation command and saved as a new skill; light details are delegated with direction from the repo; a new task type starts from the distilled common core; and when the repo has no instruction at all it says 'do it yourself' — never bare, always with the quality commands and the main flow attached. When a skill is missing, the skill is written and saved first, and the video is then made by following that new skill — the skill-first loop."
 ---
 
 # Command Authority — Repo First, Self-Generate Only When Missing
@@ -19,12 +19,12 @@ This repo is the command master. After a user installs it, videos are made WITH 
 2. Check the skill FIRST: if the skill already has the command for the thing being made, build from those skill commands. Skill commands take priority whenever they exist — for the videos this repo makes, almost all commands are already in the skills, so video work almost always takes this path.
 3. Apply the supporting skills the type skill cross-references (character, voice, language, camera, humanization, realism).
 4. Run the QC checklist before delivery.
-5. Only when no skill has the command for it does the repo fall back — to the generation command (§5) for a missing system, or to "do it yourself" (§7) for work with no repo instruction at all.
+5. Only when no skill has the command for it does the repo fall back — to the generation command (§5) for a missing system, following the skill-first loop (§9), or to "do it yourself" (§7) for work with no repo instruction at all.
 
 ## 3. Missing Skill Fallback — Check the Repo First, Then Generate
 
 - If a needed skill is NOT in the repo, check the repo's comments and notes about that topic FIRST — the README, the docs, AGENTS.md, and the skill descriptions. If the repo has a comment on it, follow the comment.
-- If the repo gives no comment, the repo issues a generation command (§5): generate the needed system from that command, in the repo's skill format, and save it as a new skill in `skills/` so the repo now has it.
+- If the repo gives no comment, the repo issues a generation command (§5): generate the needed system from that command, in the repo's skill format, and save it as a new skill in `skills/` so the repo now has it. The order is fixed by the skill-first loop (§9): the skill is written and saved BEFORE any video is generated from it.
 - Tell the user plainly what was added and why.
 - Never silently invent a system that contradicts a repo skill or a repo comment.
 
@@ -89,3 +89,19 @@ The core instruction is short — it does not explain everything in detail — b
 If the new task later grows into a full system, generate it as a new skill from the generation command (§5) so the repo now has it.
 
 The core carries the rules; the main flow in §7 carries the order — a "do it yourself" command hands over both, so the work is the right video, not any video.
+
+## 9. The Skill-First Loop — a Missing Skill Is Written First, the Video Follows It
+
+§3 and §5 say a missing skill is generated and saved. This section fixes the ORDER, because the order is what makes the video correct: a skill written after the video is only a record of what was improvised. A skill written BEFORE the video is what the video is made by. When a skill is missing, the repo runs this loop, in this exact order — never skipped, never reordered:
+
+1. **Detect the gap.** No skill has the command for the thing being made (§2 step 5).
+2. **Check the repo's comments and notes first** — the README, the docs, AGENTS.md, and the skill descriptions. If the repo has a comment on it, follow the comment.
+3. **Write the new skill FIRST.** If the repo gives no comment, build the missing system from the script's need, the common core (§8), the main flow (§7), and the generation command (§5) — in the repo's skill format: YAML frontmatter with name and description, numbered sections, and citations to the existing systems it builds on. Save it in `skills/` BEFORE generating any video.
+4. **Then make the video by following that new skill exactly** — the normal skill-first path (§2). Never improvise the video from the generation command alone.
+5. **Run the QC checklist before delivery.** The user approves before anything is locked in.
+6. **Tell the user plainly what was added and why.**
+7. **Keep the repo's own numbers true.** When a new skill is actually added this way, update the counts, the README, docs/01, the CHANGELOG, and the plugin manifests (which list every skill) — so the repo's own numbers never go stale.
+
+The guarantee: with this loop, no video is ever improvised — every video is made by following some skill — and every gap is closed permanently the first time it appears. The next time the same kind of video is asked for, the skill is already there, and the work takes the ordinary §2 path.
+
+What this loop is NOT: it does not change §7. Small work with no repo instruction at all still takes the "do it yourself" path — quality commands plus the main flow. The loop is only for a genuinely missing SYSTEM — a skill the repo does not have.
