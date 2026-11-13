@@ -127,6 +127,7 @@ angles is part of the generated script. Realism target: aim for 100%
   limit is shorter). The reference is the user's own uploaded video; the
   output is an alternative version, never a frame-for-frame copy.
   Counts updated everywhere: 84 distinct systems, 95 numbered entries.
+- Cinematic power — five new systems for feature-trailer and music-video quality (skill: skills/cinematic-power/SKILL.md; doc: docs/10-cinematic-power.md): stylized animation style lock (2D anime, 3D stylized CG, or photorealistic, chosen first and held in every shot), animal and creature performance (animals registered like characters, movement follows the creature's real body, comic timing for sidekicks, menace in stillness for monsters, elemental forces as characters), music-beat editing and synchronized ensemble (cuts and movements land on the musical beat, one timing reference for the whole ensemble), trailer and teaser structure (wonder → stakes → characters → comedy beat → climax montage → title card → credits), and scale, spectacle, and colour scripting (scale contrast for wonder, palettes assigned per emotional beat with planned transitions). Counts updated everywhere: 89 distinct systems, 100 numbered entries.
 
 ### Fixed
 

@@ -5,7 +5,7 @@ description: Makes every video feel human-made, not AI-made. Covers all 36 human
 
 # Humanized Production
 
-A video that is technically consistent but feels robotic has failed. These 36 systems make every video feel human-made. Apply them to every project. Figures such as LUT strength and grain percentage are ranges to test per project, not fixed values.
+A video that is technically consistent but feels robotic has failed. These 36 systems make every video feel human-made. Apply them to every project. Figures such as LUT strength and grain percentage are ranges to test per project, not fixed values. For the cinematic-power layer — music-beat editing, synchronized ensembles, trailer structure, and scale and colour scripting — see the `cinematic-power` skill.
 
 ## 30.1 Performance-Driven Acting (Optional Lane)
 

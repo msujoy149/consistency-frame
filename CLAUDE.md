@@ -18,6 +18,9 @@ the source of truth. Read them and follow them.
 - `skills/video-regeneration/` — reference analysis, new-not-duplicate
   remake, character/object continuity, physical interactions,
   cinematography, storyboard, audio, QC, output requirements.
+- `skills/cinematic-power/` — style lock, animal and creature
+  performance, music-beat editing and synchronized ensemble, trailer
+  structure, scale and colour scripting.
 
 Character identity and voice are fixed once registered. The user's
 explicit instructions and script outrank everything else. Character

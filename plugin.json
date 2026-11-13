@@ -1,6 +1,6 @@
 {
  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
- "description": "Consistency Frame — video production skills for keeping characters and voices consistent and human-made across episodes.",
+ "description": "Consistency Frame \u2014 video production skills for keeping characters and voices consistent and human-made across episodes.",
  "name": "consistency-frame",
  "skills": [
   "./skills/character-consistency",
@@ -8,7 +8,8 @@
   "./skills/humanized-production",
   "./skills/production-systems",
   "./skills/agency-advertising",
-  "./skills/video-regeneration"
+  "./skills/video-regeneration",
+  "./skills/cinematic-power"
  ],
  "version": "2.0.0"
 }

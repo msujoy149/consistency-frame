@@ -25,7 +25,7 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 95 numbered entries (84 distinct systems, each named and checkable)
+and 100 numbered entries (89 distinct systems, each named and checkable)
 covering identity, voice, performance, camera direction,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
@@ -156,18 +156,18 @@ their PATH changes take effect.
 5. **Get the episode.** The assistant generates with the registered
    characters and voices, runs the QC checklist, and delivers.
 
-## Features — 95 numbered entries (84 distinct systems)
+## Features — 100 numbered entries (89 distinct systems)
 
-The complete system is 95 numbered entries across the skills and
-docs — 84 distinct systems. (Eleven of the 12 professional systems are listed
+The complete system is 100 numbered entries across the skills and
+docs — 89 distinct systems. (Eleven of the 12 professional systems are listed
 twice: once in the production-systems skill and once in
 docs/01-production-systems.md — the script-driven automatic camera angles
-system is numbered in the skill only, and the video regeneration system is
-numbered in its own skill only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 = 84 distinct
-systems, 95 listed entries.) They are grouped in six layers: a
+system is numbered in the skill only, and the video regeneration and cinematic
+power systems are numbered in their own skills only — so 12 + 18 + 3 + 7 + 36 + 7 + 1 + 5 = 89 distinct
+systems, 100 listed entries.) They are grouped in seven layers: a
 character and voice foundation, humanized production, professional
-production, language, captions, and format, agency advertising, and video
-regeneration. The skill files in
+production, language, captions, and format, agency advertising, video
+regeneration, and cinematic power. The skill files in
 `skills/` are the source of truth; the `docs/` folder describes each
 system in full.
 
@@ -362,6 +362,16 @@ rules: [`docs/08-agency-advertising.md`](docs/08-agency-advertising.md).
 
 Full rules: [`docs/09-video-regeneration.md`](docs/09-video-regeneration.md).
 
+### Cinematic power — 5 systems
+
+- **Stylized animation style lock.** 2D anime, 3D stylized CG, or photorealistic — chosen first and held in every shot; line weight and cel colour for anime, proportions and squash-and-stretch for CG, realism rules for live-action.
+- **Animal and creature performance.** Animals registered like characters, each distinct; movement follows the creature's real body; sidekicks have comic timing, monsters have menace in stillness, and elemental forces may act as characters.
+- **Music-beat editing and synchronized ensemble.** Cuts and movements land on the musical beat; a synchronized jump or dance shares one timing reference for every character and animal, with no drift.
+- **Trailer and teaser structure.** Wonder → stakes → characters → one comedy beat after tension → climax montage → title card → credits; never reveal the ending.
+- **Scale, spectacle, and colour scripting.** Scale contrast for wonder, planned per beat; a colour palette assigned to each emotional beat with planned transitions — colour follows emotion, not only time of day.
+
+Full rules: [`docs/10-cinematic-power.md`](docs/10-cinematic-power.md).
+
 ## Character registration
 
 Registering a character takes all three of these, in one go:
@@ -443,6 +453,7 @@ and `description`, plus the full instructions):
 | `production-systems` | The 12 professional + 18 extended + 7 additional systems, plus language, captions, and format rules |
 | `agency-advertising` | Brand kit, ad formats, campaign variants, client isolation, AI disclosure and likeness safety, product/service consistency, client approval |
 | `video-regeneration` | Reference analysis, new-not-duplicate remake, character/object continuity, physical interactions, cinematography, storyboard, audio, QC, output requirements |
+| `cinematic-power` | Style lock, animal and creature performance, music-beat editing and synchronized ensemble, trailer structure, scale and colour scripting |
 
 `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` are thin pointers to
 `skills/` — one source of truth, read by every platform.

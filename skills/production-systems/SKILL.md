@@ -7,7 +7,7 @@ description: The professional production layer for series video-making. Covers t
 
 These systems make the difference between an acceptable video and a professional series. Apply them in every project unless the user says otherwise. They sit alongside the `character-consistency`, `voice-consistency`, and `humanized-production` skills: characters and voices stay fixed, humanization makes each frame feel real, and these systems make the whole series hold together.
 
-Counting note: this skill lists 40 numbered entries (12 + 18 + 7 + 3). Together with the 36 humanization systems, the 7 agency advertising systems, and the 1 video regeneration system, the repo holds 84 distinct systems, presented as 95 numbered entries — eleven of the 12 professional systems in Part A below are also listed in docs/01-production-systems.md; the camera-angles system (A12) is numbered here only, and docs/01 §2 cross-references it.
+Counting note: this skill lists 40 numbered entries (12 + 18 + 7 + 3). Together with the 36 humanization systems, the 7 agency advertising systems, the 1 video regeneration system, and the 5 cinematic power systems, the repo holds 89 distinct systems, presented as 100 numbered entries — eleven of the 12 professional systems in Part A below are also listed in docs/01-production-systems.md; the camera-angles system (A12) is numbered here only, and docs/01 §2 cross-references it.
 
 ## Part A — 12 Professional Production Systems
 
@@ -17,7 +17,7 @@ Every project has one fixed visual style: a colour palette, a lighting mood, and
 
 ### A2. Camera Language and Shot List
 
-Decide the camera language before generating: when to use a close-up (emotion, dialogue), a medium shot (conversation), and a wide shot (place, action). Use the same language across episodes. For each scene, follow a simple shot plan: establishing shot, main action, reaction shot, closing shot. Do not rely on a single framing for everything. Choose camera movements and shot compositions according to the actual scene; every shot must have a visual purpose. Use wide shots, medium shots, close-ups, over-the-shoulder shots, tracking shots, establishing shots, appropriate angles, balanced framing, natural perspective, realistic depth of field, proper subject focus, professional lighting, natural shadows, accurate reflections, and realistic environmental details. Which angle each shot uses is decided by the script beat — see A12.
+Decide the camera language before generating: when to use a close-up (emotion, dialogue), a medium shot (conversation), and a wide shot (place, action). Use the same language across episodes. For each scene, follow a simple shot plan: establishing shot, main action, reaction shot, closing shot. Do not rely on a single framing for everything. Choose camera movements and shot compositions according to the actual scene; every shot must have a visual purpose. Use wide shots, medium shots, close-ups, over-the-shoulder shots, tracking shots, establishing shots, appropriate angles, balanced framing, natural perspective, realistic depth of field, proper subject focus, professional lighting, natural shadows, accurate reflections, and realistic environmental details. Which angle each shot uses is decided by the script beat — see A12. For the cinematic-power layer — style lock, animal and creature performance, music-beat editing, trailer structure, and scale and colour scripting — see the `cinematic-power` skill.
 
 ### A3. Negative Prompt Library
 

@@ -85,7 +85,7 @@ Several characters may appear together in one scene — for example three, four,
 
 Natural physical contact is allowed: one character may put a hand on another's shoulder, hold another's hand, or touch another's hair. Contact is on the surface; bodies stay separate and solid.
 
-But one character or object must NEVER go inside another character or object: no overlapping, no merged bodies, no merged faces, no hand passing through a body, no head inside another head. During handshakes, conversations, walking together, hugging, dancing, or other interactions, maintain accurate physical positioning, realistic distances, appropriate personal space, and anatomically believable contact. Never allow one character to unintentionally transform into another. Check every multi-character shot for overlap before delivery.
+But one character or object must NEVER go inside another character or object: no overlapping, no merged bodies, no merged faces, no hand passing through a body, no head inside another head. During handshakes, conversations, walking together, hugging, dancing, or other interactions, maintain accurate physical positioning, realistic distances, appropriate personal space, and anatomically believable contact. Never allow one character to unintentionally transform into another. Check every multi-character shot for overlap before delivery. Animals and creatures in a scene are registered like characters and perform like them — see the `cinematic-power` skill.
 
 ## 9. Private Character Data Separation
 
