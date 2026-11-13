@@ -36,8 +36,10 @@ follow and a human can check.
 ```bash
 git clone https://github.com/msujoy149/consistency-frame.git
 cd consistency-frame
-./setup.sh
+bash setup.sh
 ```
+
+> Run it with `bash` — a fresh clone from GitHub does not carry the executable bit, so `./setup.sh` fails with "Permission denied".
 
 `setup.sh` fetches and installs the bundled components (VoiceStudio for
 voice, OpenMontage for long-form video) automatically — no separate
@@ -56,7 +58,7 @@ Per-platform install details are in
 | ChatGPT | Upload the `skills/` folder via the Skills tab |
 | Gemini CLI | Extension: `gemini-extension.json` |
 | Antigravity | Skills in `.agents/skills/`, rules in `AGENTS.md` / `GEMINI.md` |
-| Muse (Meta) | Clone into the workspace and run `./setup.sh` |
+| Muse (Meta) | Clone into the workspace and run `bash setup.sh` |
 | Any other tool | `npx skills add msujoy149/consistency-frame` or `gh skill install msujoy149/consistency-frame` |
 
 ## Local install — Mac, Windows, Linux
@@ -82,7 +84,7 @@ brew install git bun uv node ffmpeg
 # Consistency Frame
 git clone https://github.com/msujoy149/consistency-frame.git
 cd consistency-frame
-./setup.sh
+bash setup.sh
 ```
 
 ### Linux (Ubuntu / Debian)
@@ -99,7 +101,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # Consistency Frame
 git clone https://github.com/msujoy149/consistency-frame.git
 cd consistency-frame
-./setup.sh
+bash setup.sh
 ```
 
 ### Windows — WSL (recommended)
@@ -131,7 +133,7 @@ Then in Git Bash:
 ```bash
 git clone https://github.com/msujoy149/consistency-frame.git
 cd consistency-frame
-./setup.sh
+bash setup.sh
 ```
 
 Notes: the `Git.Git` winget package is not maintained by the Git for
@@ -143,7 +145,7 @@ their PATH changes take effect.
 
 ## Quick start
 
-1. **Install** (above) and run `./setup.sh`.
+1. **Install** (above) and run `bash setup.sh`.
 2. **Register a character.** Give the installed assistant a name, a
    unique ID, 3–4 reference photos, and a voice reference. See
    [Character registration](#character-registration).

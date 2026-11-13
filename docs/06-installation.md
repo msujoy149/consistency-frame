@@ -69,7 +69,7 @@ brew install git bun uv node ffmpeg
 # Consistency Frame
 git clone https://github.com/msujoy149/consistency-frame.git
 cd consistency-frame
-./setup.sh
+bash setup.sh
 ```
 
 Homebrew needs the Xcode Command Line Tools (`xcode-select --install`)
@@ -91,7 +91,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # Consistency Frame
 git clone https://github.com/msujoy149/consistency-frame.git
 cd consistency-frame
-./setup.sh
+bash setup.sh
 ```
 
 `unzip` is required by the bun installer on Linux. On non-Debian
@@ -128,7 +128,7 @@ Then in Git Bash:
 ```bash
 git clone https://github.com/msujoy149/consistency-frame.git
 cd consistency-frame
-./setup.sh
+bash setup.sh
 ```
 
 Notes: the `Git.Git` winget package is not maintained by the Git for
@@ -158,7 +158,7 @@ or later for bun.
 5. **Walks you through the voice-model download** (next section) — it
    does not download the model itself.
 
-Re-running `./setup.sh` is safe: components already present are
+Re-running `bash setup.sh` is safe: components already present are
 skipped, skills are re-copied exactly, and the component setups run
 again.
 
@@ -200,7 +200,7 @@ present, `SKILL.md` frontmatter, no character data installed).
   PATH for new shells only.
 - **`make: command not found`** — install make (macOS: Xcode Command
   Line Tools; Linux: `sudo apt install -y make`; Windows: use WSL).
-- **Component clone fails** — check the network, then run `./setup.sh`
+- **Component clone fails** — check the network, then run `bash setup.sh`
   again. A failed pin checkout removes the partial clone, so a re-run
   starts clean.
 - **VoiceStudio `setup:api` fails** — run it manually to see the error:
@@ -246,7 +246,7 @@ codex plugin marketplace add msujoy149/consistency-frame
 Then, inside a Codex session, open `/plugins`, select the
 `consistency-frame` marketplace, and install the plugin. The plugin's
 skills then load from the plugin's own `skills/` folders. (Running
-`./setup.sh` additionally copies the skills into `.agents/skills/`.)
+`bash setup.sh` additionally copies the skills into `.agents/skills/`.)
 
 ## ChatGPT
 
@@ -286,7 +286,7 @@ OpenMontage for video) and copies the skills into `.agents/skills/`.
 ```bash
 git clone https://github.com/msujoy149/consistency-frame
 cd consistency-frame
-./setup.sh
+bash setup.sh
 ```
 
 `setup.sh` installs the bundled components and copies `skills/` into

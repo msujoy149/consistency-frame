@@ -133,6 +133,7 @@ angles is part of the generated script. Realism target: aim for 100%
 
 ### Fixed
 
+- Install command is now `bash setup.sh` everywhere (README, docs/06-installation.md): a fresh clone from GitHub does not carry `setup.sh`'s executable bit, so `./setup.sh` fails with "Permission denied". Verified by a fresh-clone install test (2026-11-13): `bash setup.sh` exits 0 and installs both bundled components at their pinned commits.
 - Audit fixes (deep review of the first release). The "86 systems"
   count is now explained everywhere it appears: 75 distinct systems,
   86 numbered entries, because the 11 professional systems are listed
