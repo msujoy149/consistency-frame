@@ -7,7 +7,7 @@ description: Uses a registered AI-generated model as an agency spokesperson acro
 
 This skill turns a registered character into an advertising spokesperson. One AI-generated model — a synthetic person with no real existence — is introduced once and then used across every ad for a business's services, with the same face, the same voice, and the same brand in each one.
 
-Nothing here replaces the character system. The model is a registered character, created through the Character Generator (`character-consistency` skill, Section 12, option (b): AI-generated, shown first, permanent only on the user's explicit "done" approval). Registration, 100% reference fidelity, identity anchoring, face-consistency correction, angle-matched verification, and the expression library all still apply, unchanged, to every ad. This skill adds the seven advertising systems that sit on top of that foundation.
+Nothing here replaces the character system. The model is a registered character, created through the Character Generator (`character-consistency` skill, Section 12.2: AI-generated, shown first, permanent only on the user's explicit "done" approval). Registration, 100% reference fidelity, identity anchoring, face-consistency correction, angle-matched verification, and the expression library all still apply, unchanged, to every ad. This skill adds the seven advertising systems that sit on top of that foundation.
 
 ## 1. Brand Kit — One Kit, One Brand
 

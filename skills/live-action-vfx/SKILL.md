@@ -1,13 +1,13 @@
 ---
 name: live-action-vfx
-description: Live-action and VFX hybrid quality for real humans with CG creatures: a real body performs with micro-expressions, breath, fatigue and weight; CG creatures share the live plate's light, shadow and eyelines; water and wetness stay continuous across cuts; real locations are extended with CG without a visible seam; stunts are choreographed and shot to look unplanned; real animals perform on their own terms. Builds on the production-systems skill (camera language, shot list, angles), the humanized-production skill (performance, physics, editing), and the cinematic-power skill (style lock, creature performance, trailer structure, scale and colour scripting) — it adds only the live-action and VFX layer on top.
+description: "Live-action and VFX hybrid quality for real humans with CG creatures: a real body performs with micro-expressions, breath, fatigue and weight; CG creatures share the live plate's light, shadow and eyelines; water and wetness stay continuous across cuts; real locations are extended with CG without a visible seam; stunts are choreographed and shot to look unplanned; real animals perform on their own terms. Builds on the production-systems skill (camera language, shot list, angles), the humanized-production skill (performance, physics, editing), and the cinematic-power skill (style lock, creature performance, trailer structure, scale and colour scripting) — it adds only the live-action and VFX layer on top."
 ---
 
 # Live-Action & VFX
 
 Animation can be directed frame by frame. Live action cannot: a real body tires, a real animal does what it does, and a CG creature must live in light that was never on set. This skill adds the six systems that make live-action and VFX hybrid footage hold together — a real human performance, CG creatures inside live footage, water and wetness continuity, practical locations extended with CG, stunt choreography, and real-animal performance.
 
-Nothing here replaces the existing systems. The visual style bible (`production-systems` skill, A1), script-driven camera angles (A12), editing rhythm (`humanized-production` skill, 30.10), script-driven colour grading (28.7), the character registry (`character-consistency` skill), the cinematic-power layer (style lock, creature performance, trailer structure, scale and colour scripting), and the episode QC checklist all still apply, unchanged. This skill adds only the live-action and VFX layer on top of that foundation.
+Nothing here replaces the existing systems. The visual style bible (`production-systems` skill, A1), script-driven camera angles (A12), editing rhythm (`humanized-production` skill, 30.10), script-driven colour grading (production-systems C7), the character registry (`character-consistency` skill), the cinematic-power layer (style lock, creature performance, trailer structure, scale and colour scripting), and the episode QC checklist all still apply, unchanged. This skill adds only the live-action and VFX layer on top of that foundation.
 
 ## 1. Live-Action Human Performance — A Real Body Performs
 

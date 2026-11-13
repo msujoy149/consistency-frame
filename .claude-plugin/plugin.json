@@ -16,7 +16,13 @@
   "./skills/video-regeneration",
   "./skills/cinematic-power",
   "./skills/live-action-vfx",
-  "./skills/emotional-performance"
+  "./skills/emotional-performance",
+  "./skills/resource-management",
+  "./skills/language-authenticity",
+  "./skills/realistic-person",
+  "./skills/explainer-animation",
+  "./skills/command-authority",
+  "./skills/kids-family-animation"
  ],
  "version": "2.0.0"
 }

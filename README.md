@@ -158,7 +158,7 @@ their PATH changes take effect.
 5. **Get the episode.** The assistant generates with the registered
    characters and voices, runs the QC checklist, and delivers.
 
-**Command authority.** This repo commands the assistant: for every video the assistant reads and uses the repo's skills first, and only generates a missing system itself after checking the repo's notes on it (see [`skills/command-authority/SKILL.md`](skills/command-authority/SKILL.md)).
+**Command authority.** This repo commands the assistant: for every video the assistant reads and uses the repo's skills first, and only generates a missing system itself from the repo's own generation command after checking the repo's notes on it; light details are delegated with direction from the repo, a new task type starts from the distilled common core, and when the repo has no instruction at all it says "do it yourself" — never bare (see [`skills/command-authority/SKILL.md`](skills/command-authority/SKILL.md)).
 
 ## Features — 120 numbered entries (109 distinct systems)
 
@@ -541,6 +541,10 @@ and `description`, plus the full instructions):
 | `emotional-performance` | Musical performance and stagecraft, crowd as a living character, intimate drama and emotional arc, age performance, instrument performance sync, music as story and memory, cultural authenticity and object storytelling |
 | `resource-management` | Load only what the phase needs: voice plugin for voice work, video plugin for video assembly, working memory for the current phase; stop rules and the quality guard |
 | `language-authenticity` | Native patterns per language (US English, Bengali, Hindi), multi-language delivery, one voice across languages, lip-sync matched to the language's sounds |
+| `realistic-person` | A real person's photo becomes a realistic moving, speaking person video |
+| `explainer-animation` | 2D flat cartoon / stick-figure explainer that teaches one idea through simple scenes and visual metaphors |
+| `command-authority` | The repo is the command master: skills first, self-generate only when missing |
+| `kids-family-animation` | Professional kids & family animation across 14 methods, with a permanent reference library |
 
 `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` are thin pointers to
 `skills/` — one source of truth, read by every platform.

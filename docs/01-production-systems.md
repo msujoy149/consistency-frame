@@ -14,6 +14,8 @@ cross-referenced from §2 below. Together with the 18 extended, 3
 language/captions/format, 7 additional, 36 humanization, 7 agency
 advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, and 1 on-demand resource management, and 1 language authenticity, and 1 realistic person video, 1 2D explainer animation, 1 command authority, and 1 kids & family animation systems, the repo holds 109 distinct systems, presented as 120 numbered entries.
 
+How the count is made: production-systems lists 40 numbered entries (12 + 18 + 7 + 3); humanized-production 36; agency-advertising 7; cinematic-power 5; live-action-vfx 6; emotional-performance 7; and video-regeneration, user-supplied voice cloning (voice-consistency §13), resource-management, language-authenticity, realistic-person, explainer-animation, command-authority, and kids-family-animation each count as 1 whole system — 12+18+3+7+36+7+1+5+6+7+1+1+1+1+1+1+1 = 109 distinct systems. The 120 numbered entries are those 109 plus the 11 Part A systems listed twice (in the production-systems skill and here). The character-consistency skill and the other sections of voice-consistency are the working detail of those systems — registry, generator, verification, voice profiles, dialogue — not additional numbered entries.
+
 ## Production Priority Hierarchy
 
 When different instructions compete, follow this order. A lower priority

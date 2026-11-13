@@ -1,6 +1,6 @@
 ---
 name: command-authority
-description: The repo is the command master — after install, every video is made by reading and using the repo's skills first. A skill that exists is used, never reinvented; a missing system is generated only after checking the repo's notes, then saved as a new skill and reported to the user.
+description: "The repo is the command master — after install, every video is made by reading and using the repo's skills first. A skill that exists is used, never reinvented; a missing system is generated from the repo's own generation command and saved as a new skill; light details are delegated with direction from the repo; a new task type starts from the distilled common core; and when the repo has no instruction at all it says 'do it yourself' — never bare, always with the quality commands attached."
 ---
 
 # Command Authority — Repo First, Self-Generate Only When Missing
@@ -16,14 +16,15 @@ This repo is the command master. After a user installs it, videos are made WITH 
 ## 2. Order of Work for Every Video
 
 1. Read the script and the video type the user named.
-2. Find the repo skill for that type and follow it.
+2. Check the skill FIRST: if the skill already has the command for the thing being made, build from those skill commands. Skill commands take priority whenever they exist — for the videos this repo makes, almost all commands are already in the skills, so video work almost always takes this path.
 3. Apply the supporting skills the type skill cross-references (character, voice, language, camera, humanization, realism).
 4. Run the QC checklist before delivery.
+5. Only when no skill has the command for it does the repo fall back — to the generation command (§5) for a missing system, or to "do it yourself" (§7) for work with no repo instruction at all.
 
 ## 3. Missing Skill Fallback — Check the Repo First, Then Generate
 
 - If a needed skill is NOT in the repo, check the repo's comments and notes about that topic FIRST — the README, the docs, AGENTS.md, and the skill descriptions. If the repo has a comment on it, follow the comment.
-- If the repo gives no comment, generate the needed system yourself, in the repo's skill format, and save it as a new skill in `skills/` so the repo now has it.
+- If the repo gives no comment, the repo issues a generation command (§5): generate the needed system from that command, in the repo's skill format, and save it as a new skill in `skills/` so the repo now has it.
 - Tell the user plainly what was added and why.
 - Never silently invent a system that contradicts a repo skill or a repo comment.
 
@@ -31,3 +32,45 @@ This repo is the command master. After a user installs it, videos are made WITH 
 
 - To every skill in the repo, including future ones, and to every platform the repo is installed on.
 - The user's explicit instructions and script still outrank everything else.
+
+## 5. The Generation Command — What the Repo Issues When a Skill Is Missing
+
+When a skill is missing, the repo does not leave the assistant guessing — it issues a generation command in this standard form, and the assistant generates from it:
+
+- **Generate:** [the missing system, in one line — what it must do].
+- **Preserve:** the fixed identity — the character's face, structure, hands, and feet; the character's voice (tags + seed + reference audio); the locked visual style; continuity with the episode and the series. Nothing fixed is ever redesigned.
+- **Quality bar:** correct, cinematic, human-generated — human-feeling, never robotic. Realism target 100%, 99.9% as the floor.
+- **Verify:** check the result against the fixed reference; run the episode QC checklist; the user approves before anything is locked in.
+- **Save:** write it as a new skill in `skills/` in the repo's skill format, and tell the user plainly what was added and why.
+
+## 6. Light Details Are Delegated — the AI Decides Them, the Repo Directs Them
+
+Small things the AI creates itself — the emotion in a line, the tone of a reply, natural phrasing, a pause, a sigh, a small gesture. The AI decides these details. But the direction for them comes from the repo: the script's emotion per line, the character's established personality, the scene's beat, and the humanization systems. The AI never invents a detail that contradicts a fixed identity, a locked voice, or the script.
+
+## 7. "Do It Yourself" — The Explicit Permission, Never Bare
+
+When the repo has no instruction at all for something, it explicitly says "do it yourself" — that is permission, not an error and not a stop. The AI does it on its own. But the permission is NEVER bare: it always carries the quality commands with it:
+
+- **Do it CORRECTLY** — the work must be right, not approximate.
+- **Do it CINEMATICALLY** — framed, lit, and cut like cinema, not like a placeholder.
+- **Do it HUMAN-GENERATED** — human-feeling, never robotic; a person must feel like a person, a voice like a voice.
+- **Do it according to the TASK** — the need and the script decide the details; the script outranks everything else.
+
+And the priority from §2 still holds: this path is ONLY when no skill has the command. If a skill has it, build from the skill.
+
+## 8. The Common Core — One Instruction for Any New Task
+
+For a NEW kind of task — for example animation: make a small animation, or make an animated cartoon from a given video or script — do NOT hunt through the skills one by one looking for a matching skill. The repo distills the main common rules from ALL its skills into ONE core instruction and gives that to the AI: "do the work this way." The AI works from this core — no skill-hunting.
+
+The core instruction is short — it does not explain everything in detail — but it carries the universal rules that apply to ALL videos, the same in every chat and session:
+
+- **Human-like, never robotic** — characters move, talk, and act like people; voices sound like people; nothing sits as a still with a voice over it (`humanized-production`, `voice-consistency` §4).
+- **No overlap** — characters never overlap each other; each character keeps their own space (`character-consistency` multi-character scenes).
+- **Lip-sync** — if a character speaks, the mouth moves with the voice: the lips match the sounds of the language being spoken. A talking character with a still mouth is a defect (`language-authenticity`, `voice-consistency`).
+- **Fixed identity** — a character's face, structure, hands, and feet never change; their voice (tags + seed + reference audio) never changes (`character-consistency`, `voice-consistency` §1–§2).
+- **The script decides** — the user's script and instructions outrank everything else (§4).
+- **Physical realism and continuity** — movement, objects, and light stay believable and continuous across cuts (`production-systems`).
+- **QC before delivery** — the episode QC checklist runs before anything is delivered (`production-systems`).
+- **Rights and consent** — a real person's photo or voice is used only with permission (`production-systems` B17).
+
+If the new task later grows into a full system, generate it as a new skill from the generation command (§5) so the repo now has it.

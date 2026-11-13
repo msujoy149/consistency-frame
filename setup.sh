@@ -39,6 +39,14 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 1
 fi
 
+# Disk space: the components need ~5 GB and the OmniVoice model ~3.3 GB.
+# If free space cannot be determined, the check is skipped.
+avail_kb=$(df -k "$REPO_ROOT" 2>/dev/null | tail -1 | awk '{print $4}')
+if [ -n "$avail_kb" ] && [ "$avail_kb" -lt 9437184 ]; then
+  echo "ERROR: less than 9 GB free disk space (components need ~5 GB, the OmniVoice model ~3.3 GB). Free space and run bash setup.sh again."
+  exit 1
+fi
+
 # The published tree carries no submodule links, so the installs below
 # are plain git clones — the only path that works in this repo.
 echo "-- Installing bundled components (VoiceStudio + OpenMontage) --"
@@ -91,7 +99,9 @@ cp -r skills/* .agents/skills/
 echo "Installed skills: $(ls .agents/skills | tr '\n' ' ')"
 
 # 3. VoiceStudio (voice) -------------------------------------------------
-if [ -d "components/voicestudio" ]; then
+# A directory that is not a git checkout is not a usable install (see
+# clone_component above) — skip it instead of running setup inside it.
+if [ -d "components/voicestudio/.git" ]; then
   echo "-- VoiceStudio found. Setting up its API (needs bun + uv) --"
   if command -v bun >/dev/null 2>&1; then
     # `bun run setup:api` needs uv on PATH; it is often in ~/.local/bin.
@@ -128,11 +138,16 @@ if [ -d "components/voicestudio" ]; then
     echo "follow components/voicestudio README instructions manually."
   fi
 else
-  echo "VoiceStudio is not installed — run bash setup.sh again."
+  if [ -d "components/voicestudio" ]; then
+    echo "VoiceStudio is not a valid checkout — remove components/voicestudio and run bash setup.sh again."
+  else
+    echo "VoiceStudio is not installed — run bash setup.sh again."
+  fi
 fi
 
 # 4. OpenMontage (long-form video) ---------------------------------------
-if [ -d "components/openmontage" ]; then
+# As above: only a real checkout is a usable install.
+if [ -d "components/openmontage/.git" ]; then
   echo "-- OpenMontage found. Running its own setup (make setup; downloads the Node + Python dependencies, takes a few minutes) --"
   echo "  (Needs Python 3.10+ — uv provides it if installed — plus Node and ffmpeg."
   echo "  No API keys are set by this script. Add provider keys to"
@@ -151,7 +166,11 @@ if [ -d "components/openmontage" ]; then
     echo "  cd components/openmontage && make setup"
   fi
 else
-  echo "OpenMontage is not installed — run bash setup.sh again."
+  if [ -d "components/openmontage" ]; then
+    echo "OpenMontage is not a valid checkout — remove components/openmontage and run bash setup.sh again."
+  else
+    echo "OpenMontage is not installed — run bash setup.sh again."
+  fi
 fi
 
 echo ""

@@ -55,4 +55,4 @@ Resource discipline must NEVER degrade quality.
 
 ## 9. Honest Limit — A Start/Stop Discipline, Not a Memory Meter
 
-This repo cannot measure memory on every platform. This system is a start/stop discipline, not a memory meter: which plugin starts, when it starts, and when it stops. On the reference install, the production scripts start the plugins per phase and stop them after. If a platform cannot stop a plugin, say so plainly; the discipline still applies to everything that can be stopped.
+This repo cannot measure memory on every platform. This system is a start/stop discipline, not a memory meter: which plugin starts, when it starts, and when it stops. On the reference install, the plugins are started by hand per phase and stopped after — there are no production scripts in this repo; the discipline is manual start/stop. If a platform cannot stop a plugin, say so plainly; the discipline still applies to everything that can be stopped.

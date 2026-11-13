@@ -35,9 +35,11 @@ models/
 hf-cache/
 
 # Character data — private by default, never in this public repo
-characters/*/
+characters/*
 !characters/.gitkeep
 !characters/README.md
+demo/*
+!demo/README.md
 
 # Build and editor artefacts
 .DS_Store

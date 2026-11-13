@@ -1,6 +1,6 @@
 ---
 name: video-regeneration
-description: Regenerates a video the user uploads: first analyses the reference video in full (story, scenes, characters, objects, camera, light, sound), then creates a NEW original video that preserves the reference's core story, emotional impact, narrative structure and creative direction, with only minor or explicitly requested changes. Covers analysis, continuity, realistic physical interactions, cinematography, storyboarding, audio, quality control, and output requirements. Builds on the character-consistency, voice-consistency, humanized-production and production-systems skills — the reference is the user's own uploaded video, and the output is an original alternative version, never a frame-for-frame copy.
+description: "Regenerates a video the user uploads: first analyses the reference video in full (story, scenes, characters, objects, camera, light, sound), then creates a NEW original video that preserves the reference's core story, emotional impact, narrative structure and creative direction, with only minor or explicitly requested changes. Covers analysis, continuity, realistic physical interactions, cinematography, storyboarding, audio, quality control, and output requirements. Builds on the character-consistency, voice-consistency, humanized-production and production-systems skills — the reference is the user's own uploaded video, and the output is an original alternative version, never a frame-for-frame copy."
 ---
 
 # Video Regeneration

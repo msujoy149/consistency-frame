@@ -65,7 +65,7 @@ Choose ONE method for the project, lock it, and hold it across every scene. Neve
 ### 4.2 Rigging
 
 - Skeleton structure, bone hierarchy, facial rigging, eye controls, mouth controls, body controls, hand and finger controls, IK/FK concepts, deformation quality. A rig that deforms badly (a bent elbow that collapses, a face that warps) is a defect — fix the rig, never ship the deformation.
-- **Honest distinction.** An AI video model does NOT perform real 3D rigging or geometry operations. Never claim it does. When this skill talks about rigging, it describes the craft that the reference was built with — the AI reproduction strategy in §4.5 is how those visual qualities are approximated, not how rigging is performed.
+- **Honest distinction.** An AI video model does NOT perform real 3D rigging or geometry operations. Never claim it does. When this skill talks about rigging, it describes the craft that the reference was built with — the AI reproduction strategy in §4.6 is how those visual qualities are approximated, not how rigging is performed.
 
 ### 4.3 Animation principles
 
@@ -102,14 +102,14 @@ For each traditional 3D technique, this is how an AI-based video-generation work
 - **First-frame and last-frame conditioning.** The first and last frames of a shot are fixed, so the movement between them is intentional.
 - **Motion references.** A reference movement (a walk, a wave, a jump) guides the generated motion; the generated motion is checked against it.
 - **Scene continuation.** The next shot starts from the previous shot's last frame, so the world does not reset between cuts.
-- **Inpainting and repair.** A defect in one area (a warped hand, a merged face) is repaired in that area only — never by regenerating the whole scene and losing the good parts.
+- **Inpainting and repair.** A defect in one area (a warped hand, a torn prop) is repaired in that area only — never by regenerating the whole scene and losing the good parts. A face is never inpainted: a merged or drifted face is a drifted face — regenerate fresh from the approved reference, as the `character-consistency` skill (§14) requires.
 - **Multi-clip continuity.** Characters, voices, clothes, props, light, and the world stay the same across clips — see §11 and the `character-consistency` skill.
 - **AI stills + slow movement (verified 2026-11-13).** The dominant small-channel method observed in the reference library: photoreal or 3D-style AI still images, slow Ken Burns zooms and pans, narration over stills — NOT true motion animation. The camera is static or near-static; cuts do the work. Use it for narration-driven stories (a rescue, a saga, a moral tale) where the story is told by the voice and the images, not by animated motion — and say plainly that the result is animated stills, not full motion animation. See §17 and library records R-06 to R-11, R-14, R-15.
 - Never pretend an AI model performs actual 3D rigging or geometry. Say plainly what the workflow can and cannot do, and deliver only what was actually checked.
 
 ## 5. Camera Decision System — The Camera Follows the Story
 
-Never choose an angle merely to look complicated. Every shot answers the 8 questions in §5.6 first. For the script-driven angle rule, see the `production-systems` skill (§33): the angle is chosen from the script beat — story function, emotion, character relationship, what the viewer must notice. This section is the full camera language that rule draws on.
+Never choose an angle merely to look complicated. Every shot answers the 8 questions in §5.6 first. For the script-driven angle rule, see the `production-systems` skill (A12): the angle is chosen from the script beat — story function, emotion, character relationship, what the viewer must notice. This section is the full camera language that rule draws on.
 
 ### 5.1 Camera angles
 
@@ -362,7 +362,7 @@ The ending is a promise, not a resolution: the video stops at the crisis and ask
 
 Viral Shorts often use NO camera movement at all: static shots, hard cuts only, one location, one gag. Observed across the 4-video watch, the channel research, and the Cocomelon video — no pans or push-ins in the sampled frames. When the script is a Short, a static camera with hard cuts is a legitimate choice, not a missing movement: choose movement only when a beat needs it. See §5.3 and library records R-01 to R-05.
 
-### 17.5 Game-engine animation — observed detail (area 3 — 3D CGI production, as observed detail)
+### 17.5 Game-engine animation — observed detail (area 2 — 3D CGI production, as observed detail)
 
 Method 12 (game-engine-generated animation) is a real viral category, confirmed by search results on 2026-11-13: physics-sandbox driving (BeamNG.drive, 23M and 24M views), sandbox chase animation (Garry's Mod, 112K views), and block-world animation (Minecraft, 2.1M views) — all in the cartoon car / monster truck Shorts searches. The observed detail: the game engine supplies the physics, the vehicles, and the crashes; the video adds the framing, the cuts, and the joke. The engine is the production method; the comedy is in the edit. Recorded in the library's trend-intelligence section (search results, 2026-11-13).
 
@@ -384,4 +384,4 @@ The biggest kids Shorts in the research set (774M, 596M, 515M views) are live-ac
 
 ### 17.10 Rights — borrowed audio (area 8 — audio and sound design)
 
-A reference creator who animates over borrowed comedy audio and credits the audio's creator in the title or description does not make that audio licensed for our use. Credit alone is not a licence. Our productions use original audio or audio licensed to us — see §9. This is recorded here because the pattern (animate over viral audio, credit the creator) was observed repeatedly in the research, and the repo's rights rule (§25 item 17 in the `production-systems` skill) must be applied to it explicitly: observing the method is not permission to copy it.
+A reference creator who animates over borrowed comedy audio and credits the audio's creator in the title or description does not make that audio licensed for our use. Credit alone is not a licence. Our productions use original audio or audio licensed to us — see §9. This is recorded here because the pattern (animate over viral audio, credit the creator) was observed repeatedly in the research, and the repo's rights rule (B17 in the `production-systems` skill) must be applied to it explicitly: observing the method is not permission to copy it.

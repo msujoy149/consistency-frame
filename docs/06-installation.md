@@ -22,6 +22,34 @@ The skills in this repository are:
 - `production-systems` — the 12 professional systems, the 18 extended
   systems, the 7 additional systems, and the language, captions, and
   format rules.
+- `agency-advertising` — brand kit, ad formats, campaign variants,
+  client isolation, AI disclosure, product consistency, client approval.
+- `video-regeneration` — reference analysis, new-not-duplicate remake,
+  continuity, physical interactions, cinematography, storyboard, audio,
+  QC, output requirements.
+- `cinematic-power` — style lock, creature performance, music-beat
+  editing and synchronized ensemble, trailer structure, scale and colour
+  scripting.
+- `live-action-vfx` — live-action human performance, VFX integration of
+  CG creatures, water continuity, practical locations and set extension,
+  stunt and action choreography, real-animal performance.
+- `emotional-performance` — musical performance and stagecraft, crowd as
+  a living character, intimate drama and emotional arc, age performance,
+  instrument performance sync, music as story and memory, cultural
+  authenticity and object storytelling.
+- `resource-management` — load only what the phase needs; stop rules;
+  the quality guard.
+- `language-authenticity` — native patterns per language, multi-language
+  delivery, one voice across languages, lip-sync matched to the
+  language's sounds.
+- `realistic-person` — a real person's photo becomes a realistic moving,
+  speaking person video.
+- `explainer-animation` — 2D flat cartoon / stick-figure explainer that
+  teaches one idea.
+- `command-authority` — the repo is the command master: skills first,
+  self-generate only when missing.
+- `kids-family-animation` — professional kids & family animation across
+  14 methods, with a permanent reference library.
 
 Use the one-command install for your platform below. After installing,
 the skills are available to the agent in that platform; character data is
@@ -184,12 +212,12 @@ instead. The notice is kept wherever the model is used.
 ```bash
 git --version; bun --version; uv --version; node --version; ffmpeg -version | head -1
 ls components/voicestudio components/openmontage   # both present, with real content
-ls .agents/skills                                  # character-consistency voice-consistency humanized-production production-systems
+ls .agents/skills                                  # all fifteen skills present
 (cd components/voicestudio && .venv/bin/python -c "import torch; print(torch.__version__)")  # VoiceStudio Python API
 (cd components/openmontage && ls .venv)            # OpenMontage virtual environment
 ```
 
-Also run the checks in "Verifying the install" below (four skills
+Also run the checks in "Verifying the install" below (fifteen skills
 present, `SKILL.md` frontmatter, no character data installed).
 
 ### Troubleshooting
@@ -227,8 +255,7 @@ plugin name are both `consistency-frame`:
 ```
 
 The marketplace manifest is `.claude-plugin/marketplace.json`; the
-plugin manifest is `.claude-plugin/plugin.json` at the repository root,
-and the plugin's skills load from the plugin's own `skills/` folders.
+plugin manifest is `.claude-plugin/plugin.json`, and the plugin's skills load from the plugin's own `skills/` folders.
 Nothing needs to be copied into `.claude/skills/` by hand.
 
 ## Codex
@@ -327,7 +354,7 @@ After installing, check that:
 
 1. Each skill folder contains a `SKILL.md` with `name` and `description`
    in its YAML frontmatter.
-2. The four skills listed at the top of this document are all present.
+2. The fifteen skills listed at the top of this document are all present.
 3. No character data (reference images, voice recordings, personal
    data) was installed — character data lives only in the private
    overlay, never in the public repository.

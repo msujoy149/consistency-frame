@@ -34,4 +34,4 @@ The library now holds real records (R-01 to R-17) from videos watched in full on
 
 ## Script-only workflow
 
-The user gives a script (plus optional character references and special instructions); the system reads it, identifies the category, loads this skill and the supporting skills, prepares a storyboard and shot list, selects camera angles from the story, creates the assets, generates and assembles the video, runs QC, and delivers the finished video with a concise production summary. If the script lacks an essential detail, ask the smallest necessary clarification.
+The user gives a script (plus optional character references and special instructions); the system reads it, identifies the category, loads this skill and the supporting skills, prepares a storyboard and shot list, selects camera angles from the story, creates the assets, generates and assembles the video, runs QC, and delivers the finished video with a concise production summary. The fifteen steps are enumerated in the skill (§15). If the script lacks an essential detail, ask the smallest necessary clarification.

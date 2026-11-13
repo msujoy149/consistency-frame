@@ -1,6 +1,6 @@
 ---
 name: humanized-production
-description: Makes every video feel human-made, not AI-made. Covers all 36 humanization systems — performance-driven acting, single-pass dialogue, micro-motion, listener reactions, never-silence sound, non-verbal voice, gaze continuity, hands and physics, anti-plastic skin, editing rhythm, the film-finish pipeline, drift and artifact QC, camera and lighting imperfection, background life, cloth and hair physics, sound spotting, disclosure and provenance, detector self-QC, audio description, voice variants, code-switching, model pinning, re-anchoring, reference strategy, the human blind-test gate, and the realism budget.
+description: Makes every video feel human-made, not AI-made. Covers all 36 humanization systems — performance-driven acting, single-pass dialogue, micro-motion, listener reactions, never-silence sound, non-verbal voice, gaze continuity, hands and physics, anti-plastic skin, editing rhythm, the film-finish pipeline, drift and artifact QC, camera and lighting imperfection, background life, cloth and hair physics, sound spotting, disclosure and provenance, detector self-QC, audio description, voice variants, code-switching, model pinning, re-anchoring, reference strategy, the human blind-test gate, distance and space in voice, mouth-interior QC, wardrobe wear, imperfection budget, music-ducking, failure playbook, real-person safeguards, cinematic backgrounds, and the realism budget.
 ---
 
 # Humanized Production

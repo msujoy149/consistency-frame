@@ -11,7 +11,7 @@ A short video that teaches one idea through simple scenes and visual metaphors. 
 
 - Flat 2D vector cartoon: thick black outlines, flat colour fills, no gradients on characters, warm neutral backgrounds, a small palette (a few strong colours).
 - Two character designs, kept apart: a fuller cartoon figure for the real person; simple stick figures (round head, dot eyes, stick limbs) for abstract ideas. The simple figures ARE the abstract ideas; the fuller figure is the real person. Never mix the two designs.
-- No anime styling, no 3D look, no photorealism. If the user asks for animation, this is the explainer style — the anime and 3D CG styles live in the `cinematic-power` skill's style lock instead.
+- No anime styling, no 3D look, no photorealism. If the user asks for an explainer or teaching animation, this is the explainer style — the anime and 3D CG styles live in the `cinematic-power` skill's style lock instead, and kids & family animation lives in the `kids-family-animation` skill.
 
 ## 2. Metaphor System — Every Abstract Idea Becomes a Character or a Place
 
