@@ -77,10 +77,10 @@ Rules:
 - Each beat has a duration budget in the shot list. The trailer must work without the full film: a viewer who never sees the film still feels a complete arc.
 - A teaser is the same structure shortened: wonder, one stake, one character, title. The order never changes; only the length does.
 
-**Title cards and end cards.** A trailer speaks in cards as well as in shots. Four kinds, each with one job:
+**Title cards and end cards.** A video speaks in cards as well as in shots. Cards are a general video device, not trailer-only: any video can introduce a character with a card and close with an end card — a trailer is one kind of video that uses them. Four kinds, each with one job:
 
 - **Character-intro cards.** One card per introduction, over a close-up or a full-body reveal of that character — a name or a short label that tells the viewer who this is and what they are. The card arrives with the character, never before them, and never stays past the reveal.
-- **Tagline cards.** One short line over a spectacle shot (a figure against the moon, a world in flames) that states the promise of the piece in a few words. One tagline per trailer, placed at the emotional peak — never two taglines competing.
+- **Tagline cards.** One short line over a spectacle shot (a figure against the moon, a world in flames) that states the promise of the piece in a few words. One tagline per video, placed at the emotional peak — never two taglines competing.
 - **Pedigree cards.** A short line over a wide wonder shot that places the piece ("from the studio that brought you…", "from the makers of…") — used once, early, and only when the pedigree is real. Never invent a pedigree.
 - **Release-date end cards.** After the title card: when and where the piece arrives, and in which languages, on a plain silent card. The release information lives only here — never on an earlier card, never over a scene.
 

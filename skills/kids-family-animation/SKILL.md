@@ -386,9 +386,9 @@ The biggest kids Shorts in the research set (774M, 596M, 515M views) are live-ac
 
 A reference creator who animates over borrowed comedy audio and credits the audio's creator in the title or description does not make that audio licensed for our use. Credit alone is not a licence. Our productions use original audio or audio licensed to us — see §9. This is recorded here because the pattern (animate over viral audio, credit the creator) was observed repeatedly in the research, and the repo's rights rule (B17 in the `production-systems` skill) must be applied to it explicitly: observing the method is not permission to copy it.
 
-### 17.11 Trailer title cards and end cards (areas 6, 9 — storytelling, editing and retention)
+### 17.11 Title cards and end cards (areas 6, 9 — storytelling, editing and retention)
 
-Observed in a 3D stylized fantasy feature-film trailer watched in full on 2026-11-15: the trailer speaks in cards as well as in shots — a character-intro card over a close-up, a tagline card over a moonlit full-body shot, a studio-pedigree card over a village wide, a silent title card on black, and a silent release-date card (date + languages) after it. Each card carries one idea; cards are timed to the music or the beat; the title card is the last emotional image and the release card follows it quietly. See the `cinematic-power` skill §4 and library records R-18, R-19.
+Observed in a 3D stylized fantasy video clip watched in full on 2026-11-15 — a training clip, not a trailer (the clip uses a trailer-like arc, but the cards are a general video device, usable in any video): the video speaks in cards as well as in shots — a character-intro card over a close-up, a tagline card over a moonlit full-body shot, a studio-pedigree card over a village wide, a silent title card on black, and a silent release-date card (date + languages) after it. Each card carries one idea; cards are timed to the music or the beat; the title card is the last emotional image and the release card follows it quietly. See the `cinematic-power` skill §4 and library records R-18, R-19.
 
 ### 17.12 Character transformation as a story beat (areas 2, 5 — 3D CGI production, character performance)
 
