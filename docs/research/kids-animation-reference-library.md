@@ -2,9 +2,9 @@
 
 The permanent reference library for the `kids-family-animation` skill: verified production knowledge, not just links. When the user supplies a script, the system consults this library and decides visual style, animation method, camera angles, shot sizes, character actions, dialogue style, sound design, scene timing, and editing structure automatically.
 
-## Status — populated from fully watched videos only (2026-11-13)
+## Status — populated from fully watched videos only (2026-11-13 and 2026-11-15)
 
-This library holds real records ONLY from videos that were watched in full on 2026-11-13: the 4-video watch, the one popular-channel video that played (Cocomelon Pat-A-Cake), and the videos actually watched in the 7-channel research. Every record below states its source and date. Nothing in this file is invented or guessed. Quality rule (2026-11-13): only what we are sure about is included — anything doubtful, unclear, or not yet understood stays out.
+This library holds real records ONLY from videos that were watched in full on 2026-11-13: the 4-video watch, the one popular-channel video that played (Cocomelon Pat-A-Cake), and the videos actually watched in the 7-channel research. Records R-18 and R-19 come from two user-uploaded videos watched in full on 2026-11-15 (a 3D stylized fantasy dialogue scene excerpt and a 3D stylized fantasy feature-film trailer, both vertical). Every record below states its source and date. Nothing in this file is invented or guessed. Quality rule (2026-11-13): only what we are sure about is included — anything doubtful, unclear, or not yet understood stays out.
 
 Caveats that apply to the whole library (from the research notes, 2026-11-13):
 - The 4-video watch items were recent small-channel uploads (2, 7, 1, 10 views), NOT viral hits — they are technique observations of what new small channels produce now, never cited as viral examples.
@@ -371,6 +371,42 @@ Each record covers all 25 fields of the analysis format (field numbers shown). "
 - **Field 24:** Recorded as trend intelligence (area 10) only — not animation. The choosing-game structure is the reusable observation.
 - **Field 25:** Exact publication date and duration not recorded. Live-action, not animation — do not present as an animation reference.
 - **Areas:** 10 (kids Shorts trend intelligence) ONLY. Source: browser research, 2026-11-13.
+
+### R-18 — 3D stylized fantasy dialogue scene excerpt (user-uploaded, vertical)
+
+- **Fields 1–4:** User-uploaded files received 2026-11-15 (two files, same clip — see Field 25). No public URL, channel, or title available. Watched in full (frame-by-frame decode).
+- **Fields 5–7:** 13.46 s, 9:16 vertical, 3D stylized fantasy dialogue scene excerpt.
+- **Field 8:** 3D stylized CG, feature-film rendering quality (fixed proportions, consistent materials).
+- **Fields 9–10:** A young heroine (long dark-red hair, white blouse, dark skirt, scarf) carrying a birdcage with a small creature; an antagonist in a wide-brim hat and purple outfit; an older woman in a patterned purple dress with a glowing orb; a character caught in a rope net. Fantasy castle on a hill, forest, crooked multi-storey house with glowing windows.
+- **Fields 11–14:** Extreme wide establishing shot, medium-wide, low angle, full-body, close-ups, two-shot; static or near-static framing; hard cuts on dialogue lines. Lens data not recorded.
+- **Field 15:** Day → pink sunset → dark teal night; purple = antagonist, warm pink = heroine; palette changes only at emotional transitions.
+- **Fields 16–17:** Run with a swinging cage, crouch in vines, hanging upside-down in a net; faces change with the beat (wonder, fear, anger, worry); mouths move with the dialogue.
+- **Fields 18–19:** Continuous dialogue, no silent gaps; burned-in English dialogue subtitles throughout, centred low.
+- **Field 20:** Cuts land on dialogue lines; excerpt ends mid-scene on a night exterior.
+- **Field 21:** 5 beats — (1) wonder establishing shot; (2) secret revealed in dialogue; (3) threat named; (4) capture in the net; (5) defiant closing line + mysterious night exterior.
+- **Field 22:** Feature-quality 3D fantasy in a vertical Short; expressive faces; mood-coded colour.
+- **Field 23:** Wonder opening; dialogue hook; capture as the visual payoff.
+- **Field 24:** 3D stylized fantasy dialogue scene (see skill §4, §5, §8; cinematic-power §1, §5); burned-in subtitles as a Shorts delivery format (captions stay opt-in per production-systems D1).
+- **Field 25:** Two files received for the same clip (different encodes — frames f06–f13 pixel-identical, f01–f05 differ at re-encode noise, PSNR 36.6–40.0 dB; audio identical). One record covers both. No public source — do not cite a URL, channel, or title.
+- **Areas:** 2 (3D CGI), 5 (character performance), 6 (storytelling), 7 (dialogue and voice), 9 (editing and retention). Source: user-uploaded files, frame decode 2026-11-15.
+
+### R-19 — 3D stylized fantasy feature-film trailer (user-uploaded, vertical)
+
+- **Fields 1–4:** User-uploaded file received 2026-11-15. No public URL, channel, or title available. Watched in full (frame-by-frame decode).
+- **Fields 5–7:** 32.02 s, 9:16 vertical, 3D stylized fantasy feature-film trailer.
+- **Field 8:** 3D stylized CG, feature-film rendering quality (same world and characters as R-18).
+- **Fields 9–10:** Same heroine and antagonist as R-18, plus a living teacup (object with a face), a comic-relief older man, a flock of black birds. Fantasy village, forest, house interiors, night skies with a full moon.
+- **Fields 11–14:** Extreme close-ups for emotion, full-body reveals, extreme wides for wonder, low angles for threat, two-shots for confrontation; hard cuts, faster in the climax montage; one motion-blur speed shot; one full-frame pink flash transition. Lens data not recorded.
+- **Field 15:** Purple = antagonist/threat; warm pink/candlelight = heroine/home; deep blue night = danger; gold moonlight = wonder. Palette scripted per beat.
+- **Fields 16–17:** Full expression range in extreme close-ups; a transformation (large dark wings spread against the moon); a bird flock moving as one mass; the teacup keeps its shape and gains a face and feelings.
+- **Fields 18–19:** Dialogue and music throughout the first ~27 s; the last ~5 s (title + release-date end cards) are silent. Audio mean −17.4 dB, max −3.2 dB.
+- **Field 20:** Six-beat trailer arc with title cards timed to the music/beat; climax montage cuts fastest; end cards silent and static.
+- **Field 21:** 6 beats — (1) mysterious silhouette opening; (2) threat established; (3) heroine in danger, allies and comic relief; (4) transformation and climax; (5) title card; (6) release-date end card.
+- **Field 22:** Feature-trailer craft in a vertical Short; title cards as a core device; a complete arc without the film.
+- **Field 23:** Title cards (intro, tagline, pedigree, release-date); transformation beat; flash-frame transition; silent end cards.
+- **Field 24:** Trailer title cards and end cards, character transformation as a story beat (see skill §17.11, §17.12; cinematic-power §2, §4); trailer six-beat structure verified against a real feature trailer (see cinematic-power §4).
+- **Field 25:** The end card states a November 27 cinema release in two languages (English and Hindi) — recorded as observed on-screen text; no public source, channel, or title cited. The small print at the bottom of the end card was not read.
+- **Areas:** 1 (camera), 2 (3D CGI), 5 (character performance), 6 (storytelling), 9 (editing and retention). Source: user-uploaded file, frame decode 2026-11-15.
 
 ## Trend intelligence (area 10) — dated 2026-11-13
 

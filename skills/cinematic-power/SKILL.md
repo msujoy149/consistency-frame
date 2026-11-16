@@ -41,6 +41,8 @@ Rules:
 - **Groups of animals are never clones.** Each animal in a group is distinct in look and in timing; a group of identical copies reads as a mistake.
 - Animals follow the same continuity rules as characters: identity, clothing or markings, and props never change between shots unless the story requires it.
 
+- **Transformation — a character may change form as a story beat.** A character that grows wings, turns into a beast, or takes another form does so as a planned beat, never as an accident and never as a jump-cut swap: anticipation first (the character braces, the light changes, the camera holds), then the change itself is shown (the form shifts on screen — feathers, light, a silhouette stretching), then the new form is established (a full-body shot that lets the viewer read it). The face and the voice stay fixed through the change — the audience must still recognise who it is. The new form is registered like a second character record (shape, size, colours, markings) and held consistent in every later shot. A transformation that changes the face is a drifted character, not a transformation — regenerate from the approved reference.
+
 **Check:** every animal and creature in the delivered video matches its record in species, size, colours, and markings, and moves the way its real body moves.
 
 ## 3. Music-Beat Editing & Synchronized Ensemble — The Beat Is the Clock
@@ -74,6 +76,15 @@ Rules:
 - Never reveal the ending. Never explain what the images already show — if a shot says it, no line of dialogue needs to say it again.
 - Each beat has a duration budget in the shot list. The trailer must work without the full film: a viewer who never sees the film still feels a complete arc.
 - A teaser is the same structure shortened: wonder, one stake, one character, title. The order never changes; only the length does.
+
+**Title cards and end cards.** A trailer speaks in cards as well as in shots. Four kinds, each with one job:
+
+- **Character-intro cards.** One card per introduction, over a close-up or a full-body reveal of that character — a name or a short label that tells the viewer who this is and what they are. The card arrives with the character, never before them, and never stays past the reveal.
+- **Tagline cards.** One short line over a spectacle shot (a figure against the moon, a world in flames) that states the promise of the piece in a few words. One tagline per trailer, placed at the emotional peak — never two taglines competing.
+- **Pedigree cards.** A short line over a wide wonder shot that places the piece ("from the studio that brought you…", "from the makers of…") — used once, early, and only when the pedigree is real. Never invent a pedigree.
+- **Release-date end cards.** After the title card: when and where the piece arrives, and in which languages, on a plain silent card. The release information lives only here — never on an earlier card, never over a scene.
+
+Rules: each card carries exactly one idea; cards are timed to the music or the beat, never dropped at random; text is big, readable, and held long enough to read at a glance. The title card remains the last emotional image — the release-date card follows it quietly, plain, silent, and factual, and never competes with it.
 
 **Check:** the delivered trailer contains all six beats in order, reveals nothing of the ending, and works as a complete arc on its own.
 

@@ -47,7 +47,7 @@ Choose ONE method for the project, lock it, and hold it across every scene. Neve
 - **Limited animation.** Not every frame needs full movement: hold a pose, move only what the beat needs (a head turn, a blink, a pointing arm). Limited animation is a craft choice, not a defect — but a held pose must be intentional, never frozen by accident.
 - **Frame-by-frame movement and motion cycles.** Walk and run cycles repeat cleanly; a cycle that drifts or changes shape mid-loop is a defect. Smear frames (a stretched in-between that sells fast motion) are used sparingly, only where the motion is fast.
 - **Timing.** Comedy is timing: a pause before the surprise, a fast reaction after it. Timing follows the story beat — see §5.
-- **Transitions, pans, and zooms.** Slow pans and zooms carry the camera between ideas; hard cuts mark a new scene. Never cut in the middle of a movement.
+- **Transitions, pans, and zooms.** Slow pans and zooms carry the camera between ideas; hard cuts mark a new scene. Never cut in the middle of a movement. A flash transition — a single full-frame flash (white, pink, or the scene's key colour) — can mark a hard scene change or a title-card entrance; use it sparingly, never as the default cut.
 - **Visual metaphors.** Abstract ideas become characters or places (see the `explainer-animation` skill): an obstacle is a mountain with a face; a worry is a heavy backpack. A metaphor must be readable with the sound off.
 - **Layered parallax.** Foreground, midground, and background move at different speeds when the camera moves — that is what makes a flat scene feel deep. Parallax speeds stay consistent across shots in the same scene.
 - **Compositing.** Characters sit IN the scene: feet touch the ground, shadows fall the right way, scale matches the environment. A floating character is a defect (see §12).
@@ -344,7 +344,7 @@ If the script lacks an essential detail, ask the smallest necessary clarificatio
 
 ## 17. Verified Techniques from Observed References (2026-11-13)
 
-Every technique below was observed in videos actually watched on 2026-11-13 and recorded in the permanent reference library (`docs/research/kids-animation-reference-library.md`, records R-01 to R-17). Each item names its knowledge area and its library records. Nothing here comes from a video that could not be played — those stay out until they are watched in full.
+Every technique below was observed in videos actually watched — records R-01 to R-17 on 2026-11-13, records R-18 and R-19 on 2026-11-15 — and recorded in the permanent reference library (`docs/research/kids-animation-reference-library.md`). Each item names its knowledge area and its library records. Nothing here comes from a video that could not be played — those stay out until they are watched in full.
 
 ### 17.1 AI stills + slow movement (area 4 — AI animation production)
 
@@ -385,3 +385,11 @@ The biggest kids Shorts in the research set (774M, 596M, 515M views) are live-ac
 ### 17.10 Rights — borrowed audio (area 8 — audio and sound design)
 
 A reference creator who animates over borrowed comedy audio and credits the audio's creator in the title or description does not make that audio licensed for our use. Credit alone is not a licence. Our productions use original audio or audio licensed to us — see §9. This is recorded here because the pattern (animate over viral audio, credit the creator) was observed repeatedly in the research, and the repo's rights rule (B17 in the `production-systems` skill) must be applied to it explicitly: observing the method is not permission to copy it.
+
+### 17.11 Trailer title cards and end cards (areas 6, 9 — storytelling, editing and retention)
+
+Observed in a 3D stylized fantasy feature-film trailer watched in full on 2026-11-15: the trailer speaks in cards as well as in shots — a character-intro card over a close-up, a tagline card over a moonlit full-body shot, a studio-pedigree card over a village wide, a silent title card on black, and a silent release-date card (date + languages) after it. Each card carries one idea; cards are timed to the music or the beat; the title card is the last emotional image and the release card follows it quietly. See the `cinematic-power` skill §4 and library records R-18, R-19.
+
+### 17.12 Character transformation as a story beat (areas 2, 5 — 3D CGI production, character performance)
+
+Observed in the same trailer: a character grows large dark wings against a full moon — a form change shown as a story beat, face and voice identity held, the new form established in a full-body shot. The change is shown on screen (anticipation → change → new form), never a jump-cut swap; the new form is registered and held consistent afterwards. See the `cinematic-power` skill §2 and library record R-19.

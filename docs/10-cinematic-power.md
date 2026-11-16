@@ -26,6 +26,8 @@ Movement follows the creature's real body: quadruped gait, flight, swimming, cra
 
 Creatures act. A sidekick animal has comic timing — head tilts, eye pops, delayed reactions — and the joke lands because the timing is deliberate. A monster has menace in stillness before it moves: it is frightening because it waits, not because it flails. Elemental forces (an ocean, a fire, a storm) may act as characters, behaving as a living presence with consistent behaviour across the piece; when an element acts, its continuity is checked like any character's. Groups of animals are never clones: each animal in a group is distinct in look and in timing. Animals follow the same continuity rules as characters — identity, markings, and props never change between shots unless the story requires it.
 
+Transformation — a character may change form as a story beat: a character that grows wings, turns into a beast, or takes another form does so as a planned beat, never as an accident and never as a jump-cut swap. Anticipation first (the character braces, the light changes, the camera holds), then the change itself is shown on screen, then the new form is established in a full-body shot. The face and the voice stay fixed through the change, so the audience still recognises who it is. The new form is registered like a second character record (shape, size, colours, markings) and held consistent in every later shot.
+
 ## 3. Music-Beat Editing & Synchronized Ensemble
 
 In music-driven videos, the beat is the clock. Build the edit from the song's structure — verse, chorus, drop — and place cuts, gestures, and movements on the musical beat. The biggest movement lands on the strongest beat.
@@ -46,6 +48,8 @@ A trailer is built, not summarized. It has six beats, in this order:
 6. **End on the title card, then credits.** The title is the last image the audience keeps. Nothing after it competes with it.
 
 Never reveal the ending. Never explain what the images already show — if a shot says it, no line of dialogue needs to say it again. Each beat has a duration budget in the shot list. The trailer must work without the full film: a viewer who never sees the film still feels a complete arc. A teaser is the same structure shortened — wonder, one stake, one character, title. The order never changes; only the length does.
+
+Title cards and end cards: a trailer speaks in cards as well as in shots. Character-intro cards (one per introduction, over a close-up or full-body reveal, arriving with the character); tagline cards (one short line over a spectacle shot, one per trailer, at the emotional peak); pedigree cards (one short line over a wide wonder shot, used once, early, only when the pedigree is real); release-date end cards (when and where the piece arrives, and in which languages, on a plain silent card after the title). Each card carries exactly one idea, is timed to the music or the beat, and is big and readable. The title card remains the last emotional image — the release-date card follows it quietly and never competes with it.
 
 ## 5. Scale, Spectacle & Colour Scripting
 
