@@ -24,7 +24,7 @@ video production/editing). See
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p0-safe-foundations`
 **Head commit:** `5e25545a3d803b7611b8865d453f4c88f524b525`
-**GitHub branch head:** `b30d75e305508837e4ed7c8cbb9a759ce62f78dc` (remote head of `feat/cf-p0-safe-foundations` at
+**GitHub branch head:** `43d4fd33a59a19c57cabbb74b14492a2acaf9343` (remote head of `feat/cf-p0-safe-foundations` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
