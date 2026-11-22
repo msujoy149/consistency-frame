@@ -17,6 +17,19 @@ Rules encoded here (and tested in tests/test_modes.py):
   REFERENCE_LEARN_AND_UPDATE (with explicit user instruction) may
   propose a learning candidate, and even then only as a reviewable
   patch — never a direct permanent write.
+
+Propose vs apply (independent-review correction, CF-WO-P0-002 §5):
+proposing a skill patch and applying one are two different
+permissions. `may_propose_skill_patch` allows writing a reviewable
+patch file under `.consistency-frame/proposals/` — a proposal never
+touches a canonical skill. `may_apply_skill_patch` allows applying
+such a patch to a canonical skill, and only with a full, explicit
+authorisation (granted_by + scope + branch + explicit_authorisation),
+validated by `validate_skill_patch_application`. Intake alone never
+carries an apply authorisation, so `intake_result` always reports
+`may_apply_skill_patch: False`. `may_mutate_canonical_skills` is the
+legacy combined gate: it returns True only when BOTH the propose
+permission and a full apply authorisation are present.
 """
 from __future__ import annotations
 
@@ -31,8 +44,12 @@ MODES = [
 # Modes that may never create a permanent record, whatever else is set.
 NO_PERMANENT_RECORD_MODES = {"UPLOAD_ONLY", "TEMPORARY_ASSET_USE"}
 
-# Modes that may mutate canonical skills (only via a reviewable patch).
+# Modes that may propose a skill change (only as a reviewable patch).
 CAN_PROPOSE_SKILL_CHANGE = {"REFERENCE_LEARN_AND_UPDATE"}
+
+# Where proposed skill patches live: reviewable patch files only.
+# Canonical skills are never touched by a proposal.
+PROPOSALS_DIR = ".consistency-frame/proposals"
 
 
 def may_create_permanent_record(mode: str) -> bool:
@@ -101,22 +118,83 @@ def check_character_record_separation(character: dict) -> list[str]:
     return errors
 
 
-def may_mutate_canonical_skills(mode: str, explicit_user_instruction: bool) -> bool:
+def may_propose_skill_patch(mode: str, explicit_user_instruction: bool) -> bool:
+    """True only for REFERENCE_LEARN_AND_UPDATE with explicit instruction.
+
+    A proposal is a reviewable patch file under PROPOSALS_DIR — it
+    never writes a canonical skill. Proposing is not applying.
+    """
     if mode not in MODES:
         raise ValueError(f"unknown mode: {mode}")
-    if mode == "REFERENCE_LEARN_AND_UPDATE":
-        return bool(explicit_user_instruction)
-    return False
+    return mode in CAN_PROPOSE_SKILL_CHANGE and bool(explicit_user_instruction)
 
 
-def intake_result(mode: str) -> dict:
-    """What an intake in this mode is allowed to do (for reports/tests)."""
+def validate_skill_patch_application(authorization) -> list[str]:
+    """Return a list of rejection reasons; empty list means allowed.
+
+    `authorization` keys: granted_by (non-empty string), scope
+    (non-empty string), branch (non-empty string),
+    explicit_authorisation (bool, must be True). Anything missing or
+    empty -> rejection. Mirrors validate_character_registration style.
+    """
+    errors = []
+    if not isinstance(authorization, dict):
+        return ["missing skill-patch authorisation"]
+    if not authorization.get("granted_by") or \
+            not isinstance(authorization.get("granted_by"), str):
+        errors.append("missing granted_by")
+    if not authorization.get("scope") or \
+            not isinstance(authorization.get("scope"), str):
+        errors.append("missing scope")
+    if not authorization.get("branch") or \
+            not isinstance(authorization.get("branch"), str):
+        errors.append("missing branch")
+    if authorization.get("explicit_authorisation") is not True:
+        errors.append("missing explicit authorisation to apply the patch")
+    return errors
+
+
+def may_apply_skill_patch(authorization) -> bool:
+    """True only with a full, explicit apply authorisation.
+
+    Propose permission alone never applies a patch; intake alone
+    never carries an authorisation.
+    """
+    return validate_skill_patch_application(authorization) == []
+
+
+def may_mutate_canonical_skills(mode: str, explicit_user_instruction: bool,
+                                authorization=None) -> bool:
+    """Legacy combined gate: True only when BOTH halves are present.
+
+    Propose permission (REFERENCE_LEARN_AND_UPDATE + explicit user
+    instruction) AND a full apply authorisation
+    (validate_skill_patch_application == []). A proposal alone never
+    mutates a canonical skill.
+    """
+    if mode not in MODES:
+        raise ValueError(f"unknown mode: {mode}")
+    return (may_propose_skill_patch(mode, explicit_user_instruction)
+            and may_apply_skill_patch(authorization))
+
+
+def intake_result(mode: str, explicit_user_instruction: bool = False) -> dict:
+    """What an intake in this mode is allowed to do (for reports/tests).
+
+    Propose permission needs the explicit instruction passed in;
+    without it, no proposal is reported. Apply is always False from
+    intake alone — intake never carries the apply authorisation.
+    """
     if mode not in MODES:
         raise ValueError(f"unknown mode: {mode}")
     return {
         "mode": mode,
         "creates_permanent_record": may_create_permanent_record(mode),
         "may_propose_skill_change": mode in CAN_PROPOSE_SKILL_CHANGE,
+        "may_propose_skill_patch": may_propose_skill_patch(
+            mode, explicit_user_instruction),
+        # Intake never carries an apply authorisation: always False.
+        "may_apply_skill_patch": False,
         "retention": ("temporary" if mode in NO_PERMANENT_RECORD_MODES
                       else "project_or_registered"),
     }

@@ -2,7 +2,8 @@
 """P0 asset-mode policy tests. Run via tests/run-tests.sh or directly:
   python3 tests/test_modes.py
 Exit 0 = PASS, 1 = FAIL.
-Test IDs: CF-P0-ASSET-001, CF-P0-ASSET-002, CF-P0-ASSET-003.
+Test IDs: CF-P0-ASSET-001, CF-P0-ASSET-002, CF-P0-ASSET-003,
+CF-P0-LEARN-001 (propose/apply split for skill learning).
 """
 import os
 import sys
@@ -76,8 +77,53 @@ def main():
           not asset_policy.may_mutate_canonical_skills("REFERENCE_REVIEW", True))
     check("REFERENCE_LEARN_AND_UPDATE without explicit instruction cannot mutate",
           not asset_policy.may_mutate_canonical_skills("REFERENCE_LEARN_AND_UPDATE", False))
-    check("REFERENCE_LEARN_AND_UPDATE with explicit instruction may propose (patch only)",
-          asset_policy.may_mutate_canonical_skills("REFERENCE_LEARN_AND_UPDATE", True))
+
+    # CF-P0-LEARN-001: propose vs apply are separate permissions.
+    full_auth = {"granted_by": "user", "scope": "kids-family-animation",
+                 "branch": "feat/cf-p0-safe-foundations",
+                 "explicit_authorisation": True}
+    check("CF-P0-LEARN-001: propose allowed with explicit instruction",
+          asset_policy.may_propose_skill_patch("REFERENCE_LEARN_AND_UPDATE", True))
+    check("CF-P0-LEARN-001: propose rejected without explicit instruction",
+          not asset_policy.may_propose_skill_patch("REFERENCE_LEARN_AND_UPDATE", False))
+    check("CF-P0-LEARN-001: propose rejected in other modes",
+          not asset_policy.may_propose_skill_patch("REFERENCE_REVIEW", True))
+    check("CF-P0-LEARN-001: apply rejected without authorisation",
+          not asset_policy.may_apply_skill_patch(None))
+    check("CF-P0-LEARN-001: apply rejected with partial authorisation",
+          not asset_policy.may_apply_skill_patch(
+              {"granted_by": "user", "scope": "kids-family-animation"}))
+    check("CF-P0-LEARN-001: apply rejected when explicit_authorisation is False",
+          not asset_policy.may_apply_skill_patch(
+              {**full_auth, "explicit_authorisation": False}))
+    check("CF-P0-LEARN-001: apply allowed only with full authorisation",
+          asset_policy.may_apply_skill_patch(full_auth))
+    check("CF-P0-LEARN-001: validate_skill_patch_application lists "
+          "every missing field",
+          asset_policy.validate_skill_patch_application({}) == [
+              "missing granted_by", "missing scope", "missing branch",
+              "missing explicit authorisation to apply the patch"])
+    # The legacy combined gate needs BOTH halves.
+    check("CF-P0-LEARN-001: propose alone does not mutate canonical skills",
+          not asset_policy.may_mutate_canonical_skills(
+              "REFERENCE_LEARN_AND_UPDATE", True))
+    check("CF-P0-LEARN-001: propose + full authorisation may mutate",
+          asset_policy.may_mutate_canonical_skills(
+              "REFERENCE_LEARN_AND_UPDATE", True, full_auth))
+    check("CF-P0-LEARN-001: propose + partial authorisation cannot mutate",
+          not asset_policy.may_mutate_canonical_skills(
+              "REFERENCE_LEARN_AND_UPDATE", True,
+              {"granted_by": "user", "scope": "kids-family-animation"}))
+    # Intake never reports apply True, with or without instruction.
+    check("CF-P0-LEARN-001: intake never reports apply True",
+          not asset_policy.intake_result("REFERENCE_LEARN_AND_UPDATE", True)[
+              "may_apply_skill_patch"])
+    check("CF-P0-LEARN-001: intake reports propose True with instruction",
+          asset_policy.intake_result("REFERENCE_LEARN_AND_UPDATE", True)[
+              "may_propose_skill_patch"])
+    check("CF-P0-LEARN-001: intake reports propose False without instruction",
+          not asset_policy.intake_result("REFERENCE_LEARN_AND_UPDATE")[
+              "may_propose_skill_patch"])
 
     # Unknown mode is an error, never silently allowed.
     try:

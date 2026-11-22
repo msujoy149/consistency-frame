@@ -7,7 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "93eaf45b3d365fd1f2b7f6b95af99fbd73b814f1",
+  "head_commit": "36999a71489c68e1ef63741461cc895a09df276b",
+  "github_branch_head": "fcf311ef79c5f10a4248f026a5f667109c584831",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -32,6 +33,7 @@
     "docs/17-command-authority.md",
     "docs/19-audio-delivery-profiles.md",
     "docs/architecture/living-architecture-report-v2.3-p0.md",
+    "docs/architecture/living-architecture-report-v2.4-p0.md",
     "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
     "docs/implementation/BUILD_REPORT_P0.md",
     "docs/implementation/CF-WO-P0-001-plan.md",
@@ -93,12 +95,23 @@
     "tests/last-run.json",
     "tests/run-tests.sh",
     "tests/test_installer.sh",
+    "tests/test_installer_security.sh",
     "tests/test_modes.py",
+    "tests/test_performance_semantics.py",
     "tests/test_private_overlay.py",
     "tests/test_registries.py",
     "tests/test_routing.py",
     "tests/test_schemas.py"
   ],
+  "ci": {
+    "head": "fcf311ef79c5f10a4248f026a5f667109c584831",
+    "result": "PASS",
+    "checks_passed": 2,
+    "checks_total": 2,
+    "run_url": "https://github.com/msujoy149/consistency-frame/actions/runs/45046203236",
+    "pull_request": "https://github.com/msujoy149/consistency-frame/pull/1",
+    "note": "Remote CI PASSED on the GitHub branch head named here. The post-corrections CI run is checked by the parent after the push; this record is evidence for the head it names, not a claim about a later head."
+  },
   "tests": [
     {
       "id": "CF-INT-014",
@@ -143,6 +156,76 @@
       "evidence": "tests/last-run.json"
     },
     {
+      "id": "CF-P0-LEARN-001",
+      "command": "python3 tests/test_modes.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-PERF-001",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-PERF-002",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-PERF-003",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-PERF-004",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-PERF-005",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-REPORT-001",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-REPORT-002",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-REPORT-003",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-REPORT-004",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
       "id": "CF-P0-ROUTING-001",
       "command": "python3 tests/test_routing.py",
       "exit_code": 0,
@@ -158,6 +241,13 @@
     },
     {
       "id": "CF-P0-ROUTING-003",
+      "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ROUTING-004",
       "command": "python3 tests/test_routing.py",
       "exit_code": 0,
       "result": "PASS",
@@ -201,7 +291,6 @@
   ],
   "not_run": [
     "CF-INT-015 (component-clone failure path via setup.sh --with-components end-to-end): the full --with-components run downloads ~5 GB + ~1 GB deps; failure reporting is unit-tested in tests/test_installer.sh, the live run is NOT RUN.",
-    "CI remote run: GitHub Actions runs only after the branch is pushed and a PR is opened; the workflow file is validated locally (YAML parse + pinned SHAs verified via API).",
     "setup.sh --with-components end-to-end on a clean machine: NOT RUN (network + disk); core-only path executed end-to-end locally (exit 0)."
   ],
   "known_issues": [
@@ -211,7 +300,7 @@
     "Research-register reconciliation (gaps-research-20261112.md staleness) deferred.",
     "Media intelligence, reference-learning runtime, provider orchestration, benchmarks and repair loop are out of scope for P0 by design (P1-P4).",
     "v2.4: runtime skill-routing engine and script-to-performance runtime are P1 work (matrix/graph/schemas are canonical data, not a runtime).",
-    "v2.4: OpenMontage paid provider routes are NOT_VERIFIED; no live paid call was made."
+    "v2.4: OpenMontage paid provider routes have evidence_level present_locally (documented in the companion's provider guide only, never exercised); no live paid call was made."
   ],
   "security_and_licence_notes": [
     "Secret scan (validate-repo.py): PASS \u2014 no credentials or private keys in tracked text files.",

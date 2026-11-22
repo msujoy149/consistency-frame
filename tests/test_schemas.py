@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """P0 schema tests. Run via tests/run-tests.sh or directly:
   python3 tests/test_schemas.py
-Exit 0 = PASS, 1 = FAIL. Test IDs: P0-SCHEMA, CF-P0-ASSET-003 (part).
+Exit 0 = PASS, 1 = FAIL. Test IDs: P0-SCHEMA, CF-P0-ASSET-003 (part),
+CF-P0-LEARN-001 (reference-review propose/apply, part).
 """
 import json
 import os
@@ -40,6 +41,30 @@ def errors_for(schema, value):
     errs = []
     validate_instance(schema, value, "$", errs)
     return errs
+
+
+def reference_review_errors(review):
+    """Schema validation + the conditional apply rule for a review.
+
+    The restricted subset cannot express conditional-required, so the
+    rule is enforced semantically here: apply_skill_patch=true needs
+    a full authorization object (granted_by, scope, branch).
+    """
+    errs = errors_for(load_schema("reference-review.json"), review)
+    if review.get("apply_skill_patch") is True:
+        auth = review.get("authorization")
+        if not isinstance(auth, dict):
+            errs.append("apply_skill_patch=true requires an authorization object")
+        else:
+            for field in ("granted_by", "scope", "branch"):
+                if not auth.get(field):
+                    errs.append(f"authorization is missing '{field}'")
+    return errs
+
+
+def base_review():
+    return {"schema_version": "2.3", "id": "rev-001",
+            "reference_id": "ref-001", "mutates_canonical_skills": False}
 
 
 def main():
@@ -91,6 +116,40 @@ def main():
                        "reference_id": "ref-001", "mutates_canonical_skills": True})
     check("reference-review with mutates_canonical_skills=true is rejected",
           bool(errs))
+
+    # CF-P0-LEARN-001: a review may only propose (proposal_only, default true).
+    check("CF-P0-LEARN-001: reference-review without proposal_only is valid "
+          "(default true: proposal only)",
+          not reference_review_errors(base_review()))
+    review = base_review()
+    review["proposal_only"] = True
+    check("CF-P0-LEARN-001: reference-review with proposal_only=true is valid",
+          not reference_review_errors(review))
+    review = base_review()
+    review["apply_skill_patch"] = True
+    check("CF-P0-LEARN-001: apply_skill_patch=true without authorization "
+          "is rejected",
+          bool(reference_review_errors(review)))
+    review = base_review()
+    review["apply_skill_patch"] = True
+    review["authorization"] = {"granted_by": "user",
+                               "scope": "kids-family-animation"}
+    check("CF-P0-LEARN-001: apply_skill_patch=true with partial "
+          "authorization is rejected",
+          bool(reference_review_errors(review)))
+    review = base_review()
+    review["apply_skill_patch"] = True
+    review["authorization"] = {"granted_by": "user",
+                               "scope": "kids-family-animation",
+                               "branch": "feat/cf-p0-safe-foundations"}
+    check("CF-P0-LEARN-001: apply_skill_patch=true with full authorization "
+          "is valid",
+          not reference_review_errors(review))
+    review = base_review()
+    review["apply_skill_patch"] = False
+    check("CF-P0-LEARN-001: apply_skill_patch=false without authorization "
+          "is valid",
+          not reference_review_errors(review))
 
     # Intake: TEMPORARY_ASSET_USE with permanent records is a policy violation.
     job = load_fixture("intake-temporary.json")

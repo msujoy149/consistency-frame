@@ -4,7 +4,7 @@ Versioned JSON Schemas for every canonical record type. All schemas are
 JSON Schema draft 2020-12, but they deliberately use only the subset that
 `scripts/validate-repo.py` (Python standard library only) can check:
 `type`, `properties`, `required`, `enum`, `pattern`, `minLength`,
-`minimum`, `minItems`, `items`, `additionalProperties: false`, and local
+`minimum`, `maximum`, `exclusiveMinimum`, `minItems`, `items`, `additionalProperties: false`, and local
 `$ref` to `#/$defs` is NOT used — nested objects are written inline so
 the stdlib validator stays small and auditable. If a future schema needs
 `allOf`/`oneOf`/`$ref`, the validator must be extended first and the

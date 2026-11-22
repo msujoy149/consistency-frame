@@ -43,6 +43,7 @@ run_one() {
 run_one "P0-SHELL" bash -n scripts/sync-skills.sh
 run_one "P0-SHELL" bash -n setup.sh
 run_one "P0-SHELL" bash -n tests/test_installer.sh
+run_one "P0-SHELL" bash -n tests/test_installer_security.sh
 run_one "P0-SHELL" bash -n tests/run-tests.sh
 
 # Repo validation (schemas, frontmatter, registries, privacy, secrets,
@@ -62,9 +63,17 @@ run_one "CF-INT-023" python3 tests/test_registries.py
 run_one "CF-P0-ASSET-001" python3 tests/test_modes.py
 run_one "CF-P0-ASSET-002" python3 tests/test_modes.py
 run_one "CF-P0-ASSET-003" python3 tests/test_modes.py
+run_one "CF-P0-LEARN-001" python3 tests/test_modes.py
+run_one "CF-P0-LEARN-001" python3 tests/test_schemas.py
+run_one "CF-P0-PERF-001" python3 tests/test_performance_semantics.py
+run_one "CF-P0-PERF-002" python3 tests/test_performance_semantics.py
+run_one "CF-P0-PERF-003" python3 tests/test_performance_semantics.py
+run_one "CF-P0-PERF-004" python3 tests/test_performance_semantics.py
+run_one "CF-P0-PERF-005" python3 tests/test_performance_semantics.py
 run_one "P0-PRIVACY" python3 tests/test_private_overlay.py
 run_one "CF-INT-014" bash tests/test_installer.sh
 run_one "CF-INT-015" bash tests/test_installer.sh
+run_one "CF-INT-015" bash tests/test_installer_security.sh
 
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check
@@ -72,6 +81,14 @@ run_one "P0-DIFF-CHECK" git diff --check
 # Living report: regenerate from canonical records, then verify it matches.
 run_one "CF-INT-023" python3 scripts/generate-report.py
 run_one "CF-INT-023" python3 scripts/generate-report.py --check
+
+# Companion evidence + report provenance (P0-002 §§6-7). These run after
+# the living report is regenerated so they check the fresh artifacts.
+run_one "CF-P0-ROUTING-004" python3 tests/test_routing.py
+run_one "CF-P0-REPORT-001" python3 tests/test_reports.py
+run_one "CF-P0-REPORT-002" python3 tests/test_reports.py
+run_one "CF-P0-REPORT-003" python3 tests/test_reports.py
+run_one "CF-P0-REPORT-004" python3 tests/test_reports.py
 
 python3 - "$TMP_RESULTS" "$RESULTS_JSON" "$OVERALL" <<'PYEOF'
 import json, sys

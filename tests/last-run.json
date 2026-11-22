@@ -21,6 +21,12 @@
     },
     {
       "id": "P0-SHELL",
+      "command": "bash -n tests/test_installer_security.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "P0-SHELL",
       "command": "bash -n tests/run-tests.sh",
       "exit_code": 0,
       "result": "PASS"
@@ -92,6 +98,48 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P0-LEARN-001",
+      "command": "python3 tests/test_modes.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-LEARN-001",
+      "command": "python3 tests/test_schemas.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-PERF-001",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-PERF-002",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-PERF-003",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-PERF-004",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-PERF-005",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "P0-PRIVACY",
       "command": "python3 tests/test_private_overlay.py",
       "exit_code": 0,
@@ -110,6 +158,12 @@
       "result": "PASS"
     },
     {
+      "id": "CF-INT-015",
+      "command": "bash tests/test_installer_security.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "command": "git diff --check",
       "exit_code": 0,
@@ -124,6 +178,36 @@
     {
       "id": "CF-INT-023",
       "command": "python3 scripts/generate-report.py --check",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ROUTING-004",
+      "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-REPORT-001",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-REPORT-002",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-REPORT-003",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-REPORT-004",
+      "command": "python3 tests/test_reports.py",
       "exit_code": 0,
       "result": "PASS"
     }
