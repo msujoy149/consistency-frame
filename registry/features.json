@@ -1714,10 +1714,10 @@
     {
       "conflicts": [],
       "dependencies": [],
-      "evidence": "skills/realistic-person/SKILL.md (section: 6. What It Is Not)",
-      "feature_id": "feat-realistic-person-6-what-it-is-not",
+      "evidence": "skills/realistic-person/SKILL.md (section: 6. What It Is \u2014 and What It Is Not)",
+      "feature_id": "feat-realistic-person-6-what-it-is-and-what-it-is-not",
       "maturity": "DOCUMENTED",
-      "name": "6. What It Is Not",
+      "name": "6. What It Is \u2014 and What It Is Not",
       "owner_path": "skills/realistic-person/SKILL.md",
       "owner_skill": "skill-realistic-person",
       "scope": "global",
