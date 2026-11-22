@@ -193,8 +193,7 @@ sexualised or unsafe involving a child.
 
 ## 14. Audio Mastering Standard
 
-Master the final audio of every video to one consistent loudness — target
-−14 LUFS, true peak below −1 dBTP — so dialogue, music, and sound effects
+Master the final audio of every video to the project's named delivery profile (integrated loudness + true peak) — so dialogue, music, and sound effects
 are the same volume across episodes and platforms.
 
 - A character's voice must not be louder in one episode and barely
