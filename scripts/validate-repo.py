@@ -4,7 +4,8 @@
 Checks, all deterministic and offline:
   1. Every schema in schemas/*.json is valid JSON and a well-formed
      JSON Schema (subset): type/properties/required/enum/pattern/
-     minLength/minimum/minItems/items/additionalProperties.
+     minLength/minimum/maximum/exclusiveMinimum/minItems/items/
+     additionalProperties.
      schema_version must be "2.3" (v2.3 P0) or "2.4" (v2.4 Brain
      Architecture Amendment — the new script-to-performance schemas).
   2. Every skill in skills/*/SKILL.md has YAML frontmatter with
@@ -30,9 +31,12 @@ Checks, all deterministic and offline:
      skill routing matrix (15 skills, required fields, unique
      precedence), the workflow graph (15 nodes, known endpoints,
      acyclic), the companion capability registry (2 companions,
-     honest statuses only) and the agent compatibility matrix
-     (only Muse verified). Needs PyYAML; if PyYAML is missing the
-     check is reported SKIPPED with a clear message (CI installs
+     evidence_level from the closed set on every capability and
+     interface, a run reference on every exercised_recorded_run,
+     pinned commits matching setup.sh, no production_verified
+     claim without a production record) and the agent compatibility
+     matrix (only Muse verified). Needs PyYAML; if PyYAML is missing
+     the check is reported SKIPPED with a clear message (CI installs
      PyYAML, so it runs there).
 
 Usage: python3 scripts/validate-repo.py [--root DIR] [--json]
@@ -55,7 +59,7 @@ JSON_OUT = "--json" in sys.argv
 ALLOWED_SCHEMA_KEYS = {
     "$schema", "$id", "title", "description", "type", "properties",
     "required", "additionalProperties", "enum", "pattern", "minLength",
-    "minimum", "minItems", "items", "format",
+    "minimum", "maximum", "exclusiveMinimum", "minItems", "items", "format",
 }
 ALLOWED_TYPES = {"object", "string", "integer", "number", "boolean", "array"}
 FORBIDDEN_ABSOLUTE_CLAIMS = [
@@ -103,6 +107,61 @@ def check_schema(schema: dict, path: str, errors: list[str]) -> None:
             re.compile(schema["pattern"])
         except re.error as e:
             errors.append(f"{path}: bad pattern: {e}")
+    for bound in ("minimum", "maximum", "exclusiveMinimum"):
+        if bound in schema and (not isinstance(schema[bound], (int, float))
+                                or isinstance(schema[bound], bool)):
+            errors.append(f"{path}: {bound} must be a number")
+
+
+def validate_dialogue_rewrite(plan: dict) -> list[str]:
+    """Cross-field dialogue-rewrite rule (cannot live in the restricted
+    JSON-Schema subset, so it is enforced semantically).
+
+    A line's `dialogue.rewritten_text` may be present only when that
+    line's `dialogue.rewrite_permitted` is explicitly true. The
+    plan-level `dialogue_mode` (even SCRIPT_EDIT_REQUESTED) never
+    permits a rewrite by itself — the per-line flag governs.
+    Returns a list of violations; empty list means the plan complies.
+    """
+    errors = []
+    if not isinstance(plan, dict):
+        return ["performance plan is not an object"]
+    for i, line in enumerate(plan.get("lines") or []):
+        if not isinstance(line, dict):
+            continue
+        dialogue = line.get("dialogue")
+        if not isinstance(dialogue, dict):
+            continue
+        if "rewritten_text" in dialogue and dialogue.get("rewrite_permitted") is not True:
+            errors.append(
+                f"lines[{i}] ({line.get('line_id', '?')}): rewritten_text present "
+                "but rewrite_permitted is not true for this line "
+                "(plan-level dialogue_mode alone never permits a rewrite)")
+    return errors
+
+
+def validate_non_verbal_lines(plan: dict) -> list[str]:
+    """A performance-plan line must speak or perform non-verbally.
+
+    A line with no spoken dialogue text (dialogue absent, or text
+    missing/empty) must carry at least one `non_verbal_events` entry.
+    Returns a list of violations; empty list means the plan complies.
+    """
+    errors = []
+    if not isinstance(plan, dict):
+        return ["performance plan is not an object"]
+    for i, line in enumerate(plan.get("lines") or []):
+        if not isinstance(line, dict):
+            continue
+        dialogue = line.get("dialogue")
+        text = dialogue.get("text") if isinstance(dialogue, dict) else None
+        events = line.get("non_verbal_events") or []
+        if not text and not events:
+            errors.append(
+                f"lines[{i}] ({line.get('line_id', '?')}): no spoken dialogue "
+                "text and no non_verbal_events — a line must speak or "
+                "perform non-verbally")
+    return errors
 
 
 def validate_instance(schema: dict, value, path: str, errors: list[str]) -> None:
@@ -142,6 +201,11 @@ def validate_instance(schema: dict, value, path: str, errors: list[str]) -> None
             errors.append(f"{path}: shorter than minLength {schema['minLength']}")
     if t in ("integer", "number") and "minimum" in schema and value < schema["minimum"]:
         errors.append(f"{path}: {value} < minimum {schema['minimum']}")
+    if t in ("integer", "number") and "maximum" in schema and value > schema["maximum"]:
+        errors.append(f"{path}: {value} > maximum {schema['maximum']}")
+    if t in ("integer", "number") and "exclusiveMinimum" in schema \
+            and value <= schema["exclusiveMinimum"]:
+        errors.append(f"{path}: {value} <= exclusiveMinimum {schema['exclusiveMinimum']}")
     if t == "array":
         if "minItems" in schema and len(value) < schema["minItems"]:
             errors.append(f"{path}: fewer than minItems {schema['minItems']}")
@@ -411,7 +475,16 @@ def main() -> int:
             if visited != len(nodes):
                 errors.append("architecture/WORKFLOW_GRAPH.yaml: graph has a cycle")
 
-        # COMPANION_CAPABILITY_REGISTRY.yaml: 2 companions, honest statuses.
+        # COMPANION_CAPABILITY_REGISTRY.yaml: 2 companions, closed
+        # evidence_level on every capability and interface (P0-002 §6:
+        # evidence_level REPLACED the old `status` field).
+        EVIDENCE_LEVELS = ("upstream_inspected_pinned_commit",
+                           "present_locally", "exercised_recorded_run",
+                           "production_verified")
+        EXPECTED_PINS = {
+            "VoiceStudio": "2f2f5a9b0e982c6147efc6baaeae62936f29b79b",
+            "OpenMontage": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+        }
         companions = load_yaml("architecture/COMPANION_CAPABILITY_REGISTRY.yaml")
         if companions is not None:
             if str(companions.get("version")) != "2.4":
@@ -420,11 +493,32 @@ def main() -> int:
             if {c.get("name") for c in comps} != {"VoiceStudio", "OpenMontage"}:
                 errors.append("architecture/COMPANION_CAPABILITY_REGISTRY.yaml: must list exactly VoiceStudio + OpenMontage")
             for c in comps:
-                for cap in c.get("capabilities") or []:
-                    if cap.get("status") not in ("VERIFIED_ON_DISK", "VERIFIED_BY_RUN", "NOT_VERIFIED"):
-                        errors.append(f"companion {c.get('name')}: capability '{cap.get('capability')}' has an unknown status")
-                    if not cap.get("evidence"):
-                        errors.append(f"companion {c.get('name')}: capability '{cap.get('capability')}' has no evidence pointer")
+                if c.get("pinned_commit") != EXPECTED_PINS.get(c.get("name")):
+                    errors.append(f"companion {c.get('name')}: pinned_commit "
+                                  f"{c.get('pinned_commit')!r} does not match "
+                                  f"the setup.sh pin {EXPECTED_PINS.get(c.get('name'))!r}")
+                for group in ("capabilities", "interfaces"):
+                    for item in c.get(group) or []:
+                        label = item.get("capability") or item.get("name")
+                        level = item.get("evidence_level")
+                        if level not in EVIDENCE_LEVELS:
+                            errors.append(f"companion {c.get('name')}: {group[:-1]} '{label}' has unknown evidence_level {level!r} "
+                                          f"(must be one of {list(EVIDENCE_LEVELS)})")
+                        if "status" in item:
+                            errors.append(f"companion {c.get('name')}: {group[:-1]} '{label}' still carries the retired 'status' field "
+                                          "(P0-002 §6 replaced it with evidence_level)")
+                        if not item.get("evidence"):
+                            errors.append(f"companion {c.get('name')}: {group[:-1]} '{label}' has no evidence pointer")
+                        if level == "exercised_recorded_run":
+                            ref = item.get("run_reference")
+                            if not isinstance(ref, str) or not ref.strip():
+                                errors.append(f"companion {c.get('name')}: {group[:-1]} '{label}' is exercised_recorded_run "
+                                              "but has no run_reference (date + what was run + where it is recorded)")
+                        if level == "production_verified":
+                            rec = item.get("production_record")
+                            if not isinstance(rec, str) or not rec.strip():
+                                errors.append(f"companion {c.get('name')}: {group[:-1]} '{label}' claims production_verified "
+                                              "but has no production_record")
 
         # AGENT_COMPATIBILITY_MATRIX.yaml: only Muse verified.
         agents_doc = load_yaml("architecture/AGENT_COMPATIBILITY_MATRIX.yaml")

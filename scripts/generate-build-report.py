@@ -10,7 +10,24 @@ a docs-only commit; the delivery message states both SHAs:
 The manifest's per-file SHA-256 hashes are computed from the working
 tree, which at generation time equals the code head tree.
 
-Usage: python3 scripts/generate-build-report.py
+`github_branch_head` records the GitHub head of the branch this
+package describes (see §12 Provenance in the generated report):
+  --github-head <sha> (or the CF_GITHUB_HEAD env var) pins it;
+  without either, it defaults to the current git HEAD. Pushing the
+  regenerated manifest advances the branch head by one docs-only
+  commit; the delivery message states that final head. The manifest
+  never tries to predict its own push SHA.
+
+release-manifest.json is excluded from its own `files` list (a file
+cannot contain its own hash); it IS listed in build-report.json's
+`changed_files`, which is a list of names, not hashes.
+
+A detached checksum file, docs/implementation/CHECKSUMS.txt, is also
+written: SHA-256 + byte count of the three generated files as
+generated (before commit). The ZIP hash lives in the delivery message
+(the ZIP is built from the final head after commit).
+
+Usage: python3 scripts/generate-build-report.py [--github-head <sha>]
 """
 from __future__ import annotations
 
@@ -25,6 +42,16 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 OUT_MD = os.path.join(ROOT, "docs", "implementation", "BUILD_REPORT_P0.md")
 OUT_JSON = os.path.join(ROOT, "docs", "implementation", "build-report.json")
 OUT_MANIFEST = os.path.join(ROOT, "release-manifest.json")
+OUT_CHECKSUMS = os.path.join(ROOT, "docs", "implementation", "CHECKSUMS.txt")
+
+# Remote CI evidence (P0-002 §7): verified by the parent on 2026-11-22.
+# CI PASSED on this head — 2/2 checks. The post-corrections CI run is
+# checked by the parent after the push; this record is the evidence
+# for the head it names, not a claim about a later head.
+CI_HEAD = "fcf311ef79c5f10a4248f026a5f667109c584831"
+CI_RUN_URL = ("https://github.com/msujoy149/consistency-frame/actions/"
+              "runs/45046203236")
+CI_PR_URL = "https://github.com/msujoy149/consistency-frame/pull/1"
 
 
 def git(*args: str) -> str:
@@ -40,10 +67,22 @@ def sha256_file(path: str) -> str:
     return h.hexdigest()
 
 
+def resolve_github_head(argv, environ, default_head: str) -> str:
+    """GitHub branch head to record: --github-head wins, then the
+    CF_GITHUB_HEAD env var, else the current git HEAD (the default
+    "current recorded head")."""
+    if "--github-head" in argv:
+        i = argv.index("--github-head")
+        if i + 1 < len(argv) and argv[i + 1]:
+            return argv[i + 1]
+    return environ.get("CF_GITHUB_HEAD") or default_head
+
+
 def main() -> int:
     base = git("rev-parse", "origin/main")
     head = git("rev-parse", "HEAD")
     branch = git("rev-parse", "--abbrev-ref", "HEAD")
+    github_head = resolve_github_head(sys.argv, os.environ, head)
     changed = git("diff", "--name-only", f"{base}...HEAD").splitlines()
     changed = [c for c in changed if c]
     log = git("log", "--format=%H %s", f"{base}..HEAD").splitlines()
@@ -62,6 +101,10 @@ def main() -> int:
 
     files = []
     for rel in sorted(changed):
+        # release-manifest.json is excluded from its own file-hash list:
+        # a file cannot contain its own hash (see §12 Provenance).
+        if rel == "release-manifest.json":
+            continue
         p = os.path.join(ROOT, rel)
         if os.path.exists(p):
             files.append({"path": rel, "sha256": sha256_file(p),
@@ -80,14 +123,26 @@ def main() -> int:
         "base_commit": base,
         "branch": branch,
         "head_commit": head,
+        "github_branch_head": github_head,
         "status": status,
         "changed_files": sorted(changed),
+        "ci": {
+            "head": CI_HEAD,
+            "result": "PASS",
+            "checks_passed": 2,
+            "checks_total": 2,
+            "run_url": CI_RUN_URL,
+            "pull_request": CI_PR_URL,
+            "note": ("Remote CI PASSED on the GitHub branch head named "
+                     "here. The post-corrections CI run is checked by the "
+                     "parent after the push; this record is evidence for "
+                     "the head it names, not a claim about a later head."),
+        },
         "tests": [{"id": t["id"], "command": t["command"],
                    "exit_code": t["exit_code"], "result": t["result"],
                    "evidence": "tests/last-run.json"} for t in tests],
         "not_run": [
             "CF-INT-015 (component-clone failure path via setup.sh --with-components end-to-end): the full --with-components run downloads ~5 GB + ~1 GB deps; failure reporting is unit-tested in tests/test_installer.sh, the live run is NOT RUN.",
-            "CI remote run: GitHub Actions runs only after the branch is pushed and a PR is opened; the workflow file is validated locally (YAML parse + pinned SHAs verified via API).",
             "setup.sh --with-components end-to-end on a clean machine: NOT RUN (network + disk); core-only path executed end-to-end locally (exit 0).",
         ],
         "known_issues": [
@@ -97,7 +152,7 @@ def main() -> int:
             "Research-register reconciliation (gaps-research-20261112.md staleness) deferred.",
             "Media intelligence, reference-learning runtime, provider orchestration, benchmarks and repair loop are out of scope for P0 by design (P1-P4).",
             "v2.4: runtime skill-routing engine and script-to-performance runtime are P1 work (matrix/graph/schemas are canonical data, not a runtime).",
-            "v2.4: OpenMontage paid provider routes are NOT_VERIFIED; no live paid call was made.",
+            "v2.4: OpenMontage paid provider routes have evidence_level present_locally (documented in the companion's provider guide only, never exercised); no live paid call was made.",
         ],
         "security_and_licence_notes": [
             "Secret scan (validate-repo.py): PASS — no credentials or private keys in tracked text files.",
@@ -120,6 +175,7 @@ def main() -> int:
         "version": "2.4-p0",
         "branch": branch,
         "commit": head,
+        "github_branch_head": github_head,
         "files": files,
         "tests": [{"id": t["id"], "result": t["result"]} for t in tests],
         "generated_at_utc": now,
@@ -142,6 +198,8 @@ Product: general-purpose professional AI video production & editing system.
 - Base branch / commit: `main` / `{base}`
 - Feature branch: `{branch}`
 - Head commit at generation time (code head): `{head}`
+- GitHub branch head recorded in this package: `{github_head}`
+  (remote head of `{branch}`; see §12 Provenance)
 - Working tree at generation time: clean except the report/manifest files
   generated by this script (committed afterwards as a docs-only commit;
   the delivery message states that final head SHA).
@@ -261,17 +319,28 @@ NOT RUN (honestly, not claimed as passed):
 
 - `setup.sh --with-components` end-to-end (would download ~5 GB +
   ~1 GB deps; failure reporting is unit-tested, the live run is NOT RUN).
-- Remote GitHub Actions CI run (runs only after push + PR; workflow
-  YAML parses locally and both action SHAs were verified via the
-  GitHub API on 2026-11-22).
+
+Remote CI evidence (not NOT RUN — it ran and passed):
+
+- Remote GitHub Actions CI PASSED on GitHub branch head `{CI_HEAD}`:
+  2/2 checks, run {CI_RUN_URL} (draft PR {CI_PR_URL}). The
+  post-corrections CI run will be checked by the parent after the push.
 
 ## 5. GITHUB
 
 - Feature branch: `{branch}`
 - Base commit: `{base}`
-- Head commit (code head): `{head}`
-- Push status / draft PR URL: see the delivery message (filled in after
-  push; this report is generated before the push).
+- Head commit (local code head): `{head}`
+- GitHub branch head: `{CI_HEAD}` (remote head; 20 snapshot commits
+  pushed to the branch plus 1 web commit that added
+  `.github/workflows/p0-ci.yml` — the remote tree equals the local
+  tree, verified by identical blob SHA for the workflow file)
+- Draft PR: {CI_PR_URL}
+- Push status: branch pushed; draft PR open; remote CI PASSED on
+  `{CI_HEAD}` (2/2 checks, run {CI_RUN_URL}). The regenerated
+  manifest and reports in this package are committed afterwards as a
+  docs-only commit, which advances the branch head by one; the
+  delivery message states that final head (see §12).
 
 ## 6. SECURITY & PRIVACY
 
@@ -291,7 +360,9 @@ NOT RUN (honestly, not claimed as passed):
 - Source ZIP: `consistency-frame-p0-feat-branch.zip` (built from the
   final head via `git archive`; SHA-256 in the delivery message).
 - Release manifest: `release-manifest.json` (per-file SHA-256 for all
-  {len(files)} changed files, test results, code-head commit `{head}`).
+  {len(files)} changed files, excluding `release-manifest.json`
+  itself — see §12; test results, code-head commit `{head}`,
+  GitHub branch head `{github_head}`).
 - Machine-readable build report: `docs/implementation/build-report.json`
   (package.sha256 is omitted by design — the ZIP is built from the final
   head after this report is committed; the ZIP SHA-256 in the delivery
@@ -312,11 +383,17 @@ NOT RUN (honestly, not claimed as passed):
 | CF-P0-ADAPTER-001 untested editor/provider not marked supported | PASS | `tests/test_registries.py` |
 | CF-P0-ROUTING-001 routing matrix covers all 15 skills, required fields, precedence unique 1–15 | PASS | `tests/test_routing.py` |
 | CF-P0-ROUTING-002 workflow graph acyclic, edges match routing-matrix dependencies (+ router edges) | PASS | `tests/test_routing.py` |
-| CF-P0-ROUTING-003 companion registry honest statuses, agent matrix only Muse verified | PASS | `tests/test_routing.py` |
+| CF-P0-ROUTING-003 companion registry honest evidence levels, agent matrix only Muse verified | PASS | `tests/test_routing.py` |
+| CF-P0-ROUTING-004 companion evidence_level closed set, run references, repo pins, zero production_verified | PASS | `tests/test_routing.py` |
+| CF-P0-REPORT-001 --github-head recorded in build-report.json + release-manifest.json (flag wins, CF_GITHUB_HEAD fallback, HEAD default) | PASS | `tests/test_reports.py` |
+| CF-P0-REPORT-002 release-manifest.json excluded from its own file list, kept in build-report.json changed_files; CHECKSUMS.txt matches the generated files | PASS | `tests/test_reports.py` |
+| CF-P0-REPORT-003 CI evidence current (CI PASSED on the GitHub head), no obsolete "CI NOT RUN" text, --with-components NOT RUN kept | PASS | `tests/test_reports.py` |
+| CF-P0-REPORT-004 generated build-report.json + release-manifest.json validate against their schemas | PASS | `tests/test_reports.py` |
 
 **P0 result: {status}** (all critical installer/data/security gates pass
-locally; CI remote run is pending the push/PR and is recorded as NOT RUN,
-not passed).
+locally; remote CI PASSED on GitHub branch head `{CI_HEAD}` — 2/2
+checks, run {CI_RUN_URL}; the post-corrections CI run will be checked
+by the parent after the push).
 
 ## 9. KNOWN ISSUES
 
@@ -330,8 +407,9 @@ not passed).
   benchmarks, repair loop: out of scope for P0 by design (P1–P4).
 - v2.4: runtime skill-routing engine and script-to-performance runtime
   are P1 work (the matrix/graph/schemas are canonical data, not a runtime).
-- v2.4: OpenMontage paid provider routes are NOT_VERIFIED; no live paid
-  call was made.
+- v2.4: OpenMontage paid provider routes have evidence_level
+  `present_locally` (documented in the companion's provider guide
+  only, never exercised); no live paid call was made.
 
 ## 10. NEXT PHASE
 
@@ -363,6 +441,39 @@ independent review of this branch.
   `schema_version: "2.4"`).
 - The v2.3 sections of this report (§§1–10) are the historical record
   of the first P0 run; this section records the revision on top of it.
+
+## 12. PROVENANCE (P0-002 §7 — GitHub head and the two-head rule)
+
+- Two heads, two meanings. `head_commit` / `commit` is the local code
+  head at generation time (`{head}`): the head of the implementation
+  this package describes. `github_branch_head` is the GitHub head of
+  the branch (`{github_head}`): the remote head the manifest records
+  as the code it describes.
+- The two-head rule: the manifest records the GitHub head of the code
+  it describes; pushing the regenerated manifest itself advances the
+  branch head by one docs-only commit, and the delivery message states
+  that final head. Do NOT try to make the manifest predict its own
+  push SHA — the manifest is generated before that commit exists.
+- Self-exclusion: `release-manifest.json` is excluded from its own
+  `files` list, because a file cannot contain its own SHA-256 hash.
+  It IS listed in `build-report.json`'s `changed_files` — that list
+  holds file names, not hashes, so there is no circularity. The two
+  lists answer different questions: names changed vs base, and
+  per-file hashes of the package.
+- Detached checksums: `docs/implementation/CHECKSUMS.txt` holds the
+  SHA-256 + byte count of `release-manifest.json`,
+  `docs/implementation/build-report.json` and
+  `docs/implementation/BUILD_REPORT_P0.md` as generated (before
+  commit). The source-ZIP hash is NOT in that file: the ZIP is built
+  from the final head after this report is committed, so its hash
+  lives in the delivery message only.
+- CI evidence for this package: remote CI PASSED on GitHub branch head
+  `{CI_HEAD}` — 2/2 checks, run {CI_RUN_URL} (draft PR {CI_PR_URL}).
+  That record is evidence for the head it names. The post-corrections
+  CI run (on the new head after this package is pushed) will be
+  checked by the parent after the push; it is NOT claimed here.
+- Regenerated under CF-WO-P0-002 (independent-review corrections)
+  with `--github-head {github_head}`.
 """
 
     os.makedirs(os.path.dirname(OUT_MD), exist_ok=True)
@@ -374,7 +485,26 @@ independent review of this branch.
     with open(OUT_MANIFEST, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
         f.write("\n")
+    # Detached checksums of the three generated files, as generated
+    # (before commit). The ZIP hash is NOT listed here: the ZIP is
+    # built from the final head after commit, so its hash lives in
+    # the delivery message only (see §12 Provenance).
+    checksums = (
+        "# Consistency Frame P0 — detached checksums\n"
+        "# SHA-256 + byte count of the three generated report files, as\n"
+        "# generated (before commit). The source-ZIP hash is NOT listed\n"
+        "# here: the ZIP is built from the final head after commit, so\n"
+        "# its hash lives in the delivery message only.\n"
+    )
+    for rel in ("release-manifest.json",
+                "docs/implementation/build-report.json",
+                "docs/implementation/BUILD_REPORT_P0.md"):
+        p = os.path.join(ROOT, rel)
+        checksums += f"{sha256_file(p)}  {os.path.getsize(p)}  {rel}\n"
+    with open(OUT_CHECKSUMS, "w", encoding="utf-8") as f:
+        f.write(checksums)
     print(f"wrote {OUT_MD}\nwrote {OUT_JSON}\nwrote {OUT_MANIFEST}")
+    print(f"wrote {OUT_CHECKSUMS}")
     print(f"base={base}\nhead={head}\nchanged_files={len(changed)}")
     return 0
 
