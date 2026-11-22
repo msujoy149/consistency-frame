@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://consistencyframe.blogspot.com/schemas/v2.3/evidence.json",
+  "title": "Evidence",
+  "description": "One evidence record: an observed fact kept separate from its interpretation, with confidence, scope and source.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "2.3"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "reference_id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "observation",
+        "measurement",
+        "human_review",
+        "test_result",
+        "provider_probe"
+      ]
+    },
+    "timecode": {
+      "type": "string"
+    },
+    "fact": {
+      "type": "string"
+    },
+    "interpretation": {
+      "type": "string"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "global",
+        "project",
+        "character",
+        "scene",
+        "shot"
+      ]
+    },
+    "source": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "kind",
+    "fact",
+    "source"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://consistencyframe.blogspot.com/schemas/v2.3/build-report.json",
+  "title": "BuildReport",
+  "description": "A machine-readable build report. A test is PASS only if it was executed; never report an unexecuted test as passed.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "2.3"
+      ]
+    },
+    "work_order_id": {
+      "type": "string"
+    },
+    "product": {
+      "type": "string"
+    },
+    "product_scope": {
+      "type": "string",
+      "enum": [
+        "general-purpose-video-production-and-editing"
+      ]
+    },
+    "repository_url": {
+      "type": "string"
+    },
+    "base_branch": {
+      "type": "string"
+    },
+    "base_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "branch": {
+      "type": "string"
+    },
+    "head_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "PARTIAL",
+        "FAIL"
+      ]
+    },
+    "changed_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "exit_code": {
+            "type": "integer"
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "FAIL",
+              "SKIPPED",
+              "NOT RUN"
+            ]
+          },
+          "evidence": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "command",
+          "result"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "not_run": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "known_issues": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "security_and_licence_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "private_data_check": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "FAIL"
+      ]
+    },
+    "package": {
+      "type": "object",
+      "properties": {
+        "archive": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "release_manifest": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "archive",
+        "release_manifest"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "work_order_id",
+    "product",
+    "product_scope",
+    "repository_url",
+    "base_commit",
+    "branch",
+    "head_commit",
+    "status",
+    "private_data_check",
+    "package"
+  ],
+  "additionalProperties": false
+}

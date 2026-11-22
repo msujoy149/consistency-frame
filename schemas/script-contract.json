@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://consistencyframe.blogspot.com/schemas/v2.3/script-contract.json",
+  "title": "ScriptContract",
+  "description": "A script/scene/shot/performance contract. Dialogue is VERBATIM by default; performance cues are stored separately and never silently rewrite dialogue.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "2.3"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "dialogue_mode": {
+      "type": "string",
+      "enum": [
+        "VERBATIM_SCRIPT",
+        "SCRIPT_EDIT_REQUESTED"
+      ]
+    },
+    "dialogue": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "line_id": {
+            "type": "string"
+          },
+          "character_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+          },
+          "text": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "line_id",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "beats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "shots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "shot_id": {
+            "type": "string"
+          },
+          "duration_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "framing": {
+            "type": "string"
+          },
+          "camera": {
+            "type": "string"
+          },
+          "character_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+            }
+          }
+        },
+        "required": [
+          "shot_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "performance_cues": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "audio_plan": {
+      "type": "string"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "dialogue_mode",
+    "dialogue"
+  ],
+  "additionalProperties": false
+}

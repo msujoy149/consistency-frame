@@ -1,0 +1,107 @@
+{
+  "status": "PASS",
+  "tests": [
+    {
+      "id": "P0-SHELL",
+      "command": "bash -n scripts/sync-skills.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "P0-SHELL",
+      "command": "bash -n setup.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "P0-SHELL",
+      "command": "bash -n tests/test_installer.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "P0-SHELL",
+      "command": "bash -n tests/run-tests.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "P0-SCHEMA",
+      "command": "python3 scripts/validate-repo.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-INT-023",
+      "command": "python3 scripts/generate-registries.py --check",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "P0-SCHEMA",
+      "command": "python3 tests/test_schemas.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-INT-023",
+      "command": "python3 tests/test_registries.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ASSET-001",
+      "command": "python3 tests/test_modes.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ASSET-002",
+      "command": "python3 tests/test_modes.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ASSET-003",
+      "command": "python3 tests/test_modes.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "P0-PRIVACY",
+      "command": "python3 tests/test_private_overlay.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-INT-014",
+      "command": "bash tests/test_installer.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-INT-015",
+      "command": "bash tests/test_installer.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "P0-DIFF-CHECK",
+      "command": "git diff --check",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-INT-023",
+      "command": "python3 scripts/generate-report.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-INT-023",
+      "command": "python3 scripts/generate-report.py --check",
+      "exit_code": 0,
+      "result": "PASS"
+    }
+  ]
+}
