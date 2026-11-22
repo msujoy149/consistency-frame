@@ -110,6 +110,17 @@ def main() -> int:
         if cur is None or order[t["result"]] < order[cur["result"]]:
             by_id[t["id"]] = t
     tests = [by_id[k] for k in sorted(by_id)]
+    # Test-evidence counts (P0-004): the report must state the exact
+    # recorded evidence — entries, distinct IDs, distinct commands —
+    # never a hand-counted total. The P0-003 docs said "40/40" while
+    # last-run.json held 41 entries: the hand count omitted the new
+    # `bash -n` entry (35 + 1 + 4 + 1 = 41, not 35 + 4 + 1 = 40), and
+    # the last-run.json committed with the fix was stale (35 entries)
+    # until it was re-recorded in the docs commit.
+    raw_tests = last_run.get("tests", [])
+    n_test_entries = len(raw_tests)
+    n_test_commands = len({t["command"] for t in raw_tests})
+    n_test_ids = len(tests)
     overall = last_run.get("status", "UNKNOWN")
 
     files = []
@@ -506,9 +517,30 @@ independent review of this branch.
   fsync + `os.replace()`), closing the predictable-`.tmp` symlink
   vulnerability in `write_manifest()` / `update_manifest_hashes()`
   (and the same pattern in the last-sync and run-owner writers).
-  Regression tests SEC-MANIFEST-01..04 + CF-P0-ATOMIC-001..006;
-  full suite 40/40 PASS locally. See
-  `docs/implementation/CF-WO-P0-003-corrections.md`.
+  Regression tests SEC-MANIFEST-01..04 + CF-P0-ATOMIC-001..006.
+  Test evidence for that package (verified, not hand-counted):
+  41 recorded test-run entries, 30 distinct test IDs, 22 distinct
+  command strings, all PASS (each listed command returned exit 0).
+  The P0-003 docs originally said "40/40" — a hand-count error: the
+  count omitted the new `bash -n` entry (35 + 1 + 4 + 1 = 41, not
+  35 + 4 + 1 = 40), and the `last-run.json` committed with the fix
+  was stale (35 entries) until re-recorded in the docs commit. See
+  `docs/implementation/CF-WO-P0-003-corrections.md` and
+  `docs/implementation/CF-WO-P0-004-corrections.md`.
+- Regenerated under CF-WO-P0-004 (post-review corrections) with
+  `--github-head {github_head}`: the installer now checks the return
+  code of every `write_result_json()` call explicitly, so a failed
+  final metadata write can no longer produce a false "Skill sync
+  SUCCESS" with exit 0 — changes applied + metadata failure reports
+  PARTIAL (exit 2) with the recovery backup preserved; no changes +
+  metadata failure reports FAILED (exit 1). New regression test
+  SEC-METADATA-05 (`tests/test_installer_metadata_failure.sh`) is a
+  true installer integration test. Test evidence for this package
+  (from `tests/last-run.json`, computed, not typed): {n_test_entries}
+  recorded test-run entries, {n_test_ids} distinct test IDs,
+  {n_test_commands} distinct command strings, all PASS (each listed
+  command returned exit 0). See
+  `docs/implementation/CF-WO-P0-004-corrections.md`.
 """
 
     # The manifest's hashes for the two files this script writes must be
