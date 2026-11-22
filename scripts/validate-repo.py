@@ -6,8 +6,13 @@ Checks, all deterministic and offline:
      JSON Schema (subset): type/properties/required/enum/pattern/
      minLength/minimum/maximum/exclusiveMinimum/minItems/items/
      additionalProperties.
-     schema_version must be "2.3" (v2.3 P0) or "2.4" (v2.4 Brain
-     Architecture Amendment — the new script-to-performance schemas).
+     schema_version must be "2.3" (v2.3 P0), "2.4" (v2.4 Brain
+     Architecture Amendment — the new script-to-performance schemas),
+     or "2.5" (v2.5 P0-006 animation-first additive migration).
+     Dual-version enums ["2.3", "2.5"] / ["2.4", "2.5"] are allowed:
+     a schema may accept records written against its earlier version
+     as well as 2.5; no existing required field was removed or
+     retyped, so every valid v2.3/v2.4 record remains valid.
   2. Every skill in skills/*/SKILL.md has YAML frontmatter with
      `name` and `description`; name matches the directory name.
   3. Registry files (registry/*.json) exist, parse, have unique IDs
@@ -235,8 +240,10 @@ def main() -> int:
             errors.append(f"schemas/{name}: invalid JSON: {e}")
             continue
         check_schema(schema, f"schemas/{name}", errors)
-        if schema.get("properties", {}).get("schema_version", {}).get("enum") not in (["2.3"], ["2.4"]):
-            errors.append(f"schemas/{name}: schema_version must be '2.3' or '2.4'")
+        if schema.get("properties", {}).get("schema_version", {}).get("enum") not in (
+                ["2.3"], ["2.4"], ["2.5"], ["2.3", "2.5"], ["2.4", "2.5"]):
+            errors.append(f"schemas/{name}: schema_version must be '2.3', '2.4' or '2.5' "
+                          "(dual-version ['2.3', '2.5'] / ['2.4', '2.5'] allowed)")
     checks["schemas"] = "PASS" if not errors else "FAIL"
 
     # 2. Skill frontmatter ------------------------------------------------
