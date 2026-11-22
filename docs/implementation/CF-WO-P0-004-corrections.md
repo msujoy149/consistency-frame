@@ -253,8 +253,20 @@ Recorded from the review document, for the delivery report:
 - `bash setup.sh` core-only → exit 0, same SUCCESS line, 15
   skills synced.
 - `git diff --check` → clean.
-- NOT RUN (honest): `setup.sh --with-components` end-to-end;
-  remote CI on the new head (parent checks after push).
+- Local checks completed before push: everything above in this
+  section (43 recorded test-run entries, all PASS; `setup.sh`
+  core-only and `--dry-run` SUCCESS; `git diff --check` clean).
+- Remote GitHub CI completed after push (verified by the parent on
+  2026-11-22, NOT claimed before it ran): PASSED on final PR head
+  `88791231caa03e8fb75a3499beeb21d1dd64a906` — 2/2 checks, push run
+  #37 https://github.com/msujoy149/consistency-frame/actions/runs/45055643056
+  and PR run #38 https://github.com/msujoy149/consistency-frame/actions/runs/45055649820.
+  The `p0-test-results` artifact (artifact ID 14766603267) holds 43
+  recorded test-run entries, 31 distinct test IDs, 24 distinct
+  command strings, all PASS, every listed command exit 0; its
+  `last-run.json` is byte-for-byte identical to the P0-004 ZIP's
+  `tests/last-run.json`.
+- NOT RUN (honest): `setup.sh --with-components` end-to-end.
 
 ## 8. Files changed
 

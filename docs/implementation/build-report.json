@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "265cf48fef08d73973e39d2b7e52d160c0eae4d9",
-  "github_branch_head": "06b08feb7ab1f15dd9071966b1e381176a96b480",
+  "head_commit": "96a18f814fef12c1f1bf981a2d4affdd0b6f879a",
+  "github_branch_head": "88791231caa03e8fb75a3499beeb21d1dd64a906",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -40,6 +40,7 @@
     "docs/implementation/CF-WO-P0-002-corrections.md",
     "docs/implementation/CF-WO-P0-003-corrections.md",
     "docs/implementation/CF-WO-P0-004-corrections.md",
+    "docs/implementation/CF-WO-P0-005-corrections.md",
     "docs/implementation/CHECKSUMS.txt",
     "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
     "docs/implementation/build-report.json",
@@ -113,13 +114,13 @@
     "tests/test_schemas.py"
   ],
   "ci": {
-    "head": "fcf311ef79c5f10a4248f026a5f667109c584831",
+    "head": "88791231caa03e8fb75a3499beeb21d1dd64a906",
     "result": "PASS",
     "checks_passed": 2,
     "checks_total": 2,
-    "run_url": "https://github.com/msujoy149/consistency-frame/actions/runs/45046203236",
+    "run_url": "https://github.com/msujoy149/consistency-frame/actions/runs/45055643056",
     "pull_request": "https://github.com/msujoy149/consistency-frame/pull/1",
-    "note": "Remote CI PASSED on the GitHub branch head named here. The post-corrections CI run is checked by the parent after the push; this record is evidence for the head it names, not a claim about a later head."
+    "note": "Remote CI PASSED on the GitHub branch head named here (push run #37 + PR run #38, 2/2 checks; p0-test-results artifact ID 14766603267: 43 recorded test-run entries, 31 distinct test IDs, 24 distinct command strings, all PASS). The corrections in this package are pushed after that run; their CI run is checked by the parent after the push \u2014 this record is evidence for the head it names, not a claim about a later head."
   },
   "tests": [
     {
@@ -300,6 +301,20 @@
     {
       "id": "CF-P0-SEC-METADATA-05",
       "command": "bash tests/test_installer_metadata_failure.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-SEC-METADATA-06",
+      "command": "bash tests/test_installer_metadata_failure.sh no-change",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-SEC-METADATA-07",
+      "command": "bash tests/test_installer_metadata_failure.sh failed-no-backup",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"

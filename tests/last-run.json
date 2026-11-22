@@ -206,6 +206,18 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P0-SEC-METADATA-06",
+      "command": "bash tests/test_installer_metadata_failure.sh no-change",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-METADATA-07",
+      "command": "bash tests/test_installer_metadata_failure.sh failed-no-backup",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "CF-P0-ATOMIC-001",
       "command": "python3 tests/test_atomic_write.py",
       "exit_code": 0,
