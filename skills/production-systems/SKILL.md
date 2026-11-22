@@ -15,6 +15,8 @@ Counting note: this skill lists 40 numbered entries (12 + 18 + 7 + 3). Together 
 
 Every project has one fixed visual style: a colour palette, a lighting mood, and a level of realism. Record it in the project and use the same style in every episode, so all episodes look like one series and not like separate videos. A bright comedy scene and a sad night scene may differ in mood, but the underlying look — colour, light, texture — must stay recognizable as the same series.
 
+The visual style is one dimension of the production profile, not the whole profile: visual_style, production_medium, motion_method, subject_kind, and interaction_pattern are separate, composable dimensions — never one single `animation_type`. A change in one dimension (for example the visual_style) does not silently change the others, and never silently changes a character's identity (see the `character-consistency` skill).
+
 ### A2. Camera Language and Shot List
 
 Decide the camera language before generating: when to use a close-up (emotion, dialogue), a medium shot (conversation), and a wide shot (place, action). Use the same language across episodes. For each scene, follow a simple shot plan: establishing shot, main action, reaction shot, closing shot. Do not rely on a single framing for everything. Choose camera movements and shot compositions according to the actual scene; every shot must have a visual purpose. Use wide shots, medium shots, close-ups, over-the-shoulder shots, tracking shots, establishing shots, appropriate angles, balanced framing, natural perspective, realistic depth of field, proper subject focus, professional lighting, natural shadows, accurate reflections, and realistic environmental details. Which angle each shot uses is decided by the script beat — see A12. For the cinematic-power layer — style lock, animal and creature performance, music-beat editing, trailer structure, and scale and colour scripting — see the `cinematic-power` skill. For the live-action and VFX layer — real human performance, CG creatures in live footage, water and wetness continuity, set extension, stunts, and real-animal performance — see the `live-action-vfx` skill. For the emotional-performance layer — stage performance, crowd, intimate drama, age performance, instrument sync, music as story, and cultural authenticity and object storytelling — see the `emotional-performance` skill.
@@ -41,7 +43,7 @@ After each episode, record what happened: key events, what each character wore, 
 
 ### A8. Dialogue Writing Rules
 
-Dialogue must be natural spoken language, not bookish language. An 8-year-old speaks like an 8-year-old; an adult speaks like an adult; an elderly character speaks like an elderly person. Never give a child adult words. Keep lines short enough to speak naturally, with pauses where a human would pause. If a line sounds robotic when read aloud, rewrite it. Write each character's dialogue in that character's language (see Part D).
+Dialogue must be natural spoken language, not bookish language. An 8-year-old speaks like an 8-year-old; an adult speaks like an adult; an elderly character speaks like an elderly person. Never give a child adult words. Keep lines short enough to speak naturally, with pauses where a human would pause. If a line sounds robotic when read aloud, improve its delivery (performance tags, pauses) — preserve the user's dialogue verbatim unless the user explicitly requests rewriting. Write each character's dialogue in that character's language (see Part D).
 
 ### A9. Reference Photo Quality Rules
 
@@ -49,7 +51,7 @@ A good reference photo makes registration succeed: the face must be clear and we
 
 ### A10. Lip-Sync and Dubbing Workflow
 
-Decide the order for each project before starting: voice first, then video matched to the voice; or video first, then voice matched to the video. Follow one order consistently inside a project. Dialogue timing must match the mouth: a line must not finish long before or after the character stops speaking. If lip-sync is not supported on the platform, say so honestly instead of promising it. Check mouth interior sharpness, teeth stability, and tongue on close-ups (see the `humanized-production` skill).
+Decide the order for each project before starting: voice first, then video matched to the voice; or video first, then voice matched to the video. Follow one order consistently inside a project. Dialogue timing must match the mouth: a line must not finish long before or after the character stops speaking. If lip-sync is not supported on the platform, say so honestly instead of promising it. Check mouth interior sharpness, teeth stability, and tongue on close-ups (see the `humanized-production` skill). Lip-sync here means `lip-sync-phoneme-viseme` through articulation_target `human-mouth-lips` for human and digital-human subjects; a fictional speaking animal or creature is articulated through its own articulation_target (`bird-beak`, `animal-muzzle`, `creature-jaw-mandibles`, or `other`) — never human lips on a bird, animal, or creature. A real animal is not assumed to speak.
 
 ### A11. Episode QC Checklist
 
@@ -177,7 +179,7 @@ Keep a small demo ready — one sample character and one sample episode script. 
 
 ### C5. Script Template + Automatic Script Enhancement
 
-Scripts are written in a fixed format: scene, characters present, dialogue per character, camera, emotion per line. If the user's script is weak — flat dialogue with no feeling — improve it automatically: add emotion, natural pauses, reactions, and lively expression so the video has feeling, while keeping the story, the meaning, and the user's dialogue intact. Never change the story to add emotion; add the feeling to the story the user gave. A video with no feeling is a failed video.
+Scripts are written in a fixed format: scene, characters present, dialogue per character, camera, emotion per line. If the user's script is weak — flat dialogue with no feeling — improve its delivery automatically: add emotion, natural pauses, reactions, and lively expression so the video has feeling, while keeping the story, the meaning, and the user's dialogue intact. Preserve the user's dialogue verbatim unless the user explicitly requests rewriting; emotion is added through performance, never by changing the words the user wrote. Never change the story to add emotion; add the feeling to the story the user gave. A video with no feeling is a failed video.
 
 ### C6. Contribution Guide
 
