@@ -59,6 +59,19 @@ def git(*args: str) -> str:
                           text=True, check=True).stdout.strip()
 
 
+def head_time() -> str:
+    """Generation timestamp: the HEAD commit's time, NOT the wall clock,
+    so regenerating at the same head is byte-identical and the manifest's
+    hashes stay valid (P0-002 fix). Falls back to the wall clock only if
+    git cannot supply a commit time."""
+    try:
+        epoch = int(git("log", "-1", "--format=%ct", "HEAD"))
+        return datetime.fromtimestamp(epoch, timezone.utc).strftime(
+            "%Y-%m-%dT%H:%M:%SZ")
+    except Exception:
+        return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def sha256_file(path: str) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -105,12 +118,16 @@ def main() -> int:
         # a file cannot contain its own hash (see §12 Provenance).
         if rel == "release-manifest.json":
             continue
+        # docs/implementation/CHECKSUMS.txt is excluded for the same
+        # reason: it contains this manifest's hash (P0-002 fix).
+        if rel == "docs/implementation/CHECKSUMS.txt":
+            continue
         p = os.path.join(ROOT, rel)
         if os.path.exists(p):
             files.append({"path": rel, "sha256": sha256_file(p),
                           "bytes": os.path.getsize(p)})
 
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = head_time()
     status = "PASS" if overall == "PASS" else "PARTIAL" if overall == "PARTIAL" else "FAIL"
 
     build_report = {
@@ -459,7 +476,15 @@ independent review of this branch.
   It IS listed in `build-report.json`'s `changed_files` — that list
   holds file names, not hashes, so there is no circularity. The two
   lists answer different questions: names changed vs base, and
-  per-file hashes of the package.
+  per-file hashes of the package. `docs/implementation/CHECKSUMS.txt`
+  is excluded from the manifest's `files` list for the same reason —
+  it contains this manifest's hash. Both exclusions are checked by
+  `tests/test_reports.py` (CF-P0-REPORT-002).
+- Deterministic generation: the timestamps in the generated reports
+  come from the HEAD commit's time, not the wall clock, so regenerating
+  at the same head is byte-identical and the manifest's hashes stay
+  valid. Generate the living report first, then this report, and every
+  listed hash verifies against the final tree.
 - Detached checksums: `docs/implementation/CHECKSUMS.txt` holds the
   SHA-256 + byte count of `release-manifest.json`,
   `docs/implementation/build-report.json` and
@@ -475,6 +500,22 @@ independent review of this branch.
 - Regenerated under CF-WO-P0-002 (independent-review corrections)
   with `--github-head {github_head}`.
 """
+
+    # The manifest's hashes for the two files this script writes must be
+    # the hashes of the bytes about to be written, not the bytes on disk
+    # from the previous generation (P0-002 fix): the MD and JSON are
+    # rebuilt every run, so their on-disk hashes are always one
+    # generation stale. build-report.json is written as
+    # json.dumps(..., indent=2) + "\n"; the MD as the string itself.
+    md_bytes = md.encode("utf-8")
+    json_bytes = (json.dumps(build_report, indent=2) + "\n").encode("utf-8")
+    for entry in manifest["files"]:
+        if entry["path"] == "docs/implementation/BUILD_REPORT_P0.md":
+            entry["sha256"] = hashlib.sha256(md_bytes).hexdigest()
+            entry["bytes"] = len(md_bytes)
+        elif entry["path"] == "docs/implementation/build-report.json":
+            entry["sha256"] = hashlib.sha256(json_bytes).hexdigest()
+            entry["bytes"] = len(json_bytes)
 
     os.makedirs(os.path.dirname(OUT_MD), exist_ok=True)
     with open(OUT_MD, "w", encoding="utf-8") as f:

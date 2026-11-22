@@ -37,6 +37,18 @@ def git(*args: str) -> str:
         return "unknown"
 
 
+def head_time() -> str:
+    """Generation timestamp: the HEAD commit's time, NOT the wall clock,
+    so regenerating at the same head is byte-identical (P0-002 fix).
+    Falls back to the wall clock only if git cannot supply a time."""
+    try:
+        epoch = int(git("log", "-1", "--format=%ct", "HEAD"))
+        return datetime.fromtimestamp(epoch, timezone.utc).strftime(
+            "%Y-%m-%d %H:%M UTC")
+    except Exception:
+        return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+
 def load(name: str) -> dict:
     with open(os.path.join(ROOT, "registry", name), encoding="utf-8") as f:
         return json.load(f)
@@ -79,7 +91,7 @@ def main() -> int:
         test_section = "- No test run recorded yet (`tests/last-run.json` absent). Tests are NOT RUN, not passed."
         test_status = "NOT RUN"
 
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    now = head_time()
     adapter_rows = "\n".join(
         f"| {a['name']} | {a['integration']} | {a['native_skill_install']} | "
         f"{a['conformance']['status']} | {a['status']} |"

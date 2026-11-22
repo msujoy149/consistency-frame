@@ -105,6 +105,9 @@ def main():
     check("CF-P0-REPORT-002: release-manifest.json excluded from its own "
           "file list",
           "release-manifest.json" not in manifest_paths)
+    check("CF-P0-REPORT-002: CHECKSUMS.txt excluded from the manifest's "
+          "file list (it contains the manifest's hash)",
+          "docs/implementation/CHECKSUMS.txt" not in manifest_paths)
     check("CF-P0-REPORT-002: release-manifest.json kept in build-report.json "
           "changed_files (names, not hashes)",
           "release-manifest.json" in build_report.get("changed_files", []))
