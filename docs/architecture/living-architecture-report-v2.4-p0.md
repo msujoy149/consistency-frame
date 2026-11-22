@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-22 18:25 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-22 18:54 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p0-safe-foundations`
-**Head commit:** `265cf48fef08d73973e39d2b7e52d160c0eae4d9`
-**GitHub branch head:** `06b08feb7ab1f15dd9071966b1e381176a96b480` (remote head of `feat/cf-p0-safe-foundations` at
+**Head commit:** `96a18f814fef12c1f1bf981a2d4affdd0b6f879a`
+**GitHub branch head:** `88791231caa03e8fb75a3499beeb21d1dd64a906` (remote head of `feat/cf-p0-safe-foundations` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -193,6 +193,7 @@ docs/implementation/CF-WO-P0-001-plan.md
 docs/implementation/CF-WO-P0-002-corrections.md
 docs/implementation/CF-WO-P0-003-corrections.md
 docs/implementation/CF-WO-P0-004-corrections.md
+docs/implementation/CF-WO-P0-005-corrections.md
 docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
@@ -302,6 +303,8 @@ tests/test_schemas.py
 - `CF-P0-SEC-MANIFEST-03` — bash tests/test_installer_manifest_security.sh — **PASS** (exit 0)
 - `CF-P0-SEC-MANIFEST-04` — bash tests/test_installer_manifest_security.sh — **PASS** (exit 0)
 - `CF-P0-SEC-METADATA-05` — bash tests/test_installer_metadata_failure.sh — **PASS** (exit 0)
+- `CF-P0-SEC-METADATA-06` — bash tests/test_installer_metadata_failure.sh no-change — **PASS** (exit 0)
+- `CF-P0-SEC-METADATA-07` — bash tests/test_installer_metadata_failure.sh failed-no-backup — **PASS** (exit 0)
 - `CF-P0-ATOMIC-001` — python3 tests/test_atomic_write.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-report.py — **PASS** (exit 0)
@@ -314,10 +317,16 @@ tests/test_schemas.py
 
 CI workflow: `.github/workflows/p0-ci.yml` (runs on pull requests and
 pushes to the feature branch). Remote CI PASSED on
+`88791231caa03e8fb75a3499beeb21d1dd64a906` — 2/2 checks, push run #37
+https://github.com/msujoy149/consistency-frame/actions/runs/45055643056
+and PR run #38
+https://github.com/msujoy149/consistency-frame/actions/runs/45055649820
+(draft PR https://github.com/msujoy149/consistency-frame/pull/1).
+The `p0-test-results` artifact (artifact ID 14766603267) holds 43
+recorded test-run entries, 31 distinct test IDs, 24 distinct command
+strings, all PASS. Historical record (P0-002): remote CI PASSED on
 `fcf311ef79c5f10a4248f026a5f667109c584831` — 2/2 checks, run
-https://github.com/msujoy149/consistency-frame/actions/runs/45046203236
-(draft PR https://github.com/msujoy149/consistency-frame/pull/1). The
-post-corrections CI run will be checked by the parent after the push.
+https://github.com/msujoy149/consistency-frame/actions/runs/45046203236.
 
 ## Known issues and deferred work
 
@@ -382,4 +391,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-22 18:25 UTC.
+- Report generated: 2026-11-22 18:54 UTC.

@@ -298,10 +298,16 @@ Changed files in this branch (vs base):
 
 CI workflow: `.github/workflows/p0-ci.yml` (runs on pull requests and
 pushes to the feature branch). Remote CI PASSED on
+`88791231caa03e8fb75a3499beeb21d1dd64a906` — 2/2 checks, push run #37
+https://github.com/msujoy149/consistency-frame/actions/runs/45055643056
+and PR run #38
+https://github.com/msujoy149/consistency-frame/actions/runs/45055649820
+(draft PR https://github.com/msujoy149/consistency-frame/pull/1).
+The `p0-test-results` artifact (artifact ID 14766603267) holds 43
+recorded test-run entries, 31 distinct test IDs, 24 distinct command
+strings, all PASS. Historical record (P0-002): remote CI PASSED on
 `fcf311ef79c5f10a4248f026a5f667109c584831` — 2/2 checks, run
-https://github.com/msujoy149/consistency-frame/actions/runs/45046203236
-(draft PR https://github.com/msujoy149/consistency-frame/pull/1). The
-post-corrections CI run will be checked by the parent after the push.
+https://github.com/msujoy149/consistency-frame/actions/runs/45046203236.
 
 ## Known issues and deferred work
 
