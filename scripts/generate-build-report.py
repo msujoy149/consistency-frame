@@ -499,6 +499,16 @@ independent review of this branch.
   checked by the parent after the push; it is NOT claimed here.
 - Regenerated under CF-WO-P0-002 (independent-review corrections)
   with `--github-head {github_head}`.
+- Regenerated under CF-WO-P0-003 (final independent security
+  correction) with `--github-head {github_head}`: the installer
+  metadata writers now use one secure atomic-write helper
+  (`scripts/atomic_write.py` — `tempfile.mkstemp()` + fd write +
+  fsync + `os.replace()`), closing the predictable-`.tmp` symlink
+  vulnerability in `write_manifest()` / `update_manifest_hashes()`
+  (and the same pattern in the last-sync and run-owner writers).
+  Regression tests SEC-MANIFEST-01..04 + CF-P0-ATOMIC-001..006;
+  full suite 40/40 PASS locally. See
+  `docs/implementation/CF-WO-P0-003-corrections.md`.
 """
 
     # The manifest's hashes for the two files this script writes must be
