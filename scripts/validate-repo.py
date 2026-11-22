@@ -5,6 +5,8 @@ Checks, all deterministic and offline:
   1. Every schema in schemas/*.json is valid JSON and a well-formed
      JSON Schema (subset): type/properties/required/enum/pattern/
      minLength/minimum/minItems/items/additionalProperties.
+     schema_version must be "2.3" (v2.3 P0) or "2.4" (v2.4 Brain
+     Architecture Amendment — the new script-to-performance schemas).
   2. Every skill in skills/*/SKILL.md has YAML frontmatter with
      `name` and `description`; name matches the directory name.
   3. Registry files (registry/*.json) exist, parse, have unique IDs
@@ -23,6 +25,15 @@ Checks, all deterministic and offline:
      "100% realistic" and "99.9% as the floor" must not appear in
      skills/ or docs/ (historical CHANGELOG entries are exempt —
      history is never rewritten).
+  8. Canonical YAML records in architecture/ parse and are
+     structurally sound: intent-modes.yaml (13 modes), the v2.4
+     skill routing matrix (15 skills, required fields, unique
+     precedence), the workflow graph (15 nodes, known endpoints,
+     acyclic), the companion capability registry (2 companions,
+     honest statuses only) and the agent compatibility matrix
+     (only Muse verified). Needs PyYAML; if PyYAML is missing the
+     check is reported SKIPPED with a clear message (CI installs
+     PyYAML, so it runs there).
 
 Usage: python3 scripts/validate-repo.py [--root DIR] [--json]
 Exit 0 when every check passes, 1 otherwise. With --json, prints a
@@ -160,8 +171,8 @@ def main() -> int:
             errors.append(f"schemas/{name}: invalid JSON: {e}")
             continue
         check_schema(schema, f"schemas/{name}", errors)
-        if schema.get("properties", {}).get("schema_version", {}).get("enum") != ["2.3"]:
-            errors.append(f"schemas/{name}: schema_version must be '2.3'")
+        if schema.get("properties", {}).get("schema_version", {}).get("enum") not in (["2.3"], ["2.4"]):
+            errors.append(f"schemas/{name}: schema_version must be '2.3' or '2.4'")
     checks["schemas"] = "PASS" if not errors else "FAIL"
 
     # 2. Skill frontmatter ------------------------------------------------
@@ -292,6 +303,146 @@ def main() -> int:
                                       f"'{claim}' must be replaced by a measurable, "
                                       "scoped target (see schemas + docs/19)")
     checks["absolute_claims"] = "PASS" if len(errors) == abs_errors_before else "FAIL"
+
+    # 7. Canonical YAML records (v2.4) ------------------------------------
+    yaml_errors_before = len(errors)
+    try:
+        import yaml as _yaml
+    except ImportError:
+        _yaml = None
+    if _yaml is None:
+        checks["yaml_records"] = "SKIPPED (PyYAML not installed — pip install pyyaml)"
+        print("SKIPPED: yaml_records (PyYAML not installed — pip install pyyaml)")
+    else:
+        def load_yaml(rel):
+            p = os.path.join(ROOT, rel)
+            if not os.path.exists(p):
+                errors.append(f"{rel}: missing")
+                return None
+            try:
+                with open(p, encoding="utf-8") as f:
+                    return _yaml.safe_load(f)
+            except Exception as e:
+                errors.append(f"{rel}: invalid YAML: {e}")
+                return None
+
+        expected_modes = {"UPLOAD_ONLY", "TEMPORARY_ASSET_USE",
+                          "PROJECT_CONSISTENCY", "REGISTER_CHARACTER",
+                          "REGISTER_VOICE_PROFILE", "REGISTER_SOUND_ASSET",
+                          "GENERATE_FROM_SCRIPT", "EDIT_EXISTING_MEDIA",
+                          "REFERENCE_REVIEW", "REFERENCE_LEARN_AND_UPDATE",
+                          "VIDEO_QC", "REMAKE_OR_TRANSFORM",
+                          "REPORT_UPDATE_ONLY"}
+        skill_slugs = {f"skill-{s}" for s in skill_names}
+        slug_names = set(skill_names)
+
+        # intent-modes.yaml: 13 modes, matching asset_policy MODES.
+        modes_doc = load_yaml("architecture/intent-modes.yaml")
+        if modes_doc is not None:
+            if str(modes_doc.get("version")) != "2.3":
+                errors.append("architecture/intent-modes.yaml: version must be '2.3'")
+            if set((modes_doc.get("modes") or {}).keys()) != expected_modes:
+                errors.append("architecture/intent-modes.yaml: modes must be exactly the 13 asset modes")
+
+        # SKILL_ROUTING_MATRIX.yaml: 15 skills, required fields, unique precedence.
+        routing = load_yaml("architecture/SKILL_ROUTING_MATRIX.yaml")
+        if routing is not None:
+            if str(routing.get("version")) != "2.4":
+                errors.append("architecture/SKILL_ROUTING_MATRIX.yaml: version must be '2.4'")
+            entries = routing.get("skills") or []
+            if {e.get("skill_id") for e in entries} != skill_slugs:
+                errors.append("architecture/SKILL_ROUTING_MATRIX.yaml: skill_id set must match the 15 registry skills")
+            precs = []
+            for e in entries:
+                for field in ("skill_id", "skill", "activation_trigger",
+                              "non_trigger", "required_inputs",
+                              "expected_outputs", "dependencies", "precedence",
+                              "conflicts", "applicable_modes", "quality_gate",
+                              "approval_conditions"):
+                    if field not in e:
+                        errors.append(f"routing entry {e.get('skill_id')}: missing field '{field}'")
+                if e.get("skill") not in slug_names:
+                    errors.append(f"routing entry {e.get('skill_id')}: unknown skill '{e.get('skill')}'")
+                if isinstance(e.get("precedence"), int):
+                    precs.append(e["precedence"])
+                if not isinstance(e.get("activation_trigger"), str) or not (e.get("activation_trigger") or "").strip():
+                    errors.append(f"routing entry {e.get('skill_id')}: activation_trigger must be non-empty")
+                for dep in e.get("dependencies") or []:
+                    if dep not in slug_names:
+                        errors.append(f"routing entry {e.get('skill_id')}: unknown dependency '{dep}'")
+                for conf in e.get("conflicts") or []:
+                    if conf not in slug_names:
+                        errors.append(f"routing entry {e.get('skill_id')}: unknown conflict '{conf}'")
+                for mode in e.get("applicable_modes") or []:
+                    if mode not in expected_modes:
+                        errors.append(f"routing entry {e.get('skill_id')}: unknown mode '{mode}'")
+            if sorted(precs) != list(range(1, len(entries) + 1)):
+                errors.append("architecture/SKILL_ROUTING_MATRIX.yaml: precedence values must be unique 1..15")
+
+        # WORKFLOW_GRAPH.yaml: 15 nodes, known endpoints, acyclic.
+        graph = load_yaml("architecture/WORKFLOW_GRAPH.yaml")
+        if graph is not None:
+            if str(graph.get("version")) != "2.4":
+                errors.append("architecture/WORKFLOW_GRAPH.yaml: version must be '2.4'")
+            nodes = {n.get("id") for n in (graph.get("nodes") or [])}
+            if nodes != slug_names:
+                errors.append("architecture/WORKFLOW_GRAPH.yaml: node ids must be exactly the 15 skill slugs")
+            children: dict[str, set[str]] = {n: set() for n in nodes}
+            for edge in graph.get("edges") or []:
+                src, dst = edge.get("from"), edge.get("to")
+                if src not in nodes or dst not in nodes:
+                    errors.append(f"workflow graph edge {src} -> {dst}: unknown endpoint")
+                elif src in children:
+                    children[src].add(dst)
+            # Kahn's algorithm: a cycle leaves nodes unvisited.
+            indegree = {n: 0 for n in nodes}
+            for src in children:
+                for dst in children[src]:
+                    indegree[dst] += 1
+            queue = [n for n, d in indegree.items() if d == 0]
+            visited = 0
+            while queue:
+                n = queue.pop()
+                visited += 1
+                for dst in children[n]:
+                    indegree[dst] -= 1
+                    if indegree[dst] == 0:
+                        queue.append(dst)
+            if visited != len(nodes):
+                errors.append("architecture/WORKFLOW_GRAPH.yaml: graph has a cycle")
+
+        # COMPANION_CAPABILITY_REGISTRY.yaml: 2 companions, honest statuses.
+        companions = load_yaml("architecture/COMPANION_CAPABILITY_REGISTRY.yaml")
+        if companions is not None:
+            if str(companions.get("version")) != "2.4":
+                errors.append("architecture/COMPANION_CAPABILITY_REGISTRY.yaml: version must be '2.4'")
+            comps = companions.get("companions") or []
+            if {c.get("name") for c in comps} != {"VoiceStudio", "OpenMontage"}:
+                errors.append("architecture/COMPANION_CAPABILITY_REGISTRY.yaml: must list exactly VoiceStudio + OpenMontage")
+            for c in comps:
+                for cap in c.get("capabilities") or []:
+                    if cap.get("status") not in ("VERIFIED_ON_DISK", "VERIFIED_BY_RUN", "NOT_VERIFIED"):
+                        errors.append(f"companion {c.get('name')}: capability '{cap.get('capability')}' has an unknown status")
+                    if not cap.get("evidence"):
+                        errors.append(f"companion {c.get('name')}: capability '{cap.get('capability')}' has no evidence pointer")
+
+        # AGENT_COMPATIBILITY_MATRIX.yaml: only Muse verified.
+        agents_doc = load_yaml("architecture/AGENT_COMPATIBILITY_MATRIX.yaml")
+        if agents_doc is not None:
+            if str(agents_doc.get("version")) != "2.4":
+                errors.append("architecture/AGENT_COMPATIBILITY_MATRIX.yaml: version must be '2.4'")
+            for a in agents_doc.get("agents") or []:
+                if a.get("verified") and a.get("name") != "Muse":
+                    errors.append(f"agent matrix: {a.get('name')} is marked verified — only Muse is verified in this account")
+                if a.get("verification_status") not in ("VERIFIED", "NOT_TESTED"):
+                    errors.append(f"agent matrix: {a.get('name')} has an unknown verification_status")
+            non_hosts = {n.get("name") for n in (agents_doc.get("non_hosts") or [])}
+            if not {"OpenRouter", "Google Colab"} <= non_hosts:
+                errors.append("agent matrix: non_hosts must include OpenRouter and Google Colab")
+            for n in agents_doc.get("non_hosts") or []:
+                if n.get("is_agent_host") is not False:
+                    errors.append(f"agent matrix: non-host {n.get('name')} must have is_agent_host: false")
+        checks["yaml_records"] = "PASS" if len(errors) == yaml_errors_before else "FAIL"
 
     result = {"checks": checks, "errors": errors,
               "result": "PASS" if not errors else "FAIL"}

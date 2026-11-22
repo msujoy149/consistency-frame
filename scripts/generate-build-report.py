@@ -96,6 +96,8 @@ def main() -> int:
             "Private-overlay runtime adapter deferred to P2 (P0 adds schemas, validation and tests).",
             "Research-register reconciliation (gaps-research-20261112.md staleness) deferred.",
             "Media intelligence, reference-learning runtime, provider orchestration, benchmarks and repair loop are out of scope for P0 by design (P1-P4).",
+            "v2.4: runtime skill-routing engine and script-to-performance runtime are P1 work (matrix/graph/schemas are canonical data, not a runtime).",
+            "v2.4: OpenMontage paid provider routes are NOT_VERIFIED; no live paid call was made.",
         ],
         "security_and_licence_notes": [
             "Secret scan (validate-repo.py): PASS — no credentials or private keys in tracked text files.",
@@ -115,7 +117,7 @@ def main() -> int:
 
     manifest = {
         "schema_version": "2.3",
-        "version": "2.3-p0",
+        "version": "2.4-p0",
         "branch": branch,
         "commit": head,
         "files": files,
@@ -204,6 +206,34 @@ preview needed):
   historical claim in `registry/features.json` (`legacy_counts`);
   reconciliation is deferred P1 work.
 
+### v2.4 revision (Brain Architecture Amendment — this run)
+
+- **P0-A audit:** `docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md` —
+  zero server/API-backend/cloud-database claims in normative text
+  (the withdrawn items never existed in code); one docs fix (v2.4
+  section in `AGENTS.md`); no skill file changed; v2.4 mode mapping
+  (ONE-OFF vs RECURRING) documented.
+- **P0-B routing + performance schemas:**
+  `architecture/SKILL_ROUTING_MATRIX.yaml` (15 skills, precedence
+  1–15, command-authority is the router),
+  `architecture/WORKFLOW_GRAPH.yaml` (42 edges, acyclic),
+  four `schema_version: "2.4"` schemas (`scene-plan`, `shot-plan`,
+  `performance-plan`, `script-to-performance` — the combined
+  Script-to-Performance contract; dialogue VERBATIM unless a rewrite
+  was explicitly requested).
+- **P0-C companion + agent truth:**
+  `architecture/COMPANION_CAPABILITY_REGISTRY.yaml` (VoiceStudio
+  v0.5.8 + OpenMontage, verified capabilities only) and
+  `architecture/AGENT_COMPATIBILITY_MATRIX.yaml` (10 agents, only
+  Muse verified; OpenRouter is a model-routing layer, not a host;
+  Colab needs a Notebook/Agent Runtime).
+- **Tests + validator:** `tests/test_routing.py` (gates
+  CF-P0-ROUTING-001/002/003) + `scripts/validate-repo.py` check 8
+  (canonical YAML records); CI installs PyYAML.
+- **Docs:** `docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md`,
+  living report `docs/architecture/living-architecture-report-v2.4-p0.md`
+  (v2.3 report retained as the baseline record).
+
 Commits on this branch (base..head):
 
 {commit_list}
@@ -280,6 +310,9 @@ NOT RUN (honestly, not claimed as passed):
 | CF-P0-ASSET-002 registration fails without authorisation/name/ID/reference | PASS | `tests/test_modes.py` |
 | CF-P0-ASSET-003 voice and sound are separate schemas/types | PASS | `tests/test_schemas.py` |
 | CF-P0-ADAPTER-001 untested editor/provider not marked supported | PASS | `tests/test_registries.py` |
+| CF-P0-ROUTING-001 routing matrix covers all 15 skills, required fields, precedence unique 1–15 | PASS | `tests/test_routing.py` |
+| CF-P0-ROUTING-002 workflow graph acyclic, edges match routing-matrix dependencies (+ router edges) | PASS | `tests/test_routing.py` |
+| CF-P0-ROUTING-003 companion registry honest statuses, agent matrix only Muse verified | PASS | `tests/test_routing.py` |
 
 **P0 result: {status}** (all critical installer/data/security gates pass
 locally; CI remote run is pending the push/PR and is recorded as NOT RUN,
@@ -295,13 +328,41 @@ not passed).
 - `setup.sh --with-components` end-to-end NOT RUN (see §4).
 - Media intelligence, reference-learning runtime, provider orchestration,
   benchmarks, repair loop: out of scope for P0 by design (P1–P4).
+- v2.4: runtime skill-routing engine and script-to-performance runtime
+  are P1 work (the matrix/graph/schemas are canonical data, not a runtime).
+- v2.4: OpenMontage paid provider routes are NOT_VERIFIED; no live paid
+  call was made.
 
 ## 10. NEXT PHASE
 
-P1 (separate work order, do not start): intent router +
-reference-learning runtime — `UPLOAD_ONLY` gate, intake/hash, evidence
-cards, learning ledger, duplicate/conflict checks — after independent
-review of this branch.
+P1 (separate work order, do not start): runtime skill-routing engine
+(execute the routing matrix + workflow graph) + script-to-performance
+runtime (produce Scene/Shot/Performance Plans from a script) + intent
+router + reference-learning runtime — `UPLOAD_ONLY` gate, intake/hash,
+evidence cards, learning ledger, duplicate/conflict checks — after
+independent review of this branch.
+
+## 11. v2.4 REVISION (Brain Architecture Amendment)
+
+- Amendment: user voice call 2026-11-22. Consistency Frame is the
+  CENTRAL BRAIN / Orchestrator; Central Server Manager + own-API
+  implementation are WITHDRAWN and were never built. Three-repo model:
+  Brain (this repo) / VoiceStudio (voice/speech) / OpenMontage (video
+  production/editing). No server, API backend or central database.
+- Deliverables: `docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md`,
+  `architecture/SKILL_ROUTING_MATRIX.yaml`,
+  `architecture/WORKFLOW_GRAPH.yaml`,
+  `architecture/COMPANION_CAPABILITY_REGISTRY.yaml`,
+  `architecture/AGENT_COMPATIBILITY_MATRIX.yaml`,
+  `schemas/script-to-performance.json` (SCRIPT_TO_PERFORMANCE_SCHEMA.json)
+  + `schemas/scene-plan.json`, `schemas/shot-plan.json`,
+  `schemas/performance-plan.json`,
+  `docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md`.
+- Release manifest version for this run: `2.4-p0` (manifest format
+  `schema_version` stays `2.3`; the v2.4 schemas carry their own
+  `schema_version: "2.4"`).
+- The v2.3 sections of this report (§§1–10) are the historical record
+  of the first P0 run; this section records the revision on top of it.
 """
 
     os.makedirs(os.path.dirname(OUT_MD), exist_ok=True)
