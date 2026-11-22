@@ -44,6 +44,30 @@
       "result": "PASS"
     },
     {
+      "id": "P0-ROUTING",
+      "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ROUTING-001",
+      "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ROUTING-002",
+      "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ROUTING-003",
+      "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "CF-INT-023",
       "command": "python3 tests/test_registries.py",
       "exit_code": 0,

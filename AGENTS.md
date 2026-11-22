@@ -92,6 +92,48 @@ step-by-step order for every video, in §7).
 - Quality targets are measurable and scoped, verified shot by shot
   with a human-review gate — never an absolute percentage.
 
+## v2.4 Brain Architecture Amendment (2026-11-22, user voice call)
+
+- Consistency Frame is the CENTRAL BRAIN / Orchestrator of the video
+  production ecosystem — creative intelligence, script understanding,
+  skill routing, character/project continuity, emotion/performance
+  direction, cinematography/editing decisions, quality requirements,
+  production coordination, documentation/learning governance.
+- It is NOT a standalone video-generation server, audio-generation
+  server, API backend, cloud database, or hosting platform, and it is
+  not a replacement for the companion repos. No such component exists
+  in this repo and none is to be built (see
+  `docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md`).
+- Three-repo model: (A) this repo = Brain; (B) VoiceStudio =
+  Voice/Speech Specialist; (C) OpenMontage = Video Production/Editing
+  Specialist. The Brain directs the companions by instruction; it never
+  silently modifies or replaces their internal code. Verified
+  capabilities only — see
+  `architecture/COMPANION_CAPABILITY_REGISTRY.yaml`.
+- Intelligent skill routing is canonical data, not improvisation:
+  `architecture/SKILL_ROUTING_MATRIX.yaml` (per-skill trigger,
+  non-trigger, inputs, outputs, dependencies, precedence, conflicts,
+  modes, quality gate, approval conditions) and
+  `architecture/WORKFLOW_GRAPH.yaml` (sequential on dependency,
+  parallel only when safe, acyclic). Never arbitrarily select skills
+  or ignore relevant ones.
+- Script-to-Performance Intelligence: a script is analysed at
+  scene/beat/dialogue-line level into machine-readable Scene, Shot and
+  Performance Plans (`schemas/scene-plan.json`, `schemas/shot-plan.json`,
+  `schemas/performance-plan.json`, combined in
+  `schemas/script-to-performance.json`). The user's original dialogue is
+  preserved verbatim unless rewriting was explicitly requested.
+- Modes: ONE-OFF (supplied assets temporary, no permanent record) vs
+  RECURRING PROJECT/SERIES (stable IDs across tools and episodes;
+  permanent registration and canonical learning only on explicit
+  authorisation). Mapping to the asset modes is in
+  `docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md` §4.
+- Agent portability: one canonical Brain source; thin adapters plus a
+  verified compatibility matrix
+  (`architecture/AGENT_COMPATIBILITY_MATRIX.yaml`). Only Muse is
+  verified (knowledge-pack path). OpenRouter is a model-routing layer,
+  not an agent host. Colab needs an appropriate Notebook/Agent Runtime.
+
 ## Rules that always apply
 
 - A character's identity (face, eyes, nose, mouth, hands, feet) is

@@ -54,6 +54,10 @@ run_one "CF-INT-023" python3 scripts/generate-registries.py --check
 
 # Unit / integration tests.
 run_one "P0-SCHEMA" python3 tests/test_schemas.py
+run_one "P0-ROUTING" python3 tests/test_routing.py
+run_one "CF-P0-ROUTING-001" python3 tests/test_routing.py
+run_one "CF-P0-ROUTING-002" python3 tests/test_routing.py
+run_one "CF-P0-ROUTING-003" python3 tests/test_routing.py
 run_one "CF-INT-023" python3 tests/test_registries.py
 run_one "CF-P0-ASSET-001" python3 tests/test_modes.py
 run_one "CF-P0-ASSET-002" python3 tests/test_modes.py

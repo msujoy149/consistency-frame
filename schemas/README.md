@@ -29,6 +29,10 @@ change tested.
 | `reference-learning.json` | Learning-candidate lifecycle (`OBSERVED → … → ACCEPTED → DEPRECATED`) |
 | `script-contract.json` | Script / scene / shot / performance contract (`VERBATIM_SCRIPT` default) |
 | `timeline-manifest.json` | Editor-neutral timeline manifest (media references only; not a renderer) |
+| `scene-plan.json` | **v2.4** Scene plan — scenes, beats, dramatic intent, emotion + intensity + transitions |
+| `shot-plan.json` | **v2.4** Shot plan — framing, camera angle/movement, lighting per shot |
+| `performance-plan.json` | **v2.4** Performance plan — per dialogue line: face, micro-expressions, gaze, posture, gesture, breathing, voice, lip-sync |
+| `script-to-performance.json` | **v2.4** Script-to-Performance contract (headline deliverable `SCRIPT_TO_PERFORMANCE_SCHEMA.json`) — binds Scene + Shot + Performance Plans with audio and editing plans; dialogue VERBATIM unless a rewrite was explicitly requested |
 | `evidence.json` | One evidence record (fact vs interpretation) |
 | `approval.json` | Approval / rights / consent / retention record |
 | `installer-result.json` | Installer / sync result (one status per component) |
@@ -46,8 +50,17 @@ change tested.
   A character record must not embed voice tags/seed/audio or sound
   files; it links them by ID (`voice_profile_id`, `sound_asset_ids`
   on the project).
-- Every schema carries `schema_version: "2.3"`. A breaking change
-  requires a new version and a migration note in `CHANGELOG.md`.
+- Every schema carries `schema_version: "2.3"` (v2.3 P0) or `"2.4"`
+  (v2.4 Brain Architecture Amendment — the four script-to-performance
+  schemas). A breaking change requires a new version and a migration
+  note in `CHANGELOG.md`.
+- The four v2.4 schemas are the Script-to-Performance Intelligence
+  contracts: `scene-plan.json`, `shot-plan.json`,
+  `performance-plan.json`, and the combined `script-to-performance.json`.
+  They use only the validator's restricted subset (no `$ref`/`allOf`/
+  `oneOf`), and their valid fixtures live in `tests/fixtures/`
+  (`scene-plan-valid.json`, `shot-plan-valid.json`,
+  `performance-plan-valid.json`, `script-to-performance-valid.json`).
 - Examples that must validate live in `tests/fixtures/` (valid) and
   the negative cases in `tests/test_schemas.py` (invalid).
 

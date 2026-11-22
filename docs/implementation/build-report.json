@@ -7,7 +7,7 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "2f3be92e7c10252a74cf76ccc72b1bbc753b4d66",
+  "head_commit": "93eaf45b3d365fd1f2b7f6b95af99fbd73b814f1",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -15,6 +15,10 @@
     "AGENTS.md",
     "CHANGELOG.md",
     "README.md",
+    "architecture/AGENT_COMPATIBILITY_MATRIX.yaml",
+    "architecture/COMPANION_CAPABILITY_REGISTRY.yaml",
+    "architecture/SKILL_ROUTING_MATRIX.yaml",
+    "architecture/WORKFLOW_GRAPH.yaml",
     "architecture/audio-delivery-profiles.json",
     "architecture/intent-modes.yaml",
     "architecture/platform-capabilities.md",
@@ -28,11 +32,16 @@
     "docs/17-command-authority.md",
     "docs/19-audio-delivery-profiles.md",
     "docs/architecture/living-architecture-report-v2.3-p0.md",
+    "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
+    "docs/implementation/BUILD_REPORT_P0.md",
     "docs/implementation/CF-WO-P0-001-plan.md",
+    "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
+    "docs/implementation/build-report.json",
     "registry/adapters.json",
     "registry/features.json",
     "registry/skills.json",
     "registry/workflows.json",
+    "release-manifest.json",
     "schemas/README.md",
     "schemas/approval.json",
     "schemas/build-report.json",
@@ -42,12 +51,16 @@
     "schemas/installer-result.json",
     "schemas/intake-job.json",
     "schemas/location.json",
+    "schemas/performance-plan.json",
     "schemas/project.json",
     "schemas/prop.json",
     "schemas/reference-learning.json",
     "schemas/reference-review.json",
     "schemas/release-manifest.json",
+    "schemas/scene-plan.json",
     "schemas/script-contract.json",
+    "schemas/script-to-performance.json",
+    "schemas/shot-plan.json",
     "schemas/sound-asset.json",
     "schemas/story-bible.json",
     "schemas/timeline-manifest.json",
@@ -71,6 +84,10 @@
     "skills/voice-consistency/SKILL.md",
     "tests/fixtures/character-valid.json",
     "tests/fixtures/intake-temporary.json",
+    "tests/fixtures/performance-plan-valid.json",
+    "tests/fixtures/scene-plan-valid.json",
+    "tests/fixtures/script-to-performance-valid.json",
+    "tests/fixtures/shot-plan-valid.json",
     "tests/fixtures/sound-asset-valid.json",
     "tests/fixtures/voice-profile-valid.json",
     "tests/last-run.json",
@@ -79,6 +96,7 @@
     "tests/test_modes.py",
     "tests/test_private_overlay.py",
     "tests/test_registries.py",
+    "tests/test_routing.py",
     "tests/test_schemas.py"
   ],
   "tests": [
@@ -125,6 +143,27 @@
       "evidence": "tests/last-run.json"
     },
     {
+      "id": "CF-P0-ROUTING-001",
+      "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ROUTING-002",
+      "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ROUTING-003",
+      "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "command": "git diff --check",
       "exit_code": 0,
@@ -134,6 +173,13 @@
     {
       "id": "P0-PRIVACY",
       "command": "python3 tests/test_private_overlay.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "P0-ROUTING",
+      "command": "python3 tests/test_routing.py",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"
@@ -163,7 +209,9 @@
     "All 12 adapters are NOT_TESTED; no adapter may be called supported until a conformance test passes.",
     "Private-overlay runtime adapter deferred to P2 (P0 adds schemas, validation and tests).",
     "Research-register reconciliation (gaps-research-20261112.md staleness) deferred.",
-    "Media intelligence, reference-learning runtime, provider orchestration, benchmarks and repair loop are out of scope for P0 by design (P1-P4)."
+    "Media intelligence, reference-learning runtime, provider orchestration, benchmarks and repair loop are out of scope for P0 by design (P1-P4).",
+    "v2.4: runtime skill-routing engine and script-to-performance runtime are P1 work (matrix/graph/schemas are canonical data, not a runtime).",
+    "v2.4: OpenMontage paid provider routes are NOT_VERIFIED; no live paid call was made."
   ],
   "security_and_licence_notes": [
     "Secret scan (validate-repo.py): PASS \u2014 no credentials or private keys in tracked text files.",
