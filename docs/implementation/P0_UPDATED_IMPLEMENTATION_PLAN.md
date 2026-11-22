@@ -13,6 +13,12 @@ platform, or replacement for the companion repos. WITHDRAWN: Central
 Server Manager + own-API implementation. No standalone server, API
 backend or central database in P0. The v2.3 P0 (Safe Foundations) is
 preserved in full; this revision adds the v2.4 records on top of it.
+Consistency Frame is animation-first and style-agnostic (§9, P0-006):
+it directs consistent, expressive, physically believable animated
+videos across 2D, 3D, stylized, semi-realistic, and photorealistic
+styles, for humans, digital humans, animals, creatures,
+multi-character interactions, image-to-video, video-to-video, and
+hybrid live-action/VFX work — not a cartoon-only toolkit.
 
 ## 1. What the v2.3 P0 already delivered (preserved, not redone)
 
@@ -168,7 +174,14 @@ docs/architecture/living-architecture-report-v2.4-p0.md
   (grounded only in §7 citing B15 for caption tracks); the
   voice-consistency dependency is the strong one.
 - Precedence 11–14 (video-type skills) is tie-breaking only — those
-  skills never run together.
+  skills never run together. **Superseded by P0-006 (§9):** the
+  one-video-type-per-video mutual exclusion is withdrawn and replaced
+  by composable routing (primary pathway + style profiles + subject
+  capabilities + compatible layers, true conflicts only). The
+  `WORKFLOW_GRAPH.yaml` exclusive-groups change that implements this
+  is owned by the P0-006 architecture part; until it lands, no
+  routing claim in that file that contradicts the canonical
+  animation-scope document is to be relied on.
 - The `existing-character-prep` parallel group (character + voice) is
   valid ONLY for already-registered characters; for a new character,
   voice follows registration. It lives in
@@ -212,3 +225,96 @@ permissions — the old single gate conflated them.
   object; the conditional rule is enforced semantically in
   `tests/test_schemas.py` (the restricted schema subset cannot express
   conditional-required). `mutates_canonical_skills` stays `enum: [false]`.
+
+## 9. P0-006 — Animation-first, style-agnostic production architecture (in progress)
+
+Work order CF-WO-P0-006 + Mandatory Addendum C (received 2026-11-22).
+Part A (evidence correction) is done and committed (local head
+`2235438`); Parts B–L below are in progress on this branch, each
+owned by its part agent, and are integrated by the coordinator.
+The authoritative reference is the new canonical document
+`docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md`; the
+full corrections record is
+`docs/implementation/CF-WO-P0-006-corrections.md`.
+
+### 9.1 What changes
+
+- **Product identity becomes animation-first and style-agnostic
+  everywhere** (README, AGENTS.md, this plan): animation is NOT
+  cartoon-only — 2D, anime, stylized 3D, semi-realistic,
+  photorealistic CGI, digital humans, animals, creatures,
+  image-to-video, video-to-video, and hybrid live-action/VFX.
+  The README's "Realism, not animation" wording is withdrawn: a
+  photorealistic digital-human video IS animation (a generated
+  digital human, not live-action footage). The flat 2D explainer is
+  one optional profile, not the product's animation model.
+- **Multi-dimensional model, not one enum.** Visual style,
+  production medium, source-media type, and motion-generation
+  method are independent dimensions with fixed vocabularies, plus
+  subject kind, interaction pattern, and articulation target. No
+  giant `animation_type` enum is created.
+- **Composable routing replaces mutual exclusion.** Primary pathway
+  + style profiles + subject capabilities + compatible layers, with
+  true conflicts only. The §6 judgement that precedence 11–14
+  video-type skills "never run together" is superseded (see the
+  note in §6). The `WORKFLOW_GRAPH.yaml` exclusive-groups change
+  and the routing-matrix update are owned by the P0-006
+  architecture part.
+- **Realistic-person skill contradiction fixed (by the skills part,
+  not here):** the skill no longer says a realistic-person video is
+  "not animation"; it now covers photorealistic digital-human
+  animation including lip-sync, expressions, and body movement,
+  while keeping the consent / likeness / voice-permission rules and
+  the distinction from real live-action footage.
+- **Schema evolution, additive, v2.5.** New production-profile
+  contract (`schemas/production-profile.json`) and character
+  registration contract (`schemas/character-registration.json`);
+  character, voice-profile, shot-plan, and performance-plan
+  contracts extended with subject kind / species / anatomy /
+  consent, per-subject articulation targets, and the
+  cinematography fields — all additive; v2.4 records stay valid.
+  (Schema files are owned by the P0-006 schema part; this plan
+  records the intent, not the delivery.)
+- **Addendum C.** Reference video is OPTIONAL (Path A
+  reference-video-assisted vs Path B script-and-image-driven; never
+  invent a reference video); first-run Character Registration
+  invitation (register now / skip + temporary use / register later;
+  skipping never prevents a video; never silently convert an upload
+  into a permanent registration); character registration data model
+  (name + unique ID required, ID-generation with uniqueness
+  validation); character–image binding and reference management
+  (resolve by ID/unambiguous name, record IDs in the manifest);
+  private per-character voice registration (user-recorded + AI-
+  generated paths); strict voice isolation + privacy
+  (owner/workspace-scoped, no private media in public GitHub,
+  disclosed provider transmission, no unsupported "never leaves the
+  device" promise); character–voice binding in every production;
+  performance direction with subject-specific articulation (no human
+  lips on birds); multi-character interaction + dialogue blocking
+  (speaker/listener/eyelines/180-degree rule); intelligent
+  cinematography (motivated movement only, focus/depth, continuity);
+  one shared audio-visual timeline (stable dialogue + shot IDs for
+  VoiceStudio/OpenMontage handoffs); QC (identity, voice,
+  performance, cinematography, audio-visual, with the
+  provider-limitation honesty rule).
+- **D6 — no new skill.** P0-006 adds no new skill. The animation
+  scope is a routing/profile layer over the existing 15 skills,
+  which already cover the techniques involved; a new skill would
+  duplicate them. Counts stay 109 distinct systems / 120 numbered
+  entries. A permanent canonical skill change still needs explicit
+  user authorisation through the propose/apply split (§8).
+
+### 9.2 What P0-006 does not do
+
+- No server, API backend, database, or rendering engine; no
+  VoiceStudio/OpenMontage internal changes; no Master Prompt change;
+  no skill file rewritten by the docs part (skill text changes are
+  the skills part's work and are extensions/clarifications, not
+  deletions or weakenings).
+- No P1 work is started: routing-engine runtime,
+  script-to-performance runtime, provider execution, and adapter
+  conformance tests remain P1 (§5). No capability is marked
+  exercised or production-verified without actual evidence.
+- `docs/06-installation.md` is unchanged by the docs part: it does
+  not describe the product as cartoon-only (it lists the explainer
+  as one skill among 15), so no correction was needed there.

@@ -216,7 +216,9 @@ untouched and passing.
   suite — the two counts differ because the local suite has grown
   by the two new tests since that CI run. They are different
   measurements of different runs and are labelled as such wherever
-  they appear together.
+  they appear together. The CI run on this package's final head
+  `24d2e62` produced 45 / 33 / 26, matching the local suite exactly
+  (see §6/§8).
 
 ## 6. Validation
 
@@ -236,16 +238,25 @@ untouched and passing.
 - `bash setup.sh` core-only → exit 0, same SUCCESS line, 15
   skills synced.
 - `git diff --check` → clean.
-- NOT RUN (honest): `setup.sh --with-components` end-to-end;
-  remote CI on the new head (parent checks after push).
-- CI artifact download: NOT performed by the coordinator. The
-  GitHub MCP toolset exposes 46 tools and none of them downloads
-  Actions artifacts (no artifact/workflow-run/download tool), and
-  local git has no credentials — there is no supported route from
-  this environment. The artifact evidence cited in §1 and in the
-  generated reports rests on the work order's statement that it
-  was independently verified byte-identical; the parent re-checks
-  the artifact after the push (see the delivery steps).
+- NOT RUN (honest): `setup.sh --with-components` end-to-end.
+- Remote CI on the final head `24d2e62`: PASSED — push run #47
+  (`https://github.com/msujoy149/consistency-frame/actions/runs/45059388184`,
+  46 s) + PR run #48
+  (`https://github.com/msujoy149/consistency-frame/actions/runs/45059393245`,
+  44 s), 2/2 checks OK (verified by the parent 2026-11-22).
+- CI artifact download + inspection: performed by the parent after
+  the push via the browser. The PR run #48 artifact `p0-test-results`
+  (743 bytes, digest
+  sha256:379baeedcb76ebc63d34a1c898f8477038c0d5afdff17894ba5eae7c59669b54)
+  was downloaded and its `last-run.json` inspected: 45 recorded
+  test-run entries, 33 distinct test IDs, 26 distinct command
+  strings, 45/45 PASS, every listed command exit 0;
+  SEC-METADATA-05/06/07 all PASS; byte-for-byte identical to the
+  submitted P0-005 ZIP's `tests/last-run.json` (same SHA-256
+  `253bbb2950e84c9fe3ea6218c768d404a231aeae23a60bd31a98196df6cad22b`).
+  (The coordinator could not download it: no GitHub MCP tool
+  downloads Actions artifacts and local git has no credentials —
+  the parent downloaded it through the browser instead.)
 
 ## 7. Files changed
 
@@ -284,21 +295,28 @@ untouched and passing.
   `release-manifest.json`, `CHECKSUMS.txt`, living report,
   `tests/last-run.json`.
 
-## 8. Provenance
+## 8. Provenance (final — corrected under CF-WO-P0-006 Part A)
 
+- Final P0-005 heads, meanings distinguished: code head
+  `b24d934525d3fa366d5322b7c5debb1424cfb993` (the provenance-regen
+  commit; the fix commit is
+  `19e1a13e7c805f74e15940f44c1bb8944ec2f019`); local docs head
+  `69247d53003768cc499fa57949b092e3177c2b28`; remote PR head
+  `24d2e6274f1fe2ee42b86c20ecf083e0d4b3c4d4`.
 - Regenerated with `--github-head
-  88791231caa03e8fb75a3499beeb21d1dd64a906` (the current remote
-  head, i.e. the P0-004 final PR head whose CI is recorded above).
-  Code head: `19e1a13e7c805f74e15940f44c1bb8944ec2f019` (the fix
-  commit; the docs commit head is in the delivery report).
+  24d2e6274f1fe2ee42b86c20ecf083e0d4b3c4d4` (the final remote PR
+  head). The delivered manifest records commit `b24d934` + GitHub
+  head `c294c987` for the code it describes; 99 files, 0 hash
+  mismatches vs the working tree and vs the submitted ZIP.
 - The manifest records the GitHub head of the code it describes;
   pushing the regenerated manifest advances the branch head by one
   docs-only commit, and the delivery message states the final head
   (two-head rule, `BUILD_REPORT_P0.md` §12). The manifest excludes
   itself and `docs/implementation/CHECKSUMS.txt` from its own file
-  list, and all listed hashes verify against the working tree (see
-  the delivery report for the count).
+  list.
 - The `ci` object in `build-report.json` records the verified CI
-  run on head `8879123` (push run #37); the CI run for the P0-005
-  corrections themselves is a separate event, checked by the
-  parent after the push — it is NOT claimed here.
+  run on the final head `24d2e62` (push run #47 + PR run #48, 2/2
+  checks; artifact inspected — 45 recorded entries, 33 distinct
+  test IDs, 26 distinct command strings, all PASS; the artifact's
+  `last-run.json` byte-for-byte identical to the submitted P0-005
+  ZIP's `tests/last-run.json`).

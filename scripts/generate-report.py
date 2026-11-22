@@ -298,14 +298,22 @@ Changed files in this branch (vs base):
 
 CI workflow: `.github/workflows/p0-ci.yml` (runs on pull requests and
 pushes to the feature branch). Remote CI PASSED on
+`24d2e6274f1fe2ee42b86c20ecf083e0d4b3c4d4` — 2/2 checks, push run #47
+https://github.com/msujoy149/consistency-frame/actions/runs/45059388184
+and PR run #48
+https://github.com/msujoy149/consistency-frame/actions/runs/45059393245
+(draft PR https://github.com/msujoy149/consistency-frame/pull/1).
+The `p0-test-results` artifact (743 bytes, digest
+sha256:379baeedcb76ebc63d34a1c898f8477038c0d5afdff17894ba5eae7c59669b54)
+holds 45 recorded test-run entries, 33 distinct test IDs, 26 distinct
+command strings, all PASS; its `last-run.json` is byte-for-byte
+identical to the P0-005 ZIP's `tests/last-run.json`. Historical
+record (P0-004): remote CI PASSED on
 `88791231caa03e8fb75a3499beeb21d1dd64a906` — 2/2 checks, push run #37
 https://github.com/msujoy149/consistency-frame/actions/runs/45055643056
 and PR run #38
-https://github.com/msujoy149/consistency-frame/actions/runs/45055649820
-(draft PR https://github.com/msujoy149/consistency-frame/pull/1).
-The `p0-test-results` artifact (artifact ID 14766603267) holds 43
-recorded test-run entries, 31 distinct test IDs, 24 distinct command
-strings, all PASS. Historical record (P0-002): remote CI PASSED on
+https://github.com/msujoy149/consistency-frame/actions/runs/45055649820.
+Historical record (P0-002): remote CI PASSED on
 `fcf311ef79c5f10a4248f026a5f667109c584831` — 2/2 checks, run
 https://github.com/msujoy149/consistency-frame/actions/runs/45046203236.
 

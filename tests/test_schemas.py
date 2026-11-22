@@ -67,6 +67,139 @@ def base_review():
             "reference_id": "ref-001", "mutates_canonical_skills": False}
 
 
+# --- CF-WO-P0-006 (v2.5, animation-first, style-agnostic) -------------------
+# The restricted JSON-Schema subset cannot express cross-field rules
+# (articulation must match the subject; a generated digital human is
+# never live-action footage; character IDs must be unique across the
+# registry), so — like the dialogue-rewrite and non-verbal-line rules
+# above — they are enforced semantically here.
+
+ARTICULATION_BY_SUBJECT_KIND = {
+    "human": {"human-mouth-lips"},
+    "digital-human": {"human-mouth-lips"},
+    "real-animal": {"bird-beak", "animal-muzzle", "other"},
+    "cgi-animal": {"bird-beak", "animal-muzzle", "other"},
+    "fictional-creature": {"creature-jaw-mandibles", "bird-beak",
+                           "animal-muzzle", "other"},
+    "anthropomorphic": {"human-mouth-lips", "bird-beak", "animal-muzzle",
+                        "creature-jaw-mandibles", "other"},
+    "mixed": {"human-mouth-lips", "bird-beak", "animal-muzzle",
+              "creature-jaw-mandibles", "other"},
+    "non-character": {"human-mouth-lips", "bird-beak", "animal-muzzle",
+                      "creature-jaw-mandibles", "other"},
+}
+BIRD_WORDS = ("bird", "parrot", "crow", "owl", "eagle", "sparrow",
+              "pigeon", "duck", "chicken", "songbird")
+GENERATED_MEDIA = {"ai-digital-human", "ai-digital-creature",
+                   "3d-cgi-rigged", "2d-drawn-vector"}
+GENERATED_STYLES = {"photorealistic-digital-human",
+                    "photorealistic-digital-animal-creature",
+                    "photorealistic-3d-cgi", "stylized-3d",
+                    "semi-realistic-3d", "flat-2d-vector", "hand-drawn-2d",
+                    "illustrated-2d", "anime", "cartoon-2d"}
+
+
+def articulation_errors(entries):
+    """Each entry needs subject_kind/species/articulation_target.
+
+    Human lip movement applies ONLY to human/digital-human subjects.
+    A bird (by species or subject kind) never uses human-mouth-lips;
+    animals use animal-muzzle (or bird-beak), creatures use
+    creature-jaw-mandibles. Returns a list of violations.
+    """
+    errors = []
+    for i, entry in enumerate(entries or []):
+        if not isinstance(entry, dict):
+            continue
+        target = entry.get("articulation_target") or entry.get("articulation")
+        if not target:
+            continue
+        kind = entry.get("subject_kind")
+        species = (entry.get("species") or "").lower()
+        label = entry.get("character_id") or entry.get("dialogue_line_id") or f"entry {i}"
+        if kind in ARTICULATION_BY_SUBJECT_KIND and \
+                target not in ARTICULATION_BY_SUBJECT_KIND[kind]:
+            errors.append(f"{label}: articulation '{target}' is not valid "
+                          f"for subject_kind '{kind}'")
+        if target == "human-mouth-lips" and \
+                any(w in species for w in BIRD_WORDS):
+            errors.append(f"{label}: bird species '{entry.get('species')}' "
+                          "must never use human-mouth-lips articulation")
+    return errors
+
+
+def live_action_errors(profile):
+    """is_live_action_footage must agree with the production medium/style.
+
+    A generated subject (AI digital human/creature, CGI, drawn) with
+    is_live_action_footage=true is invalid — a generated digital human
+    is NEVER live-action footage. Conversely a live-action-footage
+    production with the flag false is invalid. Checks the profile level
+    and every per-subject override. Returns a list of violations.
+    """
+    errors = []
+    if not isinstance(profile, dict):
+        return ["production profile is not an object"]
+    flag = profile.get("is_live_action_footage")
+    medium = profile.get("production_medium")
+    style = profile.get("visual_style")
+    pid = profile.get("production_profile_id", "?")
+    if flag is True and (medium in GENERATED_MEDIA or style in GENERATED_STYLES):
+        errors.append(f"{pid}: is_live_action_footage=true but "
+                      f"production_medium='{medium}' / visual_style='{style}' "
+                      "is generated, not live-action footage")
+    if flag is False and medium == "live-action-footage":
+        errors.append(f"{pid}: is_live_action_footage=false but "
+                      "production_medium='live-action-footage'")
+    for i, sub in enumerate(profile.get("per_subject_overrides") or []):
+        if not isinstance(sub, dict):
+            continue
+        if sub.get("is_live_action_footage") is True and \
+                sub.get("representation") in GENERATED_MEDIA:
+            errors.append(f"{pid} per_subject_overrides[{i}] "
+                          f"({sub.get('character_id', '?')}): "
+                          "is_live_action_footage=true but representation "
+                          f"'{sub.get('representation')}' is generated")
+    return errors
+
+
+def subject_live_action_errors(subjects):
+    """Per-subject is_live_action_footage check for scene/shot subjects."""
+    errors = []
+    for i, sub in enumerate(subjects or []):
+        if not isinstance(sub, dict):
+            continue
+        if sub.get("is_live_action_footage") is True and \
+                sub.get("representation") in GENERATED_MEDIA:
+            errors.append(f"subjects[{i}] ({sub.get('character_id', '?')}): "
+                          "is_live_action_footage=true but representation "
+                          f"'{sub.get('representation')}' is generated")
+    return errors
+
+
+def duplicate_character_id_errors(records):
+    """character_id must be unique across registration records.
+
+    A second registration reusing an existing character_id is rejected;
+    IDs are never silently merged. `records` is a list of registration
+    objects. Returns a list of violations.
+    """
+    errors = []
+    seen = {}
+    for i, rec in enumerate(records or []):
+        if not isinstance(rec, dict):
+            continue
+        cid = rec.get("character_id")
+        if not cid:
+            continue
+        if cid in seen:
+            errors.append(f"duplicate character_id '{cid}' in records[{i}] "
+                          f"(first seen in records[{seen[cid]}])")
+        else:
+            seen[cid] = i
+    return errors
+
+
 def main():
     # Valid fixtures pass.
     for fixture, schema_name in (
@@ -158,6 +291,170 @@ def main():
           and job["retention"] == "temporary"
           and job["permanent_records_created"] == []
           and not asset_policy.may_create_permanent_record(job["mode"]))
+
+    # ---- CF-WO-P0-006 (v2.5, animation-first, style-agnostic) ----------
+    # Valid v2.5 fixtures pass schema validation.
+    for fixture, schema_name in (
+            ("production-profile-valid-digital-human.json",
+             "production-profile.json"),
+            ("routing-profile-s6-real-animal.json",
+             "production-profile.json"),
+            ("scene-plan-valid-human-bird.json", "scene-plan.json"),
+            ("shot-plan-valid-human-bird.json", "shot-plan.json"),
+            ("performance-plan-valid-bird.json", "performance-plan.json"),
+            ("script-to-performance-valid-bindings.json",
+             "script-to-performance.json"),
+            ("character-registration-valid-human.json",
+             "character-registration.json"),
+            ("character-registration-valid-bird.json",
+             "character-registration.json"),
+            ("voice-profile-valid-user-recorded.json", "voice-profile.json"),
+            ("voice-profile-valid-ai-generated.json", "voice-profile.json"),
+            ("character-valid-v25-animal.json", "character.json"),
+            ("visual-style-profile-valid.json", "visual-style-profile.json")):
+        errs = errors_for(load_schema(schema_name), load_fixture(fixture))
+        check(f"CF-P0-006: valid fixture {fixture} validates",
+              not errs, "; ".join(errs))
+
+    # Migration (F5): existing v2.3/v2.4 records stay valid under v2.5.
+    for fixture, schema_name in (
+            ("character-valid.json", "character.json"),
+            ("voice-profile-valid.json", "voice-profile.json"),
+            ("scene-plan-valid.json", "scene-plan.json"),
+            ("shot-plan-valid.json", "shot-plan.json"),
+            ("performance-plan-valid.json", "performance-plan.json"),
+            ("script-to-performance-valid.json",
+             "script-to-performance.json")):
+        errs = errors_for(load_schema(schema_name), load_fixture(fixture))
+        check(f"CF-P0-006/F5: v2.3/v2.4 fixture {fixture} still validates",
+              not errs, "; ".join(errs))
+    check("CF-P0-006/F5: character schema accepts 2.3 and 2.5",
+          load_schema("character.json")["properties"]["schema_version"]["enum"]
+          == ["2.3", "2.5"])
+    check("CF-P0-006/F5: scene-plan schema accepts 2.4 and 2.5",
+          load_schema("scene-plan.json")["properties"]["schema_version"]["enum"]
+          == ["2.4", "2.5"])
+
+    # No single animation_type enum: a record carrying it is rejected.
+    bad = load_fixture("production-profile-valid-digital-human.json")
+    bad["animation_type"] = "photorealistic"
+    check("CF-P0-006: production profile with animation_type is rejected "
+          "(no single animation_type enum; dimensions are separate)",
+          bool(errors_for(load_schema("production-profile.json"), bad)))
+    errs = errors_for(load_schema("production-profile.json"),
+                      load_fixture("production-profile-invalid-animation-type.json"))
+    check("CF-P0-006: invalid animation_type fixture is rejected",
+          bool(errs))
+
+    # Fixed vocabularies: unknown enum values are rejected.
+    bad = load_fixture("production-profile-valid-digital-human.json")
+    bad["visual_style"] = "pixar-style"
+    check("CF-P0-006: unknown visual_style is rejected",
+          bool(errors_for(load_schema("production-profile.json"), bad)))
+    bad = load_fixture("production-profile-valid-digital-human.json")
+    bad["production_medium"] = "stop-motion"
+    check("CF-P0-006: unknown production_medium is rejected",
+          bool(errors_for(load_schema("production-profile.json"), bad)))
+
+    # Articulation is subject-specific: a bird never uses human lips.
+    bird_plan = load_fixture("performance-plan-invalid-bird-human-lips.json")
+    check("CF-P0-006: bird line with human-mouth-lips is rejected",
+          bool(articulation_errors(bird_plan["lines"])))
+    good_bird = load_fixture("performance-plan-valid-bird.json")
+    check("CF-P0-006: bird line with bird-beak articulation is valid",
+          articulation_errors(good_bird["lines"]) == []
+          and not errors_for(load_schema("performance-plan.json"), good_bird))
+    check("CF-P0-006: valid bird line passes the non-verbal-line rule",
+          _validate_repo.validate_non_verbal_lines(good_bird) == [])
+    scene_bird = load_fixture("scene-plan-valid-human-bird.json")
+    check("CF-P0-006: human+bird scene subjects pass articulation check",
+          articulation_errors(scene_bird["scenes"][0]["subjects"]) == [])
+    shot_bird = load_fixture("shot-plan-valid-human-bird.json")
+    check("CF-P0-006: human+bird shot subjects pass articulation check",
+          articulation_errors(shot_bird["shots"][0]["subjects"]) == [])
+    check("CF-P0-006: human+bird scene subjects pass live-action check",
+          subject_live_action_errors(scene_bird["scenes"][0]["subjects"]) == [])
+    check("CF-P0-006: human+bird shot subjects pass live-action check",
+          subject_live_action_errors(shot_bird["shots"][0]["subjects"]) == [])
+
+    # A generated digital human is NEVER live-action footage.
+    good_profile = load_fixture("production-profile-valid-digital-human.json")
+    check("CF-P0-006: valid digital-human profile passes live-action check",
+          live_action_errors(good_profile) == [])
+    bad_profile = load_fixture(
+        "production-profile-invalid-digital-human-live-action.json")
+    check("CF-P0-006: digital-human profile claiming live-action footage "
+          "is schema-valid (boolean) but rejected by the provenance check",
+          not errors_for(load_schema("production-profile.json"), bad_profile)
+          and bool(live_action_errors(bad_profile)))
+
+    # Character registration: name + unique ID required; no duplicates.
+    reg_schema = load_schema("character-registration.json")
+    check("CF-P0-006: registration without character_id is rejected",
+          bool(errors_for(reg_schema, load_fixture(
+              "character-registration-invalid-missing-id.json"))))
+    dupes = load_fixture("character-registration-invalid-duplicate-id.json")
+    check("CF-P0-006: duplicate character_id across registrations "
+          "is rejected",
+          bool(duplicate_character_id_errors(dupes)))
+    check("CF-P0-006: each duplicate-ID record is valid on its own "
+          "(the rejection is the duplication, not the shape)",
+          all(not errors_for(reg_schema, rec) for rec in dupes))
+    check("CF-P0-006: distinct registrations pass the duplicate-ID check",
+          duplicate_character_id_errors([
+              load_fixture("character-registration-valid-human.json"),
+              load_fixture("character-registration-valid-bird.json")]) == [])
+    reg_bird = load_fixture("character-registration-valid-bird.json")
+    check("CF-P0-006: bird registration is temporary, never silently "
+          "permanent",
+          reg_bird["registration_history"][0]["event"]
+          == "registered-temporary")
+
+    # Voice profiles: user-recorded vs AI-generated (Addendum C §5).
+    vp_schema = load_schema("voice-profile.json")
+    user_vp = load_fixture("voice-profile-valid-user-recorded.json")
+    check("CF-P0-006: user-recorded voice profile is valid",
+          user_vp["source"] == "user-recording"
+          and not errors_for(vp_schema, user_vp))
+    ai_vp = load_fixture("voice-profile-valid-ai-generated.json")
+    check("CF-P0-006: AI-generated voice profile is valid",
+          ai_vp["source"] == "ai-generated"
+          and not errors_for(vp_schema, ai_vp))
+    bad = load_fixture("voice-profile-valid-user-recorded.json")
+    bad["source"] = "cloned-without-consent"
+    check("CF-P0-006: unknown voice source is rejected",
+          bool(errors_for(vp_schema, bad)))
+
+    # Script-to-performance: one shared audio-visual timeline.
+    s2p = load_fixture("script-to-performance-valid-bindings.json")
+    bindings = s2p["character_voice_bindings"]
+    check("CF-P0-006: character_voice_bindings cover the bird line and "
+          "the human line with stable dialogue_line_ids",
+          {b["dialogue_line_id"] for b in bindings}
+          == {"l-bird-01", "l-bird-02"}
+          and articulation_errors(
+              [{"subject_kind": "real-animal", "species": "African grey parrot",
+                "articulation_target": b["articulation"],
+                "character_id": b["character_id"]}
+               for b in bindings if b["character_id"] == "char-kiki-001"]) == [])
+    check("CF-P0-006: singular character_voice_binding object is valid",
+          not errors_for(
+              load_schema("script-to-performance.json"),
+              {**{k: v for k, v in s2p.items()
+                  if k != "character_voice_bindings"},
+               "character_voice_binding": bindings[0]}))
+
+    # Shot plan: legacy camera_movement 'dolly' stays valid (migration),
+    # and the new v2.5 values (push-in, dolly-in) are accepted.
+    good_shot = load_fixture("shot-plan-valid.json")
+    check("CF-P0-006/F5: legacy camera_movement 'dolly' still validates",
+          not errors_for(load_schema("shot-plan.json"), good_shot))
+    good_shot["shots"][0]["camera_movement"] = "push-in"
+    check("CF-P0-006: camera_movement 'push-in' is accepted",
+          not errors_for(load_schema("shot-plan.json"), good_shot))
+    good_shot["shots"][0]["camera_movement"] = "whip-pan"
+    check("CF-P0-006: unknown camera_movement is rejected",
+          bool(errors_for(load_schema("shot-plan.json"), good_shot)))
 
     # Path traversal in a private pointer is rejected.
     bad = load_fixture("character-valid.json")
