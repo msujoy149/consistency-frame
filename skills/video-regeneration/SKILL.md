@@ -9,7 +9,7 @@ The user uploads a video and asks for it to be regenerated. The reference is the
 
 Working order, always: first analyse, then plan, then generate, finally inspect and correct.
 
-Nothing here replaces the existing systems. Characters in the regenerated video are registered characters: identity anchoring, 100% reference fidelity, face-consistency correction, angle-matched verification, and the expression library (`character-consistency` skill) all still apply, unchanged. Outfits follow the outfit-consistency rules (`character-consistency`, Section 13). Camera angles follow the script-driven automatic camera angles system (`production-systems` skill, A12) — the angles for the regenerated video are chosen from its beats, whether the script is supplied or generated. Voices follow the `voice-consistency` skill. This skill adds only the regeneration workflow on top of that foundation.
+Nothing here replaces the existing systems. Characters in the regenerated video are registered characters: identity anchoring, measured reference fidelity, face-consistency correction, angle-matched verification, and the expression library (`character-consistency` skill) all still apply, unchanged. Outfits follow the outfit-consistency rules (`character-consistency`, Section 13). Camera angles follow the script-driven automatic camera angles system (`production-systems` skill, A12) — the angles for the regenerated video are chosen from its beats, whether the script is supplied or generated. Voices follow the `voice-consistency` skill. This skill adds only the regeneration workflow on top of that foundation.
 
 ## 1. Complete Reference Video Analysis — First, Before Anything Else
 

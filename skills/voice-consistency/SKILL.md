@@ -97,7 +97,7 @@ A crisp studio voice in outdoor footage is a named giveaway. Apply distance and 
 
 Music and sound effects duck under dialogue and never compete with it. Dialogue carries ~60% of attention, so the mix is built around keeping dialogue intelligible and human.
 
-Master the final audio of every video to one consistent loudness: target −14 LUFS, true peak below −1 dBTP, so dialogue, music, and sound effects are the same volume across episodes and platforms. A character's voice must not be louder in one episode and barely audible in the next.
+Master the final audio of every video to the project's named delivery profile (`architecture/audio-delivery-profiles.json`): the profile's integrated loudness and true-peak limits, so dialogue, music, and sound effects are the same volume across episodes and platforms. A character's voice must not be louder in one episode and barely audible in the next. If no profile is named, ask which destination the video is for — there is no universal default.
 
 ## 12. Web-Series Voices
 
