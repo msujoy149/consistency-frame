@@ -21,6 +21,10 @@
       "type": "string",
       "pattern": "^[0-9a-f]{40}$"
     },
+    "github_branch_head": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
     "files": {
       "type": "array",
       "items": {
@@ -79,6 +83,7 @@
     "version",
     "branch",
     "commit",
+    "github_branch_head",
     "files"
   ],
   "additionalProperties": false

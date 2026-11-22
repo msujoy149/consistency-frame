@@ -40,6 +40,49 @@
       "type": "string",
       "pattern": "^[0-9a-f]{40}$"
     },
+    "github_branch_head": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "ci": {
+      "type": "object",
+      "properties": {
+        "head": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "checks_passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "checks_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "run_url": {
+          "type": "string"
+        },
+        "pull_request": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "head",
+        "result",
+        "run_url"
+      ],
+      "additionalProperties": false
+    },
     "status": {
       "type": "string",
       "enum": [
@@ -144,6 +187,7 @@
     "base_commit",
     "branch",
     "head_commit",
+    "github_branch_head",
     "status",
     "private_data_check",
     "package"

@@ -1,0 +1,8 @@
+# Consistency Frame P0 — detached checksums
+# SHA-256 + byte count of the three generated report files, as
+# generated (before commit). The source-ZIP hash is NOT listed
+# here: the ZIP is built from the final head after commit, so
+# its hash lives in the delivery message only.
+5782eef370546f8ff75ef215ff28bc1b877a655f6065463a91fe04730413f9ee  16724  release-manifest.json
+32a5124969d99fe5415afcf8ee63747e68d12e75283bb149a6d7e7441ad4af9c  11044  docs/implementation/build-report.json
+e91b77eec552c1a24e820191cf313a623dfbd3ba64900660c40469194888c547  23456  docs/implementation/BUILD_REPORT_P0.md
