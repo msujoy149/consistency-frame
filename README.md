@@ -25,7 +25,7 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 120 numbered entries (109 distinct systems, each named and checkable)
+and 120 numbered entries (109 distinct systems, each named and checkable). The machine-readable inventory is in `registry/` — 15 skills and 165 features derived from the skill files by `scripts/generate-registries.py`; that count uses a different unit (one feature per skill section) and is not the same as the historical 109/120 claim (see `registry/features.json`, `legacy_counts`)
 covering identity, voice, performance, camera direction,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
@@ -58,7 +58,7 @@ Per-platform install details are in
 | ChatGPT | Upload the `skills/` folder via the Skills tab |
 | Gemini CLI | Extension: `gemini-extension.json` |
 | Antigravity | Skills in `.agents/skills/`, rules in `AGENTS.md` / `GEMINI.md` |
-| Muse (Meta) | Clone into the workspace and run `bash setup.sh` |
+| Muse (Meta) | Knowledge pack: clone into the workspace and read the skills from there (no native custom-skill install is documented by Meta); `bash setup.sh` only syncs local `.agents/skills/` copies |
 | Any other tool | `npx skills add msujoy149/consistency-frame` or `gh skill install msujoy149/consistency-frame` |
 
 ## Local install — Mac, Windows, Linux
@@ -182,8 +182,9 @@ system in full.
   a voice reference audio. A name in a script resolves to that
   character's ID, reference image, voice, and prompt block — each
   character resolved separately, so faces never merge.
-- **100% reference fidelity.** The character is built 100% from the
-  reference image(s). Face and height matter most. One photo is enough;
+- **Measured reference fidelity.** The character is built from the
+  reference image(s), aiming for the closest achievable match to the
+  reference, verified shot by shot against the approved reference. Face and height matter most. One photo is enough;
   several are more reliable.
 - **Character recall.** Ask any time and the system shows the character
   exactly as stored, so you can check face, height, and structure.
@@ -195,7 +196,7 @@ system in full.
 - **Identity anchoring.** Every generation reuses the same approved
   reference — the same reference images, the same sheet, the same fixed
   prompt block, and the same seed. The identity is never rebuilt from a
-  fresh interpretation; the structure stays 100% identical across
+  fresh interpretation; the structure stays unchanged against the approved reference across
   scenes and episodes.
 - **Expression library.** Expressions the user did not supply are
   generated from the definitive reference (face and structure
@@ -291,7 +292,7 @@ filmed, not generated:
   pipeline, thumbnail/poster generator, character turnarounds, wardrobe
   registry, seam continuity, drift measurement, LoRA training, ageing
   variants, provenance log, cost tracking, backup/versioning,
-  multi-series namespaces, child safety, audio mastering (−14 LUFS),
+  multi-series namespaces, child safety, audio mastering (delivery profiles),
   localisation/dubbing, distribution package ("Made for Kids" is set
   only when the content is for children or the user asks for it),
   rights and consent, audience feedback loop.
@@ -422,7 +423,7 @@ Full rules: [`docs/14-language-authenticity.md`](docs/14-language-authenticity.m
 - **From a photo to a real moving person.** The user supplies a real person's photo — clear, well-lit, face to camera — and the video shows that person moving and speaking naturally, like a normal real person. The photo is used exactly as given; the face, structure, hands, and feet never change — only movement and speech are added.
 - **Natural movement, never posed.** Walks, gestures, head turns, blinks, posture shifts — the way a real person moves, never stiff or cartoonish.
 - **Natural speech in the person's own language.** The person speaks following that language's native pattern, with lip-sync matched to the language's sounds. A talking person with a still mouth is a defect, never a delivery.
-- **Realism, not animation.** Real skin, hair, and cloth behaviour, natural light, no plastic skin, no cartoon look. Realism target 100%, 99.9% as the floor. This is not 2D/3D animation and not live-action footage of a real shoot — it is a realistic video generated from a still photo.
+- **Realism, not animation.** Real skin, hair, and cloth behaviour, natural light, no plastic skin, no cartoon look. Realism target: the closest achievable match to the reference, verified shot by shot against the approved reference with a human-review gate; no absolute percentage is guaranteed. This is not 2D/3D animation and not live-action footage of a real shoot — it is a realistic video generated from a still photo.
 
 Full rules: [`docs/15-realistic-person.md`](docs/15-realistic-person.md).
 
