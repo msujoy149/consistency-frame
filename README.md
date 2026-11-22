@@ -9,6 +9,22 @@ AI-made. Install the repository in any AI platform and the skills come
 with it: you introduce your characters and your series once, and
 afterwards you only give scripts and images.
 
+Consistency Frame is **animation-first and style-agnostic**: it directs
+consistent, expressive, physically believable animated videos across
+2D, 3D, stylized, semi-realistic, and photorealistic styles — for
+humans, digital humans, animals, creatures, multi-character
+interactions, image-to-video, video-to-video, and hybrid
+live-action/VFX work. Visual style, production medium, source-media
+type, and motion-generation method are independent dimensions, chosen
+per production (see
+[`docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md`](docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md),
+the authoritative reference for the animation scope). It is not a
+cartoon-only toolkit, not a standalone video-generation server, API
+backend, or cloud database, and not a VoiceStudio/OpenMontage
+replacement — it is the Brain that directs the work, and the
+companions and providers execute it. Production methods whose runtime
+does not exist yet are marked as P1 work, not claimed as working.
+
 - **Website:** https://consistencyframe.blogspot.com
 - **Version:** 2.0 (first release)
 - **Licence:** Apache-2.0 (see [Licence](#licence))
@@ -146,9 +162,12 @@ their PATH changes take effect.
 ## Quick start
 
 1. **Install** (above) and run `bash setup.sh`.
-2. **Register a character.** Give the installed assistant a name, a
+2. **Register a character (optional).** Give the installed assistant a name, a
    unique ID, 3–4 reference photos, and a voice reference. See
-   [Character registration](#character-registration).
+   [Character registration](#character-registration). Registration is
+   optional: you can also use a character temporarily for one video
+   without registering it, or register it later — skipping
+   registration never prevents creating a video.
 3. **Start a series.** Give the series a name. The assistant records it
    in the project register and reads it back before every episode.
 4. **Give a script.** Scene, characters, dialogue per character, camera,
@@ -423,13 +442,13 @@ Full rules: [`docs/14-language-authenticity.md`](docs/14-language-authenticity.m
 - **From a photo to a real moving person.** The user supplies a real person's photo — clear, well-lit, face to camera — and the video shows that person moving and speaking naturally, like a normal real person. The photo is used exactly as given; the face, structure, hands, and feet never change — only movement and speech are added.
 - **Natural movement, never posed.** Walks, gestures, head turns, blinks, posture shifts — the way a real person moves, never stiff or cartoonish.
 - **Natural speech in the person's own language.** The person speaks following that language's native pattern, with lip-sync matched to the language's sounds. A talking person with a still mouth is a defect, never a delivery.
-- **Realism, not animation.** Real skin, hair, and cloth behaviour, natural light, no plastic skin, no cartoon look. Realism target: the closest achievable match to the reference, verified shot by shot against the approved reference with a human-review gate; no absolute percentage is guaranteed. This is not 2D/3D animation and not live-action footage of a real shoot — it is a realistic video generated from a still photo.
+- **Photorealistic digital-human animation.** Real skin, hair, and cloth behaviour, natural light, no plastic skin, no cartoon look. Realism target: the closest achievable match to the reference, verified shot by shot against the approved reference with a human-review gate; no absolute percentage is guaranteed. This is a generated digital human — a realistic video generated from a still photo — not live-action footage of a real shoot, and not a still with a voiceover: the person moves, speaks, and performs.
 
 Full rules: [`docs/15-realistic-person.md`](docs/15-realistic-person.md).
 
 ### 2D explainer animation — 1 system
 
-- **One idea, told in simple pictures.** A short video that teaches one idea through simple scenes and visual metaphors — flat 2D cartoon / stick-figure explainer, vertical short-form. It is not anime, not 3D CG, not live-action, not a music video, not a trailer.
+- **One idea, told in simple pictures.** A short video that teaches one idea through simple scenes and visual metaphors — flat 2D cartoon / stick-figure explainer, vertical short-form. It is not anime, not 3D CG, not live-action, not a music video, not a trailer. This flat 2D explainer is one optional profile of the system, not the product's animation model: the same character registry, voice profiles, performance direction, and QC apply across all styles (see the animation-scope reference).
 - **Style lock.** Flat 2D vector, thick black outlines, flat colour fills, warm neutral backgrounds, a small palette. Two character designs, kept apart: a fuller cartoon figure for the real person, simple stick figures for abstract ideas.
 - **Metaphor system.** Every abstract idea becomes a character or a place — internal conflict is two figures arguing inside the brain, an obstacle is a mountain with a face, the brain itself is a friendly thinking companion. A viewer who mutes the video still gets the idea.
 - **Structure and camera.** One idea per scene, ~10 s per scene, 4–6 scenes for a short video. Slow continuous push-ins inside scenes, slow pans between ideas; scenes flow by camera movement, not by hard cuts.
