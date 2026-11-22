@@ -824,7 +824,13 @@ if [ "$failed" = 1 ]; then
     mkdir -p "$DEST_DIR/$(dirname "$rel")"
     cp -f "$f" "$DEST_DIR/$rel" 2>/dev/null || true
   done < <(find "$RUN_DIR" -type f -print0 2>/dev/null)
-  write_result_json "FAILED" "$RUN_ID" "$n_new" "$n_changed" "$n_unchanged" "$pruned" "$n_prune" "$TIMESTAMP"
+  # P0-004: check the result write explicitly (the script runs under
+  # `set -uo pipefail`, not `set -e`, so an unchecked failure would
+  # pass silently). The sync is already FAILED; a failed record write
+  # only adds a diagnostic and never changes the exit code.
+  if ! write_result_json "FAILED" "$RUN_ID" "$n_new" "$n_changed" "$n_unchanged" "$pruned" "$n_prune" "$TIMESTAMP"; then
+    echo "ERROR: failed to write final sync status record to $DEST_DIR/.consistency-frame-last-sync.json (sync already FAILED; recovery backup preserved at $RUN_DIR)" >&2
+  fi
   exit 1
 fi
 
@@ -863,22 +869,43 @@ fi
 sort -u "$NEW_OWNED" -o "$NEW_OWNED"
 write_manifest "$NEW_OWNED" || { echo "ERROR: failed to write manifest" >&2; exit 1; }
 
-# Drop this run's backup directory only when it holds no real backup
-# (only the owner marker and lock): delete ONLY the run just created,
-# after validating it.
-RESULT_RUN_ID="$RUN_ID"
-if [ -z "$(find "$RUN_DIR" -type f ! -name '.run-owner.json' ! -name '.lock' -print -quit 2>/dev/null)" ]; then
-  if remove_run_dir "$RUN_DIR"; then
-    RESULT_RUN_ID=""
-  else
-    echo "WARNING: could not remove empty run dir $RUN_DIR" >&2
-  fi
-fi
-
 STATUS="SUCCESS"
 [ "$failed" = 1 ] && STATUS="PARTIAL"
-write_result_json "$STATUS" "$RESULT_RUN_ID" "$n_new" "$n_changed" "$n_unchanged" "$pruned" "$n_prune" "$TIMESTAMP"
 
-echo "Skill sync $STATUS: new=$n_new changed=$n_changed unchanged=$n_unchanged pruned=$pruned conflicts=$n_conflicts prune_refused=$n_prune_refused run_id=${RESULT_RUN_ID:-none}"
-echo "Manifest: $MANIFEST_FILE"
-[ "$STATUS" = "SUCCESS" ] && exit 0 || exit 2
+# Decide whether this run's backup directory may be dropped, but do NOT
+# remove it yet (P0-004): no backup run directory is removed before the
+# final status record has been persisted. An empty run dir (only the
+# owner marker and lock, no real backup) is dropped after a successful
+# metadata write; a run that holds a real backup is always kept.
+RESULT_RUN_ID="$RUN_ID"
+DROP_RUN_DIR=0
+if [ -z "$(find "$RUN_DIR" -type f ! -name '.run-owner.json' ! -name '.lock' -print -quit 2>/dev/null)" ]; then
+  DROP_RUN_DIR=1
+  RESULT_RUN_ID=""
+fi
+
+# P0-004: check the result write explicitly. The script runs under
+# `set -uo pipefail`, not `set -e`, so the old unchecked call let an
+# atomic-write failure fall through to a false "Skill sync SUCCESS"
+# with exit 0. That must never happen again.
+if write_result_json "$STATUS" "$RESULT_RUN_ID" "$n_new" "$n_changed" "$n_unchanged" "$pruned" "$n_prune" "$TIMESTAMP"; then
+  # Final metadata persisted: safe to drop the empty run dir now.
+  if [ "$DROP_RUN_DIR" = 1 ]; then
+    remove_run_dir "$RUN_DIR" || echo "WARNING: could not remove empty run dir $RUN_DIR" >&2
+  fi
+  echo "Skill sync $STATUS: new=$n_new changed=$n_changed unchanged=$n_unchanged pruned=$pruned conflicts=$n_conflicts prune_refused=$n_prune_refused run_id=${RESULT_RUN_ID:-none}"
+  echo "Manifest: $MANIFEST_FILE"
+  [ "$STATUS" = "SUCCESS" ] && exit 0 || exit 2
+fi
+
+# Final metadata persistence failed: never report SUCCESS, and preserve
+# the recovery backup (its run directory and valid owner marker).
+echo "ERROR: failed to write final sync status record to $DEST_DIR/.consistency-frame-last-sync.json" >&2
+if [ $((n_new + n_changed + pruned)) -gt 0 ]; then
+  echo "PARTIAL: sync changes were applied (new=$n_new changed=$n_changed pruned=$pruned) but the final metadata record could not be written; recovery backup preserved at $RUN_DIR (run $RUN_ID)" >&2
+  echo "Skill sync PARTIAL: new=$n_new changed=$n_changed unchanged=$n_unchanged pruned=$pruned conflicts=$n_conflicts prune_refused=$n_prune_refused run_id=$RUN_ID (backup preserved)"
+  exit 2
+fi
+echo "FAILED: no files were changed, but the final metadata record could not be written; recovery backup preserved at $RUN_DIR (run $RUN_ID)" >&2
+echo "Skill sync FAILED: new=$n_new changed=$n_changed unchanged=$n_unchanged pruned=$pruned conflicts=$n_conflicts prune_refused=$n_prune_refused run_id=$RUN_ID (backup preserved)"
+exit 1
