@@ -162,7 +162,7 @@ Deliberate, counted imperfections per shot — asymmetry, flyaway hairs, dust, a
 
 ## 30.32 Music-Ducking / Dialogue-First Mix
 
-Music and sound effects duck under dialogue and never compete; dialogue carries ~60% of attention. Mastering sets loudness (target −14 LUFS, true peak below −1 dBTP); this system sets the balance that keeps dialogue intelligible and human. See the `voice-consistency` skill for the full mix rules.
+Music and sound effects duck under dialogue and never compete; dialogue carries ~60% of attention. Mastering sets loudness to the project's named delivery profile (`architecture/audio-delivery-profiles.json`); this system sets the balance that keeps dialogue intelligible and human. See the `voice-consistency` skill for the full mix rules.
 
 ## 30.33 Failure & Fallback Playbook
 

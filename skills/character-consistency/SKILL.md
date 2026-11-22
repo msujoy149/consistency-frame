@@ -1,6 +1,6 @@
 ---
 name: character-consistency
-description: Keeps every registered character visually identical across all videos and episodes. Covers the character registry and registration rules, identity resolution from script names, the fixed prompt block and seed per character, 100% reference fidelity with character recall, fixed identity structure with scene-variable clothing, multi-character scenes with no overlap, and private per-character data separation.
+description: Keeps every registered character visually identical across all videos and episodes. Covers the character registry and registration rules, identity resolution from script names, the fixed prompt block and seed per character, measured reference fidelity with character recall, fixed identity structure with scene-variable clothing, multi-character scenes with no overlap, and private per-character data separation.
 ---
 
 # Character Consistency
@@ -49,9 +49,9 @@ When a name appears in a script, resolve it to that character's full record: uni
 
 For every generation involving a registered character, inject that character's fixed prompt block and fixed seed. The prompt block is the same in every generation; only the scene-specific text (location, action, camera, emotion, clothing for the scene) changes around it. Record the model and version used, the prompt, the seed, the reference image, the voice profile, and the date for every shot, so any shot is reproducible and any drift can be traced to what changed.
 
-## 5. 100% Reference Fidelity — Face and Height Matter Most
+## 5. Measured Reference Fidelity — Face and Height Matter Most
 
-Build the character 100% from the reference image(s) provided. The face and the height are the most important identity features and must match the reference as closely as the platform allows.
+Build the character from the reference image(s) provided. The face and the height are the most important identity features and must match the reference as closely as the platform allows — the target is the closest achievable match, verified shot by shot against the approved reference with a human-review gate; no absolute percentage is guaranteed.
 
 - One reference photo is enough to register a character; several photos (for example five, from different angles) make the stored structure more reliable. In either case, the stored character is defined by the reference image(s) given.
 - The stored structure — face, height, proportions, and all preserved features — is fixed. It must stay consistent in every later video, and the user must be able to verify it.
@@ -103,7 +103,7 @@ Measure face similarity between the reference image and each generated frame or 
 
 Every generation of a registered character reuses the same approved reference: the same reference images, the same turnaround + detail sheet (`model-sheet.jpg`), the same fixed prompt block, and the same seed. The identity is never rebuilt from a fresh interpretation, and a new render is never treated as the reference.
 
-The structure must stay 100% identical across scenes and episodes — face, eyes, nose, mouth, hands, feet, proportions, height. If a render drifts from the sheet, regenerate against the sheet; do not accept the drift and do not quietly update the stored identity to match it. Re-anchor at every scene change: re-inject the reference, the sheet, and the prompt block before generating the next scene.
+The structure must stay unchanged against the approved reference across scenes and episodes — face, eyes, nose, mouth, hands, feet, proportions, height. If a render drifts from the sheet, regenerate against the sheet; do not accept the drift and do not quietly update the stored identity to match it. Re-anchor at every scene change: re-inject the reference, the sheet, and the prompt block before generating the next scene.
 
 ## 12. Character Generator — Two Ways to Create a Character
 
@@ -155,7 +155,7 @@ When a face drifts, fix it with this loop — it is the method that works. Use i
 
 1. **Definitive reference.** One user-approved image per character is the anchor. EVERY generation re-uses it as an identity reference — never generate a character without it.
 2. **Front-facing for face-critical shots.** For shots where the face matters, the face is toward the camera, looking directly at it. A fully visible face anchors identity; profile and three-quarter angles drift the face more, so use them only when the script needs them.
-3. **Explicit no-change instruction in every prompt.** Every prompt states it: face and structure 100% identical; do not change the face.
+3. **Explicit no-change instruction in every prompt.** Every prompt states it: face and structure unchanged against the approved reference; do not change the face.
 4. **Fresh generation, never edit, when the face drifts.** Never continue from a drifted image — never edit, inpaint, or "fix" the drifted render. Regenerate from the approved reference.
 5. **Verify before delivering.** Compare the new face against the definitive reference before delivering; if it drifted, repeat the loop.
 
@@ -181,7 +181,7 @@ This complements the front-facing anchor rule (Section 14): the front view ancho
 
 Not every expression is in the supplied references — the system handles that gap automatically.
 
-1. **Generate the missing ones.** If the user does not supply all expressions, generate the missing ones yourself — from the character's definitive reference, keeping face and structure 100% identical, changing only the expression. Verify each generated expression against the definitive reference before saving it (Sections 14 and 15).
+1. **Generate the missing ones.** If the user does not supply all expressions, generate the missing ones yourself — from the character's definitive reference, keeping face and structure unchanged against the approved reference, changing only the expression. Verify each generated expression against the definitive reference before saving it (Sections 14 and 15).
 2. **Save each one into the expression library.** Each generated expression is saved into that character's expression library in the character's folder: `characters/<character-id>/expressions/<expression-name>.jpg` — using the canonical expression names (neutral, smile, laugh, excited, curious, surprised, worried, determined, sad, tearful, angry, thinking). The library lives with the character's data, in the private overlay — never in the public repository.
 3. **Reuse, never regenerate twice.** Next time the same expression is needed, REUSE the saved one — never regenerate it. Check the library first; generate only what is missing.
 4. **The library grows on demand.** The library grows one expression at a time, as scripts need them. A new expression is generated, verified, and saved the first time a script asks for it; after that it is part of the character's stored set.
