@@ -1,0 +1,260 @@
+{
+  "count": 12,
+  "note": "No adapter is marked 'supported' in P0: a capability is supported only after a real conformance test passes. All adapters here are 'untested' (conformance NOT_TESTED) or 'planned'.",
+  "records": [
+    {
+      "adapter_id": "adapter-muse",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "PACKAGED",
+      "kind": "host",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "No documented native custom-SKILL.md install flow (Meta Help Centre). Use the versioned knowledge pack / uploaded workspace files instead. Knowledge-pack availability in a Muse workspace has not been conformance-tested here."
+      ],
+      "name": "Muse (Meta)",
+      "native_skill_install": "UNSUPPORTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested"
+    },
+    {
+      "adapter_id": "adapter-claude-code",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "NATIVE",
+      "kind": "host",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "Plugin marketplace files exist (.claude-plugin/marketplace.json). Loaded skill version, precedence and permissions have not been conformance-tested here."
+      ],
+      "name": "Claude Code",
+      "native_skill_install": "NOT_TESTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested"
+    },
+    {
+      "adapter_id": "adapter-codex",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "NATIVE",
+      "kind": "host",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "Plugin manifest exists (plugin.json, .codex-plugin/plugin.json). Loading behaviour has not been conformance-tested here."
+      ],
+      "name": "Codex",
+      "native_skill_install": "NOT_TESTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested"
+    },
+    {
+      "adapter_id": "adapter-gemini-cli",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "NATIVE",
+      "kind": "host",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "Extension manifest exists (gemini-extension.json). Workspace/user/extension precedence has not been conformance-tested here."
+      ],
+      "name": "Gemini CLI",
+      "native_skill_install": "NOT_TESTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested"
+    },
+    {
+      "adapter_id": "adapter-antigravity",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "PACKAGED",
+      "kind": "host",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "Skills in .agents/skills/, rules in AGENTS.md / GEMINI.md. Actual discovery in the installed Antigravity version has not been tested here."
+      ],
+      "name": "Antigravity",
+      "native_skill_install": "NOT_TESTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested"
+    },
+    {
+      "adapter_id": "adapter-chatgpt",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "PACKAGED",
+      "kind": "host",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "Skills uploaded via the Skills tab (per docs/06). Upload/loading behaviour has not been conformance-tested here."
+      ],
+      "name": "ChatGPT",
+      "native_skill_install": "NOT_TESTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested"
+    },
+    {
+      "adapter_id": "adapter-opencode",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "NATIVE",
+      "kind": "host",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "Documented .opencode/skills path exists in OpenCode docs; no manifest or conformance test exists in this repo. Planned, not tested."
+      ],
+      "name": "OpenCode",
+      "native_skill_install": "NOT_TESTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested"
+    },
+    {
+      "adapter_id": "adapter-voicestudio",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "HOST_RUNTIME",
+      "kind": "provider",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "Local voice engine (AGPL-3.0). OmniVoice weights are CC-BY-NC (noncommercial) and are never downloaded by setup.sh. Voice generation was exercised manually in Nov 2026, but no automated conformance test exists in P0."
+      ],
+      "name": "VoiceStudio (bundled component)",
+      "native_skill_install": "NOT_TESTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested"
+    },
+    {
+      "adapter_id": "adapter-openmontage",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "HOST_RUNTIME",
+      "kind": "provider",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "Long-form video assembly component (AGPL-3.0). No automated conformance test exists in P0."
+      ],
+      "name": "OpenMontage (bundled component)",
+      "native_skill_install": "NOT_TESTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested"
+    },
+    {
+      "adapter_id": "adapter-ffmpeg",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "HOST_RUNTIME",
+      "kind": "tool",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "Deterministic media probing/transcoding. Binary presence on a machine is not a conformance test; no P0 test invokes it."
+      ],
+      "name": "FFmpeg / ffprobe",
+      "native_skill_install": "NOT_TESTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested"
+    },
+    {
+      "adapter_id": "adapter-opentimelineio",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "LIMITED",
+      "kind": "tool",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "Candidate for editorial interchange only: clips, timing, tracks, transitions, markers, external media references. NOT a renderer or media container. Not installed or tested in P0 \u2014 planned."
+      ],
+      "name": "OpenTimelineIO",
+      "native_skill_install": "NOT_TESTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested"
+    },
+    {
+      "adapter_id": "adapter-premiere-uxp",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "LIMITED",
+      "kind": "editor",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "Application-specific editing integration requires a version-tested API. No adapter code or test exists in P0 \u2014 planned."
+      ],
+      "name": "Adobe Premiere Pro (UXP)",
+      "native_skill_install": "NOT_TESTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested"
+    }
+  ],
+  "registry": "adapters",
+  "version": "2.3"
+}

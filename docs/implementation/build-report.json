@@ -1,0 +1,179 @@
+{
+  "schema_version": "2.3",
+  "work_order_id": "CF-WO-P0-001",
+  "product": "Consistency Frame",
+  "product_scope": "general-purpose-video-production-and-editing",
+  "repository_url": "https://github.com/msujoy149/consistency-frame",
+  "base_branch": "main",
+  "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
+  "branch": "feat/cf-p0-safe-foundations",
+  "head_commit": "2f3be92e7c10252a74cf76ccc72b1bbc753b4d66",
+  "status": "PASS",
+  "changed_files": [
+    ".github/workflows/p0-ci.yml",
+    ".gitignore",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "README.md",
+    "architecture/audio-delivery-profiles.json",
+    "architecture/intent-modes.yaml",
+    "architecture/platform-capabilities.md",
+    "characters/README.md",
+    "docs/02-extended-systems.md",
+    "docs/06-installation.md",
+    "docs/07-character-registry.md",
+    "docs/08-agency-advertising.md",
+    "docs/09-video-regeneration.md",
+    "docs/15-realistic-person.md",
+    "docs/17-command-authority.md",
+    "docs/19-audio-delivery-profiles.md",
+    "docs/architecture/living-architecture-report-v2.3-p0.md",
+    "docs/implementation/CF-WO-P0-001-plan.md",
+    "registry/adapters.json",
+    "registry/features.json",
+    "registry/skills.json",
+    "registry/workflows.json",
+    "schemas/README.md",
+    "schemas/approval.json",
+    "schemas/build-report.json",
+    "schemas/character.json",
+    "schemas/episode-state.json",
+    "schemas/evidence.json",
+    "schemas/installer-result.json",
+    "schemas/intake-job.json",
+    "schemas/location.json",
+    "schemas/project.json",
+    "schemas/prop.json",
+    "schemas/reference-learning.json",
+    "schemas/reference-review.json",
+    "schemas/release-manifest.json",
+    "schemas/script-contract.json",
+    "schemas/sound-asset.json",
+    "schemas/story-bible.json",
+    "schemas/timeline-manifest.json",
+    "schemas/visual-style-profile.json",
+    "schemas/voice-profile.json",
+    "schemas/wardrobe.json",
+    "scripts/asset_policy.py",
+    "scripts/generate-build-report.py",
+    "scripts/generate-registries.py",
+    "scripts/generate-report.py",
+    "scripts/sync-skills.sh",
+    "scripts/validate-repo.py",
+    "setup.sh",
+    "skills/agency-advertising/SKILL.md",
+    "skills/character-consistency/SKILL.md",
+    "skills/command-authority/SKILL.md",
+    "skills/humanized-production/SKILL.md",
+    "skills/production-systems/SKILL.md",
+    "skills/realistic-person/SKILL.md",
+    "skills/video-regeneration/SKILL.md",
+    "skills/voice-consistency/SKILL.md",
+    "tests/fixtures/character-valid.json",
+    "tests/fixtures/intake-temporary.json",
+    "tests/fixtures/sound-asset-valid.json",
+    "tests/fixtures/voice-profile-valid.json",
+    "tests/last-run.json",
+    "tests/run-tests.sh",
+    "tests/test_installer.sh",
+    "tests/test_modes.py",
+    "tests/test_private_overlay.py",
+    "tests/test_registries.py",
+    "tests/test_schemas.py"
+  ],
+  "tests": [
+    {
+      "id": "CF-INT-014",
+      "command": "bash tests/test_installer.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-INT-015",
+      "command": "bash tests/test_installer.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-INT-023",
+      "command": "python3 scripts/generate-registries.py --check",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ASSET-001",
+      "command": "python3 tests/test_modes.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ASSET-002",
+      "command": "python3 tests/test_modes.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ASSET-003",
+      "command": "python3 tests/test_modes.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "P0-DIFF-CHECK",
+      "command": "git diff --check",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "P0-PRIVACY",
+      "command": "python3 tests/test_private_overlay.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "P0-SCHEMA",
+      "command": "python3 scripts/validate-repo.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "P0-SHELL",
+      "command": "bash -n scripts/sync-skills.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    }
+  ],
+  "not_run": [
+    "CF-INT-015 (component-clone failure path via setup.sh --with-components end-to-end): the full --with-components run downloads ~5 GB + ~1 GB deps; failure reporting is unit-tested in tests/test_installer.sh, the live run is NOT RUN.",
+    "CI remote run: GitHub Actions runs only after the branch is pushed and a PR is opened; the workflow file is validated locally (YAML parse + pinned SHAs verified via API).",
+    "setup.sh --with-components end-to-end on a clean machine: NOT RUN (network + disk); core-only path executed end-to-end locally (exit 0)."
+  ],
+  "known_issues": [
+    "Registry reconciliation deferred to P1: 165 derived features vs historical 109/120 claim (different counting units).",
+    "All 12 adapters are NOT_TESTED; no adapter may be called supported until a conformance test passes.",
+    "Private-overlay runtime adapter deferred to P2 (P0 adds schemas, validation and tests).",
+    "Research-register reconciliation (gaps-research-20261112.md staleness) deferred.",
+    "Media intelligence, reference-learning runtime, provider orchestration, benchmarks and repair loop are out of scope for P0 by design (P1-P4)."
+  ],
+  "security_and_licence_notes": [
+    "Secret scan (validate-repo.py): PASS \u2014 no credentials or private keys in tracked text files.",
+    "Private-data check: PASS \u2014 characters/ tracks only .gitkeep + README.md; no media tracked; .gitignore covers characters/*, private-data/, media extensions, .env, secrets.",
+    "Licences intact: own work Apache-2.0; VoiceStudio + OpenMontage AGPL-3.0; OmniVoice weights CC-BY-NC, never downloaded by setup.sh.",
+    "Installer safety: no whole-directory deletion; manifest-owned sync only; symlink/traversal and unsafe-root rejection tested."
+  ],
+  "private_data_check": "PASS",
+  "package": {
+    "archive": "consistency-frame-p0-feat-branch.zip",
+    "release_manifest": "release-manifest.json"
+  }
+}
