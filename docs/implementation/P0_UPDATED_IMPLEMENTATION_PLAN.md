@@ -66,7 +66,7 @@ Deliverable: `docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md`.
 | Skill Routing Matrix | `architecture/SKILL_ROUTING_MATRIX.yaml` | One entry per skill (all 15, ids `skill-<slug>`): stable ID, activation trigger, non-trigger, required inputs, expected outputs, dependencies, precedence (unique 1–15; command-authority = 1, the router), conflicts (symmetric), applicable production modes, quality gate, approval conditions. Every value grounded in the skill text or `registry/skills.json`; where a skill does not state something the value is `not_stated_in_skill`. |
 | Workflow Graph | `architecture/WORKFLOW_GRAPH.yaml` | 15 nodes, 42 edges (14 router edges from command-authority + 28 dependency edges), 3 parallel groups, 1 conditional parallel group (already-registered characters only), exclusive groups (video-type skills, at most one per video), 9 sequential chains. Acyclic — topological order is the precedence order. |
 | Script-to-Performance Schema (headline: `SCRIPT_TO_PERFORMANCE_SCHEMA.json`) | `schemas/script-to-performance.json` | Combined contract binding Scene + Shot + Performance Plans with audio (music/ambience/SFX) and editing (rhythm + reaction holds) plans. Dialogue VERBATIM unless a rewrite was explicitly requested. |
-| Scene Plan | `schemas/scene-plan.json` | Scenes, beats, dramatic intent, primary/secondary emotion, intensity (1–10), transitions. |
+| Scene Plan | `schemas/scene-plan.json` | Scenes, beats, dramatic intent, primary/secondary emotion, intensity (0–10), transitions. |
 | Shot Plan | `schemas/shot-plan.json` | Shots: framing, camera angle/movement, lighting, duration, beat link. |
 | Performance Plan | `schemas/performance-plan.json` | Per dialogue line: facial + micro-expressions, eye movement/gaze, posture, gesture, breathing, physical behaviour, voice (emotion, pitch, pace, pauses), speaker identity, lip-sync required. |
 
@@ -118,6 +118,12 @@ docs/architecture/living-architecture-report-v2.4-p0.md
 | CF-P0-ROUTING-002 workflow graph acyclic, all nodes known skills, edges match routing-matrix dependencies (+ router edges only) | PASS | `tests/test_routing.py` |
 | CF-P0-ROUTING-003 companion registry honest statuses, agent matrix only Muse verified, OpenRouter/Colab correctly classified | PASS | `tests/test_routing.py` |
 | P0-SCHEMA (v2.4 part) new schemas validate fixtures + reject invalid instances | PASS | `tests/test_routing.py` + `scripts/validate-repo.py` |
+| CF-P0-PERF-001 emotion intensity is 0–10 in performance-plan lines and scene-plan beats; 11 and −1 rejected, 0 and 10 accepted | PASS | `tests/test_performance_semantics.py` |
+| CF-P0-PERF-002 all durations strictly positive (`exclusiveMinimum: 0`): shot `duration_seconds`, reaction-hold `hold_seconds`, non-verbal-event `duration_seconds`; 0 rejected | PASS | `tests/test_performance_semantics.py` + `scripts/validate-repo.py` (validator extended with `maximum` + `exclusiveMinimum`) |
+| CF-P0-PERF-003 canonical emotion enum is the seven canonical + neutral set in both plans; the longer list moved to open `nuanced_emotion` (extensible, no schema change for new values) | PASS | `tests/test_performance_semantics.py` |
+| CF-P0-PERF-004 explicit `non_verbal_events` on performance-plan lines and scene-plan beats; unknown type or intensity 11 rejected; a line with no spoken text and no event is invalid | PASS | `tests/test_performance_semantics.py` |
+| CF-P0-PERF-005 dialogue is a `dialogue` object; `rewritten_text` requires per-line `rewrite_permitted: true` — plan-level `SCRIPT_EDIT_REQUESTED` alone never permits a rewrite | PASS | `tests/test_performance_semantics.py` (`validate_dialogue_rewrite` in `scripts/validate-repo.py`) |
+| CF-P0-LEARN-001 propose/apply split: propose needs `REFERENCE_LEARN_AND_UPDATE` + explicit instruction; apply needs a full authorisation (granted_by + scope + branch + explicit_authorisation); intake never reports apply True | PASS | `tests/test_modes.py` + `tests/test_schemas.py` |
 | All v2.3 gates still pass | PASS | `bash tests/run-tests.sh` (full run) |
 
 ## 5. What was deferred to P1 (not P0)
@@ -180,3 +186,29 @@ CC-BY-NC, never downloaded by `setup.sh`); no skill content changed;
 no Master Prompt file touched; no server/API/database code exists or
 was added; no push, no merge, no PR in this work (delivery is the
 parent agent's step).
+
+## 8. Propose/apply split for canonical skill learning (§5 correction, CF-WO-P0-002)
+
+Proposing a skill patch and applying one are two different
+permissions — the old single gate conflated them.
+
+- **Propose** (`may_propose_skill_patch` in `scripts/asset_policy.py`):
+  allowed only in mode `REFERENCE_LEARN_AND_UPDATE` with an explicit
+  user instruction. A proposal is a reviewable patch file under
+  `.consistency-frame/proposals/`; it never touches a canonical skill.
+- **Apply** (`may_apply_skill_patch` / `validate_skill_patch_application`):
+  allowed only with a full, explicit authorisation —
+  `granted_by` + `scope` + `branch` + `explicit_authorisation: true`.
+  Anything missing → rejected, with the missing fields listed.
+- **Legacy gate** (`may_mutate_canonical_skills`): now returns True
+  only when BOTH halves are present (propose permission + full apply
+  authorisation). Propose alone never mutates a canonical skill.
+- **Intake** (`intake_result`): reports both `may_propose_skill_patch`
+  and `may_apply_skill_patch`; apply is always False from intake alone
+  — intake never carries an apply authorisation.
+- **Reference review** (`schemas/reference-review.json`): a review may
+  only propose (`proposal_only`, default true, documented in the
+  description). `apply_skill_patch: true` requires the `authorization`
+  object; the conditional rule is enforced semantically in
+  `tests/test_schemas.py` (the restricted schema subset cannot express
+  conditional-required). `mutates_canonical_skills` stays `enum: [false]`.

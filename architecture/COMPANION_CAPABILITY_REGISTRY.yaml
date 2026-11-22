@@ -1,17 +1,40 @@
 # Consistency Frame — Companion Capability Registry (v2.4, P0)
 # Canonical record of what the two companion specialists can do.
 #
-# HONESTY RULE: a capability is listed only with evidence found in the
-# local plugin copy on disk (components/voicestudio,
-# components/openmontage) or a recorded local run. Anything not verified
-# is marked NOT_VERIFIED. The Brain directs the companions; it never
-# silently modifies or replaces their internal code.
+# HONESTY RULE: a capability or interface is listed only with evidence
+# found in the local plugin copy on disk (components/voicestudio,
+# components/openmontage), an inspection of the companion upstream at
+# its pinned commit, or a recorded local run. The Brain directs the
+# companions; it never silently modifies or replaces their internal code.
 #
-# Statuses:
-#   VERIFIED_ON_DISK    — the code/route/file exists in the local copy.
-#   VERIFIED_BY_RUN     — exercised in a recorded local run (see evidence).
-#   NOT_VERIFIED        — present in the companion's docs or code, but
-#                         never exercised here; do not rely on it.
+# evidence_level (closed set — P0-002 §6; this field REPLACED the old
+# `status` field, whose three values (VERIFIED_ON_DISK / VERIFIED_BY_RUN
+# / NOT_VERIFIED) conflated "present on disk" with "verified" and let a
+# single "verified" total hide how little was actually exercised):
+#   upstream_inspected_pinned_commit — the claim was inspected in the
+#     companion upstream at the pinned commit recorded on the companion
+#     (evidence names the file + the pinned commit). The claim itself
+#     (e.g. a headline language count) is NOT independently verified
+#     and must never be reported as exercised or production-proven.
+#   present_locally — present in components/, not exercised. Code,
+#     routes, schemas or docs exist on disk; no run was recorded here.
+#   exercised_recorded_run — exercised in a recorded local run. MUST
+#     carry a run_reference (date + what was run + where it is
+#     recorded). A run reference is never invented.
+#   production_verified — only with a production record, carried in a
+#     production_record field. EXPECT ZERO in this account: no
+#     production run exists, so no capability or interface may claim
+#     this level. The validator and tests enforce the zero.
+#
+# CORE-ONLY INSTALL NOTE: a core-only install (`bash setup.sh`, the
+# default) does NOT include VoiceStudio or OpenMontage. The companions
+# are installed only with the opt-in `bash setup.sh --with-components`
+# (see docs/06-installation.md). Nothing in this registry implies the
+# companions are present after a core-only install.
+#
+# Companion pins (must match setup.sh): VoiceStudio
+# 2f2f5a9b0e982c6147efc6baaeae62936f29b79b, OpenMontage
+# fecb9a1e3cc23ef84de30b272059457a427f16f8.
 version: "2.4"
 generated: "2026-11-22"
 companions:
@@ -29,68 +52,71 @@ companions:
     interfaces:
       - name: HTTP API (FastAPI)
         evidence: components/voicestudio/backend/main.py (routers in backend/api/routers/)
-        status: VERIFIED_ON_DISK
+        evidence_level: exercised_recorded_run
+        run_reference: "2026-11-12/13 — OmniVoice TTS runs via the local API on 127.0.0.1:3900 (Bengali, English, Hindi speech generated); user verdict recorded in the project record (2026-11-12/13)."
         notes: Local API on 127.0.0.1:3900 in the recorded runs. `bun run setup:api` / `dev:api` per docs/06-installation.md.
       - name: MCP server
         evidence: components/voicestudio/backend/mcp_server.py (create_mcp_server; 11 tools)
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Tools on disk — generate_speech, list_voices, list_personalities, list_languages, transcribe, check_health, get_voice, get_recent_history, clone_voice, describe_voice, design_voice.
       - name: CLI
         evidence: components/voicestudio/cli/
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: CLI directory present; individual commands not exercised in this P0.
       - name: Electron app
         evidence: components/voicestudio/electron/
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Desktop app present; not used by the Brain (the Brain uses the local API/MCP).
     capabilities:
       - capability: Text-to-speech generation (OmniVoice engine)
         evidence: components/voicestudio/backend/engines/omnivoice_gguf/, omnivoice_subprocess/; backend/api/routers/generation.py, tts_stream.py
-        status: VERIFIED_BY_RUN
+        evidence_level: exercised_recorded_run
+        run_reference: "2026-11-12/13 — OmniVoice model (3,267,470,260 B, CC-BY-NC, Hugging Face download, never bundled) generated Bengali, English and Hindi speech in the recorded runs; user verdict on Bengali output 'very beautiful, very natural', recorded in the project record (2026-11-12/13)."
         notes: OmniVoice model (3,267,470,260 B, CC-BY-NC, Hugging Face download, never bundled) generated Bengali, English and Hindi speech in the recorded 2026-11-12/13 runs; user verdict on Bengali output "very beautiful, very natural". Instruct tags are FIXED (gender + age + pitch); free-form instruct text is unsupported.
       - capability: Zero-shot voice cloning from reference audio
         evidence: components/voicestudio/backend/mcp_server.py (clone_voice); backend/api/routers/voice_convert.py, profiles.py
-        status: VERIFIED_BY_RUN
+        evidence_level: exercised_recorded_run
+        run_reference: "2026-11-13 — sound test: three unnamed test voices (9-year-old girl, 30-year-old man, 70-year-old woman) cloned and used across Bengali/English/Hindi; user verdict 'Good', recorded in the project record (2026-11-13)."
         notes: Three unnamed test voices (9-year-old girl, 30-year-old man, 70-year-old woman) cloned and used across Bengali/English/Hindi in the 2026-11-13 sound test; user verdict "Good". Cloning needs rights/consent for a real person's voice (see schemas/voice-profile.json).
       - capability: Voice design from a text description
         evidence: components/voicestudio/backend/mcp_server.py (describe_voice, design_voice); backend/api/routers/describe_voice.py, archetypes.py, personalities.py
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Code and MCP tools present; no design-from-description run was recorded in this account.
       - capability: Dubbing (translate + regenerate speech)
         evidence: components/voicestudio/backend/api/routers/dub_core.py, dub_generate.py, dub_translate.py, dub_export.py, sonitranslate.py
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Routers present; no dubbing run was recorded in this account.
       - capability: Transcription / dictation (speech to text)
         evidence: components/voicestudio/backend/mcp_server.py (transcribe); backend/api/routers/dictation.py, capture.py; backend/engines/whisper_cpp/
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Code present; no transcription run was recorded in this account.
       - capability: Sound-effect generation
         evidence: components/voicestudio/backend/api/routers/sfx.py; backend/engines/moss_sfx/
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Router + engine present; no SFX run was recorded in this account.
       - capability: Audiobook / long-form / batch jobs
         evidence: components/voicestudio/backend/api/routers/audiobook.py, longform_jobs.py, batch.py
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Routers present; no long-form run was recorded in this account.
       - capability: Voice profiles and personas management
         evidence: components/voicestudio/backend/api/routers/profiles.py, personas.py, archetypes.py
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Routers present. The Brain links a character to a voice profile by ID only (schemas/voice-profile.json); voice data is never embedded in a character record.
       - capability: Additional TTS engines (CosyVoice, IndexTTS, DotsTTS, MossTTS, PocketTTS, Supertonic, VoxCPM, Confucius4, MingTTS, Audiocpp)
         evidence: components/voicestudio/backend/engines/ (cosyvoice_gguf, cosyvoice_subprocess, indextts, dots_tts, moss_tts_nano_subprocess, moss_tts_v15, pockettts, supertonic3, voxcpm2_subprocess, confucius4, ming_tts, audiocpp)
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Engine directories present. Only OmniVoice was exercised in recorded runs; the other engines are NOT run-verified here.
       - capability: Speech in 646 languages
         evidence: 'components/voicestudio/README.md headline ("Clone, design, dub, dictate, transcribe and narrate in 646 languages")'
-        status: NOT_VERIFIED
-        notes: "The README's language count was not independently verified. Verified by run: Bengali, English, Hindi only."
+        evidence_level: upstream_inspected_pinned_commit
+        notes: "The README headline was inspected at the pinned commit (2f2f5a9b0e982c6147efc6baaeae62936f29b79b); the count itself (646) was NOT independently verified and is NOT an exercised claim. Verified by run: Bengali, English, Hindi only."
       - capability: Cloud sync
         evidence: components/voicestudio/backend/api/routers/cloud_sync.py
-        status: NOT_VERIFIED
+        evidence_level: present_locally
         notes: Router present; never used. The Brain keeps private voice data in the local private overlay, never in a cloud sync.
       - capability: Telephony (Twilio)
         evidence: components/voicestudio/backend/api/routers/telephony_twilio.py
-        status: NOT_VERIFIED
+        evidence_level: present_locally
         notes: Router present; never used; out of scope for video production.
     explicitly_not_claimed:
       - VoiceStudio is not a video generator and not a video editor.
@@ -114,56 +140,57 @@ companions:
     interfaces:
       - name: Agent contract (AGENT_GUIDE.md / PROJECT_CONTEXT.md)
         evidence: components/openmontage/AGENT_GUIDE.md, PROJECT_CONTEXT.md
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: "Rule Zero - all production goes through a pipeline. Onboarding skill and reference-video-analyst workflow are first-class entry points. The Brain's instructions must follow this contract when directing OpenMontage."
       - name: Pipeline definitions (YAML)
         evidence: components/openmontage/pipeline_defs/ (13 files)
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: animated-explainer, animation, avatar-spokesperson, character-animation, cinematic, clip-factory, documentary-montage, framework-smoke, hybrid, localization-dub, podcast-repurpose, screen-demo, talking-head.
       - name: Local board server ("Backlot")
         evidence: components/openmontage/requirements.txt (fastapi, uvicorn, watchfiles — "Backlot - the living storyboard (local board server)")
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Local-only server; not a hosted service.
       - name: Remotion composer (code-based rendering)
         evidence: components/openmontage/remotion-composer/ (package.json, src/, SCENE_TYPES.md)
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Code-drawn video composition; present on disk, not exercised in this P0.
       - name: Demo renderer
         evidence: components/openmontage/render-demo.sh, render_demo.py
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Present on disk; not exercised in this P0.
     capabilities:
       - capability: Pipeline-based video production (script -> assets -> edit -> render)
         evidence: components/openmontage/AGENT_GUIDE.md ("Rule Zero"); lib/pipeline_loader.py; pipeline_defs/
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: The pipeline system is the production path. Individual pipelines were not executed in this P0.
       - capability: Reference-video analysis (transcript, scene detection, frame sampling)
         evidence: components/openmontage/AGENT_GUIDE.md ("Reference Video Entry Point"); lib/source_media_review.py, clip_embedder.py; skills/meta/video-reference-analyst.md (referenced by the guide)
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Workflow documented in the agent contract; not exercised in this P0.
       - capability: Shot prompt building, scene pacing verification, playbook generation
         evidence: components/openmontage/lib/shot_prompt_builder.py, verify_scene_pacing.py, playbook_generator.py, scoring.py, variation_checker.py, slideshow_risk.py, delivery_promise.py
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Library modules present; not exercised in this P0.
       - capability: Asset cache and checkpoints
         evidence: components/openmontage/lib/asset_cache.py, checkpoint.py; schemas/checkpoints/
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Present on disk; not exercised in this P0.
       - capability: Editorial schemas (artifacts, pipelines, styles, tools)
         evidence: components/openmontage/schemas/{artifacts,checkpoints,pipelines,styles,tools}/
-        status: VERIFIED_ON_DISK
+        evidence_level: present_locally
         notes: Schema directories present.
       - capability: Paid third-party provider routes (image/video/TTS/music generation via fal, Kling, Veo, Sora, OpenAI, Gemini, ElevenLabs, Lyria, LTX and others)
         evidence: components/openmontage/docs/PROVIDERS.md (provider guide, incl. "No live paid O3 generation was validated")
-        status: NOT_VERIFIED
+        evidence_level: present_locally
         notes: Documented in the companion's provider guide only. Every route needs its own API key and is a paid call. No live paid call was made in this account. The Brain must never claim these as free, local, or tested. A paid call needs the user's explicit approval and keys.
       - capability: Free stock media routes (Pexels, Pixabay) and free-tier TTS (Google TTS, Piper local TTS)
         evidence: 'components/openmontage/docs/PROVIDERS.md ("Quick Start: What Should I Set Up?")'
-        status: NOT_VERIFIED
+        evidence_level: present_locally
         notes: Documented in the provider guide only; not exercised in this account.
       - capability: Local install / preflight
         evidence: components/openmontage/Makefile (setup, preflight, test, test-contracts targets)
-        status: VERIFIED_BY_RUN
+        evidence_level: exercised_recorded_run
+        run_reference: "2026-11-12 — `make setup` / `make preflight` passed on this machine; recorded in the project record (2026-11-12). Not re-run in the v2.4 P0; the record stands from 2026-11-12."
         notes: "Recorded 2026-11-12: `make setup` / `make preflight` passed on this machine. Not re-run in the v2.4 P0; the record stands from 2026-11-12."
     explicitly_not_claimed:
       - OpenMontage is not a voice engine and not a character registry.
