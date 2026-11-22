@@ -158,6 +158,18 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P0-006-AC-REG",
+      "command": "python3 tests/test_character_registration.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-006-AC-DIR",
+      "command": "python3 tests/test_production_direction.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "CF-INT-014",
       "command": "bash tests/test_installer.sh",
       "exit_code": 0,

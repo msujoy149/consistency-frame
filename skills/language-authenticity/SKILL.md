@@ -7,6 +7,8 @@ description: Speaks every language the way its native speakers speak it — US E
 
 Every language in a video is spoken the way its native speakers speak it — never flattened into stiff, generic, textbook speech. If the user asks for the same video in three languages, deliver it in all three. If the user asks for them separately, deliver separate videos. And the mouth must move with the words: a character talking with a still mouth is a defect, never a delivery.
 
+Scope: this skill operates across compatible human, digital-human, and creature workflows. Per-character language stays with the character whatever its subject_kind. For human and digital-human subjects, lip-sync is `lip-sync-phoneme-viseme` through articulation_target `human-mouth-lips`. For a fictional speaking animal or creature, the sounds are articulated through its own articulation_target (`bird-beak`, `animal-muzzle`, `creature-jaw-mandibles`, or `other`) via `creature-articulation` — never apply human lip movement to a bird, animal, or creature. A real animal (subject_kind `real-animal`) must NOT automatically be treated as an anthropomorphic speaking character and is not assumed to speak any language.
+
 ## 1. The Native-Pattern Rule — Speak Like a Native, Not Like a Textbook
 
 Every language has its own pattern: its tone, its rhythm, its idioms, the way its speakers actually talk. Study how native speakers of that language talk, then speak that way.
@@ -22,7 +24,7 @@ The tone must be recognizably that language's own. If a listener cannot tell whi
 
 Match the register the script calls for. When the script is casual, the speech is casual the way natives are casual — including colloquial and slang words the way native speakers actually use them. The point is authenticity, not sanitizing the tone into something no native speaker would say.
 
-- Do NOT invent profanity or add words the script does not call for. The script's meaning and dialogue stay intact; authenticity changes how a line is spoken, never what it says.
+- Do NOT invent profanity or add words the script does not call for. The script's meaning and dialogue stay intact; authenticity changes how a line is spoken, never what it says. Preserve the user's dialogue verbatim unless the user explicitly requests rewriting.
 - Do NOT clean up a character's natural way of speaking into formal speech unless the script asks for formal speech. A street-smart character does not suddenly sound like a newsreader.
 
 ## 3. Per-Character Language Stays
@@ -42,7 +44,7 @@ The same character voice profile speaks each language — the engine is multilin
 
 ## 6. Lip-Sync Follows the Language's Sounds
 
-The mouth and lip shapes follow the sounds (phonemes) of the language actually being spoken. English, Bengali, and Hindi move the mouth differently — the same face with the same words in another language must move differently, because the sounds are different.
+The mouth and lip shapes follow the sounds (phonemes) of the language actually being spoken. English, Bengali, and Hindi move the mouth differently — the same face with the same words in another language must move differently, because the sounds are different. For a non-human speaking character, the same rule applies through its own articulation_target: the beak, muzzle, or jaw moves with the sounds of the language being spoken, never with human lip shapes.
 
 - Verify every line's mouth movement against its own audio track, in its own language version. A line whose mouth shapes belong to another language is a defect.
 - A talking character with a still mouth is a defect — never deliver it. Dialogue timing must match the mouth: a line must not finish long before or after the character stops speaking (see the `production-systems` skill, A10).

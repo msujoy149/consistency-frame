@@ -1,4 +1,4 @@
-# Schemas (v2.3, P0)
+# Schemas (v2.3, v2.4, v2.5 — P0 + P0-006)
 
 Versioned JSON Schemas for every canonical record type. All schemas are
 JSON Schema draft 2020-12, but they deliberately use only the subset that
@@ -29,10 +29,12 @@ change tested.
 | `reference-learning.json` | Learning-candidate lifecycle (`OBSERVED → … → ACCEPTED → DEPRECATED`) |
 | `script-contract.json` | Script / scene / shot / performance contract (`VERBATIM_SCRIPT` default) |
 | `timeline-manifest.json` | Editor-neutral timeline manifest (media references only; not a renderer) |
-| `scene-plan.json` | **v2.4** Scene plan — scenes, beats, dramatic intent, emotion + intensity + transitions |
-| `shot-plan.json` | **v2.4** Shot plan — framing, camera angle/movement, lighting per shot |
-| `performance-plan.json` | **v2.4** Performance plan — per dialogue line: face, micro-expressions, gaze, posture, gesture, breathing, voice, lip-sync |
-| `script-to-performance.json` | **v2.4** Script-to-Performance contract (headline deliverable `SCRIPT_TO_PERFORMANCE_SCHEMA.json`) — binds Scene + Shot + Performance Plans with audio and editing plans; dialogue VERBATIM unless a rewrite was explicitly requested |
+| `scene-plan.json` | **v2.4/v2.5** Scene plan — scenes, beats, dramatic intent, emotion + intensity + transitions |
+| `shot-plan.json` | **v2.4/v2.5** Shot plan — framing, camera angle/movement, lighting per shot |
+| `performance-plan.json` | **v2.4/v2.5** Performance plan — per dialogue line: face, micro-expressions, gaze, posture, gesture, breathing, voice, lip-sync |
+| `script-to-performance.json` | **v2.4/v2.5** Script-to-Performance contract (headline deliverable `SCRIPT_TO_PERFORMANCE_SCHEMA.json`) — binds Scene + Shot + Performance Plans with audio and editing plans; dialogue VERBATIM unless a rewrite was explicitly requested |
+| `production-profile.json` | **v2.5 (new, P0-006)** Production profile — the composable dimensions for one production: visual style, production medium, source-media type, motion methods, subject types, interaction pattern, per-subject/per-shot overrides |
+| `character-registration.json` | **v2.5 (new, P0-006)** Character registration — name + unique ID, type/species, style profile, reference images, voice profile IDs, consent/permissions, registration history |
 | `evidence.json` | One evidence record (fact vs interpretation) |
 | `approval.json` | Approval / rights / consent / retention record |
 | `installer-result.json` | Installer / sync result (one status per component) |
@@ -50,10 +52,26 @@ change tested.
   A character record must not embed voice tags/seed/audio or sound
   files; it links them by ID (`voice_profile_id`, `sound_asset_ids`
   on the project).
-- Every schema carries `schema_version: "2.3"` (v2.3 P0) or `"2.4"`
+- Every schema carries `schema_version: "2.3"` (v2.3 P0), `"2.4"`
   (v2.4 Brain Architecture Amendment — the four script-to-performance
-  schemas). A breaking change requires a new version and a migration
-  note in `CHANGELOG.md`.
+  schemas), or `"2.5"` (v2.5 P0-006 animation-first additive
+  migration). Dual-version enums `["2.3", "2.5"]` / `["2.4", "2.5"]`
+  are allowed: a schema may accept records written against its
+  earlier version as well as 2.5. The migration is additive only —
+  no existing required field was removed or retyped, so every valid
+  v2.3/v2.4 record remains valid. A breaking change requires a new
+  version and a migration note in `CHANGELOG.md`.
+- The v2.5 schemas are the P0-006 animation-first contracts:
+  `production-profile.json` and `character-registration.json` are
+  new; `character.json`, `voice-profile.json`,
+  `visual-style-profile.json`, `scene-plan.json`, `shot-plan.json`,
+  `performance-plan.json`, and `script-to-performance.json` are
+  extended additively (subject kind / species / anatomy /
+  articulation, per-subject shot details, character–voice binding,
+  production dimensions). Captured footage uses
+  `visual_style: "captured-live-action"` and motion method
+  `"captured-motion"` (motion as captured by the camera, not
+  generated).
 - The four v2.4 schemas are the Script-to-Performance Intelligence
   contracts: `scene-plan.json`, `shot-plan.json`,
   `performance-plan.json`, and the combined `script-to-performance.json`.
