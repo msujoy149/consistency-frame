@@ -44,6 +44,7 @@ run_one "P0-SHELL" bash -n scripts/sync-skills.sh
 run_one "P0-SHELL" bash -n setup.sh
 run_one "P0-SHELL" bash -n tests/test_installer.sh
 run_one "P0-SHELL" bash -n tests/test_installer_security.sh
+run_one "P0-SHELL" bash -n tests/test_installer_manifest_security.sh
 run_one "P0-SHELL" bash -n tests/run-tests.sh
 
 # Repo validation (schemas, frontmatter, registries, privacy, secrets,
@@ -74,6 +75,11 @@ run_one "P0-PRIVACY" python3 tests/test_private_overlay.py
 run_one "CF-INT-014" bash tests/test_installer.sh
 run_one "CF-INT-015" bash tests/test_installer.sh
 run_one "CF-INT-015" bash tests/test_installer_security.sh
+run_one "CF-P0-SEC-MANIFEST-01" bash tests/test_installer_manifest_security.sh
+run_one "CF-P0-SEC-MANIFEST-02" bash tests/test_installer_manifest_security.sh
+run_one "CF-P0-SEC-MANIFEST-03" bash tests/test_installer_manifest_security.sh
+run_one "CF-P0-SEC-MANIFEST-04" bash tests/test_installer_manifest_security.sh
+run_one "CF-P0-ATOMIC-001" python3 tests/test_atomic_write.py
 
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check

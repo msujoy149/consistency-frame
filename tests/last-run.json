@@ -27,6 +27,12 @@
     },
     {
       "id": "P0-SHELL",
+      "command": "bash -n tests/test_installer_manifest_security.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "P0-SHELL",
       "command": "bash -n tests/run-tests.sh",
       "exit_code": 0,
       "result": "PASS"
@@ -160,6 +166,36 @@
     {
       "id": "CF-INT-015",
       "command": "bash tests/test_installer_security.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-01",
+      "command": "bash tests/test_installer_manifest_security.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-02",
+      "command": "bash tests/test_installer_manifest_security.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-03",
+      "command": "bash tests/test_installer_manifest_security.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-04",
+      "command": "bash tests/test_installer_manifest_security.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ATOMIC-001",
+      "command": "python3 tests/test_atomic_write.py",
       "exit_code": 0,
       "result": "PASS"
     },

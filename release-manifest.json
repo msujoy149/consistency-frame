@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p0-safe-foundations",
-  "commit": "add70c63e31ae0d04327d14060978f2e58048f1f",
-  "github_branch_head": "6d0862ff4457569b05a11ab945b38b7fa8de153a",
+  "commit": "ce58273ee37730048d1f3083e201d4ee7ada5b26",
+  "github_branch_head": "b30d75e305508837e4ed7c8cbb9a759ce62f78dc",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
@@ -22,8 +22,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "75e0f26ebeb9e3a1550a3c53eb00267367b7e31c7c54a16ee6aa9cba23726ae5",
-      "bytes": 35815
+      "sha256": "3dd8e482289a15200dd4e89f229a986687bcb93b9d093ecc71b2e69ad92d4c9e",
+      "bytes": 36988
     },
     {
       "path": "README.md",
@@ -77,8 +77,8 @@
     },
     {
       "path": "docs/06-installation.md",
-      "sha256": "b92e97069a1f1fe85080b471258e6509e70de4818cc8dd7306e6ea46a8647582",
-      "bytes": 16893
+      "sha256": "f262ba3c3e7c3dc90de1e510dcbb151e6aa31d078f9e0342dd0a5d71174a3295",
+      "bytes": 17608
     },
     {
       "path": "docs/07-character-registry.md",
@@ -117,8 +117,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "f72eb090b3d6e340d0581da9254d7e26a65ef777c80e61bb090f16a83389873c",
-      "bytes": 18615
+      "sha256": "bdd64f7c3ac17f67d3aa7e872b26bcaaa4a5259efc2fa8c61a33e26a94ec706b",
+      "bytes": 19275
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -127,8 +127,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "78e163955c4cbfa2aa8fc9bb241fd5fac496ea76631dd3211ee47ebcbdf0ede8",
-      "bytes": 24632
+      "sha256": "9ed1d063f4bdaf925b49bae84d2b5a665784a10c40e51582de393b5638c0fb6a",
+      "bytes": 26054
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -147,8 +147,8 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "c46d552d8fafa6a68cad5a1cb9a2873afb377913ff5671733eaf35c972cbb7f5",
-      "bytes": 11169
+      "sha256": "3bb6f939727eeaa93cad64c23d1859f4bb3b81cd74d0ac05bd585ec8b91184f9",
+      "bytes": 12281
     },
     {
       "path": "registry/adapters.json",
@@ -301,9 +301,14 @@
       "bytes": 8618
     },
     {
+      "path": "scripts/atomic_write.py",
+      "sha256": "76d01b29e2e495d8eece67915664dd180561c18d7b255ee9b4ca683c49b207ab",
+      "bytes": 3822
+    },
+    {
       "path": "scripts/generate-build-report.py",
-      "sha256": "f3b6f20195c8ebcfa6fb47c2bdacc6e4f9af65761390065a62e24df9396bc038",
-      "bytes": 28581
+      "sha256": "653a65cb9c912f993710595b51a240c5d25d5184fec7c22a05fb58617a79fcb3",
+      "bytes": 29183
     },
     {
       "path": "scripts/generate-registries.py",
@@ -317,8 +322,8 @@
     },
     {
       "path": "scripts/sync-skills.sh",
-      "sha256": "8313eb025f62e31fd0971da894b293ae27fa1b4ba1fdf2ce6b2974f592dbe302",
-      "bytes": 34146
+      "sha256": "d422885ddb82ad7132a3cd29004f490583883ba60cd8fb59030b586573588997",
+      "bytes": 35493
     },
     {
       "path": "scripts/validate-repo.py",
@@ -412,18 +417,28 @@
     },
     {
       "path": "tests/last-run.json",
-      "sha256": "ac5e3c7e1680e60b3f4410660e6aac150c164b9691df7b08c14e6e72f930e9b1",
-      "bytes": 4919
+      "sha256": "d929081a56680b470f902b04877517b7063559fa6b468955f0447be226634cf8",
+      "bytes": 5864
     },
     {
       "path": "tests/run-tests.sh",
-      "sha256": "a27583784d67377a8d6e4d7c767b75004db41c614497fa31f771838dbddf85cf",
-      "bytes": 4371
+      "sha256": "207e0f2e671b90c8c12483578f063cbcfc83d0842567076088414ac8a74bc841",
+      "bytes": 4818
+    },
+    {
+      "path": "tests/test_atomic_write.py",
+      "sha256": "bef3f2bab95c018d94d953fba440e34ccf8f832cc181ad881052acdcb8bad2a4",
+      "bytes": 5325
     },
     {
       "path": "tests/test_installer.sh",
       "sha256": "1dca3d6e6b1aa2f08e476849d9cfa25dbd97f96b90bac0335700e7a952d4ddc2",
       "bytes": 11441
+    },
+    {
+      "path": "tests/test_installer_manifest_security.sh",
+      "sha256": "9d99fadaeaa44bb78b361cc58a3fa7f3f89eb401ed13b49e67a26bb695f888b4",
+      "bytes": 6788
     },
     {
       "path": "tests/test_installer_security.sh",
@@ -492,6 +507,10 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P0-ATOMIC-001",
+      "result": "PASS"
+    },
+    {
       "id": "CF-P0-LEARN-001",
       "result": "PASS"
     },
@@ -548,6 +567,22 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P0-SEC-MANIFEST-01",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-02",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-03",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-04",
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "result": "PASS"
     },
@@ -568,5 +603,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-22T17:28:30Z"
+  "generated_at_utc": "2026-11-22T17:55:18Z"
 }

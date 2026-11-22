@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "add70c63e31ae0d04327d14060978f2e58048f1f",
-  "github_branch_head": "6d0862ff4457569b05a11ab945b38b7fa8de153a",
+  "head_commit": "ce58273ee37730048d1f3083e201d4ee7ada5b26",
+  "github_branch_head": "b30d75e305508837e4ed7c8cbb9a759ce62f78dc",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -72,6 +72,7 @@
     "schemas/voice-profile.json",
     "schemas/wardrobe.json",
     "scripts/asset_policy.py",
+    "scripts/atomic_write.py",
     "scripts/generate-build-report.py",
     "scripts/generate-registries.py",
     "scripts/generate-report.py",
@@ -96,7 +97,9 @@
     "tests/fixtures/voice-profile-valid.json",
     "tests/last-run.json",
     "tests/run-tests.sh",
+    "tests/test_atomic_write.py",
     "tests/test_installer.sh",
+    "tests/test_installer_manifest_security.sh",
     "tests/test_installer_security.sh",
     "tests/test_modes.py",
     "tests/test_performance_semantics.py",
@@ -154,6 +157,13 @@
     {
       "id": "CF-P0-ASSET-003",
       "command": "python3 tests/test_modes.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ATOMIC-001",
+      "command": "python3 tests/test_atomic_write.py",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"
@@ -252,6 +262,34 @@
     {
       "id": "CF-P0-ROUTING-004",
       "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-01",
+      "command": "bash tests/test_installer_manifest_security.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-02",
+      "command": "bash tests/test_installer_manifest_security.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-03",
+      "command": "bash tests/test_installer_manifest_security.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-04",
+      "command": "bash tests/test_installer_manifest_security.sh",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"

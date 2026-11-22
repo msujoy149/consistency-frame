@@ -219,6 +219,18 @@ for that destination. Old backups are removed only with the explicit
 `--prune-backups <days>` option, which deletes only this
 destination's run directories older than `<days>` days.
 
+Installer metadata (the ownership manifest, the last-sync record and
+the run-owner marker) is written atomically and symlink-safely through
+one helper, `scripts/atomic_write.py`: the temporary file is created
+exclusively with `tempfile.mkstemp()` (unique, unguessable name, in
+the same directory), written through its file descriptor, fsynced, and
+then moved over the target with `os.replace()`. A planted symlink at
+a predictable temporary name — or at the target itself — is never
+followed, so no write can escape the destination directory. A failed
+write leaves no temporary file behind and is reported as a failure,
+never as SUCCESS. Regression tests: SEC-MANIFEST-01..04 and
+`tests/test_atomic_write.py`.
+
 ### The voice model (OmniVoice) — download step
 
 The OmniVoice model weights (~3.27 GB) are **not** bundled in this
