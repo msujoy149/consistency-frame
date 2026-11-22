@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p0-safe-foundations",
-  "commit": "ee2de439a2e77e2fad31373624bedb55f97ccbf8",
-  "github_branch_head": "5df5a330969f7978c9c5a3dfc67dd62ad2bf606c",
+  "commit": "add70c63e31ae0d04327d14060978f2e58048f1f",
+  "github_branch_head": "6d0862ff4457569b05a11ab945b38b7fa8de153a",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
@@ -117,8 +117,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "bb4b71818d7ea5f5c225b097c348926b58d349ec8c3928e166063b4b85ea90b1",
-      "bytes": 18511
+      "sha256": "f72eb090b3d6e340d0581da9254d7e26a65ef777c80e61bb090f16a83389873c",
+      "bytes": 18615
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -127,8 +127,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "e91b77eec552c1a24e820191cf313a623dfbd3ba64900660c40469194888c547",
-      "bytes": 23456
+      "sha256": "78e163955c4cbfa2aa8fc9bb241fd5fac496ea76631dd3211ee47ebcbdf0ede8",
+      "bytes": 24632
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -141,19 +141,14 @@
       "bytes": 12785
     },
     {
-      "path": "docs/implementation/CHECKSUMS.txt",
-      "sha256": "ab2aeb21c65c4128ad49a2e8421fd31f4c55f796462ef88bd6ddad7b669e6511",
-      "bytes": 599
-    },
-    {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
       "sha256": "f72771d69bf15a107635d1fa30c90b36ea486d480d5c80ee69aec515c4718c01",
       "bytes": 15503
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "32a5124969d99fe5415afcf8ee63747e68d12e75283bb149a6d7e7441ad4af9c",
-      "bytes": 11044
+      "sha256": "c46d552d8fafa6a68cad5a1cb9a2873afb377913ff5671733eaf35c972cbb7f5",
+      "bytes": 11169
     },
     {
       "path": "registry/adapters.json",
@@ -307,8 +302,8 @@
     },
     {
       "path": "scripts/generate-build-report.py",
-      "sha256": "7e30796f418f02a6e98027422af8769049104e76d961d1d628cc81719666be61",
-      "bytes": 26399
+      "sha256": "f3b6f20195c8ebcfa6fb47c2bdacc6e4f9af65761390065a62e24df9396bc038",
+      "bytes": 28581
     },
     {
       "path": "scripts/generate-registries.py",
@@ -317,8 +312,8 @@
     },
     {
       "path": "scripts/generate-report.py",
-      "sha256": "ccfcbd047ad3e30a34fa2615531226818841229a0a248297de429a6b84d3ee04",
-      "bytes": 17316
+      "sha256": "b29eeb075df86017130a49b91dc84312113a0fda59ded73a2584006419f58359",
+      "bytes": 17777
     },
     {
       "path": "scripts/sync-skills.sh",
@@ -457,8 +452,8 @@
     },
     {
       "path": "tests/test_reports.py",
-      "sha256": "bd5aaa0202e9481153272cf97fe989f50da1b40dbc83b8b3d83801766156d4fe",
-      "bytes": 7886
+      "sha256": "588864417b2952a32699a68774138c4ae7107de80d9eded932eddf887f1e53ed",
+      "bytes": 9067
     },
     {
       "path": "tests/test_routing.py",
@@ -573,5 +568,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-22T17:24:29Z"
+  "generated_at_utc": "2026-11-22T17:28:30Z"
 }

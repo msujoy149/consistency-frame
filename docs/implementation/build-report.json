@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "ee2de439a2e77e2fad31373624bedb55f97ccbf8",
-  "github_branch_head": "5df5a330969f7978c9c5a3dfc67dd62ad2bf606c",
+  "head_commit": "add70c63e31ae0d04327d14060978f2e58048f1f",
+  "github_branch_head": "6d0862ff4457569b05a11ab945b38b7fa8de153a",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",

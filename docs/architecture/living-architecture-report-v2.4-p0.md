@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p0-safe-foundations`
-**Head commit:** `ee2de439a2e77e2fad31373624bedb55f97ccbf8`
-**GitHub branch head:** `5df5a330969f7978c9c5a3dfc67dd62ad2bf606c` (remote head of `feat/cf-p0-safe-foundations` at
+**Head commit:** `add70c63e31ae0d04327d14060978f2e58048f1f`
+**GitHub branch head:** `6d0862ff4457569b05a11ab945b38b7fa8de153a` (remote head of `feat/cf-p0-safe-foundations` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
