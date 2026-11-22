@@ -71,7 +71,7 @@ The camera angle is never random and never decorative. For every shot, read the 
 
 **6. Continuity across cuts.** Hold the 180-degree rule — never cross the line of action without a clear establishing re-set. Match eyelines in shot-reverse-shot; match on action; keep screen direction consistent so the viewer never has to re-find where anyone is.
 
-**7. Realism — human camera, not perfect camera.** Allow the small human imperfections that make footage feel shot rather than rendered: a faint handheld sway in intimate scenes, a breath of focus hunting when reframing, slightly imperfect framing corrected mid-shot. Subtle: noticeable enough to feel human, never enough to distract. See the `humanized-production` skill (30.14 Camera Imperfection). This serves the repo's overall realism target: aim for 100% realistic, human-generated feeling; 99.9% is the floor — never leave any part visibly artificial when a better choice exists.
+**7. Realism — human camera, not perfect camera.** Allow the small human imperfections that make footage feel shot rather than rendered: a faint handheld sway in intimate scenes, a breath of focus hunting when reframing, slightly imperfect framing corrected mid-shot. Subtle: noticeable enough to feel human, never enough to distract. See the `humanized-production` skill (30.14 Camera Imperfection). This serves the repo's overall realism target: aim for the closest achievable realistic, human-generated feeling — never leave any part visibly artificial when a better choice exists; fidelity is verified shot by shot, not guaranteed by a percentage.
 
 **8. Angle holds within a beat, changes with the beat.** One beat, one angle logic — no new angle mid-beat without a story reason. The angle plan is written into the shot list before generation, so every angle is decided from the script, not during generation. See A2 and docs/01 §2.
 
@@ -137,9 +137,9 @@ Characters, series, and episodes live in separate namespaces per project or seri
 
 For characters who are children, keep every scene, outfit, dialogue, and camera angle appropriate for a child, and never generate anything sexualised or unsafe involving a child. This rule is absolute and overrides any script line that conflicts with it.
 
-### B14. Audio Mastering −14 LUFS
+### B14. Audio Mastering — Delivery Profiles
 
-Master the final audio of every video to one consistent loudness: target −14 LUFS, true peak below −1 dBTP, so dialogue, music, and sound effects are the same volume across episodes and platforms. A character's voice must not be louder in one episode and barely audible in the next.
+Master the final audio of every video to the project's named delivery profile (`architecture/audio-delivery-profiles.json`): the profile's integrated loudness and true-peak limits, so dialogue, music, and sound effects are the same volume across episodes and platforms. A character's voice must not be louder in one episode and barely audible in the next. If no profile is named, ask which destination the video is for — there is no universal default.
 
 ### B15. Localisation / Dubbing Pack
 
