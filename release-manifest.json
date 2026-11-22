@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p0-safe-foundations",
-  "commit": "5e25545a3d803b7611b8865d453f4c88f524b525",
-  "github_branch_head": "43d4fd33a59a19c57cabbb74b14492a2acaf9343",
+  "commit": "17befa1af006ce0ce7ef8c0e1dc4534015ce5a33",
+  "github_branch_head": "59f562afb0d9d7c5cab14cd6d878b49d85d89449",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
@@ -22,8 +22,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "3dd8e482289a15200dd4e89f229a986687bcb93b9d093ecc71b2e69ad92d4c9e",
-      "bytes": 36988
+      "sha256": "348c626cb5f062cee9e58edd99a27e9dca8345e60dd000146c80f6ff0429461d",
+      "bytes": 38940
     },
     {
       "path": "README.md",
@@ -117,8 +117,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "c1f559b5265dfbb72bfb7e8bc2e3e07364c506bbc04fc54371539b4b09952c33",
-      "bytes": 19323
+      "sha256": "db9415ef162d5cd72b5deb0dbc94c2293cddeb6b348808ba4e8e9fbfe85d0bb9",
+      "bytes": 19550
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -127,8 +127,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "79e47484c8bdd13770faded8407d7450f6dab4b82b00198159472ec9c1c5d556",
-      "bytes": 26230
+      "sha256": "4a2f68e3724921e44de79c94f0fd9ab881e2fb4c182bd3ee4deaa7bc38a47011",
+      "bytes": 27956
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -142,8 +142,8 @@
     },
     {
       "path": "docs/implementation/CF-WO-P0-003-corrections.md",
-      "sha256": "1d14c6647b9e1f865915fd77a2bb89c00133c307cbdd72dd1480ba6367f702b0",
-      "bytes": 7299
+      "sha256": "5101b7d8b8aa94137eb63df54728c347b4cbf0dd1cb0aab49b4a0b4e9e503586",
+      "bytes": 8476
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
@@ -152,8 +152,8 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "bcd4c2ebe59e44106bad81ca87529b46c18d4dd78be81e9020ba6e3e356df501",
-      "bytes": 12336
+      "sha256": "aa58356b104f64a35e8cab173e5b47cf6cfbb669e9e094d4ddbf15bb2b286d59",
+      "bytes": 12586
     },
     {
       "path": "registry/adapters.json",
@@ -312,8 +312,8 @@
     },
     {
       "path": "scripts/generate-build-report.py",
-      "sha256": "653a65cb9c912f993710595b51a240c5d25d5184fec7c22a05fb58617a79fcb3",
-      "bytes": 29183
+      "sha256": "111d1746a78474a04193562048a9a0b44afb3cf821b952b5f2df19dac9a3a89c",
+      "bytes": 31190
     },
     {
       "path": "scripts/generate-registries.py",
@@ -327,8 +327,8 @@
     },
     {
       "path": "scripts/sync-skills.sh",
-      "sha256": "d422885ddb82ad7132a3cd29004f490583883ba60cd8fb59030b586573588997",
-      "bytes": 35493
+      "sha256": "9e1ff23615209c59a9e415dd6ece6d623bedab3979f02facda1011afe16ed3dc",
+      "bytes": 37544
     },
     {
       "path": "scripts/validate-repo.py",
@@ -422,13 +422,13 @@
     },
     {
       "path": "tests/last-run.json",
-      "sha256": "d929081a56680b470f902b04877517b7063559fa6b468955f0447be226634cf8",
-      "bytes": 5864
+      "sha256": "0d5d9a114af91c47821dc5bfd6e0087d7df17739fff44eccdb540dc871e242d7",
+      "bytes": 6176
     },
     {
       "path": "tests/run-tests.sh",
-      "sha256": "207e0f2e671b90c8c12483578f063cbcfc83d0842567076088414ac8a74bc841",
-      "bytes": 4818
+      "sha256": "230b7a8cb856b70c0abb70c170c3394b449c96a8f02b26faf9e42bf141386d75",
+      "bytes": 4964
     },
     {
       "path": "tests/test_atomic_write.py",
@@ -444,6 +444,11 @@
       "path": "tests/test_installer_manifest_security.sh",
       "sha256": "9d99fadaeaa44bb78b361cc58a3fa7f3f89eb401ed13b49e67a26bb695f888b4",
       "bytes": 6788
+    },
+    {
+      "path": "tests/test_installer_metadata_failure.sh",
+      "sha256": "95f9bf4e1f287479500e9c651ec5c1cbdac0f2c62b8d1f2b2abf45f94f68cda2",
+      "bytes": 6065
     },
     {
       "path": "tests/test_installer_security.sh",
@@ -588,6 +593,10 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P0-SEC-METADATA-05",
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "result": "PASS"
     },
@@ -608,5 +617,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-22T17:58:34Z"
+  "generated_at_utc": "2026-11-22T18:22:11Z"
 }

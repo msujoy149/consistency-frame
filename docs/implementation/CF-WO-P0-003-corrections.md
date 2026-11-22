@@ -118,8 +118,21 @@ new code. Existing SEC-01..SEC-08 tests unchanged and still passing.
 
 ## 5. Validation
 
-- `bash tests/run-tests.sh` → **40/40 PASS** (35 previous + 4
-  SEC-MANIFEST + 1 ATOMIC), exit 0, verified independently.
+- `bash tests/run-tests.sh` → **41 recorded test-run entries PASS**
+  (35 previous + 1 new `bash -n tests/test_installer_manifest_security.sh`
+  + 4 SEC-MANIFEST + 1 ATOMIC), exit 0, verified independently.
+  30 distinct test IDs, 22 distinct command strings; each listed
+  command returned exit 0. (Correction, CF-WO-P0-004: this section
+  originally said "40/40" — a hand-count error that omitted the new
+  `bash -n` entry, 35 + 4 + 1 = 40 instead of 35 + 1 + 4 + 1 = 41.
+  The `last-run.json` committed with the fix was also stale — 35
+  entries — because it was recorded before the new runner entries
+  were added; it was re-recorded with 41 entries in the docs commit.
+  The GitHub Actions artifact for the same head independently
+  records 41 rows, all PASS. Never represent test-run rows as unique
+  commands or individual assertions: the 41 rows are recorded
+  test-run entries, some commands run more than once under different
+  test IDs.)
 - `bash setup.sh --dry-run` → exit 0, `Setup SUCCESS:
   skills=SUCCESS voicestudio=SKIPPED openmontage=SKIPPED`.
 - `bash setup.sh` core-only → exit 0, 15 skills synced.
@@ -130,11 +143,17 @@ new code. Existing SEC-01..SEC-08 tests unchanged and still passing.
 ## 6. Provenance
 
 Regenerated with `--github-head
-b30d75e305508837e4ed7c8cbb9a759ce62f78dc` (the GitHub branch head
-before this correction). The manifest records the GitHub head of
-the code it describes; pushing the regenerated manifest advances
-the branch head by one docs-only commit, and the delivery message
-states the final head (see `BUILD_REPORT_P0.md` §12). The manifest
-excludes itself and `docs/implementation/CHECKSUMS.txt` from its
-own file list, and all listed hashes verify against the working
-tree (see the delivery report for the count).
+43d4fd33a59a19c57cabbb74b14492a2acaf9343` (the GitHub branch head of
+the pushed correction commits). The release manifest records the
+code head it describes (`5e25545a3d803b7611b8865d453f4c88f524b525`)
+and that GitHub head (`43d4fd33...`); pushing the regenerated
+manifest advanced the branch head by one docs-only commit, and the
+final PR head after that push was
+`59f562afb0d9d7c5cab14cd6d878b49d85d89449` — the two heads have
+different meanings, see `BUILD_REPORT_P0.md` §12 (two-head rule).
+(Correction, CF-WO-P0-004: this section originally named an earlier
+intermediate head as the regenerated release; the final regenerated
+release is the one above.) The manifest excludes itself and
+`docs/implementation/CHECKSUMS.txt` from its own file list, and all
+listed hashes verify against the working tree (see the delivery
+report for the count).

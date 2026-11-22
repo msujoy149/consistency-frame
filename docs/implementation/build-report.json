@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "5e25545a3d803b7611b8865d453f4c88f524b525",
-  "github_branch_head": "43d4fd33a59a19c57cabbb74b14492a2acaf9343",
+  "head_commit": "17befa1af006ce0ce7ef8c0e1dc4534015ce5a33",
+  "github_branch_head": "59f562afb0d9d7c5cab14cd6d878b49d85d89449",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -101,6 +101,7 @@
     "tests/test_atomic_write.py",
     "tests/test_installer.sh",
     "tests/test_installer_manifest_security.sh",
+    "tests/test_installer_metadata_failure.sh",
     "tests/test_installer_security.sh",
     "tests/test_modes.py",
     "tests/test_performance_semantics.py",
@@ -291,6 +292,13 @@
     {
       "id": "CF-P0-SEC-MANIFEST-04",
       "command": "bash tests/test_installer_manifest_security.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-SEC-METADATA-05",
+      "command": "bash tests/test_installer_metadata_failure.sh",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"
