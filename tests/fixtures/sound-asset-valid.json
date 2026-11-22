@@ -1,0 +1,18 @@
+{
+  "schema_version": "2.3",
+  "id": "sound-theme-001",
+  "project_id": "proj-series-001",
+  "kind": "theme_music",
+  "title": "Series theme",
+  "source": "commissioned composer",
+  "owner": "series producer",
+  "licence": "commissioned work, series use only",
+  "allowed_use": "series episodes only",
+  "allowed_projects": ["proj-series-001"],
+  "duration_seconds": 32.5,
+  "loudness_profile_id": "streaming-social",
+  "consent": {"granted": true, "source": "licence", "scope": "series use"},
+  "provenance": {"source": "commissioned composer"},
+  "version": 1,
+  "status": "approved"
+}

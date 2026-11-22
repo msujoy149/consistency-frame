@@ -1,0 +1,9 @@
+{
+  "schema_version": "2.3",
+  "id": "job-temp-001",
+  "mode": "TEMPORARY_ASSET_USE",
+  "inputs": [{"path": "intake/clip-001.mp4"}],
+  "state": "completed",
+  "retention": "temporary",
+  "permanent_records_created": []
+}

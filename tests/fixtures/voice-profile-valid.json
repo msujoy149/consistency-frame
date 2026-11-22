@@ -1,0 +1,18 @@
+{
+  "schema_version": "2.3",
+  "id": "voice-nila-001",
+  "character_id": "char-nila-001",
+  "provider": "voicestudio-omnivoice-local",
+  "provider_voice_id": "omnivoice",
+  "model_version": "k2-fsa/OmniVoice",
+  "reference_audio": {"path": "characters/char-nila-001/voice-reference.mp3"},
+  "tags": "child, female, high pitch",
+  "seed": 11,
+  "language": "bn",
+  "delivery_traits": "warm, curious",
+  "use_scope": "this series only",
+  "consent": {"granted": true, "granted_by": "parent", "source": "user", "scope": "this series only"},
+  "provenance": {"source": "user-supplied voice reference"},
+  "version": 1,
+  "status": "approved"
+}

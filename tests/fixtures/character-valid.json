@@ -1,0 +1,23 @@
+{
+  "schema_version": "2.3",
+  "id": "char-nila-001",
+  "name": "Nila",
+  "age": 9,
+  "gender": "female",
+  "fixed_identity": {
+    "face": "round face, big dark-brown eyes",
+    "eyes": "dark brown",
+    "hair": "long curly chestnut-brown hair",
+    "build": "slim 9-year-old build",
+    "height": "130 cm",
+    "distinctive_features": "freckles"
+  },
+  "reference_assets": [
+    {"path": "characters/char-nila-001/reference-front.jpg", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+  ],
+  "voice_profile_id": "voice-nila-001",
+  "consent": {"granted": true, "granted_by": "parent", "source": "user", "scope": "this series only"},
+  "provenance": {"source": "user-supplied reference photo"},
+  "version": 1,
+  "status": "approved"
+}
