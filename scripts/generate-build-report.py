@@ -44,13 +44,28 @@ OUT_JSON = os.path.join(ROOT, "docs", "implementation", "build-report.json")
 OUT_MANIFEST = os.path.join(ROOT, "release-manifest.json")
 OUT_CHECKSUMS = os.path.join(ROOT, "docs", "implementation", "CHECKSUMS.txt")
 
-# Remote CI evidence (P0-002 §7): verified by the parent on 2026-11-22.
-# CI PASSED on this head — 2/2 checks. The post-corrections CI run is
-# checked by the parent after the push; this record is the evidence
-# for the head it names, not a claim about a later head.
-CI_HEAD = "fcf311ef79c5f10a4248f026a5f667109c584831"
-CI_RUN_URL = ("https://github.com/msujoy149/consistency-frame/actions/"
-              "runs/45046203236")
+# Remote CI evidence (P0-005): verified by the parent on 2026-11-22.
+# Latest verified CI ran on the P0-004 final PR head 8879123 — 2/2
+# checks (push run #37 + PR run #38). The p0-test-results artifact
+# (ID 14766603267) holds 43 recorded test-run entries, 31 distinct
+# test IDs, 24 distinct command strings, all PASS, every command
+# exit 0; its last-run.json is byte-for-byte identical to the P0-004
+# ZIP's tests/last-run.json. This record is evidence for the head it
+# names, not a claim about a later head: the corrections in this
+# package are pushed after it, and their CI run is checked by the
+# parent after the push (two-head rule, §12).
+CI_HEAD = "88791231caa03e8fb75a3499beeb21d1dd64a906"
+CI_PUSH_RUN_URL = ("https://github.com/msujoy149/consistency-frame/actions/"
+                   "runs/45055643056")
+CI_PR_RUN_URL = ("https://github.com/msujoy149/consistency-frame/actions/"
+                 "runs/45055649820")
+CI_RUN_URL = CI_PUSH_RUN_URL
+CI_ARTIFACT = "p0-test-results (artifact ID 14766603267)"
+# Historical CI record (P0-002 §7): the first head whose CI was
+# verified by the parent. Retained as history, not as current evidence.
+CI_HIST_HEAD = "fcf311ef79c5f10a4248f026a5f667109c584831"
+CI_HIST_RUN_URL = ("https://github.com/msujoy149/consistency-frame/actions/"
+                   "runs/45046203236")
 CI_PR_URL = "https://github.com/msujoy149/consistency-frame/pull/1"
 
 
@@ -162,9 +177,14 @@ def main() -> int:
             "run_url": CI_RUN_URL,
             "pull_request": CI_PR_URL,
             "note": ("Remote CI PASSED on the GitHub branch head named "
-                     "here. The post-corrections CI run is checked by the "
-                     "parent after the push; this record is evidence for "
-                     "the head it names, not a claim about a later head."),
+                     "here (push run #37 + PR run #38, 2/2 checks; "
+                     "p0-test-results artifact ID 14766603267: 43 recorded "
+                     "test-run entries, 31 distinct test IDs, 24 distinct "
+                     "command strings, all PASS). The corrections in this "
+                     "package are pushed after that run; their CI run is "
+                     "checked by the parent after the push — this record is "
+                     "evidence for the head it names, not a claim about a "
+                     "later head."),
         },
         "tests": [{"id": t["id"], "command": t["command"],
                    "exit_code": t["exit_code"], "result": t["result"],
@@ -348,27 +368,33 @@ NOT RUN (honestly, not claimed as passed):
 - `setup.sh --with-components` end-to-end (would download ~5 GB +
   ~1 GB deps; failure reporting is unit-tested, the live run is NOT RUN).
 
-Remote CI evidence (not NOT RUN — it ran and passed):
+Remote CI evidence (latest verified — it ran and passed):
 
 - Remote GitHub Actions CI PASSED on GitHub branch head `{CI_HEAD}`:
-  2/2 checks, run {CI_RUN_URL} (draft PR {CI_PR_URL}). The
-  post-corrections CI run will be checked by the parent after the push.
+  2/2 checks — push run #37 {CI_PUSH_RUN_URL} and PR run #38
+  {CI_PR_RUN_URL} (draft PR {CI_PR_URL}). Test evidence from the
+  `{CI_ARTIFACT}` artifact: 43 recorded test-run entries, 31 distinct
+  test IDs, 24 distinct command strings, all PASS, every listed
+  command exit 0; the artifact's `last-run.json` is byte-for-byte
+  identical to the P0-004 ZIP's `tests/last-run.json`.
+- Historical record (P0-002): remote CI PASSED on GitHub branch head
+  `{CI_HIST_HEAD}` — 2/2 checks, run {CI_HIST_RUN_URL}. That record
+  is evidence for the head it names, not for later heads.
 
 ## 5. GITHUB
 
 - Feature branch: `{branch}`
 - Base commit: `{base}`
 - Head commit (local code head): `{head}`
-- GitHub branch head: `{CI_HEAD}` (remote head; 20 snapshot commits
-  pushed to the branch plus 1 web commit that added
-  `.github/workflows/p0-ci.yml` — the remote tree equals the local
-  tree, verified by identical blob SHA for the workflow file)
+- GitHub branch head: `{github_head}` (the remote head the manifest
+  records as the code it describes; see §12)
 - Draft PR: {CI_PR_URL}
 - Push status: branch pushed; draft PR open; remote CI PASSED on
-  `{CI_HEAD}` (2/2 checks, run {CI_RUN_URL}). The regenerated
-  manifest and reports in this package are committed afterwards as a
-  docs-only commit, which advances the branch head by one; the
-  delivery message states that final head (see §12).
+  `{CI_HEAD}` (2/2 checks, push run #37 {CI_PUSH_RUN_URL}, PR run #38
+  {CI_PR_RUN_URL}). The regenerated manifest and reports in this
+  package are committed afterwards as a docs-only commit, which
+  advances the branch head by one; the delivery message states that
+  final head (see §12).
 
 ## 6. SECURITY & PRIVACY
 
@@ -420,8 +446,9 @@ Remote CI evidence (not NOT RUN — it ran and passed):
 
 **P0 result: {status}** (all critical installer/data/security gates pass
 locally; remote CI PASSED on GitHub branch head `{CI_HEAD}` — 2/2
-checks, run {CI_RUN_URL}; the post-corrections CI run will be checked
-by the parent after the push).
+checks, push run #37 {CI_PUSH_RUN_URL}, PR run #38 {CI_PR_RUN_URL};
+the CI run for the corrections in this package will be checked by
+the parent after the push).
 
 ## 9. KNOWN ISSUES
 
@@ -504,10 +531,27 @@ independent review of this branch.
   from the final head after this report is committed, so its hash
   lives in the delivery message only.
 - CI evidence for this package: remote CI PASSED on GitHub branch head
-  `{CI_HEAD}` — 2/2 checks, run {CI_RUN_URL} (draft PR {CI_PR_URL}).
-  That record is evidence for the head it names. The post-corrections
-  CI run (on the new head after this package is pushed) will be
-  checked by the parent after the push; it is NOT claimed here.
+  `{CI_HEAD}` — 2/2 checks, push run #37 {CI_PUSH_RUN_URL}, PR run
+  #38 {CI_PR_RUN_URL} (draft PR {CI_PR_URL}). The `{CI_ARTIFACT}`
+  artifact holds 43 recorded test-run entries, 31 distinct test IDs,
+  24 distinct command strings, all PASS (each listed command returned
+  exit 0); the artifact's `last-run.json` is byte-for-byte identical
+  to the P0-004 ZIP's `tests/last-run.json`. That record is evidence
+  for the head it names. The CI run for the corrections in this
+  package (pushed after that head) will be checked by the parent
+  after the push; it is NOT claimed here.
+- Historical CI records: remote CI PASSED on GitHub branch head
+  `{CI_HIST_HEAD}` — 2/2 checks, run {CI_HIST_RUN_URL} (P0-002);
+  on `59f562a` push run #29
+  https://github.com/msujoy149/consistency-frame/actions/runs/45052729856
+  and PR run #30
+  https://github.com/msujoy149/consistency-frame/actions/runs/45052735029
+  (P0-003); on `b30d75e` push run #19
+  https://github.com/msujoy149/consistency-frame/actions/runs/45050321696
+  and PR run #20
+  https://github.com/msujoy149/consistency-frame/actions/runs/45050326230
+  (P0-002). Each record is evidence for the head it names. The full
+  run list is also in the draft PR description.
 - Regenerated under CF-WO-P0-002 (independent-review corrections)
   with `--github-head {github_head}`.
 - Regenerated under CF-WO-P0-003 (final independent security
@@ -535,12 +579,29 @@ independent review of this branch.
   PARTIAL (exit 2) with the recovery backup preserved; no changes +
   metadata failure reports FAILED (exit 1). New regression test
   SEC-METADATA-05 (`tests/test_installer_metadata_failure.sh`) is a
-  true installer integration test. Test evidence for this package
-  (from `tests/last-run.json`, computed, not typed): {n_test_entries}
-  recorded test-run entries, {n_test_ids} distinct test IDs,
-  {n_test_commands} distinct command strings, all PASS (each listed
-  command returned exit 0). See
+  true installer integration test. Test evidence for that package
+  (verified, not hand-counted): 43 recorded test-run entries, 31
+  distinct test IDs, 24 distinct command strings, all PASS (each
+  listed command returned exit 0). See
   `docs/implementation/CF-WO-P0-004-corrections.md`.
+- Regenerated under CF-WO-P0-005 (final evidence & failure-diagnostic
+  corrections) with `--github-head {github_head}`: the no-change
+  final-metadata failure diagnostic no longer claims a recovery
+  backup exists where none was created — it now reports FAILED
+  (exit 1) with "no content backup was created; run record
+  retained". The same accuracy fix covers the earlier failed=1 path
+  and the new-only PARTIAL case (a run that only installed new files
+  also creates no content backup). New regression tests
+  SEC-METADATA-06 (no-change) and SEC-METADATA-07 (failed=1 with no
+  backup) in `tests/test_installer_metadata_failure.sh`. The stale
+  "post-corrections CI run will be checked later" wording is replaced
+  by the verified final-head CI evidence above (runs #37/#38 on
+  `8879123`, artifact `{CI_ARTIFACT}`). Test evidence for this
+  package (from `tests/last-run.json`, computed, not typed):
+  {n_test_entries} recorded test-run entries, {n_test_ids} distinct
+  test IDs, {n_test_commands} distinct command strings, all PASS
+  (each listed command returned exit 0). See
+  `docs/implementation/CF-WO-P0-005-corrections.md`.
 """
 
     # The manifest's hashes for the two files this script writes must be
