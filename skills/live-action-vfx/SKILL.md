@@ -7,6 +7,16 @@ description: "Live-action and VFX hybrid quality for real humans with CG creatur
 
 Animation can be directed frame by frame. Live action cannot: a real body tires, a real animal does what it does, and a CG creature must live in light that was never on set. This skill adds the six systems that make live-action and VFX hybrid footage hold together — a real human performance, CG creatures inside live footage, water and wetness continuity, practical locations extended with CG, stunt choreography, and real-animal performance.
 
+This skill is for genuine captured footage and hybrid compositing: source_media `captured-footage` (production_medium `live-action-footage`, or `hybrid-live-action-cgi` when CG is composited into it). Keep the five-way distinction straight — visual style, production_medium, motion_method, subject_kind, and interaction_pattern are separate dimensions, never one single `animation_type`:
+
+1. **Actual live-action actor footage** — a filmed person (subject_kind `human`, production_medium `live-action-footage`).
+2. **Photorealistic AI-generated digital humans** — an AI-generated digital human (subject_kind `digital-human`, visual_style `photorealistic-digital-human`, production_medium `ai-digital-human`; see the `realistic-person` skill). It is not live action, however realistic it looks.
+3. **CGI/AI-generated creatures** — a generated creature (subject_kind `fictional-creature` or `cgi-animal`, visual_style `photorealistic-digital-animal-creature` or `stylized-3d`, production_medium `ai-digital-creature` or `3d-cgi-rigged`).
+4. **Actual captured animals** — a filmed real animal (subject_kind `real-animal`, production_medium `live-action-footage`).
+5. **CG/AI-generated animals** — a generated animal (subject_kind `cgi-animal`, production_medium `ai-digital-creature` or `3d-cgi-rigged`).
+
+A photorealistic generated human or a CGI bird does not become live-action by looking realistic. Never present generated footage as captured footage, and never claim generated movement is real captured footage. A real captured animal must be treated differently from a CGI animal: real animal behaviour, welfare, and natural movement are respected, and the animal is never forced into movement its body cannot make (see §6).
+
 Nothing here replaces the existing systems. The visual style bible (`production-systems` skill, A1), script-driven camera angles (A12), editing rhythm (`humanized-production` skill, 30.10), script-driven colour grading (production-systems C7), the character registry (`character-consistency` skill), the cinematic-power layer (style lock, creature performance, trailer structure, scale and colour scripting), and the episode QC checklist all still apply, unchanged. This skill adds only the live-action and VFX layer on top of that foundation.
 
 ## 1. Live-Action Human Performance — A Real Body Performs
@@ -82,9 +92,9 @@ A real animal on set cannot be directed frame by frame — it does what it does.
 
 Rules:
 
-- **The animal's weight, gait, and unpredictability are the performance.** A real animal walks, shakes, and looks with a weight no animation reproduces. Never animate over them: the animal's real body is the performance, and the shot is built around what the animal actually did.
+- **The animal's weight, gait, and unpredictability are the performance.** A real animal walks, shakes, and looks with a weight no animation reproduces. Never animate over them: the animal's real body is the performance, and the shot is built around what the animal actually did. Real animal behaviour, welfare, and natural movement are respected — never force a real animal into movement its body cannot make, and never treat a real animal as a CGI animal that can be posed frame by frame.
 - **Cut around the behaviour.** Shoot many takes, then cut to the moments the animal gave you — the look, the pause, the sudden move. Comic timing is made in the edit, not demanded from the animal.
 - **CG touch-up is allowed only where the animal cannot perform.** A look that must land on cue, a movement that must match the story — touch up that moment, and only that moment. The touch-up must preserve the animal's real body, never replace it with a cartoon: same size, same gait, same weight.
-- **A real animal is not a CG creature.** A real animal follows this system; a CG creature follows the `cinematic-power` skill, system 2. Never mix the two in one animal: the audience can tell.
+- **A real animal is not a CG creature.** A real animal (subject_kind `real-animal`) follows this system; a CG creature follows the `cinematic-power` skill, system 2. Never mix the two in one animal: the audience can tell. A real captured animal is never an anthropomorphic speaking character by default (see the `emotional-performance` and `voice-consistency` skills): it does not speak, and human lip movement is never applied to it — its articulation, if it speaks as a fictional character at all, follows its own articulation_target (`bird-beak`, `animal-muzzle`, `creature-jaw-mandibles`, or `other`), never `human-mouth-lips`.
 
 **Check:** every real animal in the delivered video keeps its real body, weight, and gait in every shot, the comic timing is made in the edit, and any CG touch-up preserves the animal's real body.

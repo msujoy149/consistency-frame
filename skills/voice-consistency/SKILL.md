@@ -7,6 +7,8 @@ description: Keeps every character's voice identical across all episodes, like t
 
 A character's voice is part of their identity, exactly like their face. If the voice changes between episodes, the audience notices — even when the face is perfect. This skill keeps each character's voice fixed, emotional, and human across every episode.
 
+Scope: this skill operates across compatible human, digital-human, and creature workflows (subject_kind `human`, `digital-human`, `fictional-creature`, `anthropomorphic`, `cgi-animal`). A fictional speaking animal or creature may need a voice and an articulation system: its voice is bound to that character like any other character's, and its articulation follows its articulation_target (`bird-beak`, `animal-muzzle`, `creature-jaw-mandibles`, or `other`) — never apply human lip movement (`human-mouth-lips`) to a bird, animal, or creature. A real animal (subject_kind `real-animal`) must NOT automatically be treated as an anthropomorphic speaking character and is not given a speaking voice by default. Visual style, production_medium, motion_method, subject_kind, and interaction_pattern are separate dimensions, never one single `animation_type`.
+
 ## 1. Voice Profiles — Fix Once, Reuse Every Episode
 
 For every registered character, fix a voice profile once and reuse the same profile in every episode:
@@ -43,7 +45,7 @@ The voice performs like a human actor. Emotion comes from the script and matches
 - Never use a generic "AI smile", a flat fixed expression, or the same emotion for every line. An emotion that does not fit the dialogue breaks both realism and consistency. If dialogue sounds robotic, viewers will realise it is AI and lose interest.
 - Voice emotion must match the dialogue line by line: a laughing line is spoken with laughter in the voice, a sad line is spoken with sadness; never a flat, generic, or robotic delivery.
 
-If the user's script is weak — flat dialogue with no feeling — improve it automatically: add emotion, natural pauses, reactions, and lively expression so the video has feeling, while keeping the story, the meaning, and the user's dialogue intact. Never change the story to add emotion; add the feeling to the story the user gave. A video with no feeling is a failed video.
+If the user's script is weak — flat dialogue with no feeling — improve its delivery automatically: add emotion, natural pauses, reactions, and lively expression so the video has feeling, while keeping the story, the meaning, and the user's dialogue intact. Preserve the user's dialogue verbatim unless the user explicitly requests rewriting: emotion is added through performance (voice tags, pauses, expression, timing), never by changing the words the user wrote. Never change the story to add emotion; add the feeling to the story the user gave. A video with no feeling is a failed video.
 
 ## 5. Single-Pass Multi-Speaker Dialogue
 
@@ -51,13 +53,13 @@ Generate a whole conversation in one call instead of generating one line at a ti
 
 Real conversation has ~200 ms gaps between turns, rare overlaps, and handoffs timed by the speakers. Stitched lines with clean, identical gaps sound edited, not spoken. A single-pass generation preserves the natural rhythm, interruptions, and turn-taking of a real conversation.
 
-When one character speaks, the other character must be visibly listening — micro-nods, brow movement, breath, gaze — and must NOT move their mouth. Two mouths moving at once is the commonest AI dialogue failure.
+When one character speaks, the other character must be visibly listening — micro-nods, brow movement, breath, gaze — and must NOT move their mouth. Two mouths moving at once is the commonest AI dialogue failure. For a non-human listener, the listener's own articulation organ stays still (beak, muzzle, or jaw, per its articulation_target).
 
 ## 6. Non-Verbal Voice Layer
 
 Every dialogue line may carry performance tags — sighs, laughs, whispers, gasps, clearing the throat — plus breaths, hesitations (um/uh), stutters, trailing off, and ellipsis pauses. Never deliver a clean, pause-free take. Real speech is messy; overly smooth text-to-speech is the audio uncanny valley.
 
-Keep lines short enough to speak naturally, with pauses where a human would pause. Dialogue must be natural spoken language, not bookish language. A child speaks like a child; an adult speaks like an adult; an elderly character speaks like an elderly person. Never give a child adult words. If a line sounds robotic when read aloud, rewrite it.
+Keep lines short enough to speak naturally, with pauses where a human would pause. Dialogue must be natural spoken language, not bookish language. A child speaks like a child; an adult speaks like an adult; an elderly character speaks like an elderly person. Never give a child adult words. If a line sounds robotic when read aloud, improve its delivery (performance tags, pauses) — do not rewrite the user's dialogue unless the user explicitly requests rewriting.
 
 ## 7. Voice-Drift Measurement
 

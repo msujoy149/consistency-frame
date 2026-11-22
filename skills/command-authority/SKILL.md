@@ -79,7 +79,8 @@ The core instruction is short — it does not explain everything in detail — b
 
 - **Human-like, never robotic** — characters move, talk, and act like people; voices sound like people; nothing sits as a still with a voice over it (`humanized-production`, `voice-consistency` §4).
 - **No overlap** — characters never overlap each other; each character keeps their own space (`character-consistency` multi-character scenes).
-- **Lip-sync** — if a character speaks, the mouth moves with the voice: the lips match the sounds of the language being spoken. A talking character with a still mouth is a defect (`language-authenticity`, `voice-consistency`).
+- **Lip-sync** — if a character speaks, the mouth moves with the voice: the lips match the sounds of the language being spoken. A talking character with a still mouth is a defect (`language-authenticity`, `voice-consistency`). For a non-human speaking character, the articulation follows its own articulation_target (`bird-beak`, `animal-muzzle`, `creature-jaw-mandibles`, or `other`) — never human lips on a bird, animal, or creature.
+- **Multi-dimensional, never one animation type** — visual style, production medium, motion method, subject kind, and interaction pattern are separate, composable dimensions, never one single `animation_type`. Animation is not cartoon-only: it covers 2D, 3D, photorealistic digital humans, digital animals and creatures, and live-action/VFX hybrids alike.
 - **Fixed identity** — a character's face, structure, hands, and feet never change; their voice (tags + seed + reference audio) never changes (`character-consistency`, `voice-consistency` §1–§2).
 - **The script decides** — the user's script and instructions outrank everything else (§4).
 - **Physical realism and continuity** — movement, objects, and light stay believable and continuous across cuts (`production-systems`).
