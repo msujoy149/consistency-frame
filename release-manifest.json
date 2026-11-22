@@ -1,13 +1,13 @@
 {
   "schema_version": "2.3",
-  "version": "2.3-p0",
+  "version": "2.4-p0",
   "branch": "feat/cf-p0-safe-foundations",
-  "commit": "2f3be92e7c10252a74cf76ccc72b1bbc753b4d66",
+  "commit": "93eaf45b3d365fd1f2b7f6b95af99fbd73b814f1",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
-      "sha256": "94d0589c989a6edab0238921dd9a7444494a221205e2bf44ec61073191a84952",
-      "bytes": 1212
+      "sha256": "2b6b00740bd68af84c25eeec2d8dbed1e539a90d92aa42c06a3028520c280dd4",
+      "bytes": 1363
     },
     {
       "path": ".gitignore",
@@ -16,18 +16,38 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "873419648fc89ec1161d477fdcb685aa6cf3cfb5f8c23290da8c1e8f6d41fea0",
-      "bytes": 7206
+      "sha256": "facdcd0f0a6b1e391c5ae2001d4ad9a06d7341c5436ddbe1711b7aa926e917e8",
+      "bytes": 9680
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "0fcb2a676a93c5b1c873ffe6d4517179b6ec51a823527729779966082e090be5",
-      "bytes": 32633
+      "sha256": "eaa4fd91be99a3c98adaac93b0212555e35d4d8207b3e46c5ce46cf107eb4955",
+      "bytes": 34351
     },
     {
       "path": "README.md",
       "sha256": "9a3a63098c85feda5b0b7fc5b1e2827397d9a9848af07e2a748cb8e0e4d058ec",
       "bytes": 39310
+    },
+    {
+      "path": "architecture/AGENT_COMPATIBILITY_MATRIX.yaml",
+      "sha256": "48f62000f49829bb246d080c53e0d28ff28879069284419e1ea8092f12300f36",
+      "bytes": 8377
+    },
+    {
+      "path": "architecture/COMPANION_CAPABILITY_REGISTRY.yaml",
+      "sha256": "4f566dc114baa929c219f17b279611ab692c3f2a897f18b577c0db5801e81aa4",
+      "bytes": 12993
+    },
+    {
+      "path": "architecture/SKILL_ROUTING_MATRIX.yaml",
+      "sha256": "08db3f0638549ba3120e3844e209bb48e9c8abe4ed51dc8485a3d0c580e93b2e",
+      "bytes": 33008
+    },
+    {
+      "path": "architecture/WORKFLOW_GRAPH.yaml",
+      "sha256": "d48dda85623f1a5f4673e4bdc0cd452a5e0ca0f4e88eb88aa454c98a0a05e475",
+      "bytes": 18340
     },
     {
       "path": "architecture/audio-delivery-profiles.json",
@@ -95,9 +115,29 @@
       "bytes": 12621
     },
     {
+      "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
+      "sha256": "1bac666a33293244910d83d7639bab9b99500d2f3da709de5bc5d7653fdd4ffa",
+      "bytes": 15380
+    },
+    {
+      "path": "docs/implementation/BUILD_REPORT_P0.md",
+      "sha256": "f28e6e24d04424269ce4c18a74f6edad27e15f832b99d154fd81ffc026a49cc1",
+      "bytes": 15987
+    },
+    {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
       "sha256": "0df54766d19f29f7f82a2023388a26d778b5da8d5dd98c435bc0c1db27d2d71a",
       "bytes": 7196
+    },
+    {
+      "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
+      "sha256": "5679631ca2871867a2606a46a07abc5b14573eac406120884e8b1005b2f84a78",
+      "bytes": 12417
+    },
+    {
+      "path": "docs/implementation/build-report.json",
+      "sha256": "67a808b09d8a57eda7e7f22287cc56c9f281fa018ba8cfd521effff3e4005836",
+      "bytes": 7677
     },
     {
       "path": "registry/adapters.json",
@@ -120,9 +160,14 @@
       "bytes": 7509
     },
     {
+      "path": "release-manifest.json",
+      "sha256": "4390ccad800e196d9af5657056750d18e89d59696d6699f22abb3a1fdfd0251f",
+      "bytes": 12967
+    },
+    {
       "path": "schemas/README.md",
-      "sha256": "c345f7bce4fa015e3dc24ff7dc20a11d50add3d6590528de69a3d6b973508df7",
-      "bytes": 3009
+      "sha256": "770a5dc8e02820cf1867d1f3252d1bda3e40e1868bc9c4a7a5073fce8442c864",
+      "bytes": 4191
     },
     {
       "path": "schemas/approval.json",
@@ -165,6 +210,11 @@
       "bytes": 1647
     },
     {
+      "path": "schemas/performance-plan.json",
+      "sha256": "c1c2e3dac4829a4f92acc0f6cc3f3c68e335a7c1088805d0813134fdb406121a",
+      "bytes": 2499
+    },
+    {
       "path": "schemas/project.json",
       "sha256": "890adb57a458e9e5c82ec150160988cee86ec5ce908d0e4140b4aaf2472c04e7",
       "bytes": 1926
@@ -190,9 +240,24 @@
       "bytes": 1788
     },
     {
+      "path": "schemas/scene-plan.json",
+      "sha256": "51172182dd3acb9df0b56fdc4a42c432b6f1f8b30d523e52c984c8c29b8b2ff8",
+      "bytes": 1922
+    },
+    {
       "path": "schemas/script-contract.json",
       "sha256": "a015692dba8f88544f2f2bc421cdba64e4ca0a2a14cd80fe63d05150cb6f557b",
       "bytes": 2518
+    },
+    {
+      "path": "schemas/script-to-performance.json",
+      "sha256": "ccf42a0f90e3aed66c418fe2a6379970fc3d6f2109c41f09653fd6a3defae932",
+      "bytes": 2388
+    },
+    {
+      "path": "schemas/shot-plan.json",
+      "sha256": "fc551f391c88250855e0f6f48e2a299b7fa9d58eee8cc5961871d6eff86499de",
+      "bytes": 1559
     },
     {
       "path": "schemas/sound-asset.json",
@@ -231,8 +296,8 @@
     },
     {
       "path": "scripts/generate-build-report.py",
-      "sha256": "652f1f2810bab096fdd6a0d0f8383b575f7f843011a43fc44ddf83a4dba27e7b",
-      "bytes": 15258
+      "sha256": "bcf83daf59aaab9865cd34ad9838e12e172ab7f0cbf0f593e176fc8382003e77",
+      "bytes": 18982
     },
     {
       "path": "scripts/generate-registries.py",
@@ -241,8 +306,8 @@
     },
     {
       "path": "scripts/generate-report.py",
-      "sha256": "808f5ec3a16a74328d8a89375d28f7e3be3d51d93c50051cd0b96cf37013aa8d",
-      "bytes": 10443
+      "sha256": "52227215493c7111a3f5da3ccbf8a321456fb39ce22057cd1f6f5f73b964f17b",
+      "bytes": 15196
     },
     {
       "path": "scripts/sync-skills.sh",
@@ -251,8 +316,8 @@
     },
     {
       "path": "scripts/validate-repo.py",
-      "sha256": "397453f5704ee1643a588ed79c54e01a22b7ad23c43719c521ad08904e7d8ac9",
-      "bytes": 14561
+      "sha256": "efe65c122f9a25561c4a81bb6b395cf709f4c0b3086b55bed98211f31e4f52e3",
+      "bytes": 23600
     },
     {
       "path": "setup.sh",
@@ -310,6 +375,26 @@
       "bytes": 221
     },
     {
+      "path": "tests/fixtures/performance-plan-valid.json",
+      "sha256": "929d254cd44e2266d9c9558c4a31a0f0da25c8d9af5753d02b3a32ff685d4025",
+      "bytes": 1061
+    },
+    {
+      "path": "tests/fixtures/scene-plan-valid.json",
+      "sha256": "6056cd09e7ebb64ab838626b15b2080265c500eb9d53bd693dd3df34e0e2009d",
+      "bytes": 853
+    },
+    {
+      "path": "tests/fixtures/script-to-performance-valid.json",
+      "sha256": "b5acdcae071a0b4945c266643ef4d173900fc39613cc58e35c471ba848ad04e8",
+      "bytes": 734
+    },
+    {
+      "path": "tests/fixtures/shot-plan-valid.json",
+      "sha256": "5363579c251329e1194433677f8c40e32afe2c31efc7743a0a353d1be4c262b7",
+      "bytes": 704
+    },
+    {
       "path": "tests/fixtures/sound-asset-valid.json",
       "sha256": "7aa65dfbb178690856fcb8900b0b10f79a430e5ffd4b2daecb16d440ebd01e90",
       "bytes": 588
@@ -321,13 +406,13 @@
     },
     {
       "path": "tests/last-run.json",
-      "sha256": "8f1b22ccbbbbf5dd3f1ffa90a0cff57bcc438a3150701cc258f506819377a962",
-      "bytes": 2340
+      "sha256": "a189f4994a604f0e5285cbe0d87d642d065f4d5ab19e594e79b13efc1015f5eb",
+      "bytes": 2897
     },
     {
       "path": "tests/run-tests.sh",
-      "sha256": "202f189e1985a2e1f703cd4fcd91d1db917e2c69fa821cbe0f72bb94c0b7424c",
-      "bytes": 3140
+      "sha256": "2bb6aac4d7439b0df220d55640ccfaede5f13c180d94e4f9acab4c89996192e3",
+      "bytes": 3365
     },
     {
       "path": "tests/test_installer.sh",
@@ -348,6 +433,11 @@
       "path": "tests/test_registries.py",
       "sha256": "04c75956370ac0aac5e88ff9ecf3ddaaf984343eb3ad4e3f3e8d92ccd6a293e5",
       "bytes": 5033
+    },
+    {
+      "path": "tests/test_routing.py",
+      "sha256": "7a0463b74ac5e7d3104a2e9ab207948f436b6ddcf49bc118242fc94908a0d262",
+      "bytes": 12742
     },
     {
       "path": "tests/test_schemas.py",
@@ -381,11 +471,27 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P0-ROUTING-001",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ROUTING-002",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ROUTING-003",
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "result": "PASS"
     },
     {
       "id": "P0-PRIVACY",
+      "result": "PASS"
+    },
+    {
+      "id": "P0-ROUTING",
       "result": "PASS"
     },
     {
@@ -397,5 +503,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-22T15:55:28Z"
+  "generated_at_utc": "2026-11-22T16:25:32Z"
 }

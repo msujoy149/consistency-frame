@@ -21,7 +21,7 @@ import sys
 from datetime import datetime, timezone
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
-OUT = os.path.join(ROOT, "docs", "architecture", "living-architecture-report-v2.3-p0.md")
+OUT = os.path.join(ROOT, "docs", "architecture", "living-architecture-report-v2.4-p0.md")
 CHECK = "--check" in sys.argv
 
 
@@ -72,10 +72,41 @@ def main() -> int:
         f"| `{s['skill_id']}` | {s['name']} | {s['path']} | {s['maturity']} | {s['section_count']} |"
         for s in skills["records"])
 
-    report = f"""# Living Architecture Report — v2.3 P0 (Safe Foundations)
+    # v2.4 canonical YAML records (guarded PyYAML import; CI installs it).
+    try:
+        import yaml as _yaml
+    except ImportError:
+        _yaml = None
+    if _yaml is not None:
+        def load_yaml(rel):
+            with open(os.path.join(ROOT, rel), encoding="utf-8") as f:
+                return _yaml.safe_load(f)
+        routing = load_yaml("architecture/SKILL_ROUTING_MATRIX.yaml")
+        graph = load_yaml("architecture/WORKFLOW_GRAPH.yaml")
+        companions = load_yaml("architecture/COMPANION_CAPABILITY_REGISTRY.yaml")
+        agent_matrix = load_yaml("architecture/AGENT_COMPATIBILITY_MATRIX.yaml")
+        routing_count = len(routing.get("skills") or [])
+        graph_nodes = len(graph.get("nodes") or [])
+        graph_edges = len(graph.get("edges") or [])
+        comp_caps = sum(len(c.get("capabilities") or [])
+                        for c in (companions.get("companions") or []))
+        comp_verified = sum(1 for c in (companions.get("companions") or [])
+                            for cap in (c.get("capabilities") or [])
+                            if cap.get("status") in ("VERIFIED_ON_DISK", "VERIFIED_BY_RUN"))
+        agent_count = len(agent_matrix.get("agents") or [])
+        agent_verified = [a["name"] for a in (agent_matrix.get("agents") or [])
+                          if a.get("verified")]
+        yaml_note = ""
+    else:
+        routing_count = graph_nodes = graph_edges = 0
+        comp_caps = comp_verified = agent_count = 0
+        agent_verified = []
+        yaml_note = "\n\n> v2.4 YAML records were not counted: PyYAML is not installed in this environment (`pip install pyyaml`). CI installs it, so the counts appear there."
+
+    report = f"""# Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
 **Generated:** {now} — from canonical records (`registry/*.json`,
-`schemas/`, git state, `tests/last-run.json`). Do not edit the inventory
+`schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
 **Product scope:** general-purpose professional AI video production
@@ -84,13 +115,22 @@ image-to-video and video-to-video, character/voice/sound consistency,
 stories, web series and episodic production, cinematography, VFX,
 editing, audio, post-production). Not a single-genre tool.
 
+**Brain model (v2.4):** Consistency Frame is the CENTRAL BRAIN /
+Orchestrator — creative intelligence, script understanding, skill
+routing, character/project continuity, emotion/performance direction,
+cinematography/editing decisions, quality requirements, production
+coordination, documentation/learning governance. It is NOT a server,
+API backend, cloud database or hosting platform, and not a replacement
+for the companions (VoiceStudio = voice/speech, OpenMontage =
+video production/editing). See
+`docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md`.
+
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `{base}`
 **Feature branch:** `{branch}`
 **Head commit:** `{head}`
-**Architecture/report version:** v2.3 P0 (work order CF-WO-P0-001)
-**Previous report:** none — this is the first living report (baseline is
-live `main` at `{base}`).
+**Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
+**Previous report:** `docs/architecture/living-architecture-report-v2.3-p0.md` — the v2.3 baseline (retained, not rewritten).
 
 ## Inventory (generated from canonical records)
 
@@ -101,6 +141,11 @@ live `main` at `{base}`).
 | Workflows / intent modes (`registry/workflows.json`) | {workflows["count"]} |
 | Adapters (`registry/adapters.json`) | {adapters["count"]} |
 | JSON Schemas (`schemas/*.json`) | {len(schema_files)} |
+| Routing matrix entries (`architecture/SKILL_ROUTING_MATRIX.yaml`) | {routing_count} |
+| Workflow graph nodes / edges (`architecture/WORKFLOW_GRAPH.yaml`) | {graph_nodes} / {graph_edges} |
+| Companion capabilities (`architecture/COMPANION_CAPABILITY_REGISTRY.yaml`) | {comp_caps} ({comp_verified} verified on disk or by run) |
+| Agents in compatibility matrix (`architecture/AGENT_COMPATIBILITY_MATRIX.yaml`) | {agent_count} ({len(agent_verified)} verified: {", ".join(agent_verified) if agent_verified else "none"}) |
+{yaml_note}
 
 ### Skills
 
@@ -170,6 +215,27 @@ presence is not a conformance test.
   deferred to P2).
 - Tests + GitHub Actions CI (`.github/workflows/p0-ci.yml`).
 
+### Changes in the v2.4 revision (Brain Architecture Amendment)
+
+- P0-A audit (`docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md`):
+  zero server/API-backend/cloud-database claims in normative text;
+  the withdrawn items never existed in code. One docs fix (v2.4
+  section in `AGENTS.md`). No skill file changed.
+- Intelligent Skill Routing: `architecture/SKILL_ROUTING_MATRIX.yaml`
+  (15 skills, precedence 1–15, command-authority is the router) and
+  `architecture/WORKFLOW_GRAPH.yaml` (42 edges, acyclic; sequential
+  on dependency, parallel only when safe).
+- Script-to-Performance Intelligence: four new `schema_version: "2.4"`
+  schemas (`scene-plan`, `shot-plan`, `performance-plan`,
+  `script-to-performance` — the combined contract). Dialogue is
+  VERBATIM unless a rewrite was explicitly requested.
+- Companion Capability Registry + Agent Compatibility Matrix: only
+  verified capabilities are claimed; only Muse is verified (knowledge
+  pack). OpenRouter is a model-routing layer, not a host; Colab needs
+  a Notebook/Agent Runtime.
+- Validator check 8 (canonical YAML records) + `tests/test_routing.py`
+  (gates CF-P0-ROUTING-001/002/003); CI installs PyYAML.
+
 Changed files in this branch (vs base):
 
 ```
@@ -207,7 +273,16 @@ NOT RUN, not passed.
    is deferred.
 6. **Media intelligence, reference learning runtime, provider
    orchestration, benchmarks, repair loop:** out of scope for P0 by
-   design (P1–P4).
+   design (P1–P4). Under v2.4 "orchestration" means the Brain directing
+   companions by instruction — no server, no runtime.
+7. **Runtime skill-routing engine (P1):** the routing matrix and
+   workflow graph are canonical data; a runtime that executes them is
+   P1 work.
+8. **Script-to-performance runtime (P1):** the schemas are contracts;
+   the runtime that produces Scene/Shot/Performance Plans from a
+   script is P1 work.
+9. **OpenMontage paid provider routes (NOT_VERIFIED):** no live paid
+   call was made; a paid call needs the user's explicit approval and keys.
 
 ## Privacy, licence and security notes
 
@@ -224,10 +299,13 @@ NOT RUN, not passed.
 
 ## Next phase (recommendation only — do not start)
 
-P1 (CF-WO-P1-…): intent router + reference-learning runtime —
-`UPLOAD_ONLY` gate, intake/hash, evidence cards, learning ledger,
-duplicate/conflict checks — on top of these P0 foundations, after
-independent review of this branch.
+P1 (CF-WO-P1-…): runtime skill-routing engine (execute the routing
+matrix + workflow graph — intake → route → run → QC) + script-to-
+performance runtime (produce Scene/Shot/Performance Plans from a
+script) + reference-learning runtime — `UPLOAD_ONLY` gate,
+intake/hash, evidence cards, learning ledger, duplicate/conflict
+checks — on top of these P0 foundations, after independent review of
+this branch.
 
 ## Evidence dates
 
