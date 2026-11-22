@@ -87,8 +87,7 @@ when you say "done — use this one". See "Character Generator" in
 
 A name in a script resolves to that character's ID + reference image +
 voice + prompt block. Each character is resolved separately, so faces
-never merge in multi-character scenes. The character is built 100% from
-the reference image(s); face and height matter most. On request, the
+never merge in multi-character scenes. The character is built from the reference image(s), aiming for the closest achievable match to the reference; face and height matter most. On request, the
 system shows the character exactly as stored, so you can check face,
 height, and structure.
 
@@ -98,8 +97,7 @@ the same in every scene — while clothing and props change with the scene.
 Identity anchoring: every generation reuses the same approved
 reference — the same reference images, the same turnaround + detail
 sheet, the same fixed prompt block, and the same seed. The identity is
-never rebuilt from a fresh interpretation. The structure must stay 100%
-identical across scenes and episodes; if it drifts, regenerate against
+never rebuilt from a fresh interpretation. The structure must stay unchanged against the approved reference across scenes and episodes; if it drifts, regenerate against
 the sheet.
 
 ## Private overlay (read this before adding a character)

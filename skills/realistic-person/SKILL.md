@@ -25,7 +25,7 @@ The person speaks in their own language, following that language's native patter
 
 ## 5. Realism — Real Skin, Real Light, Real Cloth
 
-Real skin with texture, real hair that moves with the head, cloth that folds and settles with the body. Natural light that matches the scene's time of day and light source. No plastic skin, no airbrushed face, no cartoon look, no glossy sheen. Realism target 100%, with 99.9% as the floor: no detail skipped, no defect accepted. Backgrounds are detailed, deep, and alive, like the rest of the video (see the `humanized-production` skill).
+Real skin with texture, real hair that moves with the head, cloth that folds and settles with the body. Natural light that matches the scene's time of day and light source. No plastic skin, no airbrushed face, no cartoon look, no glossy sheen. Realism target: the closest achievable match to the reference — no detail skipped, no defect accepted; fidelity is verified shot by shot against the approved reference with a human-review gate, not guaranteed by a percentage. Backgrounds are detailed, deep, and alive, like the rest of the video (see the `humanized-production` skill).
 
 ## 6. What It Is Not
 
