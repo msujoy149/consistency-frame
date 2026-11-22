@@ -199,6 +199,26 @@ again. `setup.sh` exits 0 only when every requested component reports
 SUCCESS; otherwise it exits 1 (FAILED) or 2 (PARTIAL) with a
 per-component summary.
 
+### Managed-file conflicts and backups
+
+`scripts/sync-skills.sh` never silently overwrites a managed file you
+edited: a file counts as user-modified when its current content differs
+from both the manifest hash and the source file. By default
+(`--conflict keep`) such files are left alone and listed as conflicts
+in `.agents/skills/.consistency-frame-last-sync.json` (a `conflicts`
+array with manifest/source/current hashes, plus a `conflict_policy`
+field); pass `--conflict overwrite` to replace them explicitly.
+Prune never deletes a user-modified stale file — it is listed under
+`prune_refused` instead.
+
+Every sync that changes or prunes a file keeps a backup in a run
+directory under `.agents/skills-backup/` (named `run-XXXXXX`, with a
+`.run-owner.json` marker tying it to its destination).
+`bash scripts/sync-skills.sh --rollback` restores the latest backup
+for that destination. Old backups are removed only with the explicit
+`--prune-backups <days>` option, which deletes only this
+destination's run directories older than `<days>` days.
+
 ### The voice model (OmniVoice) — download step
 
 The OmniVoice model weights (~3.27 GB) are **not** bundled in this
@@ -322,7 +342,7 @@ cd consistency-frame
 bash setup.sh
 ```
 
-`bash setup.sh` (core-only, the default) syncs `skills/` into `.agents/skills/` without deleting unmanaged skills. The two components (VoiceStudio for voice, OpenMontage for video) are fetched only with `bash setup.sh --with-components` — they are never installed silently. The voice model (OmniVoice) is never downloaded by `setup.sh`. Character data is not installed by the setup script — it is linked in separately from the private overlay (see "Character Registry").
+`bash setup.sh` (core-only, the default) syncs `skills/` into `.agents/skills/` without deleting unmanaged skills. **A core-only install does NOT include VoiceStudio or OpenMontage** — the two components (VoiceStudio for voice, OpenMontage for video) are fetched only with `bash setup.sh --with-components` — they are never installed silently. The voice model (OmniVoice) is never downloaded by `setup.sh`. Character data is not installed by the setup script — it is linked in separately from the private overlay (see "Character Registry").
 
 ## Generic installers
 

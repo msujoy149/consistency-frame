@@ -8,9 +8,13 @@ tests/last-run.json (written by tests/run-tests.sh). If the test file
 is absent, tests are reported as NOT RUN — never as passed.
 
 Usage:
-  python3 scripts/generate-report.py [--check]
+  python3 scripts/generate-report.py [--check] [--github-head <sha>]
   --check exits 1 if the committed report differs from a fresh
   generation (used by CI).
+  --github-head records the GitHub branch head this report describes
+  (default: the CF_GITHUB_HEAD env var, else the current git HEAD).
+  The remote head advances by one docs-only commit when the regenerated
+  report is pushed; the delivery message states that final head.
 """
 from __future__ import annotations
 
@@ -38,6 +42,17 @@ def load(name: str) -> dict:
         return json.load(f)
 
 
+def resolve_github_head(argv, environ, default_head: str) -> str:
+    """GitHub branch head to record: --github-head wins, then the
+    CF_GITHUB_HEAD env var, else the current git HEAD (the default
+    "current recorded head")."""
+    if "--github-head" in argv:
+        i = argv.index("--github-head")
+        if i + 1 < len(argv) and argv[i + 1]:
+            return argv[i + 1]
+    return environ.get("CF_GITHUB_HEAD") or default_head
+
+
 def main() -> int:
     skills = load("skills.json")
     features = load("features.json")
@@ -48,6 +63,7 @@ def main() -> int:
     branch = git("rev-parse", "--abbrev-ref", "HEAD")
     head = git("rev-parse", "HEAD")
     base = git("rev-parse", "origin/main")
+    github_head = resolve_github_head(sys.argv, os.environ, head)
     changed = git("diff", "--name-only", f"{base}...HEAD")
     if not changed:
         changed = git("diff", "--name-only", "HEAD")
@@ -90,16 +106,33 @@ def main() -> int:
         graph_edges = len(graph.get("edges") or [])
         comp_caps = sum(len(c.get("capabilities") or [])
                         for c in (companions.get("companions") or []))
-        comp_verified = sum(1 for c in (companions.get("companions") or [])
-                            for cap in (c.get("capabilities") or [])
-                            if cap.get("status") in ("VERIFIED_ON_DISK", "VERIFIED_BY_RUN"))
+        comp_levels: dict[str, int] = {
+            "exercised_recorded_run": 0,
+            "present_locally": 0,
+            "upstream_inspected_pinned_commit": 0,
+            "production_verified": 0,
+        }
+        for c in (companions.get("companions") or []):
+            for cap in (c.get("capabilities") or []):
+                lvl = cap.get("evidence_level")
+                if lvl in comp_levels:
+                    comp_levels[lvl] += 1
+        comp_line = (f"{comp_caps} ({comp_levels['exercised_recorded_run']} "
+                     "exercised_recorded_run, "
+                     f"{comp_levels['present_locally']} present_locally, "
+                     f"{comp_levels['upstream_inspected_pinned_commit']} "
+                     "upstream_inspected_pinned_commit, "
+                     f"{comp_levels['production_verified']} "
+                     "production_verified)")
         agent_count = len(agent_matrix.get("agents") or [])
         agent_verified = [a["name"] for a in (agent_matrix.get("agents") or [])
                           if a.get("verified")]
         yaml_note = ""
     else:
         routing_count = graph_nodes = graph_edges = 0
-        comp_caps = comp_verified = agent_count = 0
+        comp_caps = 0
+        comp_line = "0 (PyYAML not installed — see note below)"
+        agent_count = 0
         agent_verified = []
         yaml_note = "\n\n> v2.4 YAML records were not counted: PyYAML is not installed in this environment (`pip install pyyaml`). CI installs it, so the counts appear there."
 
@@ -129,6 +162,9 @@ video production/editing). See
 **Base branch/commit:** `main` / `{base}`
 **Feature branch:** `{branch}`
 **Head commit:** `{head}`
+**GitHub branch head:** `{github_head}` (remote head of `{branch}` at
+generation time; pushing this regenerated report advances the branch
+head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
 **Previous report:** `docs/architecture/living-architecture-report-v2.3-p0.md` — the v2.3 baseline (retained, not rewritten).
 
@@ -143,7 +179,7 @@ video production/editing). See
 | JSON Schemas (`schemas/*.json`) | {len(schema_files)} |
 | Routing matrix entries (`architecture/SKILL_ROUTING_MATRIX.yaml`) | {routing_count} |
 | Workflow graph nodes / edges (`architecture/WORKFLOW_GRAPH.yaml`) | {graph_nodes} / {graph_edges} |
-| Companion capabilities (`architecture/COMPANION_CAPABILITY_REGISTRY.yaml`) | {comp_caps} ({comp_verified} verified on disk or by run) |
+| Companion capabilities (`architecture/COMPANION_CAPABILITY_REGISTRY.yaml`) | {comp_line} |
 | Agents in compatibility matrix (`architecture/AGENT_COMPATIBILITY_MATRIX.yaml`) | {agent_count} ({len(agent_verified)} verified: {", ".join(agent_verified) if agent_verified else "none"}) |
 {yaml_note}
 
@@ -229,10 +265,12 @@ presence is not a conformance test.
   schemas (`scene-plan`, `shot-plan`, `performance-plan`,
   `script-to-performance` — the combined contract). Dialogue is
   VERBATIM unless a rewrite was explicitly requested.
-- Companion Capability Registry + Agent Compatibility Matrix: only
-  verified capabilities are claimed; only Muse is verified (knowledge
-  pack). OpenRouter is a model-routing layer, not a host; Colab needs
-  a Notebook/Agent Runtime.
+- Companion Capability Registry + Agent Compatibility Matrix: every
+  capability carries an `evidence_level` (P0-002 §6 — 20 capabilities:
+  3 `exercised_recorded_run`, 16 `present_locally`, 1
+  `upstream_inspected_pinned_commit`, 0 `production_verified`); only
+  Muse is verified (knowledge pack). OpenRouter is a model-routing
+  layer, not a host; Colab needs a Notebook/Agent Runtime.
 - Validator check 8 (canonical YAML records) + `tests/test_routing.py`
   (gates CF-P0-ROUTING-001/002/003); CI installs PyYAML.
 
@@ -247,9 +285,11 @@ Changed files in this branch (vs base):
 {test_section}
 
 CI workflow: `.github/workflows/p0-ci.yml` (runs on pull requests and
-pushes to the feature branch). A remote CI run URL is available only
-after the branch is pushed and a PR is opened; until then CI is
-NOT RUN, not passed.
+pushes to the feature branch). Remote CI PASSED on
+`fcf311ef79c5f10a4248f026a5f667109c584831` — 2/2 checks, run
+https://github.com/msujoy149/consistency-frame/actions/runs/45046203236
+(draft PR https://github.com/msujoy149/consistency-frame/pull/1). The
+post-corrections CI run will be checked by the parent after the push.
 
 ## Known issues and deferred work
 
@@ -281,8 +321,10 @@ NOT RUN, not passed.
 8. **Script-to-performance runtime (P1):** the schemas are contracts;
    the runtime that produces Scene/Shot/Performance Plans from a
    script is P1 work.
-9. **OpenMontage paid provider routes (NOT_VERIFIED):** no live paid
-   call was made; a paid call needs the user's explicit approval and keys.
+9. **OpenMontage paid provider routes (evidence_level
+   `present_locally` — documented in the companion's provider guide
+   only, never exercised):** no live paid call was made; a paid call
+   needs the user's explicit approval and keys.
 
 ## Privacy, licence and security notes
 

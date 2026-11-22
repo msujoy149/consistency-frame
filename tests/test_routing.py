@@ -2,11 +2,12 @@
 """P0 v2.4 routing tests. Run via tests/run-tests.sh or directly:
   python3 tests/test_routing.py
 Exit 0 = PASS, 1 = FAIL. Test IDs: P0-ROUTING, P0-SCHEMA (part),
-CF-P0-ROUTING-001/002/003.
+CF-P0-ROUTING-001/002/003/004.
 """
 import importlib.util
 import json
 import os
+import re
 import sys
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
@@ -171,9 +172,10 @@ def main():
         check(f"companion {c.get('name')} states a licence",
               isinstance(c.get("licence"), str) and c["licence"])
         for cap in c.get("capabilities") or []:
-            check(f"companion {c.get('name')} capability status is honest",
-                  cap.get("status") in ("VERIFIED_ON_DISK", "VERIFIED_BY_RUN",
-                                        "NOT_VERIFIED"))
+            check(f"companion {c.get('name')} capability evidence_level is honest",
+                  cap.get("evidence_level") in (
+                      "upstream_inspected_pinned_commit", "present_locally",
+                      "exercised_recorded_run", "production_verified"))
     agents_doc = load_yaml("architecture/AGENT_COMPATIBILITY_MATRIX.yaml")
     check("CF-P0-ROUTING-003: agent matrix version is 2.4",
           str(agents_doc.get("version")) == "2.4")
@@ -194,6 +196,78 @@ def main():
           and "model-routing" in (non_hosts.get("OpenRouter", {}).get("kind") or ""))
     check("CF-P0-ROUTING-003: Colab needs a Notebook/Agent Runtime",
           non_hosts.get("Google Colab", {}).get("is_agent_host") is False)
+
+    # --- CF-P0-ROUTING-004: companion evidence levels (P0-002 §6) --------
+    # evidence_level REPLACED the old `status` field. The closed set is
+    # upstream_inspected_pinned_commit / present_locally /
+    # exercised_recorded_run / production_verified. Every exercised run
+    # carries a run reference; pinned commits match setup.sh; zero
+    # production_verified claims exist in this account.
+    EVIDENCE_LEVELS = ("upstream_inspected_pinned_commit",
+                       "present_locally", "exercised_recorded_run",
+                       "production_verified")
+    # Pins as recorded in setup.sh (full 40-char SHAs).
+    setup_text = open(os.path.join(ROOT, "setup.sh"),
+                      encoding="utf-8").read()
+    setup_pins = set(re.findall(r"\b[0-9a-f]{40}\b", setup_text))
+    expected_pins = {
+        "VoiceStudio": "2f2f5a9b0e982c6147efc6baaeae62936f29b79b",
+        "OpenMontage": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+    }
+    check("CF-P0-ROUTING-004: setup.sh pins the two companion commits",
+          set(expected_pins.values()) <= setup_pins,
+          f"pins in setup.sh={sorted(setup_pins)}")
+    level_counts: dict[str, int] = {lvl: 0 for lvl in EVIDENCE_LEVELS}
+    total_caps = 0
+    for c in comps:
+        check(f"CF-P0-ROUTING-004: companion {c.get('name')} pinned commit "
+              "matches the repo pin",
+              c.get("pinned_commit") == expected_pins.get(c.get("name")),
+              f"pinned={c.get('pinned_commit')}")
+        for group in ("capabilities", "interfaces"):
+            for item in c.get(group) or []:
+                label = item.get("capability") or item.get("name")
+                level = item.get("evidence_level")
+                check(f"companion {c.get('name')} {group[:-1]} '{label}' "
+                      "evidence_level is from the closed set",
+                      level in EVIDENCE_LEVELS, f"level={level!r}")
+                check(f"companion {c.get('name')} {group[:-1]} '{label}' "
+                      "carries no retired 'status' field",
+                      "status" not in item)
+                if level == "exercised_recorded_run":
+                    ref = item.get("run_reference")
+                    check(f"companion {c.get('name')} {group[:-1]} '{label}' "
+                          "exercised_recorded_run has a run reference",
+                          isinstance(ref, str) and len(ref.strip()) >= 20,
+                          f"run_reference={ref!r}")
+                if group == "capabilities":
+                    total_caps += 1
+                    if level in level_counts:
+                        level_counts[level] += 1
+    check("CF-P0-ROUTING-004: registry lists exactly 20 capabilities",
+          total_caps == 20, f"total={total_caps}")
+    check("CF-P0-ROUTING-004: capability counts by evidence level are "
+          "3 exercised / 16 present_locally / 1 upstream-inspected / "
+          "0 production_verified",
+          level_counts == {"upstream_inspected_pinned_commit": 1,
+                           "present_locally": 16,
+                           "exercised_recorded_run": 3,
+                           "production_verified": 0},
+          f"counts={level_counts}")
+    check("CF-P0-ROUTING-004: zero production_verified claims",
+          level_counts["production_verified"] == 0,
+          f"production_verified={level_counts['production_verified']}")
+    # No production_verified anywhere (capabilities + interfaces) unless
+    # it carries a production record.
+    for c in comps:
+        for group in ("capabilities", "interfaces"):
+            for item in c.get(group) or []:
+                label = item.get("capability") or item.get("name")
+                if item.get("evidence_level") == "production_verified":
+                    check(f"companion {c.get('name')} {group[:-1]} '{label}' "
+                          "production_verified has a production record",
+                          isinstance(item.get("production_record"), str)
+                          and len(item["production_record"].strip()) >= 10)
 
     # --- P0-SCHEMA (part): new v2.4 schemas ------------------------------
     for fixture, schema_name in (

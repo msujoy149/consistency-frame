@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-22 16:25 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-22 17:17 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,7 +23,10 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p0-safe-foundations`
-**Head commit:** `93eaf45b3d365fd1f2b7f6b95af99fbd73b814f1`
+**Head commit:** `36999a71489c68e1ef63741461cc895a09df276b`
+**GitHub branch head:** `fcf311ef79c5f10a4248f026a5f667109c584831` (remote head of `feat/cf-p0-safe-foundations` at
+generation time; pushing this regenerated report advances the branch
+head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
 **Previous report:** `docs/architecture/living-architecture-report-v2.3-p0.md` — the v2.3 baseline (retained, not rewritten).
 
@@ -38,7 +41,7 @@ video production/editing). See
 | JSON Schemas (`schemas/*.json`) | 24 |
 | Routing matrix entries (`architecture/SKILL_ROUTING_MATRIX.yaml`) | 15 |
 | Workflow graph nodes / edges (`architecture/WORKFLOW_GRAPH.yaml`) | 15 / 42 |
-| Companion capabilities (`architecture/COMPANION_CAPABILITY_REGISTRY.yaml`) | 20 (15 verified on disk or by run) |
+| Companion capabilities (`architecture/COMPANION_CAPABILITY_REGISTRY.yaml`) | 20 (3 exercised_recorded_run, 16 present_locally, 1 upstream_inspected_pinned_commit, 0 production_verified) |
 | Agents in compatibility matrix (`architecture/AGENT_COMPATIBILITY_MATRIX.yaml`) | 10 (1 verified: Muse) |
 
 
@@ -149,10 +152,12 @@ presence is not a conformance test.
   schemas (`scene-plan`, `shot-plan`, `performance-plan`,
   `script-to-performance` — the combined contract). Dialogue is
   VERBATIM unless a rewrite was explicitly requested.
-- Companion Capability Registry + Agent Compatibility Matrix: only
-  verified capabilities are claimed; only Muse is verified (knowledge
-  pack). OpenRouter is a model-routing layer, not a host; Colab needs
-  a Notebook/Agent Runtime.
+- Companion Capability Registry + Agent Compatibility Matrix: every
+  capability carries an `evidence_level` (P0-002 §6 — 20 capabilities:
+  3 `exercised_recorded_run`, 16 `present_locally`, 1
+  `upstream_inspected_pinned_commit`, 0 `production_verified`); only
+  Muse is verified (knowledge pack). OpenRouter is a model-routing
+  layer, not a host; Colab needs a Notebook/Agent Runtime.
 - Validator check 8 (canonical YAML records) + `tests/test_routing.py`
   (gates CF-P0-ROUTING-001/002/003); CI installs PyYAML.
 
@@ -181,6 +186,7 @@ docs/15-realistic-person.md
 docs/17-command-authority.md
 docs/19-audio-delivery-profiles.md
 docs/architecture/living-architecture-report-v2.3-p0.md
+docs/architecture/living-architecture-report-v2.4-p0.md
 docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md
 docs/implementation/BUILD_REPORT_P0.md
 docs/implementation/CF-WO-P0-001-plan.md
@@ -242,7 +248,9 @@ tests/fixtures/voice-profile-valid.json
 tests/last-run.json
 tests/run-tests.sh
 tests/test_installer.sh
+tests/test_installer_security.sh
 tests/test_modes.py
+tests/test_performance_semantics.py
 tests/test_private_overlay.py
 tests/test_registries.py
 tests/test_routing.py
@@ -254,6 +262,7 @@ tests/test_schemas.py
 - `P0-SHELL` — bash -n scripts/sync-skills.sh — **PASS** (exit 0)
 - `P0-SHELL` — bash -n setup.sh — **PASS** (exit 0)
 - `P0-SHELL` — bash -n tests/test_installer.sh — **PASS** (exit 0)
+- `P0-SHELL` — bash -n tests/test_installer_security.sh — **PASS** (exit 0)
 - `P0-SHELL` — bash -n tests/run-tests.sh — **PASS** (exit 0)
 - `P0-SCHEMA` — python3 scripts/validate-repo.py — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-registries.py --check — **PASS** (exit 0)
@@ -266,17 +275,32 @@ tests/test_schemas.py
 - `CF-P0-ASSET-001` — python3 tests/test_modes.py — **PASS** (exit 0)
 - `CF-P0-ASSET-002` — python3 tests/test_modes.py — **PASS** (exit 0)
 - `CF-P0-ASSET-003` — python3 tests/test_modes.py — **PASS** (exit 0)
+- `CF-P0-LEARN-001` — python3 tests/test_modes.py — **PASS** (exit 0)
+- `CF-P0-LEARN-001` — python3 tests/test_schemas.py — **PASS** (exit 0)
+- `CF-P0-PERF-001` — python3 tests/test_performance_semantics.py — **PASS** (exit 0)
+- `CF-P0-PERF-002` — python3 tests/test_performance_semantics.py — **PASS** (exit 0)
+- `CF-P0-PERF-003` — python3 tests/test_performance_semantics.py — **PASS** (exit 0)
+- `CF-P0-PERF-004` — python3 tests/test_performance_semantics.py — **PASS** (exit 0)
+- `CF-P0-PERF-005` — python3 tests/test_performance_semantics.py — **PASS** (exit 0)
 - `P0-PRIVACY` — python3 tests/test_private_overlay.py — **PASS** (exit 0)
 - `CF-INT-014` — bash tests/test_installer.sh — **PASS** (exit 0)
 - `CF-INT-015` — bash tests/test_installer.sh — **PASS** (exit 0)
+- `CF-INT-015` — bash tests/test_installer_security.sh — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-report.py — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-report.py --check — **PASS** (exit 0)
+- `CF-P0-ROUTING-004` — python3 tests/test_routing.py — **PASS** (exit 0)
+- `CF-P0-REPORT-001` — python3 tests/test_reports.py — **PASS** (exit 0)
+- `CF-P0-REPORT-002` — python3 tests/test_reports.py — **PASS** (exit 0)
+- `CF-P0-REPORT-003` — python3 tests/test_reports.py — **PASS** (exit 0)
+- `CF-P0-REPORT-004` — python3 tests/test_reports.py — **PASS** (exit 0)
 
 CI workflow: `.github/workflows/p0-ci.yml` (runs on pull requests and
-pushes to the feature branch). A remote CI run URL is available only
-after the branch is pushed and a PR is opened; until then CI is
-NOT RUN, not passed.
+pushes to the feature branch). Remote CI PASSED on
+`fcf311ef79c5f10a4248f026a5f667109c584831` — 2/2 checks, run
+https://github.com/msujoy149/consistency-frame/actions/runs/45046203236
+(draft PR https://github.com/msujoy149/consistency-frame/pull/1). The
+post-corrections CI run will be checked by the parent after the push.
 
 ## Known issues and deferred work
 
@@ -308,8 +332,10 @@ NOT RUN, not passed.
 8. **Script-to-performance runtime (P1):** the schemas are contracts;
    the runtime that produces Scene/Shot/Performance Plans from a
    script is P1 work.
-9. **OpenMontage paid provider routes (NOT_VERIFIED):** no live paid
-   call was made; a paid call needs the user's explicit approval and keys.
+9. **OpenMontage paid provider routes (evidence_level
+   `present_locally` — documented in the companion's provider guide
+   only, never exercised):** no live paid call was made; a paid call
+   needs the user's explicit approval and keys.
 
 ## Privacy, licence and security notes
 
@@ -339,4 +365,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-22 16:25 UTC.
+- Report generated: 2026-11-22 17:17 UTC.
