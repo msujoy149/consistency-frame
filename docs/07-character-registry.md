@@ -209,9 +209,9 @@ The current outfit per character per scene is recorded in the wardrobe
 registry (docs/02-extended-systems.md, item 4); the continuity tracker
 and the QC check verify clothing against it in every shot.
 
-## 100% Reference Fidelity
+## Measured Reference Fidelity
 
-The character is built 100% from the reference image(s) provided.
+The character is built from the reference image(s) provided, aiming for the closest achievable match to the reference (see the fidelity section below).
 
 - Face and height are the most important identity features and must match
   the reference as closely as the platform allows.
@@ -234,7 +234,7 @@ sheet, the same fixed prompt block, and the same seed. The identity is
 never rebuilt from a fresh interpretation, and a new render is never
 treated as the reference.
 
-The structure must stay 100% identical across scenes and episodes —
+The structure must stay unchanged against the approved reference across scenes and episodes —
 face, eyes, nose, mouth, hands, feet, proportions, height. If a render
 drifts from the sheet, regenerate against the sheet; do not accept the
 drift and do not quietly update the stored identity to match it.
@@ -272,7 +272,7 @@ works. Use it for every generation, not only after a drift is noticed.
    angles drift the face more, so use them only when the script needs
    them.
 3. **Explicit no-change instruction in every prompt.** Every prompt
-   states it: face and structure 100% identical; do not change the
+   states it: face and structure unchanged against the approved reference; do not change the
    face.
 4. **Fresh generation, never edit, when the face drifts.** Never
    continue from a drifted image — never edit, inpaint, or "fix" the
@@ -331,7 +331,7 @@ handles that gap automatically.
 1. **Generate the missing ones.** If the user does not supply all
    expressions, the assistant generates the missing ones itself —
    from the character's definitive reference, keeping face and
-   structure 100% identical, changing only the expression. Each
+   structure unchanged against the approved reference, changing only the expression. Each
    generated expression is verified against the definitive reference
    before it is saved (see "Face-Consistency Correction Method" and
    "Reference Matching and Angle-Matched Verification").

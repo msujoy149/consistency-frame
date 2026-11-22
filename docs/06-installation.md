@@ -169,26 +169,35 @@ or later for bun.
 
 ### What setup.sh does
 
-1. **Clones the bundled components, pinned to tested commits** —
-   VoiceStudio (`2f2f5a9`) for voice and OpenMontage (`fecb9a1`) for
-   long-form video — into `components/`. Their AGPL-3.0 licences stay
-   intact inside each component. Nothing is vendored into this repo;
-   the components are fetched at install time.
-2. **Copies `skills/` into `.agents/skills/`** (clearing it first, so a
-   re-run is exact).
-3. **Sets up VoiceStudio** — `bun install`, then the Python API
-   (`bun run setup:api`, needs bun + uv; downloads about 1 GB).
-4. **Runs OpenMontage's `make setup`** — creates its Python virtual
-   environment and installs the Node dependencies. If `make` is missing
-   or the step fails, `setup.sh` says so plainly instead of claiming
-   success; run `cd components/openmontage && make setup` yourself to
-   see the error.
+1. **Syncs `skills/` into `.agents/skills/` — non-destructively** —
+   only Consistency Frame-owned files are updated, tracked by a
+   manifest (`.agents/skills/.consistency-frame-manifest.json`).
+   Unmanaged user and third-party skills are never deleted; stale
+   owned files are pruned only with the opt-in `--prune` flag.
+   This is the default: `bash setup.sh` does this and nothing else.
+2. **Only with `--with-components`: clones the bundled components,
+   pinned to tested commits** — VoiceStudio (`2f2f5a9`) for voice and
+   OpenMontage (`fecb9a1`) for long-form video — into `components/`.
+   Their AGPL-3.0 licences stay intact inside each component. Nothing
+   is vendored into this repo; the components are fetched at install
+   time, and a clone failure is reported as FAILED, never hidden.
+3. **Only with `--with-components`: sets up VoiceStudio** — `bun install`,
+   then the Python API (`bun run setup:api`, needs bun + uv; downloads
+   about 1 GB). A failed step reports PARTIAL, never success.
+4. **Only with `--with-components`: runs OpenMontage's `make setup`** —
+   creates its Python virtual environment and installs the Node
+   dependencies. If `make` is missing or the step fails, `setup.sh`
+   says so plainly instead of claiming success; run
+   `cd components/openmontage && make setup` yourself to see the error.
 5. **Walks you through the voice-model download** (next section) — it
    does not download the model itself.
 
-Re-running `bash setup.sh` is safe: components already present are
-skipped, skills are re-copied exactly, and the component setups run
-again.
+Re-running `bash setup.sh` is safe: skills are re-synced idempotently
+(unchanged files are left alone), and with `--with-components`,
+components already present are skipped and the component setups run
+again. `setup.sh` exits 0 only when every requested component reports
+SUCCESS; otherwise it exits 1 (FAILED) or 2 (PARTIAL) with a
+per-component summary.
 
 ### The voice model (OmniVoice) — download step
 
@@ -228,7 +237,7 @@ present, `SKILL.md` frontmatter, no character data installed).
   PATH for new shells only.
 - **`make: command not found`** — install make (macOS: Xcode Command
   Line Tools; Linux: `sudo apt install -y make`; Windows: use WSL).
-- **Component clone fails** — check the network, then run `bash setup.sh`
+- **Component clone fails** — check the network, then run `bash setup.sh --with-components`
   again. A failed pin checkout removes the partial clone, so a re-run
   starts clean.
 - **VoiceStudio `setup:api` fails** — run it manually to see the error:
@@ -305,10 +314,7 @@ and `GEMINI.md`.
 
 ## Muse (Meta's personal app)
 
-Muse has no documented skill-install flow. Install by cloning the
-repository into the workspace and running the bundled setup script,
-which installs the bundled components (VoiceStudio for voice,
-OpenMontage for video) and copies the skills into `.agents/skills/`.
+Muse has no documented skill-install flow, so there is no native custom-skill install to claim. Use the repo as a versioned knowledge pack: clone it into the workspace and read the skills from there. Running `bash setup.sh` only syncs the skills into the local `.agents/skills/` copies (non-destructive, core-only by default); the bundled components (VoiceStudio for voice, OpenMontage for video) are installed only with the opt-in `bash setup.sh --with-components`.
 
 ```bash
 git clone https://github.com/msujoy149/consistency-frame
@@ -316,12 +322,7 @@ cd consistency-frame
 bash setup.sh
 ```
 
-`setup.sh` installs the bundled components and copies `skills/` into
-`.agents/skills/`. The two components (VoiceStudio for voice,
-OpenMontage for video) are fetched automatically by `setup.sh` — no
-separate install is needed. Character data is not installed by the setup
-script — it is linked in separately from the private overlay (see
-"Character Registry").
+`bash setup.sh` (core-only, the default) syncs `skills/` into `.agents/skills/` without deleting unmanaged skills. The two components (VoiceStudio for voice, OpenMontage for video) are fetched only with `bash setup.sh --with-components` — they are never installed silently. The voice model (OmniVoice) is never downloaded by `setup.sh`. Character data is not installed by the setup script — it is linked in separately from the private overlay (see "Character Registry").
 
 ## Generic installers
 
