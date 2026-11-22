@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-22 17:17 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-22 17:28 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p0-safe-foundations`
-**Head commit:** `36999a71489c68e1ef63741461cc895a09df276b`
-**GitHub branch head:** `fcf311ef79c5f10a4248f026a5f667109c584831` (remote head of `feat/cf-p0-safe-foundations` at
+**Head commit:** `ee2de439a2e77e2fad31373624bedb55f97ccbf8`
+**GitHub branch head:** `5df5a330969f7978c9c5a3dfc67dd62ad2bf606c` (remote head of `feat/cf-p0-safe-foundations` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -190,6 +190,8 @@ docs/architecture/living-architecture-report-v2.4-p0.md
 docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md
 docs/implementation/BUILD_REPORT_P0.md
 docs/implementation/CF-WO-P0-001-plan.md
+docs/implementation/CF-WO-P0-002-corrections.md
+docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
 registry/adapters.json
@@ -253,6 +255,7 @@ tests/test_modes.py
 tests/test_performance_semantics.py
 tests/test_private_overlay.py
 tests/test_registries.py
+tests/test_reports.py
 tests/test_routing.py
 tests/test_schemas.py
 ```
@@ -365,4 +368,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-22 17:17 UTC.
+- Report generated: 2026-11-22 17:28 UTC.

@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "36999a71489c68e1ef63741461cc895a09df276b",
-  "github_branch_head": "fcf311ef79c5f10a4248f026a5f667109c584831",
+  "head_commit": "ee2de439a2e77e2fad31373624bedb55f97ccbf8",
+  "github_branch_head": "5df5a330969f7978c9c5a3dfc67dd62ad2bf606c",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -37,6 +37,8 @@
     "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
     "docs/implementation/BUILD_REPORT_P0.md",
     "docs/implementation/CF-WO-P0-001-plan.md",
+    "docs/implementation/CF-WO-P0-002-corrections.md",
+    "docs/implementation/CHECKSUMS.txt",
     "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
     "docs/implementation/build-report.json",
     "registry/adapters.json",
@@ -100,6 +102,7 @@
     "tests/test_performance_semantics.py",
     "tests/test_private_overlay.py",
     "tests/test_registries.py",
+    "tests/test_reports.py",
     "tests/test_routing.py",
     "tests/test_schemas.py"
   ],

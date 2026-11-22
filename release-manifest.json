@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p0-safe-foundations",
-  "commit": "36999a71489c68e1ef63741461cc895a09df276b",
-  "github_branch_head": "fcf311ef79c5f10a4248f026a5f667109c584831",
+  "commit": "ee2de439a2e77e2fad31373624bedb55f97ccbf8",
+  "github_branch_head": "5df5a330969f7978c9c5a3dfc67dd62ad2bf606c",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
@@ -117,8 +117,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "9a81dcb82ff947e44e402bf37b09b8987c52af05b28643b708b3f9e811e70e9f",
-      "bytes": 17371
+      "sha256": "bb4b71818d7ea5f5c225b097c348926b58d349ec8c3928e166063b4b85ea90b1",
+      "bytes": 18511
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -127,13 +127,23 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "efa07f90b46ae3e519f1de277455a1e4ed55db83230685897d88f03d0ddefa5f",
-      "bytes": 22606
+      "sha256": "e91b77eec552c1a24e820191cf313a623dfbd3ba64900660c40469194888c547",
+      "bytes": 23456
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
       "sha256": "0df54766d19f29f7f82a2023388a26d778b5da8d5dd98c435bc0c1db27d2d71a",
       "bytes": 7196
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-002-corrections.md",
+      "sha256": "5c2813c203d2b965f9f3fe3626d0d6d1466cab105e1f09029aaee8976ff6daef",
+      "bytes": 12785
+    },
+    {
+      "path": "docs/implementation/CHECKSUMS.txt",
+      "sha256": "ab2aeb21c65c4128ad49a2e8421fd31f4c55f796462ef88bd6ddad7b669e6511",
+      "bytes": 599
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
@@ -142,8 +152,8 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "77367f7f5162b143b400171048ce9ffa52276a1e8bd19922173a096966beabdf",
-      "bytes": 8995
+      "sha256": "32a5124969d99fe5415afcf8ee63747e68d12e75283bb149a6d7e7441ad4af9c",
+      "bytes": 11044
     },
     {
       "path": "registry/adapters.json",
@@ -446,6 +456,11 @@
       "bytes": 5033
     },
     {
+      "path": "tests/test_reports.py",
+      "sha256": "bd5aaa0202e9481153272cf97fe989f50da1b40dbc83b8b3d83801766156d4fe",
+      "bytes": 7886
+    },
+    {
       "path": "tests/test_routing.py",
       "sha256": "94fa67bcfaf04f7bccf7d9f579d866fa1989d789935b5e9a1472f13ac3e46e73",
       "bytes": 16890
@@ -558,5 +573,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-22T17:15:48Z"
+  "generated_at_utc": "2026-11-22T17:24:29Z"
 }
