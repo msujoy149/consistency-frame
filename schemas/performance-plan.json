@@ -1,1 +1,324 @@
-{"$id":"https://consistencyframe.blogspot.com/schemas/v2.4/performance-plan.json","$schema":"https://json-schema.org/draft/2020-12/schema","additionalProperties":false,"description":"Performance plan: one entry per dialogue line. The user's original dialogue is preserved verbatim unless rewriting was explicitly requested (dialogue_mode SCRIPT_EDIT_REQUESTED). Performance direction \u2014 face, eyes, body, breath, voice \u2014 is direction only and never changes the words. Emotion intensity is 0 (absent/neutral) to 10 (extreme). Dialogue lives in the 'dialogue' object: 'text' is the verbatim original; a rewrite is allowed only when the per-line 'rewrite_permitted' is true \u2014 the plan-level dialogue_mode alone never permits a rewrite. A line with no spoken text must carry 'non_verbal_events'.","properties":{"dialogue_mode":{"enum":["VERBATIM_SCRIPT","SCRIPT_EDIT_REQUESTED"],"type":"string"},"id":{"pattern":"^[a-z0-9][a-z0-9\\-]{2,63}$","type":"string"},"lines":{"items":{"additionalProperties":false,"properties":{"breathing":{"type":"string"},"character_id":{"pattern":"^[a-z0-9][a-z0-9\\-]{2,63}$","type":"string"},"dialogue":{"additionalProperties":false,"description":"The line's dialogue. 'text' is the user's original, verbatim. 'rewrite_permitted' defaults to false: a rewrite of this line is allowed only when it is explicitly true for this line; the plan-level dialogue_mode SCRIPT_EDIT_REQUESTED does not by itself permit a rewrite. 'rewritten_text' may be present only when 'rewrite_permitted' is true.","properties":{"rewrite_permitted":{"type":"boolean"},"rewritten_text":{"type":"string"},"text":{"minLength":1,"type":"string"}},"required":[],"type":"object"},"emotion_intensity":{"maximum":10,"minimum":0,"type":"integer"},"emotion_transition":{"type":"string"},"eye_movement":{"type":"string"},"facial_expression":{"type":"string"},"gaze":{"enum":["camera","other-character","off-screen","down","up","object","wandering"],"type":"string"},"gestures":{"items":{"type":"string"},"type":"array"},"language":{"type":"string"},"line_id":{"type":"string"},"lip_sync_required":{"type":"boolean"},"micro_expressions":{"items":{"type":"string"},"type":"array"},"non_verbal_events":{"description":"Explicit non-verbal performance events for this beat/line. Required when the beat/line is non-verbal (no spoken dialogue text): a non-verbal beat/line must carry at least one event here.","items":{"additionalProperties":false,"properties":{"duration_seconds":{"exclusiveMinimum":0,"type":"number"},"intensity":{"maximum":10,"minimum":0,"type":"integer"},"onset":{"type":"string"},"type":{"enum":["crying","sobbing","laughter","gasp","sigh","silence","breathing","trembling","reaction"],"type":"string"}},"required":["type"],"type":"object"},"type":"array"},"nuanced_emotion":{"description":"Nuanced emotion, open vocabulary (extensible \u2014 new values need no schema change). Examples: \"bittersweet\", \"wistful\", \"quiet dread\", \"curiosity\", \"determination\", \"worry\", \"excitement\", \"calm\", \"love\". Refines primary_emotion; never replaces it.","minLength":1,"type":"string"},"physical_behaviour":{"type":"string"},"posture":{"type":"string"},"primary_emotion":{"enum":["joy","sadness","anger","fear","surprise","disgust","trust","anticipation","neutral"],"type":"string"},"secondary_emotion":{"enum":["joy","sadness","anger","fear","surprise","disgust","trust","anticipation","neutral","none"],"type":"string"},"speaker_identity":{"type":"string"},"voice":{"additionalProperties":false,"properties":{"emotion":{"type":"string"},"pace":{"enum":["very-slow","slow","natural","brisk","fast","very-fast"],"type":"string"},"pauses":{"items":{"type":"string"},"type":"array"},"pitch":{"enum":["very-low","low","moderate","high","very-high"],"type":"string"}},"required":["emotion","pitch","pace"],"type":"object"}},"required":["line_id","lip_sync_required"],"type":"object"},"minItems":1,"type":"array"},"project_id":{"pattern":"^[a-z0-9][a-z0-9\\-]{2,63}$","type":"string"},"schema_version":{"enum":["2.4"],"type":"string"}},"required":["schema_version","id","dialogue_mode","lines"],"title":"PerformancePlan","type":"object"}
+{
+  "$id": "https://consistencyframe.blogspot.com/schemas/v2.5/performance-plan.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Performance plan: one entry per dialogue line. The user's original dialogue is preserved verbatim unless rewriting was explicitly requested (dialogue_mode SCRIPT_EDIT_REQUESTED). Performance direction \u2014 face, eyes, body, breath, voice \u2014 is direction only and never changes the words. Emotion intensity is 0 (absent/neutral) to 10 (extreme). Dialogue lives in the 'dialogue' object: 'text' is the verbatim original; a rewrite is allowed only when the per-line 'rewrite_permitted' is true \u2014 the plan-level dialogue_mode alone never permits a rewrite. A line with no spoken text must carry 'non_verbal_events'. v2.5 ADDITIVE MIGRATION (CF-WO-P0-006): new fields are optional; no existing required field was removed or retyped, so every valid v2.4 record remains valid.",
+  "properties": {
+    "dialogue_mode": {
+      "enum": [
+        "VERBATIM_SCRIPT",
+        "SCRIPT_EDIT_REQUESTED"
+      ],
+      "type": "string"
+    },
+    "id": {
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "lines": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "articulation_target": {
+            "description": "Subject-specific articulation for this line. human-mouth-lips only for human/digital-human subjects; bird-beak for birds; animal-muzzle for animals; creature-jaw-mandibles for creatures. Never apply human lip movement to a bird, animal or creature.",
+            "enum": [
+              "human-mouth-lips",
+              "bird-beak",
+              "animal-muzzle",
+              "creature-jaw-mandibles",
+              "other"
+            ],
+            "type": "string"
+          },
+          "audio_asset_id": {
+            "description": "Audio asset ID for this line's rendered dialogue (VoiceStudio output).",
+            "type": "string"
+          },
+          "breathing": {
+            "type": "string"
+          },
+          "character_id": {
+            "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+            "type": "string"
+          },
+          "delivery": {
+            "description": "Delivery direction for this line, e.g. 'warm, unhurried, with a small laugh at the end'.",
+            "type": "string"
+          },
+          "dialogue": {
+            "additionalProperties": false,
+            "description": "The line's dialogue. 'text' is the user's original, verbatim. 'rewrite_permitted' defaults to false: a rewrite of this line is allowed only when it is explicitly true for this line; the plan-level dialogue_mode SCRIPT_EDIT_REQUESTED does not by itself permit a rewrite. 'rewritten_text' may be present only when 'rewrite_permitted' is true.",
+            "properties": {
+              "rewrite_permitted": {
+                "type": "boolean"
+              },
+              "rewritten_text": {
+                "type": "string"
+              },
+              "text": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [],
+            "type": "object"
+          },
+          "dialogue_line_id": {
+            "description": "Stable dialogue-line ID shared across the Scene, Shot and Performance Plans and the script-to-performance bindings, so VoiceStudio and OpenMontage receive one consistent audio-visual timeline (never two independent timelines).",
+            "type": "string"
+          },
+          "emotion": {
+            "description": "Emotion carried by this line (performance direction; the canonical emotion taxonomy still lives in primary_emotion / nuanced_emotion).",
+            "type": "string"
+          },
+          "emotion_intensity": {
+            "maximum": 10,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "emotion_transition": {
+            "type": "string"
+          },
+          "eye_movement": {
+            "type": "string"
+          },
+          "facial_expression": {
+            "type": "string"
+          },
+          "gaze": {
+            "enum": [
+              "camera",
+              "other-character",
+              "off-screen",
+              "down",
+              "up",
+              "object",
+              "wandering"
+            ],
+            "type": "string"
+          },
+          "gestures": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "language": {
+            "type": "string"
+          },
+          "line_id": {
+            "type": "string"
+          },
+          "lip_sync_required": {
+            "type": "boolean"
+          },
+          "listener_state": {
+            "description": "Listener state when this character is not the speaker on this line.",
+            "enum": [
+              "attentive",
+              "reacting",
+              "distracted",
+              "absent"
+            ],
+            "type": "string"
+          },
+          "micro_expressions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "non_verbal_events": {
+            "description": "Explicit non-verbal performance events for this beat/line. Required when the beat/line is non-verbal (no spoken dialogue text): a non-verbal beat/line must carry at least one event here.",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "duration_seconds": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                "intensity": {
+                  "maximum": 10,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "onset": {
+                  "type": "string"
+                },
+                "type": {
+                  "enum": [
+                    "crying",
+                    "sobbing",
+                    "laughter",
+                    "gasp",
+                    "sigh",
+                    "silence",
+                    "breathing",
+                    "trembling",
+                    "reaction"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "nuanced_emotion": {
+            "description": "Nuanced emotion, open vocabulary (extensible \u2014 new values need no schema change). Examples: \"bittersweet\", \"wistful\", \"quiet dread\", \"curiosity\", \"determination\", \"worry\", \"excitement\", \"calm\", \"love\". Refines primary_emotion; never replaces it.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "physical_behaviour": {
+            "type": "string"
+          },
+          "posture": {
+            "type": "string"
+          },
+          "primary_emotion": {
+            "enum": [
+              "joy",
+              "sadness",
+              "anger",
+              "fear",
+              "surprise",
+              "disgust",
+              "trust",
+              "anticipation",
+              "neutral"
+            ],
+            "type": "string"
+          },
+          "reference_asset_ids": {
+            "description": "Reference asset IDs (images) for this line's performance.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "secondary_emotion": {
+            "enum": [
+              "joy",
+              "sadness",
+              "anger",
+              "fear",
+              "surprise",
+              "disgust",
+              "trust",
+              "anticipation",
+              "neutral",
+              "none"
+            ],
+            "type": "string"
+          },
+          "speaker_identity": {
+            "type": "string"
+          },
+          "speaking_state": {
+            "description": "Whether this character is speaking, listening, silent or reacting on this line.",
+            "enum": [
+              "speaking",
+              "listening",
+              "silent",
+              "reacting"
+            ],
+            "type": "string"
+          },
+          "species": {
+            "description": "Species of the performer, e.g. 'African grey parrot'.",
+            "type": "string"
+          },
+          "subject_kind": {
+            "description": "What kind of subject performs this line (carried on the line so articulation can be checked in this record).",
+            "enum": [
+              "human",
+              "digital-human",
+              "real-animal",
+              "cgi-animal",
+              "fictional-creature",
+              "anthropomorphic",
+              "mixed",
+              "non-character"
+            ],
+            "type": "string"
+          },
+          "voice": {
+            "additionalProperties": false,
+            "properties": {
+              "emotion": {
+                "type": "string"
+              },
+              "pace": {
+                "enum": [
+                  "very-slow",
+                  "slow",
+                  "natural",
+                  "brisk",
+                  "fast",
+                  "very-fast"
+                ],
+                "type": "string"
+              },
+              "pauses": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "pitch": {
+                "enum": [
+                  "very-low",
+                  "low",
+                  "moderate",
+                  "high",
+                  "very-high"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "emotion",
+              "pitch",
+              "pace"
+            ],
+            "type": "object"
+          },
+          "voice_profile_id": {
+            "description": "Voice profile bound to this line (the voice that speaks it).",
+            "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "line_id",
+          "lip_sync_required"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "project_id": {
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "schema_version": {
+      "enum": [
+        "2.4",
+        "2.5"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "dialogue_mode",
+    "lines"
+  ],
+  "title": "PerformancePlan",
+  "type": "object"
+}

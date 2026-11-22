@@ -5,6 +5,22 @@ characters and voices that feel human-made. The skills in `skills/` are
 the source of truth. Read them and follow them; do not invent your own
 versions of these rules.
 
+Consistency Frame is **animation-first and style-agnostic**: it directs
+consistent, expressive, physically believable animated videos across
+2D, 3D, stylized, semi-realistic, and photorealistic styles — for
+humans, digital humans, animals, creatures, multi-character
+interactions, image-to-video, video-to-video, and hybrid
+live-action/VFX work. Visual style, production medium, source-media
+type, and motion-generation method are independent dimensions, chosen
+per production. The authoritative reference is
+`docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md` — it
+defines the fixed vocabularies and the composable routing model, and
+it governs wherever an older document disagrees (for example, any
+cartoon-only framing, or any claim that a realistic-person video is
+"not animation"). It is not a cartoon-only toolkit, not a standalone
+video-generation server, API backend, or cloud database, and not a
+VoiceStudio/OpenMontage replacement.
+
 ## Command authority
 
 This repo is the command master: for every video, read and use the
@@ -58,13 +74,17 @@ step-by-step order for every video, in §7).
   native speakers speak it (US English, Bengali, Hindi); the same video
   in every language asked for, separately on request; one voice across
   languages; lip-sync matched to the language's sounds.
-- `skills/realistic-person/` — a real person's photo becomes a realistic
-  moving, speaking person: the face never changes, movement and speech
-  are natural, lip-sync follows the language's sounds.
+- `skills/realistic-person/` — a real person's photo becomes a
+  photorealistic digital-human animation: a realistic moving,
+  speaking person whose face never changes, whose movement and
+  speech are natural, and whose lip-sync follows the language's
+  sounds. This IS animation (a generated digital human, not
+  live-action footage of a real shoot).
 - `skills/explainer-animation/` — 2D flat cartoon / stick-figure explainer
   that teaches one idea through simple scenes and visual metaphors: flat
   2D vector, thick black outlines, small palette, two character designs
-  kept apart, one idea per scene, almost no on-screen text.
+  kept apart, one idea per scene, almost no on-screen text. This is one
+  optional profile of the system, not the product's animation model.
 - `skills/command-authority/` — the repo is the command master: read and
   use the repo's skills first for every video; a missing system is
   generated only after checking the repo's notes, then saved as a new
@@ -134,6 +154,47 @@ step-by-step order for every video, in §7).
   verified (knowledge-pack path). OpenRouter is a model-routing layer,
   not an agent host. Colab needs an appropriate Notebook/Agent Runtime.
 
+## P0-006 Animation-first, style-agnostic production architecture (2026-11-22, in progress)
+
+- Animation is NOT cartoon-only: 2D, anime, stylized 3D,
+  semi-realistic, photorealistic CGI, digital humans, animals,
+  creatures, image-to-video, video-to-video, and hybrid
+  live-action/VFX are all first-class productions of the same system.
+  A photorealistic digital-human video IS animation.
+- Visual style, production medium, source-media type, and
+  motion-generation method are independent, composable dimensions —
+  never one giant `animation_type` enum. The fixed vocabularies and
+  the full scope live in
+  `docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md`, which
+  governs wherever an older document disagrees.
+- Skill routing is composable: one primary pathway + style profiles +
+  subject capabilities + compatible layers, with true conflicts only.
+  The old one-video-type-per-video mutual exclusion is withdrawn.
+  (The routing data files that encode this —
+  `architecture/SKILL_ROUTING_MATRIX.yaml` and
+  `architecture/WORKFLOW_GRAPH.yaml` — are updated by the P0-006
+  architecture part; until then, no routing claim in them that
+  contradicts the canonical document is to be relied on.)
+- Reference video is OPTIONAL (Path A reference-video-assisted vs
+  Path B script-and-image-driven); never invent a reference video or
+  claim one was analysed when none was supplied.
+- Character registration is optional and explicit: first-run
+  invitation (register now / skip and use temporarily / register
+  later); skipping never prevents creating a video; an upload is
+  never silently converted into a permanent registration. Private
+  character and voice data stays in the private overlay, never in
+  this public repo; voice isolation is owner/workspace-scoped.
+- P0 defines contracts (production profile, character registration,
+  voice profile, scene/shot/performance, script-to-performance,
+  timeline manifest — schema version 2.5, additive only). The
+  runtimes that execute them — routing engine, script-to-performance
+  runtime, provider execution, rendering — are P1 work. No
+  capability is marked exercised or production-verified without
+  actual evidence.
+- No new skill is added in P0-006 (see the corrections record):
+  the animation scope is a routing/profile layer over the existing
+  15 skills, not a new technique skill.
+
 ## Rules that always apply
 
 - A character's identity (face, eyes, nose, mouth, hands, feet) is
@@ -167,4 +228,9 @@ and `docs/05-humanization-systems.md`. Install instructions are in
 `docs/16-explainer-animation.md`, and command authority in
 `docs/17-command-authority.md`, and kids & family animation in
 `docs/18-kids-family-animation.md`, and audio delivery profiles in
-`docs/19-audio-delivery-profiles.md`.
+`docs/19-audio-delivery-profiles.md`. The animation scope — what
+animation means here, the fixed vocabularies, composable routing,
+consent and QC rules, and Addendum C — is in
+`docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md`, and the
+P0-006 corrections record is in
+`docs/implementation/CF-WO-P0-006-corrections.md`.

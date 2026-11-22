@@ -19,7 +19,7 @@ Analyse all of the following:
 
 - Overall story, narrative structure, and central message.
 - Every scene and its exact chronological order.
-- Character identities, facial features, approximate ages, body proportions, hairstyles, clothing, and accessories.
+- Character identities, facial features, approximate ages, body proportions, hairstyles, clothing, and accessories. For animals and creatures, species-specific anatomy, silhouette, markings, colour, and scale — not a human face assumed for every subject (see the `character-consistency` skill). Record each subject's subject_kind and articulation_target where it speaks.
 - Character expressions, emotions, gestures, movements, and interactions.
 - Objects, props, their locations, and how characters interact with them.
 - Camera angles, framing, shot composition, camera movements, zooms, and focus.
@@ -115,7 +115,7 @@ Use professional live-action filmmaking principles.
 
 Prioritise:
 
-- Photorealistic human characters.
+- Photorealistic human characters — in the reference's or the user's chosen visual_style (`photorealistic-digital-human`, `photorealistic-3d-cgi`, or another chosen style; visual style, production_medium, motion_method, subject_kind, and interaction_pattern are separate dimensions, never one single `animation_type`). A photorealistic generated human is an AI-generated digital human, not live-action footage — never present it as filmed footage of a real person (see the `realistic-person` and `live-action-vfx` skills).
 - Natural skin texture and realistic facial expressions.
 - Physically accurate lighting and shadows.
 - Natural depth of field.
@@ -126,11 +126,11 @@ Prioritise:
 
 Camera angles follow the script-driven automatic camera angles system (production-systems, A12): each shot's angle is chosen from its beat — story function, emotion, character relationship, what the viewer must notice — never randomly, and never by habit.
 
-Avoid excessive artificial sharpness, plastic-looking skin, exaggerated facial features, unnatural movement, artificial lighting, and synthetic-looking textures. The final result should look like professionally filmed live-action footage, not an obvious AI-generated video.
+Avoid excessive artificial sharpness, plastic-looking skin, exaggerated facial features, unnatural movement, artificial lighting, and synthetic-looking textures. The final result should look like professionally filmed live-action footage, not an obvious AI-generated video — except where the chosen visual_style is deliberately stylized or animated, in which case it should look like that style done well, not like a failed attempt at live action. Do not imitate a specific filmmaker or copy copyrighted footage.
 
 Do not imitate a specific filmmaker or copy copyrighted footage.
 
-**Check:** the video reads as professionally filmed live-action footage — natural skin, light, and movement, with angles chosen from the beats and no synthetic-looking texture or motion.
+**Check:** the video reads as professionally filmed live-action footage — natural skin, light, and movement, with angles chosen from the beats and no synthetic-looking texture or motion — or, where another visual_style was chosen, as that style done well.
 
 ## 6. Storyboard and Shot Planning — Before Generation
 

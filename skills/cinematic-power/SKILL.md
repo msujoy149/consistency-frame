@@ -13,11 +13,11 @@ Nothing here replaces the existing systems. The visual style bible (`production-
 
 Choose the visual style FIRST, before any generation, and record it in the project (visual style bible, A1). Hold it in every shot of the piece.
 
-Three styles, one choice per project:
+The visual_style is one dimension of the production profile, not the whole profile: visual_style, production_medium, motion_method, subject_kind, and interaction_pattern are separate, composable dimensions — never one single `animation_type`. Choose from the canonical visual_style values: `flat-2d-vector`, `hand-drawn-2d`, `illustrated-2d`, `anime`, `cartoon-2d`, `stylized-3d`, `semi-realistic-3d`, `photorealistic-3d-cgi`, `photorealistic-digital-human`, `photorealistic-digital-animal-creature`, `mixed`, `captured-live-action`. The three styles below are the common choices for this skill, not the only valid styles:
 
 - **2D anime.** Consistent line weight, cel colour blocks, fixed highlight and shadow shapes, limited-animation rules: holds used deliberately, motion smears and cycles reused on purpose, never by accident.
 - **3D stylized CG.** Fixed proportions, squash-and-stretch, a consistent material look — skin, hair, and cloth read the same in every shot.
-- **Photorealistic live-action.** The existing realism rules apply (humanized-production): natural skin, physically accurate light, believable movement.
+- **Photorealistic live-action.** The existing realism rules apply (humanized-production): natural skin, physically accurate light, believable movement. A photorealistic digital human (`photorealistic-digital-human`, production_medium `ai-digital-human`; see the `realistic-person` skill) is animation, not live-action footage — it must never be presented as filmed footage of a real person.
 
 Background treatment follows the style. A full environment is one choice; a deliberate graphic backdrop is another — a clean colour with floating motifs, used as a design decision, not as an empty background. Either way, the treatment is chosen with the style and held.
 
@@ -35,7 +35,7 @@ Animals and creatures are registered like characters. Each one is distinct — s
 
 Rules:
 
-- **Movement follows the creature's real body.** Quadruped gait, flight, swimming, crawling — the movement a real body of that shape can make. Never paste human movement onto an animal: no upright walking for a quadruped, no human hand gestures from a paw, no human facial expressions on a muzzle that cannot make them.
+- **Movement follows the creature's real body.** Quadruped gait, flight, swimming, crawling — the movement a real body of that shape can make. Never paste human movement onto an animal: no upright walking for a quadruped, no human hand gestures from a paw, no human facial expressions on a muzzle that cannot make them. A fictional speaking animal or creature is articulated through its own articulation_target (`bird-beak`, `animal-muzzle`, `creature-jaw-mandibles`, or `other`) via `creature-articulation` — never apply human lip movement (`human-mouth-lips`) to a bird, animal, or creature. A real animal (subject_kind `real-animal`) must NOT automatically be treated as an anthropomorphic speaking character.
 - **Creatures act.** A sidekick animal has comic timing: head tilts, eye pops, delayed reactions — the joke lands because the timing is deliberate. A monster has menace in stillness before it moves: it is frightening because it waits, not because it flails.
 - **Elemental forces may act as characters.** An ocean, a fire, a storm can behave as a living presence — rising, reaching, withdrawing — with consistent behaviour across the piece. When an element acts, its continuity is checked like any character's: same behaviour, same scale, same relationship to the characters, shot after shot.
 - **Groups of animals are never clones.** Each animal in a group is distinct in look and in timing; a group of identical copies reads as a mistake.
