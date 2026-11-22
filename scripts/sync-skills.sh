@@ -42,6 +42,12 @@
 # --prune-backups <days> option, which deletes only this destination's
 # run directories older than <days> days with no live .lock file.
 #
+# Metadata writes are atomic and symlink-safe (P0-003): the manifest,
+# the last-sync record and the run-owner marker are all written through
+# one helper, scripts/atomic_write.py (tempfile.mkstemp + fd write +
+# fsync + os.replace). No installer metadata writer uses a predictable
+# temporary filename.
+#
 # Usage:
 #   scripts/sync-skills.sh [--source-dir DIR] [--dest-dir DIR]
 #                          [--dry-run] [--prune] [--rollback]
@@ -82,6 +88,11 @@
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Directory of the atomic-write helper (scripts/atomic_write.py) used by
+# every installer metadata writer. The embedded Python heredocs import
+# it from here and fail hard if it is unset, so a metadata write can
+# never silently fall back to a predictable temporary file (P0-003).
+export CF_ATOMIC_WRITE_LIB="$REPO_ROOT/scripts"
 SOURCE_DIR="$REPO_ROOT/skills"
 DEST_DIR="$REPO_ROOT/.agents/skills"
 MANIFEST_FILE=""
@@ -386,6 +397,11 @@ write_manifest() {
   # $1 = file with lines "sha256  relpath" for the new owned set.
   python3 - "$MANIFEST_FILE" "$1" <<'PYEOF'
 import json, os, sys
+_lib = os.environ.get("CF_ATOMIC_WRITE_LIB")
+if not _lib or not os.path.isdir(_lib):
+    raise SystemExit("CF_ATOMIC_WRITE_LIB is not set to the scripts directory")
+sys.path.insert(0, _lib)
+from atomic_write import atomic_write_json
 manifest_path, listing = sys.argv[1], sys.argv[2]
 owned = {}
 with open(listing, encoding="utf-8") as f:
@@ -396,12 +412,9 @@ with open(listing, encoding="utf-8") as f:
         sha, rel = line.split(" ", 1)
         owned[rel] = sha
 data = {"version": 1, "owned": dict(sorted(owned.items()))}
-os.makedirs(os.path.dirname(manifest_path) or ".", exist_ok=True)
-tmp = manifest_path + ".tmp"
-with open(tmp, "w", encoding="utf-8") as f:
-    json.dump(data, f, indent=2, sort_keys=True)
-    f.write("\n")
-os.replace(tmp, manifest_path)
+# Secure atomic write (P0-003): mkstemp-created temp, written through
+# its fd, then os.replace(). Never a predictable "<target>.tmp".
+atomic_write_json(manifest_path, data)
 PYEOF
 }
 
@@ -411,6 +424,11 @@ update_manifest_hashes() {
   # restored files are owned at their restored content).
   python3 - "$MANIFEST_FILE" "$1" <<'PYEOF'
 import json, os, sys
+_lib = os.environ.get("CF_ATOMIC_WRITE_LIB")
+if not _lib or not os.path.isdir(_lib):
+    raise SystemExit("CF_ATOMIC_WRITE_LIB is not set to the scripts directory")
+sys.path.insert(0, _lib)
+from atomic_write import atomic_write_json
 manifest_path, listing = sys.argv[1], sys.argv[2]
 owned = {}
 if os.path.exists(manifest_path):
@@ -424,12 +442,8 @@ with open(listing, encoding="utf-8") as f:
         sha, rel = line.split(" ", 1)
         owned[rel] = sha
 data = {"version": 1, "owned": dict(sorted(owned.items()))}
-os.makedirs(os.path.dirname(manifest_path) or ".", exist_ok=True)
-tmp = manifest_path + ".tmp"
-with open(tmp, "w", encoding="utf-8") as f:
-    json.dump(data, f, indent=2, sort_keys=True)
-    f.write("\n")
-os.replace(tmp, manifest_path)
+# Secure atomic write (P0-003): same helper as write_manifest().
+atomic_write_json(manifest_path, data)
 PYEOF
 }
 
@@ -459,10 +473,15 @@ PYEOF
 write_run_owner() {  # $1 = run dir, $2 = run id, $3 = created_utc
   python3 - "$1" "$2" "$3" "$DEST_DIR" <<'PYEOF'
 import json, os, sys
+_lib = os.environ.get("CF_ATOMIC_WRITE_LIB")
+if not _lib or not os.path.isdir(_lib):
+    raise SystemExit("CF_ATOMIC_WRITE_LIB is not set to the scripts directory")
+sys.path.insert(0, _lib)
+from atomic_write import atomic_write_json
 d, run_id, created, dest = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
-with open(os.path.join(d, ".run-owner.json"), "w", encoding="utf-8") as f:
-    json.dump({"dest_dir": dest, "run_id": run_id, "created_utc": created}, f, indent=2, sort_keys=True)
-    f.write("\n")
+# Secure atomic write (P0-003): same helper as the manifest writers.
+atomic_write_json(os.path.join(d, ".run-owner.json"),
+                  {"dest_dir": dest, "run_id": run_id, "created_utc": created})
 PYEOF
 }
 
@@ -692,6 +711,11 @@ write_result_json() {
   # $6=pruned $7=prune_candidates $8=timestamp_utc
   python3 - "$DEST_DIR/.consistency-frame-last-sync.json" "$CONFLICTS_TSV" "$PRUNE_REFUSED_TSV" "$CONFLICT_POLICY" "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$SOURCE_DIR" "$DEST_DIR" <<'PYEOF'
 import json, os, sys
+_lib = os.environ.get("CF_ATOMIC_WRITE_LIB")
+if not _lib or not os.path.isdir(_lib):
+    raise SystemExit("CF_ATOMIC_WRITE_LIB is not set to the scripts directory")
+sys.path.insert(0, _lib)
+from atomic_write import atomic_write_json
 out, conflicts_tsv, refused_tsv, policy, status, run_id, new, changed, unchanged, pruned, prune_candidates, ts, src, dest = sys.argv[1:15]
 
 def load_tsv(path, fields):
@@ -734,13 +758,10 @@ data = {
     "prune_refused_count": len(refused),
     "timestamp_utc": ts,
 }
-# Never write through a planted symlink at the result path.
-if os.path.islink(out):
-    os.unlink(out)
-os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
-with open(out, "w", encoding="utf-8") as f:
-    json.dump(data, f, indent=2, sort_keys=True)
-    f.write("\n")
+# Secure atomic write (P0-003): os.replace() replaces a planted symlink
+# at the result path itself instead of following it, so the symlink's
+# outside target is untouched and the result ends up a regular file.
+atomic_write_json(out, data)
 PYEOF
 }
 
