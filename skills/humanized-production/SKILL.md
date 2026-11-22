@@ -7,6 +7,8 @@ description: Makes every video feel human-made, not AI-made. Covers all 36 human
 
 A video that is technically consistent but feels robotic has failed. These 36 systems make every video feel human-made. Apply them to every project. Figures such as LUT strength and grain percentage are ranges to test per project, not fixed values. For the cinematic-power layer — music-beat editing, synchronized ensembles, trailer structure, and scale and colour scripting — see the `cinematic-power` skill. For the live-action and VFX layer — real human performance, CG creatures in live footage, water and wetness continuity, set extension, stunts, and real-animal performance — see the `live-action-vfx` skill. For the emotional-performance layer — stage performance, crowd, intimate drama, age performance, instrument sync, music as story, and cultural authenticity and object storytelling — see the `emotional-performance` skill.
 
+Scope: these systems operate across compatible human, digital-human, and creature workflows (subject_kind `human`, `digital-human`, `fictional-creature`, `anthropomorphic`, `cgi-animal`). Visual style, production_medium, motion_method, subject_kind, and interaction_pattern are separate dimensions — the humanization rules adapt to the subject's anatomy and the chosen style, they do not assume a single style or medium. A fictional speaking animal or creature may need a voice and an articulation system: its articulation follows its articulation_target (`bird-beak`, `animal-muzzle`, `creature-jaw-mandibles`, or `other`) — never apply human lip movement (`human-mouth-lips`) to a bird, animal, or creature. A real animal (subject_kind `real-animal`) must NOT automatically be treated as an anthropomorphic speaking character. Where a system below names a human body part (mouth, lips, hands, skin), apply it only where that subject has that anatomy; for other subjects use the equivalent articulation or movement for that body.
+
 ## 30.1 Performance-Driven Acting (Optional Lane)
 
 When the user can act a line, record it on a phone or webcam and transfer the real head, face, body, and hand motion onto the registered character (performance / motion transfer). A real take contains micro-expressions, timing, and weight that no prompt reliably invents. This lane is optional; when it is not available, use the script-driven emotion rules: emotion comes from the script and matches each line, the character feels the dialogue like a human actor, and a generic "AI smile" or flat fixed expression is never acceptable.
@@ -21,7 +23,7 @@ Every shot carries a micro-motion spec: blink cadence, tiny eye movements (sacca
 
 ## 30.4 Listener-Reaction Rule
 
-When one character speaks, the other character must be visibly listening — micro-nods, brow movement, breath, gaze — and must NOT move their mouth. Two mouths moving at once is the commonest AI dialogue failure. In every dialogue shot, specify the listener's reaction explicitly: what they do while the other character speaks, and that their mouth stays still.
+When one character speaks, the other character must be visibly listening — micro-nods, brow movement, breath, gaze — and must NOT move their mouth. Two mouths moving at once is the commonest AI dialogue failure. In every dialogue shot, specify the listener's reaction explicitly: what they do while the other character speaks, and that their mouth stays still. For a non-human listener, the equivalent applies through its own articulation_target: a listening bird's beak stays still, a listening animal's muzzle stays still — the listener's articulation organ does not move while another character speaks.
 
 ## 30.5 Room Tone / Never-Silence + 4-Layer Sound
 
@@ -150,7 +152,7 @@ Before release, show episodes to viewers who do not know the video is AI-generat
 
 ## 30.29 Mouth-Interior QC in Lip-Sync
 
-Check mouth interior sharpness, teeth stability, and tongue on close-ups. Prefer diffusion-class lip-sync for hero shots and a faster model for speed. Blurry teeth and lips are where cheap lip-sync fails. Dialogue timing must match the mouth: a line must not finish long before or after the character stops speaking. Check mouth interiors as part of the episode QC checklist, especially on close-ups where the defect is most visible.
+Check mouth interior sharpness, teeth stability, and tongue on close-ups. Prefer diffusion-class lip-sync for hero shots and a faster model for speed. Blurry teeth and lips are where cheap lip-sync fails. Dialogue timing must match the mouth: a line must not finish long before or after the character stops speaking. Check mouth interiors as part of the episode QC checklist, especially on close-ups where the defect is most visible. For non-human speaking characters, check the equivalent articulation instead — beak, muzzle, or jaw movement matched to the audio through `creature-articulation` — never human lips on a bird, animal, or creature.
 
 ## 30.30 Wardrobe Wear & Continuity Detail
 

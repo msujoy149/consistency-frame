@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-22 18:55 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-22 19:45 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p0-safe-foundations`
-**Head commit:** `b24d934525d3fa366d5322b7c5debb1424cfb993`
-**GitHub branch head:** `c294c9879042d57c61ff7e8b7da31c66248223bc` (remote head of `feat/cf-p0-safe-foundations` at
+**Head commit:** `1dec1f190a34569a2752522b158589f0918877f0`
+**GitHub branch head:** `24d2e6274f1fe2ee42b86c20ecf083e0d4b3c4d4` (remote head of `feat/cf-p0-safe-foundations` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -38,7 +38,7 @@ head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §
 | Features (`registry/features.json`) | 165 |
 | Workflows / intent modes (`registry/workflows.json`) | 13 |
 | Adapters (`registry/adapters.json`) | 12 |
-| JSON Schemas (`schemas/*.json`) | 24 |
+| JSON Schemas (`schemas/*.json`) | 26 |
 | Routing matrix entries (`architecture/SKILL_ROUTING_MATRIX.yaml`) | 15 |
 | Workflow graph nodes / edges (`architecture/WORKFLOW_GRAPH.yaml`) | 15 / 42 |
 | Companion capabilities (`architecture/COMPANION_CAPABILITY_REGISTRY.yaml`) | 20 (3 exercised_recorded_run, 16 present_locally, 1 upstream_inspected_pinned_commit, 0 production_verified) |
@@ -185,6 +185,7 @@ docs/09-video-regeneration.md
 docs/15-realistic-person.md
 docs/17-command-authority.md
 docs/19-audio-delivery-profiles.md
+docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md
 docs/architecture/living-architecture-report-v2.3-p0.md
 docs/architecture/living-architecture-report-v2.4-p0.md
 docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md
@@ -194,6 +195,7 @@ docs/implementation/CF-WO-P0-002-corrections.md
 docs/implementation/CF-WO-P0-003-corrections.md
 docs/implementation/CF-WO-P0-004-corrections.md
 docs/implementation/CF-WO-P0-005-corrections.md
+docs/implementation/CF-WO-P0-006-corrections.md
 docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
@@ -205,6 +207,7 @@ release-manifest.json
 schemas/README.md
 schemas/approval.json
 schemas/build-report.json
+schemas/character-registration.json
 schemas/character.json
 schemas/episode-state.json
 schemas/evidence.json
@@ -212,6 +215,7 @@ schemas/installer-result.json
 schemas/intake-job.json
 schemas/location.json
 schemas/performance-plan.json
+schemas/production-profile.json
 schemas/project.json
 schemas/prop.json
 schemas/reference-learning.json
@@ -237,23 +241,67 @@ scripts/validate-repo.py
 setup.sh
 skills/agency-advertising/SKILL.md
 skills/character-consistency/SKILL.md
+skills/cinematic-power/SKILL.md
 skills/command-authority/SKILL.md
+skills/emotional-performance/SKILL.md
+skills/explainer-animation/SKILL.md
 skills/humanized-production/SKILL.md
+skills/language-authenticity/SKILL.md
+skills/live-action-vfx/SKILL.md
 skills/production-systems/SKILL.md
 skills/realistic-person/SKILL.md
 skills/video-regeneration/SKILL.md
 skills/voice-consistency/SKILL.md
+tests/fixtures/character-extended-valid.json
+tests/fixtures/character-registration-bird-valid.json
+tests/fixtures/character-registration-invalid-duplicate-id.json
+tests/fixtures/character-registration-invalid-missing-id.json
+tests/fixtures/character-registration-valid-bird.json
+tests/fixtures/character-registration-valid-human.json
+tests/fixtures/character-registration-valid.json
+tests/fixtures/character-valid-v25-animal.json
 tests/fixtures/character-valid.json
 tests/fixtures/intake-temporary.json
+tests/fixtures/performance-plan-bird.json
+tests/fixtures/performance-plan-human.json
+tests/fixtures/performance-plan-invalid-bird-human-lips.json
+tests/fixtures/performance-plan-two-person.json
+tests/fixtures/performance-plan-valid-bird.json
 tests/fixtures/performance-plan-valid.json
+tests/fixtures/production-profile-invalid-animation-type.json
+tests/fixtures/production-profile-invalid-digital-human-live-action.json
+tests/fixtures/production-profile-reference-video.json
+tests/fixtures/production-profile-script-only.json
+tests/fixtures/production-profile-valid-digital-human.json
+tests/fixtures/registration-invitation.json
+tests/fixtures/routing-profile-s1-explainer-2d.json
+tests/fixtures/routing-profile-s2-stylized-3d.json
+tests/fixtures/routing-profile-s4-human-bird.json
+tests/fixtures/routing-profile-s5-live-action-creature.json
+tests/fixtures/routing-profile-s6-real-animal.json
+tests/fixtures/routing-profile-s7-video-to-video.json
+tests/fixtures/routing-profile-s8-photorealistic-explainer.json
+tests/fixtures/scene-plan-two-person.json
+tests/fixtures/scene-plan-valid-human-bird.json
 tests/fixtures/scene-plan-valid.json
+tests/fixtures/script-to-performance-binding.json
+tests/fixtures/script-to-performance-valid-bindings.json
 tests/fixtures/script-to-performance-valid.json
+tests/fixtures/shot-plan-directed.json
+tests/fixtures/shot-plan-valid-human-bird.json
 tests/fixtures/shot-plan-valid.json
 tests/fixtures/sound-asset-valid.json
+tests/fixtures/temporary-asset-use.json
+tests/fixtures/visual-style-profile-valid.json
+tests/fixtures/voice-profile-ai-generated.json
+tests/fixtures/voice-profile-user-recording.json
+tests/fixtures/voice-profile-valid-ai-generated.json
+tests/fixtures/voice-profile-valid-user-recorded.json
 tests/fixtures/voice-profile-valid.json
 tests/last-run.json
 tests/run-tests.sh
 tests/test_atomic_write.py
+tests/test_character_registration.py
 tests/test_installer.sh
 tests/test_installer_manifest_security.sh
 tests/test_installer_metadata_failure.sh
@@ -261,6 +309,7 @@ tests/test_installer_security.sh
 tests/test_modes.py
 tests/test_performance_semantics.py
 tests/test_private_overlay.py
+tests/test_production_direction.py
 tests/test_registries.py
 tests/test_reports.py
 tests/test_routing.py
@@ -295,6 +344,8 @@ tests/test_schemas.py
 - `CF-P0-PERF-004` — python3 tests/test_performance_semantics.py — **PASS** (exit 0)
 - `CF-P0-PERF-005` — python3 tests/test_performance_semantics.py — **PASS** (exit 0)
 - `P0-PRIVACY` — python3 tests/test_private_overlay.py — **PASS** (exit 0)
+- `CF-P0-006-AC-REG` — python3 tests/test_character_registration.py — **PASS** (exit 0)
+- `CF-P0-006-AC-DIR` — python3 tests/test_production_direction.py — **PASS** (exit 0)
 - `CF-INT-014` — bash tests/test_installer.sh — **PASS** (exit 0)
 - `CF-INT-015` — bash tests/test_installer.sh — **PASS** (exit 0)
 - `CF-INT-015` — bash tests/test_installer_security.sh — **PASS** (exit 0)
@@ -317,14 +368,22 @@ tests/test_schemas.py
 
 CI workflow: `.github/workflows/p0-ci.yml` (runs on pull requests and
 pushes to the feature branch). Remote CI PASSED on
+`24d2e6274f1fe2ee42b86c20ecf083e0d4b3c4d4` — 2/2 checks, push run #47
+https://github.com/msujoy149/consistency-frame/actions/runs/45059388184
+and PR run #48
+https://github.com/msujoy149/consistency-frame/actions/runs/45059393245
+(draft PR https://github.com/msujoy149/consistency-frame/pull/1).
+The `p0-test-results` artifact (743 bytes, digest
+sha256:379baeedcb76ebc63d34a1c898f8477038c0d5afdff17894ba5eae7c59669b54)
+holds 45 recorded test-run entries, 33 distinct test IDs, 26 distinct
+command strings, all PASS; its `last-run.json` is byte-for-byte
+identical to the P0-005 ZIP's `tests/last-run.json`. Historical
+record (P0-004): remote CI PASSED on
 `88791231caa03e8fb75a3499beeb21d1dd64a906` — 2/2 checks, push run #37
 https://github.com/msujoy149/consistency-frame/actions/runs/45055643056
 and PR run #38
-https://github.com/msujoy149/consistency-frame/actions/runs/45055649820
-(draft PR https://github.com/msujoy149/consistency-frame/pull/1).
-The `p0-test-results` artifact (artifact ID 14766603267) holds 43
-recorded test-run entries, 31 distinct test IDs, 24 distinct command
-strings, all PASS. Historical record (P0-002): remote CI PASSED on
+https://github.com/msujoy149/consistency-frame/actions/runs/45055649820.
+Historical record (P0-002): remote CI PASSED on
 `fcf311ef79c5f10a4248f026a5f667109c584831` — 2/2 checks, run
 https://github.com/msujoy149/consistency-frame/actions/runs/45046203236.
 
@@ -391,4 +450,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-22 18:55 UTC.
+- Report generated: 2026-11-22 19:45 UTC.

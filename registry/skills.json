@@ -27,7 +27,7 @@
       "purpose": "Keeps every registered character visually identical across all videos and episodes. Covers the character registry and registration rules, identity resolution from script names, the fixed prompt block and seed per character, measured reference fidelity with character recall, fixed identity structure with scene-variable clothing, multi-character scenes with no overlap, and private per-character data separation.",
       "scope": "global",
       "section_count": 16,
-      "sha256": "96bf5eb116ba879cded95186d93842f8cbb57fcaa3d58cc193caa6b0a1d95c69",
+      "sha256": "1e3d587f2124350e1cb74d3fcdb1d089838330b580f1ce69bcabb74ea790d78c",
       "skill_id": "skill-character-consistency",
       "status": "DOCUMENTED",
       "tests": [
@@ -44,7 +44,7 @@
       "purpose": "Cinematic power for feature-trailer and music-video quality: locks the visual style first (2D anime, 3D stylized CG, or photorealistic), gives animals and creatures real performances, cuts and moves on the musical beat with synchronized ensembles, structures trailers as wonder \u2192 stakes \u2192 characters \u2192 comedy \u2192 climax \u2192 title, and scripts scale and colour across the whole piece. Builds on the production-systems skill (style bible, camera language, shot list, angles) and the humanized-production skill \u2014 it adds only the cinematic-power layer on top.",
       "scope": "global",
       "section_count": 5,
-      "sha256": "747c92d1d6a788a3c04129664135dcfca8672670b4985a0bd46ce47b07e0a7f7",
+      "sha256": "db7f6fb3e34ceb3d2408cde57d45b408b241bd8861365ed4209567d4a482fba9",
       "skill_id": "skill-cinematic-power",
       "status": "DOCUMENTED",
       "tests": [
@@ -61,7 +61,7 @@
       "purpose": "The repo is the command master \u2014 after install, every video is made by reading and using the repo's skills first. A skill that exists is used, never reinvented; a missing system is generated from the repo's own generation command and saved as a new skill; light details are delegated with direction from the repo; a new task type starts from the distilled common core; and when the repo has no instruction at all it says 'do it yourself' \u2014 never bare, always with the quality commands and the main flow attached. When a skill is missing, the skill is written and saved first, and the video is then made by following that new skill \u2014 the skill-first loop.",
       "scope": "global",
       "section_count": 9,
-      "sha256": "6ec257baffcb8ccf4d07283cb6f30d0493d0ce2eb50d5961ef098213f81f3683",
+      "sha256": "39ac0fcaf40aa89a92f19c4c067872b9c50fd578457ba782ae6e3c4298981e78",
       "skill_id": "skill-command-authority",
       "status": "DOCUMENTED",
       "tests": [
@@ -78,7 +78,7 @@
       "purpose": "Emotional performance for musical and intimate scenes: a live performance on stage with an arc that wins the crowd, a crowd of hundreds of distinct people reacting in waves, a long two-person scene held on the faces with a slow emotional turn, age performed through movement, voice, face, and memory, hands that play the instrument you hear, a song that is the plot and unlocks memory, and a culturally specific world where objects carry history and turn the story. Builds on the production-systems skill (style bible, camera language, shot list, angles), the humanized-production skill (performance, micro-motion, sound, editing), the cinematic-power skill (style lock, music-beat editing, scale and colour scripting), and the voice-consistency skill (one voice per character, fixed across episodes) \u2014 it adds only the emotional-performance layer on top.",
       "scope": "global",
       "section_count": 7,
-      "sha256": "cc17ff5121df546a7fa10a41effbc70904aec92f745b6cadf1015ef82f26775a",
+      "sha256": "2f2cd2a5d403c9e6c86e40571c8dbbcb84a5f1676e0e5cbd421dad1a28e839a0",
       "skill_id": "skill-emotional-performance",
       "status": "DOCUMENTED",
       "tests": [
@@ -87,15 +87,15 @@
       "version": "2.0"
     },
     {
-      "description": "Teaches one idea through 2D flat cartoon / stick-figure explainer animation \u2014 simple scenes and visual metaphors, vertical short-form. Flat 2D vector, thick black outlines, small palette; abstract ideas become characters or places; one idea per scene; almost no on-screen text.",
+      "description": "Teaches one idea through 2D flat cartoon / stick-figure explainer animation \u2014 simple scenes and visual metaphors, vertical short-form. Flat 2D vector, thick black outlines, small palette; abstract ideas become characters or places; one idea per scene; almost no on-screen text. This is ONE optional visual-style/production profile (visual_style flat-2d-vector, production_medium 2d-drawn-vector), not the only way to make an explainer video.",
       "evidence": "skills/explainer-animation/SKILL.md",
       "maturity": "DOCUMENTED",
       "name": "explainer-animation",
       "path": "skills/explainer-animation/SKILL.md",
-      "purpose": "Teaches one idea through 2D flat cartoon / stick-figure explainer animation \u2014 simple scenes and visual metaphors, vertical short-form. Flat 2D vector, thick black outlines, small palette; abstract ideas become characters or places; one idea per scene; almost no on-screen text.",
+      "purpose": "Teaches one idea through 2D flat cartoon / stick-figure explainer animation \u2014 simple scenes and visual metaphors, vertical short-form. Flat 2D vector, thick black outlines, small palette; abstract ideas become characters or places; one idea per scene; almost no on-screen text. This is ONE optional visual-style/production profile (visual_style flat-2d-vector, production_medium 2d-drawn-vector), not the only way to make an explainer video.",
       "scope": "global",
       "section_count": 8,
-      "sha256": "ee9fd01147f5acec7920ed3ba6f1692a5ea9007a54bb8055c645a2b08bd5207c",
+      "sha256": "4b5067959f622ceeb46f1697aaa16e1bd9478b0a0f7faa6856c1e3866c2bb7ce",
       "skill_id": "skill-explainer-animation",
       "status": "DOCUMENTED",
       "tests": [
@@ -112,7 +112,7 @@
       "purpose": "Makes every video feel human-made, not AI-made. Covers all 36 humanization systems \u2014 performance-driven acting, single-pass dialogue, micro-motion, listener reactions, never-silence sound, non-verbal voice, gaze continuity, hands and physics, anti-plastic skin, editing rhythm, the film-finish pipeline, drift and artifact QC, camera and lighting imperfection, background life, cloth and hair physics, sound spotting, disclosure and provenance, detector self-QC, audio description, voice variants, code-switching, model pinning, re-anchoring, reference strategy, the human blind-test gate, distance and space in voice, mouth-interior QC, wardrobe wear, imperfection budget, music-ducking, failure playbook, real-person safeguards, cinematic backgrounds, and the realism budget.",
       "scope": "global",
       "section_count": 37,
-      "sha256": "5755011e5e516d82c93f2db71b17b349df29574831685d9603a5653b300db376",
+      "sha256": "2bdfdb6a958337c2f654295571b1c615d919e7833762cc9340d9b4be46b0aee2",
       "skill_id": "skill-humanized-production",
       "status": "DOCUMENTED",
       "tests": [
@@ -146,7 +146,7 @@
       "purpose": "Speaks every language the way its native speakers speak it \u2014 US English, Bengali, Hindi \u2014 and delivers the same video in every language the user asks for, with lip-sync matched to the sounds of the language being spoken.",
       "scope": "global",
       "section_count": 9,
-      "sha256": "24f0091c793a8498796cdf7f517c5e1748f2cf84c94f3263f66b49c056e8195c",
+      "sha256": "a370ecc948b3ba5f6621f2cdc5caa8c01e2ed8827a9903f6b8c61ea14788a0ee",
       "skill_id": "skill-language-authenticity",
       "status": "DOCUMENTED",
       "tests": [
@@ -163,7 +163,7 @@
       "purpose": "Live-action and VFX hybrid quality for real humans with CG creatures: a real body performs with micro-expressions, breath, fatigue and weight; CG creatures share the live plate's light, shadow and eyelines; water and wetness stay continuous across cuts; real locations are extended with CG without a visible seam; stunts are choreographed and shot to look unplanned; real animals perform on their own terms. Builds on the production-systems skill (camera language, shot list, angles), the humanized-production skill (performance, physics, editing), and the cinematic-power skill (style lock, creature performance, trailer structure, scale and colour scripting) \u2014 it adds only the live-action and VFX layer on top.",
       "scope": "global",
       "section_count": 6,
-      "sha256": "a82e72338bed464ea7d87f0a64fd5712c5226a938150e2ffef2add8dacd5ced2",
+      "sha256": "32acf307dc86f2e3ef06331668f371e73457f15ecc9700d828575a82eccd0a8b",
       "skill_id": "skill-live-action-vfx",
       "status": "DOCUMENTED",
       "tests": [
@@ -180,7 +180,7 @@
       "purpose": "The professional production layer for series video-making. Covers the 12 professional production systems, the 18 extended systems, the 7 additional systems, the language, captions and format rules, and the production priority hierarchy \u2014 described in enough detail that an AI following this skill alone can apply them.",
       "scope": "global",
       "section_count": 5,
-      "sha256": "22dfcadcdb3d46f36fc8b401b6a709292c5f784e6eba72d2a04bc6edbaf2aedf",
+      "sha256": "85958c281d391e172d40543be5d59a7473d1efc3d22c4a6ce307ca57f8acfc2c",
       "skill_id": "skill-production-systems",
       "status": "DOCUMENTED",
       "tests": [
@@ -189,15 +189,15 @@
       "version": "2.0"
     },
     {
-      "description": "Turns a real person's photo into a realistic video of that person moving and speaking naturally \u2014 the face never changes, only movement and speech are added. Real skin, hair, and cloth; natural light; lip-sync matched to the language's sounds; never a still mouth.",
+      "description": "Turns a real person's photo into photorealistic digital-human animation \u2014 a realistic video of that person moving and speaking naturally, face never changing, only movement and speech added. Real skin, hair, and cloth; natural light; lip-sync matched to the language's sounds; never a still mouth.",
       "evidence": "skills/realistic-person/SKILL.md",
       "maturity": "DOCUMENTED",
       "name": "realistic-person",
       "path": "skills/realistic-person/SKILL.md",
-      "purpose": "Turns a real person's photo into a realistic video of that person moving and speaking naturally \u2014 the face never changes, only movement and speech are added. Real skin, hair, and cloth; natural light; lip-sync matched to the language's sounds; never a still mouth.",
+      "purpose": "Turns a real person's photo into photorealistic digital-human animation \u2014 a realistic video of that person moving and speaking naturally, face never changing, only movement and speech added. Real skin, hair, and cloth; natural light; lip-sync matched to the language's sounds; never a still mouth.",
       "scope": "global",
       "section_count": 8,
-      "sha256": "a853c3ada288782402c5322ddfeaf5db28807a0811a38551a1a21a6999635af2",
+      "sha256": "5fc7f7fb69bfce8159ad6c7399b071b56b075f47114099fdecfb13c44b35664e",
       "skill_id": "skill-realistic-person",
       "status": "DOCUMENTED",
       "tests": [
@@ -231,7 +231,7 @@
       "purpose": "Regenerates a video the user uploads: first analyses the reference video in full (story, scenes, characters, objects, camera, light, sound), then creates a NEW original video that preserves the reference's core story, emotional impact, narrative structure and creative direction, with only minor or explicitly requested changes. Covers analysis, continuity, realistic physical interactions, cinematography, storyboarding, audio, quality control, and output requirements. Builds on the character-consistency, voice-consistency, humanized-production and production-systems skills \u2014 the reference is the user's own uploaded video, and the output is an original alternative version, never a frame-for-frame copy.",
       "scope": "global",
       "section_count": 9,
-      "sha256": "3eeb11df406994dfdea7b0a4f3e3ccae95d5fca26142869905540f70f53a0b59",
+      "sha256": "ea47ad9ec1a96661b52180f1512aa4f72cc815d20c38d99e57d76481f36bdc92",
       "skill_id": "skill-video-regeneration",
       "status": "DOCUMENTED",
       "tests": [
@@ -248,7 +248,7 @@
       "purpose": "Keeps every character's voice identical across all episodes, like their visual identity. Covers fixed per-character voice profiles, generating once and reusing reference audio, the bundled VoiceStudio/OmniVoice local engine and its licence limits, script-driven emotional performance, single-pass multi-speaker dialogue, the non-verbal voice layer, voice-drift measurement, ageing and state variants, code-switching and dialect handling, distance and space in voice, dialogue-first mixing, and user-supplied voice cloning.",
       "scope": "global",
       "section_count": 13,
-      "sha256": "04cee9eed70bdd24d2faca4a382d8852ebca63fe4fbbcdc46ef1dc5acf55c5c7",
+      "sha256": "9e604e1b568d6649ff3ac4a75a69ee1d26d85eae255512c8b5b742be031bbf71",
       "skill_id": "skill-voice-consistency",
       "status": "DOCUMENTED",
       "tests": [
