@@ -788,6 +788,16 @@ while IFS= read -r rel; do
   fi
 done < <(cat "$PLAN_CHANGED" "$APPLIED_PRUNE")
 
+# Whether this run's directory holds a real content backup: any file
+# other than the owner marker and the lock. Backups are created only
+# for replaced or pruned files, so a run that only installed new
+# files, or changed nothing, has no content backup to recover. The
+# failure diagnostics below use this so they never claim a backup
+# exists when none was created (P0-005).
+run_dir_has_content_backup() {
+  [ -n "$(find "$RUN_DIR" -type f ! -name '.run-owner.json' ! -name '.lock' -print -quit 2>/dev/null)" ]
+}
+
 apply_copy() {
   # $1 = relpath
   local rel="$1"
@@ -816,7 +826,15 @@ if [ "$PRUNE" = 1 ]; then
 fi
 
 if [ "$failed" = 1 ]; then
-  echo "FAILED: one or more file operations failed; restoring from this run's backup $RUN_DIR" >&2
+  # P0-005: describe the backup state accurately. A run that failed
+  # while installing only new files, or before any backup was made,
+  # has no content backup to restore from — say so instead of
+  # claiming one.
+  if run_dir_has_content_backup; then
+    echo "FAILED: one or more file operations failed; restoring from this run's backup $RUN_DIR" >&2
+  else
+    echo "FAILED: one or more file operations failed; no content backup was created for this run, nothing to restore" >&2
+  fi
   while IFS= read -r -d '' f; do
     rel="${f#$RUN_DIR/}"
     case "$rel" in ".run-owner.json"|".lock") continue ;; esac
@@ -829,7 +847,11 @@ if [ "$failed" = 1 ]; then
   # pass silently). The sync is already FAILED; a failed record write
   # only adds a diagnostic and never changes the exit code.
   if ! write_result_json "FAILED" "$RUN_ID" "$n_new" "$n_changed" "$n_unchanged" "$pruned" "$n_prune" "$TIMESTAMP"; then
-    echo "ERROR: failed to write final sync status record to $DEST_DIR/.consistency-frame-last-sync.json (sync already FAILED; recovery backup preserved at $RUN_DIR)" >&2
+    if run_dir_has_content_backup; then
+      echo "ERROR: failed to write final sync status record to $DEST_DIR/.consistency-frame-last-sync.json (sync already FAILED; recovery backup preserved at $RUN_DIR)" >&2
+    else
+      echo "ERROR: failed to write final sync status record to $DEST_DIR/.consistency-frame-last-sync.json (sync already FAILED; no content backup was created for this run; run record retained at $RUN_DIR)" >&2
+    fi
   fi
   exit 1
 fi
@@ -898,14 +920,22 @@ if write_result_json "$STATUS" "$RESULT_RUN_ID" "$n_new" "$n_changed" "$n_unchan
   [ "$STATUS" = "SUCCESS" ] && exit 0 || exit 2
 fi
 
-# Final metadata persistence failed: never report SUCCESS, and preserve
-# the recovery backup (its run directory and valid owner marker).
+# Final metadata persistence failed: never report SUCCESS. The run
+# directory is preserved (with its valid owner marker); whether it
+# holds a content backup depends on what the run did — the
+# diagnostics below say so accurately (P0-005). A run that only
+# installed new files, or changed nothing, created no content backup.
 echo "ERROR: failed to write final sync status record to $DEST_DIR/.consistency-frame-last-sync.json" >&2
 if [ $((n_new + n_changed + pruned)) -gt 0 ]; then
-  echo "PARTIAL: sync changes were applied (new=$n_new changed=$n_changed pruned=$pruned) but the final metadata record could not be written; recovery backup preserved at $RUN_DIR (run $RUN_ID)" >&2
-  echo "Skill sync PARTIAL: new=$n_new changed=$n_changed unchanged=$n_unchanged pruned=$pruned conflicts=$n_conflicts prune_refused=$n_prune_refused run_id=$RUN_ID (backup preserved)"
+  if run_dir_has_content_backup; then
+    echo "PARTIAL: sync changes were applied (new=$n_new changed=$n_changed pruned=$pruned) but the final metadata record could not be written; recovery backup preserved at $RUN_DIR (run $RUN_ID)" >&2
+    echo "Skill sync PARTIAL: new=$n_new changed=$n_changed unchanged=$n_unchanged pruned=$pruned conflicts=$n_conflicts prune_refused=$n_prune_refused run_id=$RUN_ID (backup preserved)"
+  else
+    echo "PARTIAL: sync changes were applied (new=$n_new changed=$n_changed pruned=$pruned) but the final metadata record could not be written; no content backup was created for this run; run record retained at $RUN_DIR (run $RUN_ID)" >&2
+    echo "Skill sync PARTIAL: new=$n_new changed=$n_changed unchanged=$n_unchanged pruned=$pruned conflicts=$n_conflicts prune_refused=$n_prune_refused run_id=$RUN_ID (no content backup; run record retained)"
+  fi
   exit 2
 fi
-echo "FAILED: no files were changed, but the final metadata record could not be written; recovery backup preserved at $RUN_DIR (run $RUN_ID)" >&2
-echo "Skill sync FAILED: new=$n_new changed=$n_changed unchanged=$n_unchanged pruned=$pruned conflicts=$n_conflicts prune_refused=$n_prune_refused run_id=$RUN_ID (backup preserved)"
+echo "FAILED: no files were changed, but the final metadata record could not be written; no content backup was created; run record retained at $RUN_DIR (run $RUN_ID)" >&2
+echo "Skill sync FAILED: new=$n_new changed=$n_changed unchanged=$n_unchanged pruned=$pruned conflicts=$n_conflicts prune_refused=$n_prune_refused run_id=$RUN_ID (no files changed; run record retained)"
 exit 1
