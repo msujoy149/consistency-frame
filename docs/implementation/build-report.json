@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "05a3fd3ddce20e5227be47acd3d721c99838f160",
-  "github_branch_head": "9da842f465f4369a3a29d225f93980684bb6a474",
+  "head_commit": "5a034a233887336918b3e593019a692f4281da29",
+  "github_branch_head": "212469b908d39d431cd767c4f2275bfa5d7642d1",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -243,6 +243,13 @@
     },
     {
       "id": "CF-P0-014-PIN",
+      "command": "bash tests/test_installer_status.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-015-WT",
       "command": "bash tests/test_installer_status.sh",
       "exit_code": 0,
       "result": "PASS",

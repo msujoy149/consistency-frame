@@ -189,7 +189,9 @@ or later for bun.
    untouched — it is never silently reset, force-checked-out, or
    deleted. A fresh clone is verified the same way (HEAD equals the
    pinned commit, origin is the official repository) before the
-   component is reported as ready.
+   component is reported as ready. A linked git worktree (a `.git`
+   file instead of a `.git` directory) is a valid working tree and
+   is verified and set up the same way as a normal clone.
 3. **Only with `--with-components`: sets up VoiceStudio** — `bun install`,
    then the Python API (`bun run setup:api`, needs bun + uv; downloads
    about 1 GB). A failed step reports PARTIAL, never success.

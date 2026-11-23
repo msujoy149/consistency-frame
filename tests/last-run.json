@@ -260,6 +260,12 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P0-015-WT",
+      "command": "bash tests/test_installer_status.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "CF-P0-ATOMIC-001",
       "command": "python3 tests/test_atomic_write.py",
       "exit_code": 0,
