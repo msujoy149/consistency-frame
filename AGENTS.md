@@ -154,7 +154,7 @@ step-by-step order for every video, in §7).
   verified (knowledge-pack path). OpenRouter is a model-routing layer,
   not an agent host. Colab needs an appropriate Notebook/Agent Runtime.
 
-## P0-006 Animation-first, style-agnostic production architecture (2026-11-22, in progress)
+## P0-006 Animation-first, style-agnostic production architecture (2026-11-22, complete)
 
 - Animation is NOT cartoon-only: 2D, anime, stylized 3D,
   semi-realistic, photorealistic CGI, digital humans, animals,
@@ -194,6 +194,46 @@ step-by-step order for every video, in §7).
 - No new skill is added in P0-006 (see the corrections record):
   the animation scope is a routing/profile layer over the existing
   15 skills, not a new technique skill.
+
+## P0-007 Final autonomous completion (2026-11-22, in progress)
+
+- **Timeline contract completed.** `schemas/timeline-manifest.json`
+  is v2.5 (additive): video-clip + shot bindings, audio-clip +
+  dialogue bindings, synchronization groups, and real
+  cross-reference validation (`validate_timeline_cross_references`
+  in `tests/test_timeline_manifest.py`) — a shot, dialogue line,
+  character, voice profile, or audio asset ID must resolve to the
+  record it names. Valid v2.3 timelines still pass.
+- **Structured ownership enforced.** Character registrations and
+  voice profiles carry `ownership` (`owner_id`, `workspace_id`,
+  `visibility`, `sharing`) — opaque local IDs, private by default.
+  Resolving a voice profile requires BOTH the Character ID +
+  Voice Profile binding AND matching ownership; same Character ID
+  with a different owner or workspace is REJECTED. The old
+  free-text `ownership_scope` is kept only as a deprecated legacy
+  field.
+- **Conditional v2.5 voice validation.** The repo validator cannot
+  express conditional requirements, so the v2.5 voice rules
+  (required fields, user-recorded vs AI-generated conditions,
+  approval states, consent rules) are enforced by the Python
+  validators in `scripts/asset_policy.py`; schema and validators
+  must agree on every record. A v2.3 voice profile remains valid
+  under the legacy contract.
+- **Real animal vs CGI animal fixed.** A speaking bird (Kiki) is
+  `cgi-animal`, not `real-animal`; a genuine captured animal is
+  never automatically given fictional dialogue or a speaking voice.
+  Species matching for articulation is by substring ("African grey
+  parrot" maps to bird-beak). A listening line needs no voice
+  profile; a speaking line still does.
+- **Companion licensing recorded.** OmniVoice model weights are
+  CC-BY-NC (non-commercial) — technically capable but NOT approved
+  for commercial production; no verified commercial voice provider
+  exists, so the commercial voice adapter stays unsupported
+  (see `architecture/COMPANION_CAPABILITY_REGISTRY.yaml`).
+- P0-007 is a contract + validation correction round: it does not
+  build the first-run registration UI, provider execution, or any
+  P1 runtime. No capability is marked exercised or
+  production-verified without actual evidence.
 
 ## Rules that always apply
 

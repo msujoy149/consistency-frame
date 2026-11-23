@@ -28,7 +28,7 @@ change tested.
 | `reference-review.json` | Reference review (analysis only; never mutates skills) |
 | `reference-learning.json` | Learning-candidate lifecycle (`OBSERVED → … → ACCEPTED → DEPRECATED`) |
 | `script-contract.json` | Script / scene / shot / performance contract (`VERBATIM_SCRIPT` default) |
-| `timeline-manifest.json` | Editor-neutral timeline manifest (media references only; not a renderer) |
+| `timeline-manifest.json` | **v2.3/v2.5** Editor-neutral timeline manifest — v2.5 (P0-007) adds video-clip + shot bindings, audio-clip + dialogue bindings, synchronization groups, and cross-reference validation; not a renderer |
 | `scene-plan.json` | **v2.4/v2.5** Scene plan — scenes, beats, dramatic intent, emotion + intensity + transitions |
 | `shot-plan.json` | **v2.4/v2.5** Shot plan — framing, camera angle/movement, lighting per shot |
 | `performance-plan.json` | **v2.4/v2.5** Performance plan — per dialogue line: face, micro-expressions, gaze, posture, gesture, breathing, voice, lip-sync |
@@ -72,6 +72,21 @@ change tested.
   `visual_style: "captured-live-action"` and motion method
   `"captured-motion"` (motion as captured by the camera, not
   generated).
+- P0-007 (final completion) extends the v2.5 contracts: the timeline
+  manifest is v2.5 with clip/shot/audio bindings, synchronization
+  groups, and cross-reference validation (`validate_timeline_cross_references`
+  in `tests/test_timeline_manifest.py`); character registration and
+  voice profiles carry a structured `ownership` record
+  (`owner_id`, `workspace_id`, `visibility`, `sharing` — opaque
+  local IDs, private by default) that replaces the old free-text
+  `ownership_scope` (kept only as a deprecated legacy field); and
+  v2.5 voice profiles follow conditional validation rules that
+  differ by `source` (user-recorded vs AI-generated) and by
+  approval state, enforced by the Python validators in
+  `scripts/asset_policy.py` because the restricted schema subset
+  cannot express conditional requirements — the schema and the
+  validators must agree on every record (see the P0-007
+  corrections record).
 - The four v2.4 schemas are the Script-to-Performance Intelligence
   contracts: `scene-plan.json`, `shot-plan.json`,
   `performance-plan.json`, and the combined `script-to-performance.json`.

@@ -28,18 +28,18 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 # recorded head against the live branch via the GitHub API.
 GH_HEAD = os.environ.get(
     "CF_GITHUB_HEAD", "fcf311ef79c5f10a4248f026a5f667109c584831")
-# Latest verified remote CI (P0-006 Part A): push run #47 + PR run #48 on the
-# P0-005 final PR head 24d2e62, both SUCCESS, 2/2 checks. The parent
+# Latest verified remote CI (P0-007): push run #83 + PR run #84 on the
+# P0-006 final PR head 33dc78b8, both SUCCESS, 2/2 checks. The parent
 # verified both runs live on 2026-11-22 and downloaded + inspected the
-# PR run's p0-test-results artifact (45 recorded entries, 33 distinct
-# test IDs, 26 distinct command strings, all PASS; last-run.json
-# byte-for-byte identical to the submitted P0-005 ZIP's). The push run
+# PR run's p0-test-results artifact (47 recorded entries, 35 distinct
+# test IDs, 28 distinct command strings, all PASS; last-run.json
+# byte-for-byte identical to the submitted P0-006 ZIP's). The push run
 # URL is the one recorded in build-report.json's ci object; the PR run
 # URL is cited in BUILD_REPORT_P0.md and the living report alongside it.
 CI_RUN_URL = ("https://github.com/msujoy149/consistency-frame/actions/"
-              "runs/45059388184")
+              "runs/45063530337")
 CI_PR_RUN_URL = ("https://github.com/msujoy149/consistency-frame/actions/"
-                 "runs/45059393245")
+                 "runs/45063535304")
 CI_PR_URL = "https://github.com/msujoy149/consistency-frame/pull/1"
 
 _spec = importlib.util.spec_from_file_location(
@@ -153,7 +153,7 @@ def main():
               "CI PASSED" in text and CI_RUN_URL in text
               and "2/2 checks" in text)
     # The CI evidence records the run that actually passed (head
-    # 24d2e62, push run #47). It must NOT be forced to equal the
+    # 33dc78b8, push run #83). It must NOT be forced to equal the
     # current github_branch_head: the corrections were pushed after
     # that run, so the current head's CI run is a separate event
     # checked by the delivery process, not by this file.

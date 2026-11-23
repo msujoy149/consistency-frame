@@ -75,6 +75,7 @@ run_one "CF-P0-PERF-005" python3 tests/test_performance_semantics.py
 run_one "P0-PRIVACY" python3 tests/test_private_overlay.py
 run_one "CF-P0-006-AC-REG" python3 tests/test_character_registration.py
 run_one "CF-P0-006-AC-DIR" python3 tests/test_production_direction.py
+run_one "CF-P0-007-AC-TIMELINE" python3 tests/test_timeline_manifest.py
 run_one "CF-INT-014" bash tests/test_installer.sh
 run_one "CF-INT-015" bash tests/test_installer.sh
 run_one "CF-INT-015" bash tests/test_installer_security.sh

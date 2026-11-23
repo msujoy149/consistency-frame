@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://consistencyframe.blogspot.com/schemas/v2.5/voice-profile.json",
   "title": "VoiceProfile",
-  "description": "A character voice profile. Separate from character identity and from sound assets. Requires explicit authorisation + rights/consent. v2.5 ADDITIVE MIGRATION (CF-WO-P0-006 Addendum C §5): Voice Profile data added (voice_profile_id, source, audio_reference_assets, accent, vocal_characteristics, pitch_range, speaking_pace, pronunciation_preferences, emotional_delivery_range, model, approval_status, consent_status). All new fields are optional; no existing required field was removed or retyped, so every valid v2.3 record remains valid. Voice profiles are private, owner/workspace-scoped, and bound to exactly one character (character_id) — never shared across characters or users, and never sent to a provider without disclosing that transmission.",
+  "description": "A character voice profile. Separate from character identity and from sound assets. Requires explicit authorisation + rights/consent. v2.5 ADDITIVE MIGRATION (CF-WO-P0-006 Addendum C \u00a75): Voice Profile data added (voice_profile_id, source, audio_reference_assets, accent, vocal_characteristics, pitch_range, speaking_pace, pronunciation_preferences, emotional_delivery_range, model, approval_status, consent_status). All new fields are optional; no existing required field was removed or retyped, so every valid v2.3 record remains valid. Voice profiles are private, owner/workspace-scoped, and bound to exactly one character (character_id) \u2014 never shared across characters or users, and never sent to a provider without disclosing that transmission. CF-WO-P0-007 Correction B/C: structured 'ownership' (owner_id + workspace_id + visibility + sharing) is REQUIRED for v2.5 records, enforced conditionally by scripts/asset_policy.py validate_voice_profile \u2014 the repo's JSON-Schema validator subset has no if/then, allOf or dependentRequired, so the JSON Schema alone cannot express conditional-required and stays permissive here; a record is fully valid v2.5 only when both the schema and the Python validator pass. For v2.5 the minimum fields are voice_profile_id, character_id, source, ownership, voice asset references, approval_status and consent_status, with source-conditional rules (user-recording: audio reference + granted consent; ai-generated: provider + model identification + approval state). consent_status governs consent and must agree with consent.granted; consent_status 'not-required' is legitimate only when human_voice_donor is false. approval_status is 'pending' until the user explicitly approves \u2014 a generated voice is never approved automatically, and only an approved, correctly owned profile may be selected for production. Provider transmission must be disclosed, approved and recorded (provider_transmission); nothing here promises data never leaves the device.",
   "type": "object",
   "properties": {
     "schema_version": {
@@ -70,7 +70,7 @@
       "type": "string"
     },
     "voice_profile_id": {
-      "description": "Voice Profile ID (Addendum C §5). Stable ID for this voice profile; the same ID is referenced from character.voice_profile_ids, performance-plan lines and script-to-performance character_voice_bindings so VoiceStudio receives a consistent handoff.",
+      "description": "Voice Profile ID (Addendum C \u00a75). Stable ID for this voice profile; the same ID is referenced from character.voice_profile_ids, performance-plan lines and script-to-performance character_voice_bindings so VoiceStudio receives a consistent handoff.",
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
     },
@@ -83,7 +83,7 @@
       ]
     },
     "audio_reference_assets": {
-      "description": "Reference audio assets for this voice (recordings/samples). Pointers only — relative path + optional hash; the audio itself lives in the private overlay, workspace-scoped.",
+      "description": "Reference audio assets for this voice (recordings/samples). Pointers only \u2014 relative path + optional hash; the audio itself lives in the private overlay, workspace-scoped.",
       "type": "array",
       "items": {
         "type": "object",
@@ -153,6 +153,46 @@
       "description": "Voice model used (e.g. 'OmniVoice'). Distinct from model_version, which pins the model build.",
       "type": "string"
     },
+    "ownership": {
+      "type": "object",
+      "description": "Structured private ownership. owner_id + workspace_id are stable, opaque, randomly generated local identifiers \u2014 never a real name, email or account detail. visibility is private by default; sharing is none by default and requires an explicit future sharing permission.",
+      "properties": {
+        "owner_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+        },
+        "workspace_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": [
+            "private",
+            "shared"
+          ]
+        },
+        "sharing": {
+          "type": "string",
+          "enum": [
+            "none",
+            "workspace",
+            "explicit"
+          ]
+        }
+      },
+      "required": [
+        "owner_id",
+        "workspace_id",
+        "visibility",
+        "sharing"
+      ],
+      "additionalProperties": false
+    },
+    "human_voice_donor": {
+      "description": "Whether a real person's voice was used as the donor for this voice (recorded, or cloned from a real person). True: explicit permission + granted consent are required. False: no real person's voice was used; consent_status 'not-required' is legitimate only with this field false. Absent: donor status unrecorded, so 'not-required' is not legitimate.",
+      "type": "boolean"
+    },
     "approval_status": {
       "description": "Whether this voice profile is approved for use in productions.",
       "type": "string",
@@ -163,7 +203,7 @@
       ]
     },
     "consent_status": {
-      "description": "Consent state for this voice. A user-recorded voice requires granted consent; an AI-generated voice with no human donor is not-required only when no real person's voice was used.",
+      "description": "Consent state for this voice. A user-recorded voice requires granted consent; an AI-generated voice with no human donor is not-required only when no real person's voice was used (human_voice_donor false) \u2014 never use 'not-required' to bypass actual permission requirements.",
       "type": "string",
       "enum": [
         "granted",
@@ -221,6 +261,33 @@
       },
       "required": [
         "source"
+      ],
+      "additionalProperties": false
+    },
+    "provider_transmission": {
+      "description": "Disclosure record for voice data sent to a provider. Voice data must never be sent to a provider without disclosing that transmission, user approval, and the provider + data-use scope. This record must never promise that data never leaves the device; it records what was disclosed and approved for this transmission.",
+      "type": "object",
+      "properties": {
+        "disclosed": {
+          "type": "boolean"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "data_use_scope": {
+          "type": "string"
+        },
+        "approved_by": {
+          "type": "string"
+        },
+        "external": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "disclosed",
+        "provider",
+        "data_use_scope"
       ],
       "additionalProperties": false
     },

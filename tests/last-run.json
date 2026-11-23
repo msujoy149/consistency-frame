@@ -170,6 +170,12 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P0-007-AC-TIMELINE",
+      "command": "python3 tests/test_timeline_manifest.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "CF-INT-014",
       "command": "bash tests/test_installer.sh",
       "exit_code": 0,
