@@ -93,8 +93,18 @@ REGISTRATION_FIELDS = {
     "visual_style_profile", "canonical_reference_images",
     "additional_reference_images", "features",
     "expression_pose_references", "default_voice_profile_id",
-    "additional_voice_profile_ids", "audio_assets", "ownership_scope",
+    "additional_voice_profile_ids", "audio_assets", "ownership",
+    "ownership_scope",
     "consent_permissions", "registration_history", "schema_version"}
+# CF-WO-P0-007 (B): deterministic test identities for the structured
+# ownership object. owner-a/workspace-a own Mina + Nila; owner-b /
+# workspace-b are the "other user / other workspace" in the tests.
+OWNER_A = {"owner_id": "owner-a", "workspace_id": "workspace-a",
+           "visibility": "private", "sharing": "none"}
+OWNER_B = {"owner_id": "owner-b", "workspace_id": "workspace-b",
+           "visibility": "private", "sharing": "none"}
+OWNER_A_WS_B = {"owner_id": "owner-a", "workspace_id": "workspace-b",
+                "visibility": "private", "sharing": "none"}
 CHARACTER_EXT_FIELDS = {
     "subject_kind", "species", "anatomy_profile", "articulation_target",
     "identity_origin", "reference_media_provenance",
@@ -183,8 +193,10 @@ def validate_registration(reg):
     consent = reg.get("consent_permissions") or {}
     if consent.get("granted") is not True:
         errs.append("consent_permissions.granted must be true")
-    if not reg.get("ownership_scope"):
-        errs.append("missing ownership_scope")
+    # CF-WO-P0-007 (B): structured ownership is REQUIRED (the schema
+    # requires it too). The legacy ownership_scope string is optional
+    # and deprecated — it is never a substitute for the object.
+    errs.extend(asset_policy.validate_ownership(reg.get("ownership")))
     history = reg.get("registration_history")
     if not isinstance(history, list) or not history:
         errs.append("registration_history must be a non-empty list")
@@ -198,7 +210,25 @@ def validate_registration(reg):
 
 
 def validate_voice_profile(vp):
-    """Fixed voice-profile contract (Addendum C §5)."""
+    """Fixed voice-profile contract (Addendum C §5, as amended by
+    CF-WO-P0-007 Correction C).
+
+    Consent governing rule: consent_status governs; consent.granted
+    must agree with it. consent_status "not-required" is legitimate
+    only when human_voice_donor is explicitly false. Approval:
+    approval_status must EXIST (pending is a legitimate state — a
+    generated voice is never approved automatically); whether the
+    profile may be used in production is decided by the resolver
+    (asset_policy.resolve_voice_for_production), not here. status
+    "approved" without approval_status "approved" is invalid.
+    Ownership + the full v2.5 minimum-field set are enforced by
+    asset_policy.validate_voice_profile (see
+    validate_voice_profile_v25 below) — this §5 validator predates
+    structured ownership and does not demand it, so the pre-P0-007
+    fixtures it checks (voice-profile-user-recording.json /
+    voice-profile-ai-generated.json, which carry no ownership
+    object) keep their §5 meaning.
+    """
     errs = []
     if not isinstance(vp, dict):
         return ["voice profile is not an object"]
@@ -215,16 +245,52 @@ def validate_voice_profile(vp):
         if vp.get("consent_status") != "granted":
             errs.append("user-recording needs consent_status 'granted'")
     if source == "ai-generated":
-        if vp.get("approval_status") != "approved":
+        if vp.get("approval_status") not in ("pending", "approved",
+                                             "rejected"):
             errs.append("ai-generated voice needs approval_status "
-                        "'approved'")
+                        "(pending, approved or rejected)")
         if not vp.get("provider"):
             errs.append("ai-generated voice needs a provider")
     if vp.get("consent_status") not in ("granted", "pending", "denied",
                                         "not-required"):
         errs.append(f"unknown consent_status "
                     f"{vp.get('consent_status')!r}")
+    consent = vp.get("consent") or {}
+    if vp.get("consent_status") == "granted" \
+            and consent.get("granted") is not True:
+        errs.append("consent_status 'granted' but consent.granted is "
+                    "not true")
+    if vp.get("consent_status") == "not-required" \
+            and vp.get("human_voice_donor") is not False:
+        errs.append("consent_status 'not-required' is legitimate only "
+                    "when human_voice_donor is false (no real person's "
+                    "voice was used)")
+    if vp.get("human_voice_donor") is True \
+            and vp.get("consent_status") != "granted":
+        errs.append("a real-person voice donor requires explicit "
+                    "permission (consent_status 'granted')")
+    if vp.get("status") == "approved" \
+            and vp.get("approval_status") != "approved":
+        errs.append("status 'approved' without approval_status "
+                    "'approved' is invalid (no approval record)")
     return errs
+
+
+def validate_voice_profile_v25(vp, character=None):
+    """Full v2.5 voice-profile verdict: (schema_errors, python_errors).
+
+    Both layers are returned separately so the C tests can pin each
+    layer's verdict: the JSON Schema is permissive for v2.5
+    conditional fields (the repo validator subset has no if/then),
+    so schema-pass + python-fail is an expected, documented
+    outcome for conditional cases — never a silent disagreement.
+    A record is fully valid v2.5 only when both lists are empty.
+    """
+    schema = load_schema("voice-profile.json")
+    schema_errs = errors_for(schema, vp) if schema is not None else [
+        "voice-profile.json schema missing"]
+    python_errs = asset_policy.validate_voice_profile(vp, character)
+    return schema_errs, python_errs
 
 
 def validate_invitation(inv):
@@ -266,8 +332,19 @@ def resolve_references(registry, character_id):
 
 
 def resolve_voice_for_character(voice_registry, character_id,
-                                voice_profile_id=None):
-    """The voice profile bound to a character (optionally: one ID)."""
+                                voice_profile_id=None,
+                                character_registry=None,
+                                requesting_owner_id=None,
+                                requesting_workspace_id=None):
+    """The voice profile bound to a character (optionally: one ID).
+
+    CF-WO-P0-007 (B): when a character_registry is given, the
+    resolved voice's ownership must match the character's
+    ownership; when a requesting owner/workspace is given, the
+    requester must be allowed access by the voice ownership.
+    With no registry/requester the legacy binding-only behaviour
+    is kept (AC-09).
+    """
     matches = [v for v in voice_registry.values()
                if v.get("character_id") == character_id]
     if not matches:
@@ -278,13 +355,35 @@ def resolve_voice_for_character(voice_registry, character_id,
         if not hit:
             return None, [f"voice_profile_id {voice_profile_id!r} is not "
                           f"bound to character {character_id!r}"]
-        return hit[0], []
-    return matches[0], []
+        voice = hit[0]
+    else:
+        voice = matches[0]
+    if character_registry is not None:
+        character = character_registry.get(character_id)
+        if character is None:
+            return None, [f"unknown character_id {character_id!r}"]
+        if not asset_policy.ownerships_match(
+                voice.get("ownership"), character.get("ownership")):
+            return None, ["voice profile ownership does not match the "
+                          "character ownership (owner/workspace must "
+                          "match)"]
+    if requesting_owner_id is not None or \
+            requesting_workspace_id is not None:
+        if not asset_policy.ownership_allows_access(
+                voice.get("ownership"), requesting_owner_id,
+                requesting_workspace_id):
+            return None, ["voice profile is not accessible to this "
+                          "owner/workspace (private by default; no "
+                          "cross-user sharing)"]
+    return voice, []
 
 
-def check_voice_binding(voice_registry, character_id, voice_profile_id):
+def check_voice_binding(voice_registry, character_id, voice_profile_id,
+                        character_registry=None):
     """A character/voice binding is valid only when the voice profile's
-    own character_id is the character it is bound to."""
+    own character_id is the character it is bound to (and, when a
+    character registry is given, the voice ownership matches the
+    character ownership)."""
     vp = voice_registry.get(voice_profile_id)
     if vp is None:
         return [f"unknown voice_profile_id {voice_profile_id!r}"]
@@ -292,12 +391,37 @@ def check_voice_binding(voice_registry, character_id, voice_profile_id):
         return [f"voice_profile_id {voice_profile_id!r} belongs to "
                 f"character {vp.get('character_id')!r}, not "
                 f"{character_id!r} — cross-character assignment rejected"]
+    if character_registry is not None:
+        character = character_registry.get(character_id)
+        if character is None:
+            return [f"unknown character_id {character_id!r}"]
+        if not asset_policy.ownerships_match(
+                vp.get("ownership"), character.get("ownership")):
+            return ["voice profile ownership does not match the "
+                    "character ownership (owner/workspace must match)"]
     return []
 
 
-def resolve_for_user(reg, requesting_user):
+def resolve_for_user(reg, requesting_user, requesting_workspace=None):
     """Owner/workspace-scoped resolution: another user's assets are
-    rejected, never silently served."""
+    rejected, never silently served.
+
+    CF-WO-P0-007 (B): a structured ownership object, when present,
+    governs — the requester must be its owner_id in its
+    workspace_id (see asset_policy.ownership_allows_access). The
+    legacy ownership_scope string is consulted ONLY for records
+    with no ownership object. requesting_user is an owner_id;
+    requesting_workspace is a workspace_id.
+    """
+    ownership = reg.get("ownership") if isinstance(reg, dict) else None
+    if isinstance(ownership, dict):
+        if asset_policy.ownership_allows_access(
+                ownership, requesting_user, requesting_workspace):
+            return []
+        return [f"asset owned by {ownership.get('owner_id')!r} in "
+                f"workspace {ownership.get('workspace_id')!r} cannot "
+                f"be resolved under owner {requesting_user!r} "
+                f"(workspace {requesting_workspace!r})"]
     if reg.get("ownership_scope") != requesting_user:
         return [f"asset owned by {reg.get('ownership_scope')!r} cannot "
                 f"be resolved under user {requesting_user!r}"]
@@ -323,7 +447,27 @@ def main():
     # --- SCHEMA DEPENDENCY GATES --------------------------------------
     reg_schema = schema_gate(
         "character-registration.json", REGISTRATION_FIELDS,
-        required_fields=("character_id", "display_name"))
+        required_fields=("character_id", "display_name", "ownership"))
+    if reg_schema is not None:
+        props = reg_schema["properties"]
+        check("SCHEMA-GATE: character-registration requires the "
+              "structured ownership object",
+              "ownership" in reg_schema.get("required", []),
+              f"required={reg_schema.get('required')}")
+        check("SCHEMA-GATE: character-registration keeps "
+              "ownership_scope as OPTIONAL legacy (deprecated, "
+              "superseded by ownership)",
+              "ownership_scope" in props
+              and "ownership_scope" not in reg_schema.get("required", []),
+              f"required={reg_schema.get('required')}")
+        check("SCHEMA-GATE: character-registration ownership shape is "
+              "owner_id + workspace_id + visibility + sharing",
+              set(props.get("ownership", {}).get("properties", {}))
+              == {"owner_id", "workspace_id", "visibility", "sharing"}
+              and set(props.get("ownership", {}).get("required", []))
+              == {"owner_id", "workspace_id", "visibility", "sharing"}
+              and props.get("ownership", {}).get("additionalProperties")
+              is False)
     if reg_schema is not None:
         props = reg_schema["properties"]
         check("SCHEMA-GATE: character-registration visual_style "
@@ -357,6 +501,42 @@ def main():
         check("SCHEMA-GATE: voice-profile.json carries approval_status "
               "+ consent_status",
               "approval_status" in props and "consent_status" in props)
+        check("SCHEMA-GATE: voice-profile.json carries the structured "
+              "ownership object (same shape as character-registration)",
+              set(props.get("ownership", {}).get("properties", {}))
+              == {"owner_id", "workspace_id", "visibility", "sharing"}
+              and set(props.get("ownership", {}).get("required", []))
+              == {"owner_id", "workspace_id", "visibility", "sharing"})
+        check("SCHEMA-GATE: voice-profile.json does NOT add v2.5 fields "
+              "to the global required array (v2.3 must keep passing)",
+              "ownership" not in voice_schema.get("required", [])
+              and "voice_profile_id" not in voice_schema.get("required", [])
+              and "source" not in voice_schema.get("required", []),
+              f"required={voice_schema.get('required')}")
+        check("SCHEMA-GATE: voice-profile.json records the human-donor "
+              "condition + provider transmission disclosure",
+              "human_voice_donor" in props
+              and "provider_transmission" in props)
+
+    # The bird registration fixture (character-registration-bird-valid
+    # .json, char-002) is owned by another CF-WO-P0-007 worker: its
+    # structured ownership object is pending from them. Until it
+    # lands, the fixture-vs-schema check is SKIPped (never a pass
+    # against nothing) and the registration tests below use an
+    # in-memory copy with the ownership object injected — the file
+    # itself is not modified here. The check un-skips automatically
+    # once the fixture carries ownership.
+    _bird_reg = load_fixture("character-registration-bird-valid.json")
+    _bird_ownership_pending = "ownership" not in _bird_reg
+    if _bird_ownership_pending:
+        skip("valid fixture character-registration-bird-valid.json "
+             "validates",
+             "bird fixture ownership pending from its owning worker")
+    else:
+        validate_against_schema(
+            reg_schema, "character-registration-bird-valid.json",
+            "valid fixture character-registration-bird-valid.json "
+            "validates")
 
     # Fixture-vs-schema validation (repo's validate_instance), only
     # where the gate passed.
@@ -364,8 +544,9 @@ def main():
         reg_schema, "character-registration-valid.json",
         "valid fixture character-registration-valid.json validates")
     validate_against_schema(
-        reg_schema, "character-registration-bird-valid.json",
-        "valid fixture character-registration-bird-valid.json validates")
+        reg_schema, "character-registration-valid-human.json",
+        "valid fixture character-registration-valid-human.json "
+        "validates")
     validate_against_schema(
         char_schema, "character-extended-valid.json",
         "valid fixture character-extended-valid.json validates")
@@ -396,8 +577,20 @@ def main():
 
     mina = load_fixture("character-registration-valid.json")
     kiki = load_fixture("character-registration-bird-valid.json")
+    if _bird_ownership_pending:
+        # In-memory only: the registration logic below is exercised
+        # with the ownership object present; the file gains it from
+        # its owning worker (see the SKIP above).
+        kiki = copy.deepcopy(kiki)
+        kiki["ownership"] = copy.deepcopy(OWNER_A)
     mina_voice = load_fixture("voice-profile-user-recording.json")
     kiki_voice = load_fixture("voice-profile-ai-generated.json")
+    # Full valid v2.5 records (CF-WO-P0-007 Worker 2 fixtures):
+    # Nila (user-recorded voice) + Aria (AI-generated voice), both
+    # owned by owner-a / workspace-a, private, sharing none.
+    nila = load_fixture("character-registration-valid-human.json")
+    nila_voice = load_fixture("voice-profile-valid-user-recorded.json")
+    aria_voice = load_fixture("voice-profile-valid-ai-generated.json")
     registry = {}
     voice_registry = {mina_voice["voice_profile_id"]: mina_voice,
                       kiki_voice["voice_profile_id"]: kiki_voice}
@@ -557,15 +750,28 @@ def main():
                                       "voice-kiki-001"))
 
     # --- AC-11: private assets are not exposed to another user --------
-    check("AC-11: user-A asset resolves under user-A",
-          not resolve_for_user(mina, "user-a"))
-    check("AC-11: user-A asset is rejected when resolved under user-B",
-          bool(resolve_for_user(mina, "user-b")))
-    check("AC-11: a voice bound to a user-A character is rejected "
-          "under user-B (ownership follows the character)",
+    # CF-WO-P0-007 (B): resolution is by structured ownership now
+    # (owner-a / workspace-a). The legacy ownership_scope string
+    # ("user-a") is no longer an identity once the ownership object
+    # exists.
+    check("AC-11: owner-A asset resolves under owner-A / workspace-A",
+          not resolve_for_user(mina, "owner-a", "workspace-a"))
+    check("AC-11: owner-A asset is rejected when resolved under "
+          "owner-B",
+          bool(resolve_for_user(mina, "owner-b", "workspace-b")))
+    check("AC-11: owner-A asset is rejected under owner-A in the "
+          "wrong workspace",
+          bool(resolve_for_user(mina, "owner-a", "workspace-b")))
+    check("AC-11: a voice bound to an owner-A character is rejected "
+          "under owner-B (ownership follows the character)",
           bool(resolve_for_user(
-              {"ownership_scope":
-               mina["ownership_scope"]}, "user-b")))
+              {"ownership": copy.deepcopy(OWNER_A)}, "owner-b",
+              "workspace-b")))
+    check("AC-11: legacy ownership_scope still governs a record with "
+          "no ownership object (migration fallback)",
+          not resolve_for_user({"ownership_scope": "user-a"}, "user-a")
+          and bool(resolve_for_user({"ownership_scope": "user-a"},
+                                       "user-b")))
 
     # --- AC-12: private media excluded from public releases -----------
     manifest = load_json("release-manifest.json")
@@ -612,6 +818,277 @@ def main():
               f"tracked={char_tracked}")
     except Exception as e:  # pragma: no cover - git always present here
         check("AC-12: git ls-files readable", False, str(e))
+
+    # --- CF-WO-P0-007 (B): structured private ownership -------------
+    # The production resolver is asset_policy.resolve_voice_for_
+    # production; these tests verify it (not isolated example
+    # conditions). v2.5 voice fixtures: Nila (user-recorded) + Aria
+    # (AI-generated), both owner-a / workspace-a.
+    v25_voice_registry = {
+        nila_voice["voice_profile_id"]: nila_voice,
+        aria_voice["voice_profile_id"]: aria_voice}
+    nila_registry = {nila["character_id"]: nila}
+    aria_character = {"character_id": "char-aria-001",
+                      "ownership": copy.deepcopy(OWNER_A)}
+    aria_registry = {aria_character["character_id"]: aria_character}
+    v25_registries = {**nila_registry, **aria_registry}
+
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a")
+    check("B: Owner-A character resolved by Owner-A (production "
+          "resolver)",
+          not errs and voice is not None
+          and voice["voice_profile_id"] == "voice-nila-001",
+          "; ".join(errs))
+    voice, errs = resolve_voice_for_character(
+        v25_voice_registry, "char-nila-001", "voice-nila-001",
+        character_registry=nila_registry,
+        requesting_owner_id="owner-a",
+        requesting_workspace_id="workspace-a")
+    check("B: Owner-A character voice resolves under Owner-A "
+          "(binding resolver)",
+          not errs and voice is not None, "; ".join(errs))
+    _, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-nila-001", "owner-b", "workspace-b")
+    check("B: Owner-A character rejected by Owner-B",
+          bool(errs), "; ".join(errs))
+    _, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-b")
+    check("B: same owner but wrong workspace rejected",
+          bool(errs), "; ".join(errs))
+    _, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-nila-001", "owner-b", "workspace-a")
+    check("B: no cross-user sharing by default (same workspace, "
+          "other owner, sharing none)",
+          bool(errs), "; ".join(errs))
+    shared_ws = copy.deepcopy(nila_voice)
+    shared_ws["ownership"] = {"owner_id": "owner-a",
+                              "workspace_id": "workspace-a",
+                              "visibility": "shared",
+                              "sharing": "workspace"}
+    check("B: sharing 'workspace' admits another owner in the same "
+          "workspace",
+          asset_policy.ownership_allows_access(
+              shared_ws["ownership"], "owner-b", "workspace-a"))
+    check("B: sharing 'workspace' still rejects another workspace",
+          not asset_policy.ownership_allows_access(
+              shared_ws["ownership"], "owner-b", "workspace-b"))
+    other_owner_voice = copy.deepcopy(nila_voice)
+    other_owner_voice["ownership"] = copy.deepcopy(OWNER_B)
+    _, errs = asset_policy.resolve_voice_for_production(
+        {other_owner_voice["voice_profile_id"]: other_owner_voice},
+        v25_registries, "char-nila-001", "voice-nila-001",
+        "owner-a", "workspace-a")
+    check("B: voice owned by another user rejected (correct "
+          "Character ID, mismatched ownership)",
+          bool(errs), "; ".join(errs))
+    other_ws_voice = copy.deepcopy(nila_voice)
+    other_ws_voice["ownership"] = copy.deepcopy(OWNER_A_WS_B)
+    _, errs = asset_policy.resolve_voice_for_production(
+        {other_ws_voice["voice_profile_id"]: other_ws_voice},
+        v25_registries, "char-nila-001", "voice-nila-001",
+        "owner-a", "workspace-a")
+    check("B: voice owned by another workspace rejected",
+          bool(errs), "; ".join(errs))
+    check("B: correct Character ID but mismatched ownership rejected "
+          "(binding check with registry)",
+          bool(check_voice_binding(
+              {other_owner_voice["voice_profile_id"]: other_owner_voice},
+              "char-nila-001", "voice-nila-001",
+              character_registry=nila_registry)))
+    _, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-aria-001", "owner-a", "workspace-a")
+    check("B: cross-character voice assignment rejected by the "
+          "production resolver",
+          bool(errs), "; ".join(errs))
+    check("B: private voice export blocked without explicit "
+          "authorization",
+          bool(asset_policy.validate_private_voice_export(nila_voice)))
+    check("B: private voice export blocked with partial "
+          "authorization",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, {"granted_by": "user",
+                           "scope": "export voice"})))
+    check("B: private voice export allowed with full explicit "
+          "authorization",
+          not asset_policy.validate_private_voice_export(
+              nila_voice, {"granted_by": "owner-a",
+                           "scope": "export voice-nila-001 for backup",
+                           "explicit_authorisation": True}))
+    check("B: private media not included in public release manifests "
+          "(manifest check)",
+          bool(asset_policy.validate_release_manifest_paths(
+              ["characters/char-nila-001/voice-reference.mp3",
+               "docs/07-character-registry.md"]))
+          and not asset_policy.validate_release_manifest_paths(
+              ["characters/README.md",
+               "docs/07-character-registry.md"]))
+    check("B: private data path traversal rejected",
+          asset_policy.resolve_private_path(
+              "characters", "../outside/secret.jpg")[1] != []
+          and asset_policy.resolve_private_path(
+              "characters", "/etc/passwd")[1] != []
+          and asset_policy.resolve_private_path(
+              "characters",
+              "char-nila-001/../../etc/passwd")[1] != [])
+    check("B: temporary asset use must NOT silently become permanent "
+          "registration",
+          not asset_policy.may_create_permanent_record(
+              "TEMPORARY_ASSET_USE")
+          and bool(register({}, load_fixture("temporary-asset-use.json"))))
+    check("B: uploading an image never makes a character public "
+          "(visibility stays private, sharing none, other owner "
+          "still rejected)",
+          nila["ownership"]["visibility"] == "private"
+          and nila["ownership"]["sharing"] == "none"
+          and bool(resolve_for_user(nila, "owner-b", "workspace-b")))
+    check("B: visibility 'shared' without a sharing permission is "
+          "rejected",
+          bool(asset_policy.validate_ownership(
+              {"owner_id": "owner-a", "workspace_id": "workspace-a",
+               "visibility": "shared", "sharing": "none"})))
+    check("B: ownership IDs must be opaque local identifiers (never "
+          "a real name/email)",
+          bool(asset_policy.validate_ownership(
+              {"owner_id": "Owner A", "workspace_id": "workspace-a",
+               "visibility": "private", "sharing": "none"}))
+          and bool(asset_policy.validate_ownership(
+              {"owner_id": "owner-a",
+               "workspace_id": "someone@example.com",
+               "visibility": "private", "sharing": "none"}))
+          and not asset_policy.validate_ownership(
+              copy.deepcopy(OWNER_A)))
+
+    # --- CF-WO-P0-007 (C): conditional v2.5 voice-profile ----------
+    # validation. Each case pins BOTH layers: the JSON Schema verdict
+    # and the Python v2.5 validator verdict. For conditional fields
+    # the schema is permissive by design (validator subset has no
+    # if/then) — schema-pass + python-fail is the documented gap,
+    # asserted explicitly, never silent.
+    def check_voice_case(name, record, expect_schema_pass,
+                         expect_python_pass, character=None):
+        schema_errs, python_errs = validate_voice_profile_v25(
+            record, character)
+        check(f"C: {name} — schema verdict as expected",
+              (not schema_errs) == expect_schema_pass,
+              "; ".join(schema_errs))
+        check(f"C: {name} — python v2.5 verdict as expected",
+              (not python_errs) == expect_python_pass,
+              "; ".join(python_errs))
+
+    check_voice_case("valid v2.5 user-recorded (approved + granted "
+                     "consent + matching ownership)",
+                     copy.deepcopy(nila_voice), True, True,
+                     character=nila)
+    check_voice_case("valid v2.5 AI-generated (approved, provider+"
+                     "model recorded, no-human-donor accurately "
+                     "recorded)",
+                     copy.deepcopy(aria_voice), True, True,
+                     character=aria_character)
+    check_voice_case("valid v2.3 legacy voice profile still passes",
+                     load_fixture("voice-profile-valid.json"), True, True)
+    bad = copy.deepcopy(nila_voice)
+    del bad["voice_profile_id"]
+    check_voice_case("missing Voice Profile ID", bad, True, False)
+    bad = copy.deepcopy(nila_voice)
+    del bad["source"]
+    check_voice_case("missing source", bad, True, False)
+    bad = copy.deepcopy(nila_voice)
+    del bad["ownership"]
+    check_voice_case("missing owner/workspace (documented subset gap: "
+                     "schema cannot express conditional-required, "
+                     "Python enforces it)",
+                     bad, True, False)
+    bad = copy.deepcopy(nila_voice)
+    bad["audio_reference_assets"] = []
+    check_voice_case("user recording without audio reference", bad,
+                     True, False)
+    bad = copy.deepcopy(nila_voice)
+    bad["consent_status"] = "pending"
+    bad["consent"] = {"granted": False, "granted_by": "parent",
+                      "scope": "this series only", "source": "user"}
+    check_voice_case("user recording without granted consent", bad,
+                     True, False)
+    bad = copy.deepcopy(aria_voice)
+    del bad["provider"]
+    check_voice_case("AI-generated voice without provider", bad,
+                     True, False)
+    bad = copy.deepcopy(aria_voice)
+    del bad["approval_status"]
+    check_voice_case("AI-generated voice without approval state", bad,
+                     True, False)
+    bad = copy.deepcopy(aria_voice)
+    del bad["model"]
+    del bad["model_version"]
+    check_voice_case("AI-generated voice without model identification",
+                     bad, True, False)
+    bad = copy.deepcopy(aria_voice)
+    bad["human_voice_donor"] = True
+    bad["consent_status"] = "not-required"
+    bad["consent"] = {"granted": False, "source": "user"}
+    check_voice_case("unauthorized real-person voice sample (donor "
+                     "voice claimed not-required, no consent)",
+                     bad, True, False)
+    bad = copy.deepcopy(aria_voice)
+    del bad["human_voice_donor"]
+    check_voice_case("consent_status 'not-required' without the "
+                     "no-human-donor condition recorded",
+                     bad, True, False)
+    bad = copy.deepcopy(nila_voice)
+    bad["approval_status"] = "pending"
+    check_voice_case("status 'approved' without an approval record",
+                     bad, True, False)
+    bad = copy.deepcopy(nila_voice)
+    bad["ownership"] = {"owner_id": "Owner A!",
+                        "workspace_id": "workspace-a",
+                        "visibility": "private", "sharing": "none"}
+    check_voice_case("ownership owner_id is not an opaque local "
+                     "identifier (both layers reject)", bad, False, False)
+    bad = copy.deepcopy(nila_voice)
+    bad["ownership"] = {"owner_id": "owner-a",
+                        "workspace_id": "workspace-a",
+                        "visibility": "shared", "sharing": "none"}
+    check_voice_case("visibility 'shared' with sharing 'none'",
+                     bad, True, False)
+    bad = copy.deepcopy(nila_voice)
+    bad["provider_transmission"] = {"disclosed": False,
+                                    "provider": "external-voice-api",
+                                    "data_use_scope": "synthesis",
+                                    "approved_by": "user"}
+    check_voice_case("provider transmission without disclosure",
+                     bad, True, False)
+    # Pending is a legitimate record state — but never an approved
+    # production voice.
+    pending = copy.deepcopy(aria_voice)
+    pending["approval_status"] = "pending"
+    pending["status"] = "draft"
+    check_voice_case("pending profile is a valid record (not yet "
+                     "approved)", pending, True, True)
+    _, errs = asset_policy.resolve_voice_for_production(
+        {pending["voice_profile_id"]: pending}, aria_registry,
+        "char-aria-001", "voice-aria-001", "owner-a", "workspace-a")
+    check("C: pending profile used as approved production voice is "
+          "rejected",
+          bool(errs), "; ".join(errs))
+    _, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-aria-001",
+        "voice-nila-001", "owner-a", "workspace-a")
+    check("C: voice bound to another character rejected by the "
+          "production resolver",
+          bool(errs), "; ".join(errs))
+    wrong_ws = copy.deepcopy(aria_voice)
+    wrong_ws["ownership"] = copy.deepcopy(OWNER_A_WS_B)
+    _, errs = asset_policy.resolve_voice_for_production(
+        {wrong_ws["voice_profile_id"]: wrong_ws}, aria_registry,
+        "char-aria-001", "voice-aria-001", "owner-a", "workspace-a")
+    check("C: voice bound to another workspace rejected by the "
+          "production resolver",
+          bool(errs), "; ".join(errs))
 
     # --- QC-01: character-identity QC (Addendum C §12) -----------------
     refs, errs = resolve_references(registry, "char-999")
