@@ -195,7 +195,7 @@ step-by-step order for every video, in §7).
   the animation scope is a routing/profile layer over the existing
   15 skills, not a new technique skill.
 
-## P0-007 Final autonomous completion (2026-11-22, in progress)
+## P0-007 Final autonomous completion (2026-11-22, complete)
 
 - **Timeline contract completed.** `schemas/timeline-manifest.json`
   is v2.5 (additive): video-clip + shot bindings, audio-clip +
@@ -287,6 +287,47 @@ step-by-step order for every video, in §7).
   it does not build the first-run registration UI, provider
   execution, the app/session runtime for the trusted boundary,
   lip-sync/articulation generation, or any P1 runtime.
+
+## P0-009 Immutable authorization context & fail-closed resolution (2026-11-23)
+
+- **The authorization context is genuinely immutable.**
+  `TrustedAuthorizationContext` (`scripts/asset_policy.py`) freezes
+  itself at issuance (`_frozen` flag; `__setattr__`/`__delattr__`
+  raise `AttributeError`; no `__dict__`; copy/deepcopy/pickle return
+  frozen objects). `__slots__` alone was not enough — the old
+  `ctx.revoked = True` mutation no longer works. Revocation is a
+  separate registry (`_REVOKED_AUTHORIZATION_IDS`, keyed by the
+  immutable per-issuance `authorization_id`) and never mutates the
+  issued context. The registry is process-local/in-memory;
+  persistence is P1 work.
+- **v2.5 voice resolution fails closed without a Character
+  Registry.** `resolve_voice_for_production` returns no voice when
+  the registry is missing, non-dict, lacks the Character, or the
+  Character/Voice ownership does not match. Legacy v2.3 keeps its
+  historical contract; v2.5 never silently falls back to it.
+- **Timeline validation is strict by default.**
+  `validate_timeline_cross_references` (`scripts/timeline_policy.py`)
+  runs full strict v2.5 checks when the `strict` argument is omitted
+  (only an exactly-`"2.3"` manifest keeps its legacy structural
+  contract). Structural-only validation is the explicitly named
+  `validate_timeline_structural()` and its result is never
+  authorization for a v2.5 Timeline.
+- **Voice Profile ownership is bound to its Character in timeline
+  validation.** A voice linked to a Character with different
+  ownership is rejected even when both assets are `shared` /
+  `workspace` and individually authorized to the requester.
+- **P0-008 provenance corrected.** The delivered P0-008 Bengali
+  report's §8 had recorded the stale P0-007 hash; the correct
+  P0-008 `tests/last-run.json` SHA-256 was verified from both the
+  local file and the downloaded CI artifact, and the report file +
+  its ZIP were corrected and rebuilt. Full record:
+  `docs/implementation/CF-WO-P0-009-corrections.md`.
+- P0-009 hardens contracts, authorization logic, validation APIs,
+  tests, and provenance only. It does not build an authenticated
+  end-user app session, provider execution, or any P1 runtime, and
+  the P0 contract alone does not stop a malicious process running
+  with the same local OS user privileges from manipulating files
+  or code.
 
 ## Rules that always apply
 
