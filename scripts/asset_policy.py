@@ -119,7 +119,8 @@ Tasks A + B):
   v2.3 records keep their historical contract — v2.5 never
   silently falls back to it.
 
-Factory-issued authorization contexts (CF-WO-P0-010):
+Factory-issued authorization contexts (CF-WO-P0-010, corrected
+by CF-WO-P0-011):
 - P0-009 made the context immutable, but immutability alone
   never proved issuance: the constructor sentinel could be
   imported, `__setstate__` could initialize a `__new__` object,
@@ -127,13 +128,23 @@ Factory-issued authorization contexts (CF-WO-P0-010):
   `isinstance` check in `validate_private_voice_export` — with
   zero factory calls. The consumer now verifies ISSUANCE, not
   type: a process-local, identity-based issuance registry
-  (`_ISSUED_AUTHORIZATION_CONTEXTS`, a `weakref.WeakSet`) holds
-  the exact objects the factory issued, and
+  (`_ISSUED_AUTHORIZATION_CONTEXTS`) holds weak references to
+  the exact objects the factory issued, keyed by `id()`, and
   `is_factory_issued_trusted_authorization_context` is the single
-  check every authorization boundary uses. A directly constructed,
-  `__new__`/`__setstate__`-built, copied or deserialized object
-  is never in the registry and is always rejected, however
-  genuine its fields look. Serialization of a context is
+  check every authorization boundary uses. P0-011: the P0-010
+  registry was a `weakref.WeakSet`, whose membership test hashes
+  the candidate and compares with `==` — a forged SUBCLASS
+  overriding `__eq__`/`__hash__` could compare equal to a
+  genuine issued context and pass the check with zero factory
+  calls (reproduced: `p0-011-repro-before.txt`). The verifier
+  therefore requires the EXACT concrete type (`type(context) is
+  TrustedAuthorizationContext` — subclassing is also prohibited
+  outright by `__init_subclass__`) and compares the stored weak
+  reference's target with `is`, never with `==` and never through
+  a hash. A directly constructed, `__new__`/`__setstate__`-built,
+  copied, deserialized or subclass object is never in the
+  registry and is always rejected, however genuine its fields
+  look. Serialization of a context is
   rejected outright (`__reduce__` / `__reduce_ex__` /
   `__getstate__` / `__setstate__` all raise TypeError); copying
   returns a frozen but UNREGISTERED clone with no authority.
@@ -822,13 +833,58 @@ def resolve_voice_for_production(voice_registry, character_registry,
 # the factory registered are accepted, and every authorization
 # boundary verifies issuance with
 # `is_factory_issued_trusted_authorization_context` — never a bare
-# `isinstance`. The registry is identity-based (a WeakSet over
-# objects with identity equality/hash), so two contexts with
-# identical fields are distinct entries, and an entry vanishes
-# when its object is garbage-collected (no leak).
+# `isinstance`.
+#
+# CF-WO-P0-011 — the P0-010 registry was a `weakref.WeakSet`,
+# which is NOT an adequate issuance proof: WeakSet membership
+# hashes the candidate and compares it with `==`, so a forged
+# subclass overriding `__eq__`/`__hash__` could compare equal to
+# a genuine issued context and pass the check (reproduced:
+# p0-011-repro-before.txt). The registry is therefore keyed by
+# `id()` — a plain int, never the context object itself — and
+# maps each id to a weak reference to the issued object.
+# Verification never invokes the candidate's `__eq__` or
+# `__hash__`: it requires the exact concrete type and then checks
+# that the weak reference stored under `id(context)` still points
+# at that very object (`ref() is context`). A weak reference is
+# never hashed or equality-compared as a set member (a weakref's
+# own `__eq__`/`__hash__` delegate to its referent, which would
+# reintroduce the same hole), and the dict keys are ints, so no
+# untrusted method runs during lookup at all. Dead entries are
+# removed by the weak-reference callback — and only when the
+# stored value is still that exact (now dead) reference, so a
+# newer registration that reused the id can never be removed by
+# an old callback (see _drop_issued_context). The verifier also
+# prunes a dead entry it happens to meet, under the same guard.
+# A failed factory call never registers anything; entries vanish
+# when their objects are garbage-collected (no leak).
 _AUTHORIZATION_BOUNDARY = object()
 
-_ISSUED_AUTHORIZATION_CONTEXTS: "weakref.WeakSet" = weakref.WeakSet()
+_ISSUED_AUTHORIZATION_CONTEXTS: dict[int, "weakref.ref"] = {}
+
+
+def _drop_issued_context(key, ref):
+    """Weak-reference callback for the issuance registry: remove
+    the entry under `key` ONLY if it still holds this exact
+    (now dead) reference. If a newer registration reused the id
+    after this object died, the stored value is the newer ref,
+    not this one, and the entry must survive — deleting by key
+    alone would silently un-register a live context."""
+    if _ISSUED_AUTHORIZATION_CONTEXTS.get(key) is ref:
+        del _ISSUED_AUTHORIZATION_CONTEXTS[key]
+
+
+def _register_issued_context(context):
+    """Register an issued context (factory only — this is the
+    single registration path, called as the factory's last step
+    after all validation and successful construction). The dict
+    is keyed by id(context) and holds a weak reference, so the
+    registry never pins an issued context in memory."""
+    key = id(context)
+    _ISSUED_AUTHORIZATION_CONTEXTS[key] = weakref.ref(
+        context,
+        lambda dead_ref, _key=key: _drop_issued_context(_key,
+                                                        dead_ref))
 
 
 def _utc_now_iso() -> str:
@@ -878,22 +934,31 @@ class TrustedAuthorizationContext:
     of this class, so no caller-created JSON can pass the
     isinstance check in validate_private_voice_export.
 
-    Immutability is NOT issuance (CF-WO-P0-010). An immutable
-    object is still untrusted unless the factory registered this
-    exact instance: equality and hashing are IDENTITY-based
-    (`__eq__` is `is`, `__hash__` is `object.__hash__`), so the
-    issuance registry (`_ISSUED_AUTHORIZATION_CONTEXTS`) tracks
-    exact objects, never field values. Serialization is refused
-    outright — `__reduce__`, `__reduce_ex__`, `__getstate__`
-    and `__setstate__` all raise TypeError — so no serialized
-    representation can ever restore a trusted context, and no
-    serialized representation can transfer authority to another
-    object or process. `__copy__` / `__deepcopy__` return a
-    frozen clone with the same field values (including the same
-    `authorization_id`, so copying can never reset revocation
-    state) that is deliberately NOT registered: the clone looks
-    like the original but has no authority and is rejected by
-    every authorization consumer.
+    Immutability is NOT issuance (CF-WO-P0-010, corrected by
+    CF-WO-P0-011). An immutable object is still untrusted unless
+    the factory registered this exact instance: equality and
+    hashing are IDENTITY-based (`__eq__` is `is`, `__hash__` is
+    `object.__hash__`), and — crucially — the verifier never
+    relies on them. The P0-010 issuance registry was a
+    `weakref.WeakSet`, whose membership test hashes the candidate
+    and compares with `==`, so a forged subclass overriding
+    `__eq__`/`__hash__` could compare equal to a genuine issued
+    context and pass. The registry is therefore an `id()`-keyed
+    dict of weak references, and verification requires the exact
+    concrete type (`type(context) is TrustedAuthorizationContext`)
+    plus a weak-reference target check with `is` — subclassing is
+    also prohibited outright by `__init_subclass__`, as a
+    defence-in-depth layer, never as the trust anchor itself.
+    Serialization is refused outright — `__reduce__`,
+    `__reduce_ex__`, `__getstate__` and `__setstate__` all raise
+    TypeError — so no serialized representation can ever restore
+    a trusted context, and no serialized representation can
+    transfer authority to another object or process. `__copy__` /
+    `__deepcopy__` return a frozen clone with the same field
+    values (including the same `authorization_id`, so copying can
+    never reset revocation state) that is deliberately NOT
+    registered: the clone looks like the original but has no
+    authority and is rejected by every authorization consumer.
     """
     __slots__ = ("authorization_id", "actor_owner_id",
                  "actor_workspace_id", "granted_by", "scope",
@@ -909,12 +974,26 @@ class TrustedAuthorizationContext:
                    "provider_transmission_approved", "expires_at",
                    "revoked", "_frozen")
 
+    def __init_subclass__(cls, **kwargs):
+        # CF-WO-P0-011: subclassing is prohibited outright. A
+        # subclass could override __eq__/__hash__ (or inherit
+        # the constructor and fields) and try to pass as a
+        # genuine issued context. This is a defence-in-depth
+        # layer ONLY — it is not the trust anchor: the verifier
+        # independently requires the exact concrete type, so
+        # even a subclass instance built through an unusual or
+        # low-level mechanism is still rejected.
+        raise TypeError(
+            "TrustedAuthorizationContext cannot be subclassed — "
+            "only the exact object issued by "
+            "issue_trusted_authorization_context() is trusted")
+
     def __eq__(self, other):
         # Identity equality ONLY: two contexts with identical
         # fields are still distinct objects. A value-equality
         # implementation would let a forged object compare equal
         # to a genuine one and could confuse the issuance
-        # registry (a WeakSet) into treating them as the same.
+        # registry into treating them as the same.
         return self is other
 
     def __ne__(self, other):
@@ -1061,21 +1140,46 @@ def is_factory_issued_trusted_authorization_context(context) -> bool:
     issue_trusted_authorization_context().
 
     This is the single issuance check every authorization
-    boundary must use (CF-WO-P0-010). It is identity-based,
-    not type- or field-based: `isinstance` alone is NOT proof
-    (a directly constructed, `__new__`-built, copied or
-    deserialized object is an instance of the class too), a
-    matching field structure is NOT proof, a valid-looking
-    owner/workspace is NOT proof, a matching private sentinel
-    is NOT proof, and a frozen object is NOT proof. Only
-    membership of this exact object in the process-local
-    issuance registry counts. A forged object is never
-    reported as issued, and a non-context is never reported
-    as issued.
+    boundary must use (CF-WO-P0-010, corrected by CF-WO-P0-011).
+    It is exact-type AND object-identity based, never
+    equality- or hash-based:
+    - `type(context) is TrustedAuthorizationContext` — a subclass
+      instance is rejected even if it inherits every field and
+      method (an `isinstance` check would accept it).
+    - The registry is an `id()`-keyed dict of weak references;
+      the stored reference's target must be this very object
+      (`ref() is context`). A matching field structure is NOT
+      proof, a valid-looking owner/workspace is NOT proof, a
+      matching private sentinel is NOT proof, a frozen object is
+      NOT proof, a matching `authorization_id` is NOT proof, a
+      matching hash is NOT proof, and an `__eq__` that returns
+      True is NOT proof.
+    - No untrusted method runs during verification: `type()`,
+      `id()` and the int-keyed dict lookup never invoke the
+      candidate's `__eq__` or `__hash__`, so a hostile equality
+      (always True, or one that raises) is irrelevant to the
+      decision and cannot disrupt it. A dead registry entry met
+      during lookup is pruned (only if it is still that exact
+      ref) and the check fails closed.
+    A forged object is never reported as issued, and a
+    non-context is never reported as issued.
     """
-    if not isinstance(context, TrustedAuthorizationContext):
+    if type(context) is not TrustedAuthorizationContext:
         return False
-    return context in _ISSUED_AUTHORIZATION_CONTEXTS
+    ref = _ISSUED_AUTHORIZATION_CONTEXTS.get(id(context))
+    if ref is None:
+        return False
+    target = ref()
+    if target is None:
+        # Dead entry (its callback has not run yet): drop it
+        # only if it is still this exact ref, then fail closed.
+        # A live object reusing this id can never be removed by
+        # this prune — the stored value would be its ref, not
+        # the dead one.
+        if _ISSUED_AUTHORIZATION_CONTEXTS.get(id(context)) is ref:
+            del _ISSUED_AUTHORIZATION_CONTEXTS[id(context)]
+        return False
+    return target is context
 
 
 def revoke_trusted_authorization_context(trusted_context):
@@ -1176,14 +1280,14 @@ def issue_trusted_authorization_context(*, actor_owner_id,
             provider_transmission_approved),
         expires_at=expires_at,
         authorization_id=uuid.uuid4().hex)
-    # CF-WO-P0-010: registration is the LAST step, after the
-    # constructor has returned successfully and every field has
-    # been validated. A failed construction therefore never
-    # leaves a partially issued or trusted object in the
-    # registry — only this exact object, built by this factory
-    # call, is registered, and only it will ever be accepted by
-    # the authorization consumers.
-    _ISSUED_AUTHORIZATION_CONTEXTS.add(context)
+    # CF-WO-P0-010 (registry form corrected by CF-WO-P0-011):
+    # registration is the LAST step, after the constructor has
+    # returned successfully and every field has been validated.
+    # A failed construction therefore never leaves a partially
+    # issued or trusted object in the registry — only this exact
+    # object, built by this factory call, is registered, and only
+    # it will ever be accepted by the authorization consumers.
+    _register_issued_context(context)
     return context
 
 
