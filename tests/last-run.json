@@ -176,6 +176,12 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P0-008-SEC",
+      "command": "python3 tests/test_private_voice_security.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "CF-INT-014",
       "command": "bash tests/test_installer.sh",
       "exit_code": 0,

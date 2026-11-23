@@ -338,13 +338,16 @@ def resolve_voice_for_character(voice_registry, character_id,
                                 requesting_workspace_id=None):
     """The voice profile bound to a character (optionally: one ID).
 
-    CF-WO-P0-007 (B): when a character_registry is given, the
-    resolved voice's ownership must match the character's
-    ownership; when a requesting owner/workspace is given, the
-    requester must be allowed access by the voice ownership.
-    With no registry/requester the legacy binding-only behaviour
-    is kept (AC-09).
+    CF-WO-P0-008 (D): thin wrapper over the production resolver
+    (asset_policy.resolve_voice_for_production) — no authorization
+    logic of its own lives here. Without a voice_profile_id, the
+    first voice bound to the character that the production resolver
+    accepts is returned. Private v2.5 resolution requires requester
+    identity: without it the production resolver rejects, and so
+    does this wrapper (AC-09 now supplies the requester).
     """
+    if not isinstance(voice_registry, dict):
+        return None, ["voice registry is not an object"]
     matches = [v for v in voice_registry.values()
                if v.get("character_id") == character_id]
     if not matches:
@@ -355,77 +358,31 @@ def resolve_voice_for_character(voice_registry, character_id,
         if not hit:
             return None, [f"voice_profile_id {voice_profile_id!r} is not "
                           f"bound to character {character_id!r}"]
-        voice = hit[0]
+        candidates = hit
     else:
-        voice = matches[0]
-    if character_registry is not None:
-        character = character_registry.get(character_id)
-        if character is None:
-            return None, [f"unknown character_id {character_id!r}"]
-        if not asset_policy.ownerships_match(
-                voice.get("ownership"), character.get("ownership")):
-            return None, ["voice profile ownership does not match the "
-                          "character ownership (owner/workspace must "
-                          "match)"]
-    if requesting_owner_id is not None or \
-            requesting_workspace_id is not None:
-        if not asset_policy.ownership_allows_access(
-                voice.get("ownership"), requesting_owner_id,
-                requesting_workspace_id):
-            return None, ["voice profile is not accessible to this "
-                          "owner/workspace (private by default; no "
-                          "cross-user sharing)"]
-    return voice, []
+        candidates = matches
+    errors = []
+    for voice in candidates:
+        vid = voice.get("voice_profile_id") or voice.get("id")
+        resolved, errs = asset_policy.resolve_voice_for_production(
+            voice_registry, character_registry, character_id, vid,
+            requesting_owner_id, requesting_workspace_id)
+        if resolved is not None:
+            return resolved, []
+        errors.extend(errs)
+    return None, errors
 
 
-def check_voice_binding(voice_registry, character_id, voice_profile_id,
-                        character_registry=None):
-    """A character/voice binding is valid only when the voice profile's
-    own character_id is the character it is bound to (and, when a
-    character registry is given, the voice ownership matches the
-    character ownership)."""
-    vp = voice_registry.get(voice_profile_id)
-    if vp is None:
-        return [f"unknown voice_profile_id {voice_profile_id!r}"]
-    if vp.get("character_id") != character_id:
-        return [f"voice_profile_id {voice_profile_id!r} belongs to "
-                f"character {vp.get('character_id')!r}, not "
-                f"{character_id!r} — cross-character assignment rejected"]
-    if character_registry is not None:
-        character = character_registry.get(character_id)
-        if character is None:
-            return [f"unknown character_id {character_id!r}"]
-        if not asset_policy.ownerships_match(
-                vp.get("ownership"), character.get("ownership")):
-            return ["voice profile ownership does not match the "
-                    "character ownership (owner/workspace must match)"]
-    return []
+# Production binding check (CF-WO-P0-008 D): the rule moved to
+# scripts/asset_policy.py check_voice_binding — this name IS the
+# production function, not a second implementation.
+check_voice_binding = asset_policy.check_voice_binding
 
 
-def resolve_for_user(reg, requesting_user, requesting_workspace=None):
-    """Owner/workspace-scoped resolution: another user's assets are
-    rejected, never silently served.
-
-    CF-WO-P0-007 (B): a structured ownership object, when present,
-    governs — the requester must be its owner_id in its
-    workspace_id (see asset_policy.ownership_allows_access). The
-    legacy ownership_scope string is consulted ONLY for records
-    with no ownership object. requesting_user is an owner_id;
-    requesting_workspace is a workspace_id.
-    """
-    ownership = reg.get("ownership") if isinstance(reg, dict) else None
-    if isinstance(ownership, dict):
-        if asset_policy.ownership_allows_access(
-                ownership, requesting_user, requesting_workspace):
-            return []
-        return [f"asset owned by {ownership.get('owner_id')!r} in "
-                f"workspace {ownership.get('workspace_id')!r} cannot "
-                f"be resolved under owner {requesting_user!r} "
-                f"(workspace {requesting_workspace!r})"]
-    if reg.get("ownership_scope") != requesting_user:
-        return [f"asset owned by {reg.get('ownership_scope')!r} cannot "
-                f"be resolved under user {requesting_user!r}"]
-    return []
+# Production owner/workspace-scoped resolution (CF-WO-P0-008 D):
+# the rule moved to scripts/asset_policy.py resolve_for_user — this
+# name IS the production function, not a second implementation.
+resolve_for_user = asset_policy.resolve_for_user
 
 
 def is_releasable(path):
@@ -726,15 +683,28 @@ def main():
     # --- AC-09: Voice Profile stays linked across projects ------------
     proj_a = {"project_id": "proj-a", "character_id": "char-001"}
     proj_b = {"project_id": "proj-b", "character_id": "char-001"}
+    # CF-WO-P0-008 (A/D): the binding resolver delegates to the
+    # production resolver, so private v2.5 resolution requires the
+    # requester identity — both productions supply owner-a /
+    # workspace-a.
     voice_a, err_a = resolve_voice_for_character(
-        voice_registry, proj_a["character_id"])
+        voice_registry, proj_a["character_id"],
+        requesting_owner_id="owner-a",
+        requesting_workspace_id="workspace-a")
     voice_b, err_b = resolve_voice_for_character(
-        voice_registry, proj_b["character_id"])
+        voice_registry, proj_b["character_id"],
+        requesting_owner_id="owner-a",
+        requesting_workspace_id="workspace-a")
     check("AC-09: two productions referencing char-001 resolve the "
           "same voice_profile_id",
           not err_a and not err_b
           and voice_a["voice_profile_id"] == "voice-mina-001"
           and voice_b["voice_profile_id"] == "voice-mina-001")
+    _, err_none = resolve_voice_for_character(
+        voice_registry, proj_a["character_id"])
+    check("AC-09: the same resolution without any requester identity "
+          "is rejected (fail closed, P0-008 A)",
+          bool(err_none), "; ".join(err_none))
 
     # --- AC-10: one character's voice is never assigned to another ----
     check("AC-10: binding Mina's voice to Kiki is rejected",
@@ -906,20 +876,31 @@ def main():
     check("B: cross-character voice assignment rejected by the "
           "production resolver",
           bool(errs), "; ".join(errs))
-    check("B: private voice export blocked without explicit "
-          "authorization",
+    check("B: private voice export blocked without any "
+          "authorization context",
           bool(asset_policy.validate_private_voice_export(nila_voice)))
-    check("B: private voice export blocked with partial "
-          "authorization",
+    check("B: private voice export blocked with a caller-created "
+          "authorization dict (an untrusted request, never authority)",
           bool(asset_policy.validate_private_voice_export(
-              nila_voice, {"granted_by": "user",
-                           "scope": "export voice"})))
-    check("B: private voice export allowed with full explicit "
-          "authorization",
-          not asset_policy.validate_private_voice_export(
               nila_voice, {"granted_by": "owner-a",
                            "scope": "export voice-nila-001 for backup",
-                           "explicit_authorisation": True}))
+                           "explicit_authorisation": True})))
+    check("B: private voice export blocked with a forged granted_by "
+          "(owner-b claiming owner-a's voice)",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, {"granted_by": "owner-b",
+                           "scope": "export voice-nila-001 for backup",
+                           "explicit_authorisation": True})))
+    _export_ctx = asset_policy.issue_trusted_authorization_context(
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a",
+        scope="export voice-nila-001 for backup",
+        action="export_private_asset", character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    check("B: private voice export allowed under a trusted "
+          "authorization context issued by the application boundary",
+          not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_export_ctx))
     check("B: private media not included in public release manifests "
           "(manifest check)",
           bool(asset_policy.validate_release_manifest_paths(

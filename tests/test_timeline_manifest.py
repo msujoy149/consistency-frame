@@ -4,12 +4,14 @@
 Tests the additive v2.5 migration of schemas/timeline-manifest.json and
 the reference cross-reference validator defined in this file.
 
-REFERENCE IMPLEMENTATION — validate_timeline_cross_references(manifest,
-registry) lives HERE (tests/test_timeline_manifest.py). It is not in a
-file another worker owns, and it is not in scripts/validate-repo.py
-(that file is out of scope for this correction). The coordinator may
-promote it to a shared helper at integration; until then this file is
-its canonical home.
+PRODUCTION IMPLEMENTATION — validate_timeline_cross_references()
+lives in scripts/timeline_policy.py (CF-WO-P0-008, Correction C: moved
+out of this test file, where a validator cannot be called by the
+production planning and handoff pipeline). This file imports the
+production function and keeps only the fixtures and cases; the
+structural validation code here is gone, not duplicated. Strict v2.5
+production validation (ownership + requester + approval) is the
+`strict=True` mode of the same production function.
 
 Registry shape (mini-registries are built inline in this file; no other
 worker's fixtures are depended on):
@@ -42,7 +44,7 @@ schemas/timeline-manifest.json: format-dependent requirements (e.g.
 frame_rate with timebase frames/timecode) stay optional with a
 description, and every cross-field / cross-record rule (shot exists,
 line exists, voice belongs to the character, sync-group members exist)
-is enforced semantically by validate_timeline_cross_references() below
+is enforced semantically by validate_timeline_cross_references() in scripts/timeline_policy.py
 — the same pattern test_schemas.py uses for the dialogue-rewrite,
 non-verbal-line and articulation rules.
 
@@ -61,6 +63,13 @@ _spec = importlib.util.spec_from_file_location(
 _validate_repo = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_validate_repo)
 validate_instance = _validate_repo.validate_instance
+
+# Production implementation (CF-WO-P0-008 C): the validator moved to
+# scripts/timeline_policy.py. This name IS the production function —
+# there is no second implementation in this file.
+import timeline_policy  # noqa: E402
+validate_timeline_cross_references = (
+    timeline_policy.validate_timeline_cross_references)
 
 failures = []
 
@@ -87,337 +96,6 @@ def schema_errors(value):
     errs = []
     validate_instance(load_schema("timeline-manifest.json"), value, "$", errs)
     return errs
-
-
-# ---------------------------------------------------------------------------
-# Reference implementation: validate_timeline_cross_references
-# ---------------------------------------------------------------------------
-
-def validate_timeline_cross_references(manifest, registry):
-    """Validate a timeline manifest's cross-references against a registry.
-
-    Args:
-        manifest: a timeline-manifest record (dict).
-        registry: a dict of reference records, keyed as documented in the
-            module docstring (shots, scenes, dialogue_lines, characters,
-            voice_profiles, audio_assets). A section that is absent is
-            skipped; a section that is present is authoritative.
-    Returns:
-        A list of error strings; empty means the manifest's relationships
-        are valid against the registry.
-    """
-    errors = []
-    if not isinstance(manifest, dict):
-        return ["timeline manifest is not an object"]
-    if not isinstance(registry, dict):
-        return ["registry is not an object"]
-
-    shots = registry.get("shots")
-    scenes = registry.get("scenes")
-    lines = registry.get("dialogue_lines")
-    characters = registry.get("characters")
-    voices = registry.get("voice_profiles")
-    audio_assets = registry.get("audio_assets")
-
-    def check_character(cid, where):
-        if characters is None:
-            return
-        rec = characters.get(cid)
-        if rec is None:
-            errors.append(f"{where}: character_id '{cid}' does not resolve "
-                          "to a registered or approved-temporary character "
-                          "record")
-        elif isinstance(rec, dict) and rec.get("status") == "deprecated":
-            errors.append(f"{where}: character_id '{cid}' is deprecated")
-
-    def check_voice(vpid, expect_character_id, where):
-        """Resolve a voice profile; return its owning character_id or None."""
-        if voices is None:
-            return None
-        rec = voices.get(vpid)
-        if rec is None:
-            errors.append(f"{where}: voice_profile_id '{vpid}' does not "
-                          "resolve to a voice profile record")
-            return None
-        if not isinstance(rec, dict):
-            return None
-        if rec.get("approval_status") == "rejected":
-            errors.append(f"{where}: voice_profile_id '{vpid}' is rejected")
-        owner = rec.get("character_id")
-        if not owner:
-            errors.append(f"{where}: voice_profile_id '{vpid}' has no "
-                          "character_id — a voice profile must belong to "
-                          "exactly one character")
-        elif expect_character_id and owner != expect_character_id:
-            errors.append(f"{where}: voice_profile_id '{vpid}' belongs to "
-                          f"character '{owner}', not '{expect_character_id}' "
-                          "— an audio clip must not silently switch to "
-                          "another character's voice")
-        return owner
-
-    def check_audio_asset(aid, where):
-        if audio_assets is None:
-            return
-        rec = audio_assets.get(aid)
-        if rec is None:
-            errors.append(f"{where}: audio_asset_id '{aid}' does not "
-                          "resolve to a private/approved audio asset record")
-        elif isinstance(rec, dict):
-            if rec.get("approved") is False:
-                errors.append(f"{where}: audio_asset_id '{aid}' is not "
-                              "approved")
-            if rec.get("status") in ("rejected", "deprecated"):
-                errors.append(f"{where}: audio_asset_id '{aid}' has status "
-                              f"'{rec.get('status')}'")
-
-    def check_shot(sid, where):
-        if shots is None:
-            return None
-        rec = shots.get(sid)
-        if rec is None:
-            errors.append(f"{where}: shot_id '{sid}' does not exist in the "
-                          "referenced shot plan")
-            return None
-        return rec if isinstance(rec, dict) else {}
-
-    def check_scene(scid, where):
-        if scenes is None:
-            return
-        if scid not in scenes:
-            errors.append(f"{where}: scene_id '{scid}' does not exist in "
-                          "the referenced scene plan")
-
-    def check_line(lid, where):
-        if lines is None:
-            return None
-        rec = lines.get(lid)
-        if rec is None:
-            errors.append(f"{where}: dialogue_line_id '{lid}' does not "
-                          "exist in the referenced performance plan")
-            return None
-        return rec if isinstance(rec, dict) else {}
-
-    # --- Collect clips (clip_id -> (clip, track kind, track_id)) ----------
-    clips = {}
-    for ti, track in enumerate(manifest.get("tracks") or []):
-        if not isinstance(track, dict):
-            continue
-        kind = track.get("kind")
-        tid = track.get("track_id")
-        for clip in track.get("clips") or []:
-            if not isinstance(clip, dict):
-                continue
-            cid = clip.get("clip_id")
-            where = f"tracks[{ti}].clips[{cid or '?'}]"
-            if cid is None:
-                errors.append(f"{where}: clip without clip_id")
-                continue
-            if cid in clips:
-                errors.append(f"duplicate clip_id '{cid}' — clip IDs must "
-                              "be unique across the timeline")
-            clips[cid] = (clip, kind, tid)
-            if clip.get("track_id") is not None and tid is not None \
-                    and clip["track_id"] != tid:
-                errors.append(f"{where}: track_id '{clip['track_id']}' does "
-                              f"not match enclosing track '{tid}'")
-            # Timing sanity: the schema can bound each field, not relate them.
-            if isinstance(clip.get("in_seconds"), (int, float)) \
-                    and isinstance(clip.get("out_seconds"), (int, float)) \
-                    and clip["out_seconds"] < clip["in_seconds"]:
-                errors.append(f"{where}: out_seconds {clip['out_seconds']} "
-                              f"is before in_seconds {clip['in_seconds']}")
-            if isinstance(clip.get("timeline_start_seconds"), (int, float)) \
-                    and isinstance(clip.get("timeline_end_seconds"), (int, float)) \
-                    and clip["timeline_end_seconds"] < clip["timeline_start_seconds"]:
-                errors.append(f"{where}: timeline_end_seconds "
-                              f"{clip['timeline_end_seconds']} is before "
-                              f"timeline_start_seconds "
-                              f"{clip['timeline_start_seconds']}")
-
-    # --- Per-clip references ----------------------------------------------
-    for cid, (clip, kind, _tid) in clips.items():
-        where = f"clip '{cid}'"
-        if clip.get("scene_id") is not None:
-            check_scene(clip["scene_id"], where)
-        shot_rec = None
-        if clip.get("shot_id") is not None:
-            shot_rec = check_shot(clip["shot_id"], where)
-            if shot_rec is not None and clip.get("scene_id") is not None \
-                    and shot_rec.get("scene_id") is not None \
-                    and shot_rec["scene_id"] != clip["scene_id"]:
-                errors.append(f"{where}: scene_id '{clip['scene_id']}' does "
-                              f"not match shot '{clip['shot_id']}' scene "
-                              f"'{shot_rec['scene_id']}'")
-        for sid in clip.get("shot_ids") or []:
-            check_shot(sid, where)
-        for char_id in clip.get("character_ids") or []:
-            check_character(char_id, where)
-        if clip.get("character_id") is not None:
-            check_character(clip["character_id"], where)
-        # A clip must not show a character the shot plan does not place
-        # in that shot.
-        if shot_rec is not None \
-                and isinstance(shot_rec.get("character_ids"), list) \
-                and clip.get("character_ids"):
-            for char_id in clip["character_ids"]:
-                if char_id not in shot_rec["character_ids"]:
-                    errors.append(f"{where}: character_id '{char_id}' is "
-                                  f"not in shot '{clip['shot_id']}' — a "
-                                  "video clip must not reference an "
-                                  "unrelated character")
-        line_rec = None
-        if clip.get("dialogue_line_id") is not None:
-            line_rec = check_line(clip["dialogue_line_id"], where)
-        if clip.get("audio_asset_id") is not None:
-            check_audio_asset(clip["audio_asset_id"], where)
-        # Voice: the expected owner is the clip's character, else the
-        # dialogue line's speaker.
-        expect_char = clip.get("character_id")
-        if expect_char is None and line_rec is not None:
-            expect_char = line_rec.get("character_id")
-        if clip.get("voice_profile_id") is not None:
-            check_voice(clip["voice_profile_id"], expect_char, where)
-        # Dialogue-line agreement: no silent character/voice/audio switch.
-        if line_rec is not None:
-            line_char = line_rec.get("character_id")
-            if line_char:
-                if clip.get("character_id") is not None \
-                        and clip["character_id"] != line_char:
-                    errors.append(f"{where}: character_id "
-                                  f"'{clip['character_id']}' does not match "
-                                  f"the speaker '{line_char}' of "
-                                  f"dialogue_line_id "
-                                  f"'{clip['dialogue_line_id']}'")
-                if clip.get("character_ids") \
-                        and line_char not in clip["character_ids"]:
-                    errors.append(f"{where}: dialogue_line_id "
-                                  f"'{clip['dialogue_line_id']}' is spoken "
-                                  f"by '{line_char}', who is not among this "
-                                  "clip's character_ids — a video clip must "
-                                  "not reference an unrelated dialogue")
-            line_voice = line_rec.get("voice_profile_id")
-            if line_voice and clip.get("voice_profile_id") is not None \
-                    and clip["voice_profile_id"] != line_voice:
-                errors.append(f"{where}: voice_profile_id "
-                              f"'{clip['voice_profile_id']}' does not match "
-                              f"the voice '{line_voice}' bound to "
-                              f"dialogue_line_id "
-                              f"'{clip['dialogue_line_id']}' — an audio "
-                              "clip must not silently switch to another "
-                              "character's voice")
-            line_audio = line_rec.get("audio_asset_id")
-            if line_audio and clip.get("audio_asset_id") is not None \
-                    and clip["audio_asset_id"] != line_audio:
-                errors.append(f"{where}: audio_asset_id "
-                              f"'{clip['audio_asset_id']}' does not match "
-                              f"the audio asset '{line_audio}' bound to "
-                              f"dialogue_line_id "
-                              f"'{clip['dialogue_line_id']}'")
-        # Audio-type rules (audio tracks only).
-        if kind == "audio":
-            atype = clip.get("audio_type")
-            if atype in NON_DIALOGUE_AUDIO_TYPES \
-                    and clip.get("dialogue_line_id") is not None:
-                errors.append(f"{where}: audio_type '{atype}' must not bind "
-                              f"dialogue_line_id "
-                              f"'{clip['dialogue_line_id']}' — music, "
-                              "ambience and SFX carry no dialogue")
-            if atype == "dialogue" \
-                    and clip.get("dialogue_line_id") is None \
-                    and clip.get("character_id") is None:
-                errors.append(f"{where}: audio_type 'dialogue' with no "
-                              "dialogue_line_id and no character_id — a "
-                              "dialogue clip must identify its line or its "
-                              "speaker")
-            # Narration needs no character voice binding; music/ambience/
-            # SFX/foley need no character, voice or dialogue binding.
-
-    # --- Synchronization groups -------------------------------------------
-    seen_groups = set()
-    for gi, group in enumerate(manifest.get("synchronization_groups") or []):
-        if not isinstance(group, dict):
-            continue
-        gid = group.get("sync_group_id")
-        where = f"synchronization_groups[{gi}] ({gid or '?'})"
-        if gid is None:
-            errors.append(f"{where}: sync group without sync_group_id")
-            continue
-        if gid in seen_groups:
-            errors.append(f"duplicate sync_group_id '{gid}'")
-        seen_groups.add(gid)
-        vids = group.get("video_clip_ids") or []
-        aids = group.get("audio_clip_ids") or []
-        if not vids and not aids:
-            errors.append(f"{where}: sync group references no clips")
-        for vcid in vids:
-            if vcid not in clips:
-                errors.append(f"{where}: video_clip_id '{vcid}' does not "
-                              "exist in the timeline")
-            elif clips[vcid][1] not in ("video", "title"):
-                errors.append(f"{where}: video_clip_id '{vcid}' is on a "
-                              f"'{clips[vcid][1]}' track, not a video track")
-        for acid in aids:
-            if acid not in clips:
-                errors.append(f"{where}: audio_clip_id '{acid}' does not "
-                              "exist in the timeline")
-            elif clips[acid][1] != "audio":
-                errors.append(f"{where}: audio_clip_id '{acid}' is on a "
-                              f"'{clips[acid][1]}' track, not an audio track")
-        for lid in group.get("dialogue_line_ids") or []:
-            check_line(lid, where)
-        for sid in group.get("shot_ids") or []:
-            check_shot(sid, where)
-
-    # --- Explicit hierarchy map -------------------------------------------
-    hier = manifest.get("hierarchy")
-    if isinstance(hier, dict):
-        if hier.get("timeline_id") is not None \
-                and manifest.get("id") is not None \
-                and hier["timeline_id"] != manifest["id"]:
-            errors.append(f"hierarchy.timeline_id '{hier['timeline_id']}' "
-                          f"does not match manifest id '{manifest['id']}'")
-        if hier.get("project_id") is not None \
-                and manifest.get("project_id") is not None \
-                and hier["project_id"] != manifest["project_id"]:
-            errors.append(f"hierarchy.project_id '{hier['project_id']}' "
-                          "does not match manifest project_id "
-                          f"'{manifest['project_id']}'")
-        for si, scene in enumerate(hier.get("scenes") or []):
-            if not isinstance(scene, dict):
-                continue
-            where = f"hierarchy.scenes[{si}] ({scene.get('scene_id') or '?'})"
-            if scene.get("scene_id") is not None:
-                check_scene(scene["scene_id"], where)
-            for shot in scene.get("shots") or []:
-                if not isinstance(shot, dict):
-                    continue
-                sw = f"{where}.shots[{shot.get('shot_id') or '?'}]"
-                if shot.get("shot_id") is not None:
-                    check_shot(shot["shot_id"], sw)
-                s_chars = shot.get("character_ids") or []
-                for char_id in s_chars:
-                    check_character(char_id, sw)
-                for lid in shot.get("dialogue_line_ids") or []:
-                    check_line(lid, sw)
-                for vpid in shot.get("voice_profile_ids") or []:
-                    owner = check_voice(vpid, None, sw)
-                    if owner is not None and s_chars \
-                            and owner not in s_chars:
-                        errors.append(f"{sw}: voice_profile_id '{vpid}' "
-                                      f"belongs to character '{owner}', who "
-                                      "is not among this shot's "
-                                      "character_ids")
-                for aid in shot.get("audio_asset_ids") or []:
-                    check_audio_asset(aid, sw)
-                for vcid in shot.get("video_clip_ids") or []:
-                    if vcid not in clips:
-                        errors.append(f"{sw}: video_clip_id '{vcid}' does "
-                                      "not exist in the timeline")
-                for acid in shot.get("audio_clip_ids") or []:
-                    if acid not in clips:
-                        errors.append(f"{sw}: audio_clip_id '{acid}' does "
-                                      "not exist in the timeline")
-    return errors
 
 
 def full_errors(manifest, registry):

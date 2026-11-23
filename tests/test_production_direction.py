@@ -23,6 +23,8 @@ import os
 import sys
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
+sys.path.insert(0, os.path.join(ROOT, "scripts"))
+import asset_policy  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location(
     "validate_repo", os.path.join(ROOT, "scripts", "validate-repo.py"))
@@ -344,15 +346,13 @@ def validate_performance_line(line, voice_registry):
     if state == "speaking" and "voice_profile_id" not in line:
         errs.append(f"line {line.get('line_id')!r}: a speaking line "
                     "needs voice_profile_id")
-    vp = voice_registry.get(line.get("voice_profile_id")) \
-        if line.get("voice_profile_id") else None
-    if line.get("voice_profile_id") and vp is None:
-        errs.append(f"unknown voice_profile_id "
-                    f"{line.get('voice_profile_id')!r}")
-    elif vp is not None and vp.get("character_id") != line.get("character_id"):
-        errs.append(f"voice_profile_id {line.get('voice_profile_id')!r} "
-                    f"belongs to {vp.get('character_id')!r}, not "
-                    f"{line.get('character_id')!r}")
+    # CF-WO-P0-008 (D): voice binding is decided by the production
+    # check (asset_policy.check_voice_binding), not by a second
+    # comparison here.
+    if line.get("voice_profile_id"):
+        errs.extend(asset_policy.check_voice_binding(
+            voice_registry, line.get("character_id"),
+            line.get("voice_profile_id")))
     if not isinstance(line.get("lip_sync_required"), bool):
         errs.append(f"line {line.get('line_id')!r}: lip_sync_required "
                     "must be a boolean")
@@ -416,14 +416,12 @@ def validate_binding(binding, voice_registry):
     if binding.get("articulation") not in ARTICULATION_TARGET:
         errs.append(f"articulation {binding.get('articulation')!r} not "
                     "in the fixed vocabulary")
-    vp = voice_registry.get(binding.get("voice_profile_id"))
-    if vp is None:
-        errs.append(f"unknown voice_profile_id "
-                    f"{binding.get('voice_profile_id')!r}")
-    elif vp.get("character_id") != binding.get("character_id"):
-        errs.append(f"voice_profile_id {binding.get('voice_profile_id')!r} "
-                    f"belongs to {vp.get('character_id')!r}, not "
-                    f"{binding.get('character_id')!r}")
+    # CF-WO-P0-008 (D): voice binding is decided by the production
+    # check (asset_policy.check_voice_binding), not by a second
+    # comparison here.
+    errs.extend(asset_policy.check_voice_binding(
+        voice_registry, binding.get("character_id"),
+        binding.get("voice_profile_id")))
     return errs
 
 

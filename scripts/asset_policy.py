@@ -73,11 +73,36 @@ validation (CF-WO-P0-007, Worker 2 — Corrections B + C):
   symlink escapes against a base directory; privateness is
   decided by ownership, never by a folder being named
   "private".
+
+Fail-closed private voice security (CF-WO-P0-008):
+- `resolve_voice_for_production` REQUIRES requester identity
+  (owner + workspace) for private v2.5 voices. A missing
+  requester is never an authorized internal request and `None`
+  is never an authorization bypass. Legacy v2.3 records keep
+  their historical contract (binding + approval only) and gain
+  v2.5 protection only by explicit ownership assignment —
+  ownership is never inferred from a filename, name or image.
+- Private voice export requires a `TrustedAuthorizationContext`
+  issued by `issue_trusted_authorization_context` — the local
+  application authorization boundary. A caller-created dict
+  (granted_by / scope / explicit_authorisation) is an untrusted
+  request, never authority, and a forged granted_by is rejected.
+  The context is a structural (type) boundary, not
+  cryptographic proof of identity: the P1 runtime (app UI /
+  session) must supply the actor identity at the boundary.
+- All production access decisions go through one choke point,
+  `authorize_action` (Correction E), with explicit action
+  scopes: use_in_project, use_in_production,
+  export_private_asset, transmit_to_provider,
+  share_with_workspace. Permission to use a voice locally never
+  implies permission to export it, and export never implies
+  provider transmission.
 """
 from __future__ import annotations
 
 import os
 import re
+from datetime import datetime, timezone
 
 MODES = [
     "UPLOAD_ONLY", "TEMPORARY_ASSET_USE", "PROJECT_CONSISTENCY",
@@ -335,6 +360,124 @@ def ownership_allows_access(ownership, requesting_owner_id,
     return False
 
 
+# --- Centralized authorization (CF-WO-P0-008, Correction E) -----------
+# One choke point for every production access decision. Do not create
+# a second, slightly different privacy rule elsewhere: resolvers,
+# export validation and timeline validation all call authorize_action
+# (or authorize_export, which builds on it). Permission for one
+# action never implies permission for another: local production use
+# does not imply export, export does not imply provider transmission.
+ACTION_SCOPES = ("use_in_project", "use_in_production",
+                 "export_private_asset", "transmit_to_provider",
+                 "share_with_workspace")
+
+
+def authorize_action(action, ownership, requesting_owner_id,
+                     requesting_workspace_id) -> list[str]:
+    """Authorize one action for one requester against one ownership
+    record. Returns rejection reasons; [] = allowed.
+
+    Fail closed: an unknown action, an invalid ownership record, or
+    a missing requester owner/workspace is a rejection. `None` is
+    never an authorized internal request — a caller that cannot name
+    its owner and workspace cannot be authorized. Sharing follows
+    ownership_allows_access (private + none: owner only in the
+    owning workspace; shared + workspace: any owner in the same
+    workspace; shared + explicit: owner only, an explicit grant
+    record is not modelled here).
+    """
+    errors = []
+    if action not in ACTION_SCOPES:
+        errors.append(f"unknown action {action!r} (must be one of "
+                      f"{list(ACTION_SCOPES)})")
+    if validate_ownership(ownership):
+        errors.append("asset has no valid ownership binding — access "
+                      "blocked")
+    if not requesting_owner_id or not isinstance(requesting_owner_id, str):
+        errors.append("requesting owner identity is required — a "
+                      "missing requester identity is never an "
+                      "authorized internal request")
+    if not requesting_workspace_id or \
+            not isinstance(requesting_workspace_id, str):
+        errors.append("requesting workspace identity is required — a "
+                      "missing requester identity is never an "
+                      "authorized internal request")
+    if errors:
+        return errors
+    if not ownership_allows_access(ownership, requesting_owner_id,
+                                   requesting_workspace_id):
+        errors.append("requester is not allowed access to this asset "
+                      "(private by default; no cross-user / "
+                      "cross-workspace use without an explicit sharing "
+                      "permission)")
+    return errors
+
+
+def check_voice_binding(voice_registry, character_id, voice_profile_id,
+                        character_registry=None) -> list[str]:
+    """Production character/voice binding check (Correction D: moved
+    out of tests/test_character_registration.py, which duplicated
+    this rule).
+
+    The voice must exist, belong to the requested character, and —
+    when a character registry is given — its ownership must match
+    the character's ownership. This is a BINDING check, not a
+    production-use authorization: it does not check requester
+    identity or approval. Production selection must use
+    resolve_voice_for_production, which enforces those too.
+    """
+    if not isinstance(voice_registry, dict):
+        return ["voice registry is not an object"]
+    vp = voice_registry.get(voice_profile_id)
+    if vp is None:
+        return [f"unknown voice_profile_id {voice_profile_id!r}"]
+    if vp.get("character_id") != character_id:
+        return [f"voice_profile_id {voice_profile_id!r} belongs to "
+                f"character {vp.get('character_id')!r}, not "
+                f"{character_id!r} — cross-character assignment "
+                "rejected"]
+    if character_registry is not None:
+        character = character_registry.get(character_id)
+        if character is None:
+            return [f"unknown character_id {character_id!r}"]
+        if not ownerships_match(vp.get("ownership"),
+                                character.get("ownership")):
+            return ["voice profile ownership does not match the "
+                    "character ownership (owner/workspace must match)"]
+    return []
+
+
+def resolve_for_user(record, requesting_owner_id,
+                     requesting_workspace_id=None) -> list[str]:
+    """Owner/workspace-scoped resolution of one record (Correction D:
+    moved out of tests/test_character_registration.py, which
+    duplicated this rule).
+
+    A structured ownership object, when present, governs — the
+    requester must be its owner_id in its workspace_id (see
+    ownership_allows_access). The legacy ownership_scope string is
+    consulted ONLY for records with no ownership object (migration
+    fallback). Returns rejection reasons; [] = the record resolves
+    for this requester.
+    """
+    if not isinstance(record, dict):
+        return ["record is not an object"]
+    ownership = record.get("ownership")
+    if isinstance(ownership, dict):
+        if ownership_allows_access(ownership, requesting_owner_id,
+                                   requesting_workspace_id):
+            return []
+        return [f"asset owned by {ownership.get('owner_id')!r} in "
+                f"workspace {ownership.get('workspace_id')!r} cannot "
+                f"be resolved under owner {requesting_owner_id!r} "
+                f"(workspace {requesting_workspace_id!r})"]
+    if record.get("ownership_scope") != requesting_owner_id:
+        return [f"asset owned by {record.get('ownership_scope')!r} "
+                f"cannot be resolved under user "
+                f"{requesting_owner_id!r}"]
+    return []
+
+
 # --- Conditional v2.5 voice-profile validation (Correction C) --------
 # The JSON Schema cannot express these (validator subset has no
 # if/then/allOf/dependentRequired), so this function is the
@@ -500,13 +643,29 @@ def resolve_voice_for_production(voice_registry, character_registry,
     (1) the voice exists and its character_id is the requested
     character (cross-character assignment rejected); (2) the
     character exists and the voice ownership matches the
-    character ownership; (3) the requester (when given) is
-    allowed access by the voice ownership (no cross-user /
-    cross-workspace use by default); (4) the record passes the
-    v2.5 conditional validation; (5) when require_approved,
-    approval_status and status are both "approved" — a pending
-    profile is a valid record but never an approved production
-    voice, and sample-generation success is not user approval.
+    character ownership; (3) CF-WO-P0-008 (A): for a private v2.5
+    voice the REQUESTER identity is mandatory — both
+    requesting_owner_id and requesting_workspace_id must be
+    provided and authorized (authorize_action, action
+    "use_in_production"). A missing requester is never an
+    authorized internal request, there is no silent fallback to
+    the character's owner, and None is never an authorization
+    bypass; (4) the record passes the v2.5 conditional
+    validation; (5) when require_approved, approval_status and
+    status are both "approved" — a pending profile is a valid
+    record but never an approved production voice, and
+    sample-generation success is not user approval.
+
+    Legacy compatibility: a record that is NOT v2.5 keeps its
+    historical contract (binding + validation + approval; the
+    requester is checked only when given, as before). A legacy
+    record that lacks reliable ownership information does NOT
+    automatically become available for private v2.5 production
+    use: it gains v2.5 protection only by explicit ownership
+    assignment (an ownership object matching its character, plus
+    schema_version "2.5"). Ownership is never inferred from a
+    filename, directory name, character name or uploaded image,
+    and a missing owner is never silently assigned.
     """
     errors = []
     if not isinstance(voice_registry, dict):
@@ -530,8 +689,17 @@ def resolve_voice_for_production(voice_registry, character_registry,
                           "character ownership (owner/workspace must "
                           "match)"]
     errors.extend(validate_voice_profile(vp, character))
-    if requesting_owner_id is not None or \
+    if vp.get("schema_version") == "2.5":
+        # Private v2.5 production selection: requester identity is
+        # mandatory (CF-WO-P0-008 A). authorize_action fails closed
+        # on a missing owner/workspace and on unauthorized access.
+        errors.extend(authorize_action(
+            "use_in_production", vp.get("ownership"),
+            requesting_owner_id, requesting_workspace_id))
+    elif requesting_owner_id is not None or \
             requesting_workspace_id is not None:
+        # Legacy (non-2.5) contract, unchanged: the requester is
+        # checked only when given.
         if not ownership_allows_access(
                 vp.get("ownership"), requesting_owner_id,
                 requesting_workspace_id):
@@ -550,33 +718,223 @@ def resolve_voice_for_production(voice_registry, character_registry,
     return vp, []
 
 
-def validate_private_voice_export(voice, authorization=None) -> list[str]:
-    """A private voice export is blocked without explicit
-    authorisation. `authorization` needs granted_by + scope +
-    explicit_authorisation True (same shape as the skill-patch
-    apply authorisation). Returns rejection reasons; [] = allowed.
+# --- Trusted authorization context (CF-WO-P0-008, Correction B) -----
+# A private voice export must be authorized by the OWNER through the
+# local application's trusted authorization boundary — never by a
+# caller-created JSON dictionary. The boundary is structural (a
+# dedicated class only the factory below can construct), NOT
+# cryptographic proof of identity: a local pure-Python function
+# cannot prove who the human at the keyboard is. The P1 runtime
+# (first-run registration UI / app session) must supply the actor
+# identity at the boundary; until then the factory IS the boundary
+# and its caller MUST be the trusted local application. Passing
+# someone else's IDs to the factory is boundary misuse, not a
+# validator bypass — the validator still checks the issued context
+# against the asset owner, workspace, character and voice, so a
+# context issued for another asset authorizes nothing here.
+_AUTHORIZATION_BOUNDARY = object()
+
+
+def _utc_now_iso() -> str:
+    """Current UTC time as an ISO-8601 'Z' string (lexicographic
+    comparison works for expiry checks)."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+class TrustedAuthorizationContext:
+    """An authorization context issued by the local application
+    authorization boundary (see issue_trusted_authorization_context).
+
+    Fields: actor_owner_id / actor_workspace_id (the actor the
+    boundary authenticated), granted_by (who granted the
+    authorization — must be the asset owner), scope (non-empty
+    description of the authorized export), action (one of
+    ACTION_SCOPES — export requires "export_private_asset"),
+    character_id / voice_profile_id (the exact asset this
+    authorization covers — an authorization for one character or
+    voice never covers another), provider_transmission_approved
+    (whether this authorization also permits sending the voice to
+    an external provider — a separate permission from export),
+    expires_at (ISO-8601 UTC string or None = no expiry), revoked
+    (whether the authorization has been revoked).
+
+    Instances are immutable after issuance (slots + no setters are
+    exposed; the factory freezes nothing else). Direct construction
+    raises TypeError: only the factory, holding the boundary
+    sentinel, may create one. A plain dict is never an instance of
+    this class, so no caller-created JSON can pass the isinstance
+    check in validate_private_voice_export.
+    """
+    __slots__ = ("actor_owner_id", "actor_workspace_id", "granted_by",
+                 "scope", "action", "character_id", "voice_profile_id",
+                 "provider_transmission_approved", "expires_at",
+                 "revoked")
+
+    def __init__(self, *, _boundary, actor_owner_id,
+                 actor_workspace_id, granted_by, scope, action,
+                 character_id, voice_profile_id,
+                 provider_transmission_approved=False, expires_at=None,
+                 revoked=False):
+        if _boundary is not _AUTHORIZATION_BOUNDARY:
+            raise TypeError(
+                "TrustedAuthorizationContext must be issued by "
+                "issue_trusted_authorization_context() — the local "
+                "application authorization boundary — never "
+                "constructed directly")
+        self.actor_owner_id = actor_owner_id
+        self.actor_workspace_id = actor_workspace_id
+        self.granted_by = granted_by
+        self.scope = scope
+        self.action = action
+        self.character_id = character_id
+        self.voice_profile_id = voice_profile_id
+        self.provider_transmission_approved = \
+            provider_transmission_approved
+        self.expires_at = expires_at
+        self.revoked = revoked
+
+
+def issue_trusted_authorization_context(*, actor_owner_id,
+                                        actor_workspace_id,
+                                        granted_by, scope, action,
+                                        character_id,
+                                        voice_profile_id,
+                                        provider_transmission_approved=False,
+                                        expires_at=None):
+    """Issue a trusted authorization context at the local application
+    authorization boundary.
+
+    CALLER MUST BE the trusted local application (P1: the app UI /
+    session that just saw the owner approve this action). The
+    arguments are the actor the boundary authenticated — NOT
+    caller-supplied claims to be believed at face value. Raises
+    ValueError on any missing/invalid field (fail closed at
+    issuance); the returned context still authorizes nothing until
+    validate_private_voice_export checks it against the asset.
+    """
+    for field, value in (
+            ("actor_owner_id", actor_owner_id),
+            ("actor_workspace_id", actor_workspace_id),
+            ("granted_by", granted_by),
+            ("character_id", character_id),
+            ("voice_profile_id", voice_profile_id)):
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"{field} must be a non-empty string")
+        if not OWNERSHIP_ID_PATTERN.search(value):
+            raise ValueError(f"{field} {value!r} is not a valid opaque "
+                             "local identifier")
+    if not isinstance(scope, str) or not scope.strip():
+        raise ValueError("scope must be a non-empty string")
+    if action not in ACTION_SCOPES:
+        raise ValueError(f"action {action!r} must be one of "
+                         f"{list(ACTION_SCOPES)}")
+    if expires_at is not None and (
+            not isinstance(expires_at, str) or len(expires_at) != 20
+            or not expires_at.endswith("Z")):
+        raise ValueError("expires_at must be an ISO-8601 UTC string "
+                         "('YYYY-MM-DDTHH:MM:SSZ') or None")
+    return TrustedAuthorizationContext(
+        _boundary=_AUTHORIZATION_BOUNDARY,
+        actor_owner_id=actor_owner_id,
+        actor_workspace_id=actor_workspace_id, granted_by=granted_by,
+        scope=scope, action=action, character_id=character_id,
+        voice_profile_id=voice_profile_id,
+        provider_transmission_approved=bool(
+            provider_transmission_approved),
+        expires_at=expires_at)
+
+
+def validate_private_voice_export(voice, authorization=None,
+                                  trusted_context=None,
+                                  to_provider=False) -> list[str]:
+    """A private voice export is allowed only under a trusted,
+    owner-bound authorization. Returns rejection reasons; [] = allowed.
+
+    `trusted_context` must be a TrustedAuthorizationContext issued by
+    issue_trusted_authorization_context (the local application
+    authorization boundary). The `authorization` dict — when given —
+    is an UNTRUSTED request record only: its granted_by / scope /
+    explicit_authorisation fields NEVER confer authority and are
+    ignored for the decision. A dict claiming granted_by == the
+    owner, or granted_by == anyone else, authorizes nothing on its
+    own. The context is checked against the voice on every point:
+    trusted actor is the voice owner in the voice workspace; the
+    issuer (granted_by) is the voice owner; the action is an
+    explicit "export_private_asset"; the scope is non-empty; the
+    context covers exactly this character_id and voice_profile_id;
+    the context is not expired or revoked. Export to an external
+    provider (to_provider=True) additionally requires
+    provider_transmission_approved on the context — a separate
+    permission from export. Private sharing and exporting remain
+    disabled by default: no context, no export.
     """
     errors = []
     if not isinstance(voice, dict):
         return ["voice profile is not an object"]
-    if validate_ownership(voice.get("ownership")):
+    ownership = voice.get("ownership")
+    if validate_ownership(ownership):
         errors.append("voice profile has no valid ownership binding — "
                       "private export blocked")
-    auth_errors = []
-    if not isinstance(authorization, dict):
-        auth_errors.append("missing export authorisation")
-    else:
-        if not authorization.get("granted_by") or \
-                not isinstance(authorization.get("granted_by"), str):
-            auth_errors.append("missing granted_by")
-        if not authorization.get("scope") or \
-                not isinstance(authorization.get("scope"), str):
-            auth_errors.append("missing scope")
-        if authorization.get("explicit_authorisation") is not True:
-            auth_errors.append("missing explicit authorisation to export")
-    if auth_errors:
-        errors.append("private voice export blocked without explicit "
-                      f"authorisation ({'; '.join(auth_errors)})")
+    if trusted_context is None:
+        errors.append("private voice export blocked: no trusted "
+                      "authorization context — a caller-created "
+                      "authorization dictionary (granted_by / scope / "
+                      "explicit_authorisation) is an untrusted request, "
+                      "never authority")
+        return errors
+    if not isinstance(trusted_context, TrustedAuthorizationContext):
+        errors.append("private voice export blocked: authorization "
+                      "context is not a trusted context issued by the "
+                      "local application authorization boundary")
+        return errors
+    ctx = trusted_context
+    if ctx.revoked:
+        errors.append("private voice export blocked: the authorization "
+                      "has been revoked")
+    if ctx.expires_at is not None and ctx.expires_at <= _utc_now_iso():
+        errors.append("private voice export blocked: the authorization "
+                      f"expired at {ctx.expires_at}")
+    if isinstance(ownership, dict):
+        if ctx.actor_owner_id != ownership.get("owner_id"):
+            errors.append("private voice export blocked: trusted actor "
+                          f"{ctx.actor_owner_id!r} is not the voice "
+                          f"owner {ownership.get('owner_id')!r}")
+        if ctx.actor_workspace_id != ownership.get("workspace_id"):
+            errors.append("private voice export blocked: trusted actor "
+                          "workspace "
+                          f"{ctx.actor_workspace_id!r} is not the "
+                          "voice workspace "
+                          f"{ownership.get('workspace_id')!r}")
+        if ctx.granted_by != ownership.get("owner_id"):
+            errors.append("private voice export blocked: authorization "
+                          f"issuer (granted_by) {ctx.granted_by!r} is "
+                          "not the voice owner "
+                          f"{ownership.get('owner_id')!r} — a forged "
+                          "granted_by is rejected")
+    if ctx.action != "export_private_asset":
+        errors.append("private voice export blocked: authorization "
+                      f"action {ctx.action!r} is not an explicit "
+                      "export action ('export_private_asset')")
+    if not isinstance(ctx.scope, str) or not ctx.scope.strip():
+        errors.append("private voice export blocked: export scope is "
+                      "empty or missing")
+    if ctx.character_id != voice.get("character_id"):
+        errors.append("private voice export blocked: authorization is "
+                      f"for character {ctx.character_id!r}, not "
+                      f"{voice.get('character_id')!r} — an "
+                      "authorization for one character never covers "
+                      "another")
+    if ctx.voice_profile_id != voice.get("voice_profile_id"):
+        errors.append("private voice export blocked: authorization is "
+                      f"for voice profile {ctx.voice_profile_id!r}, "
+                      f"not {voice.get('voice_profile_id')!r} — an "
+                      "authorization for one voice profile never "
+                      "covers another")
+    if to_provider and not ctx.provider_transmission_approved:
+        errors.append("private voice export blocked: sending this voice "
+                      "to an external provider requires provider-"
+                      "transmission approval — a separate permission "
+                      "from export, not granted by this authorization")
     return errors
 
 

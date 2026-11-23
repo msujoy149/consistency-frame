@@ -77,20 +77,28 @@ def main():
             encoding="utf-8") as f:
         voice = json.load(f)
 
-    # Private voice export is blocked without explicit authorization.
-    check("B: private voice export blocked without authorization",
+    # Private voice export (CF-WO-P0-008 B): a caller-created dict is
+    # an untrusted request, never authority. Only a trusted context
+    # issued by the application boundary authorizes an export.
+    check("B: private voice export blocked without any authorization "
+          "context",
           bool(asset_policy.validate_private_voice_export(voice)))
-    check("B: private voice export blocked with partial "
-          "authorization",
+    check("B: private voice export blocked with a caller-created "
+          "authorization dict",
           bool(asset_policy.validate_private_voice_export(
               voice, {"granted_by": "owner-a",
-                      "scope": "export voice"})))
-    check("B: private voice export allowed with full explicit "
-          "authorization",
-          not asset_policy.validate_private_voice_export(
-              voice, {"granted_by": "owner-a",
                       "scope": "export voice-nila-001 for backup",
-                      "explicit_authorisation": True}))
+                      "explicit_authorisation": True})))
+    _export_ctx = asset_policy.issue_trusted_authorization_context(
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a",
+        scope="export voice-nila-001 for backup",
+        action="export_private_asset", character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    check("B: private voice export allowed under a trusted "
+          "authorization context",
+          not asset_policy.validate_private_voice_export(
+              voice, trusted_context=_export_ctx))
 
     # Private media is never in a public release manifest.
     check("B: release manifest check rejects private media paths",
