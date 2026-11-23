@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p0-safe-foundations",
-  "commit": "bc169255cbe388976de3baee5357c141aa03379f",
-  "github_branch_head": "0a123219a41a24630d9581e0e3133d70a4bfaf5d",
+  "commit": "d8a5cf96c483b46c6dd3eab6751d935db29ef6dd",
+  "github_branch_head": "49aa01d70a0b4236e70e287e74b4a2f4f7c6af98",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
@@ -17,13 +17,13 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "31d6644f4bf101fb6afc898516d9aab0fe3c620c878575bca08484fa758a68fa",
-      "bytes": 18657
+      "sha256": "909657886030824137ecf79ec7c016d9c2bc517bd7cac710bd4cc25daf6fe9ba",
+      "bytes": 21021
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "4eab9b5493d8cb3dd047390cdb6f8e557b88f62cc9ec0604a83bc69d3109700f",
-      "bytes": 52469
+      "sha256": "493dde84904c754114a5ab16615edccf2bc24f5867888e873e1f5c17f45c6983",
+      "bytes": 55446
     },
     {
       "path": "README.md",
@@ -122,8 +122,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "d1bc940bf6dc6aff8fe446d48f6a91a50d7fd9f7bf2beba56251c7c8ac21eac0",
-      "bytes": 23722
+      "sha256": "22b41a513cd825d933a9d9ed7bf8feced95e92df056cd9c11b255ebc467a1e83",
+      "bytes": 23770
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -132,8 +132,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "95d598c996c0a241cb4e71857340cbb76a5457279296ce328326602fc7b01e52",
-      "bytes": 42256
+      "sha256": "07abcfc0e25da7c2a192e17381c7bd6a139d2705c8a6ca92feb7a431bf340514",
+      "bytes": 43137
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -176,14 +176,19 @@
       "bytes": 29646
     },
     {
+      "path": "docs/implementation/CF-WO-P0-009-corrections.md",
+      "sha256": "a617ca1728f63ac9411a73c4a095e18aebc94d98a5b31d849d2acf9647378412",
+      "bytes": 27857
+    },
+    {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
       "sha256": "23bb2a5aa29fde3bbacbec7996625c52b25e9d67106c278da8bb35ed0f855099",
       "bytes": 27096
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "a9cd807ac5c916203bc781c8311102af4ac64146dd674ca762c26971b3bf3df5",
-      "bytes": 17291
+      "sha256": "ca26f696907230320615c1fa8cb2b3be670014224384f31a192fd320ecd894dc",
+      "bytes": 17346
     },
     {
       "path": "registry/adapters.json",
@@ -342,8 +347,8 @@
     },
     {
       "path": "scripts/asset_policy.py",
-      "sha256": "d5312028f191837cdb92a7a89079895ca95fa9f25ce7ac2fc4fc71530c3eb0a1",
-      "bytes": 49054
+      "sha256": "1178d8b312560c31670b70d74f3f430ed9b753ab918e9ba3ae73d3408df6e7d9",
+      "bytes": 58708
     },
     {
       "path": "scripts/atomic_write.py",
@@ -372,8 +377,8 @@
     },
     {
       "path": "scripts/timeline_policy.py",
-      "sha256": "dbdc5af612b83df6357469198f48f09f5d396a91216789c4ccb678d75e5e95e6",
-      "bytes": 34646
+      "sha256": "fde352444c12a4c68c0e20c6b92186f9209b1a2d4ef975ca9f9caffe4d0f5c76",
+      "bytes": 42620
     },
     {
       "path": "scripts/validate-repo.py",
@@ -707,8 +712,8 @@
     },
     {
       "path": "tests/test_character_registration.py",
-      "sha256": "0effbc3f0aebd329ebba993c2f35d027b51aac044d12a2544bc70120a70b002a",
-      "bytes": 53809
+      "sha256": "be8e6862dd3f21fd50d138c4785e63f72666afd406b44925f0c752312101410f",
+      "bytes": 54096
     },
     {
       "path": "tests/test_installer.sh",
@@ -747,8 +752,8 @@
     },
     {
       "path": "tests/test_private_voice_security.py",
-      "sha256": "7e896f58703866ccbae30926478d609db38a93b3f42d7b73fe82809ab9dca22a",
-      "bytes": 37085
+      "sha256": "7dafa98e0ee29501a5da93b9d7250dc76090720c9d13599a1276dc6e0c5b13e4",
+      "bytes": 51398
     },
     {
       "path": "tests/test_production_direction.py",
@@ -777,8 +782,8 @@
     },
     {
       "path": "tests/test_timeline_manifest.py",
-      "sha256": "17a88fa249ce854257951b6fdf67fb615f217d277541aadaa008986a008bf278",
-      "bytes": 25668
+      "sha256": "13cd4810f424082c11f03512ea1ac8c6401cb62b236fd275cc801e09c5ec4808",
+      "bytes": 42651
     }
   ],
   "tests": [
@@ -931,5 +936,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-23T06:40:57Z"
+  "generated_at_utc": "2026-11-23T08:29:05Z"
 }

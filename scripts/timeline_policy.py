@@ -12,35 +12,35 @@ that the production system enforces the same rules. The
 implementation moved here verbatim; the test file now imports it
 and keeps only fixtures and cases.
 
-Two validation modes:
+Two validation modes (CF-WO-P0-009, Task C — strict by default):
 
-- Structural (default, strict=False): the P0-007 relationship
-  contract. Every cross-reference rule (shot/scene/dialogue-line/
-  character/voice/audio/clip/track/sync-group existence, timing,
-  speaker/listener agreement, no silent character/voice/audio
-  switch) is enforced against the registry. A registry section
-  that is ABSENT is skipped (partial registries allowed); a
-  section that is PRESENT is authoritative. Valid v2.3 timelines
-  still pass under this contract.
-- Strict v2.5 production (strict=True): the structural contract
-  PLUS fail-closed ownership enforcement, for private v2.5
-  production only. Strict applies only to schema_version "2.5"
-  manifests (a strict call on a v2.3 file is an error: a v2.3
-  file is valid only under the legacy structural contract, never
-  as an authorized private v2.5 production). In strict mode:
-  every kind of asset the manifest references must have its
-  registry section present (missing registry data fails closed);
-  requester owner + workspace identity is required whenever the
-  timeline references a character, voice or dialogue line
-  (legitimate non-character tracks — narration, music, ambience,
-  SFX, foley — reference none of these and remain valid without
-  a requester); every referenced character, voice and
-  dialogue-bound audio asset must carry a valid ownership
-  binding and must be accessible to the requester
-  (asset_policy.authorize_action, action "use_in_project");
-  every referenced voice must be approved. A voice audio
-  reference from another user/character is never silently
-  attached to a private character's production.
+- Production (validate_timeline_cross_references, the normal entry
+  point): FAIL CLOSED by default. A call with no `strict` argument
+  runs the FULL strict v2.5 production contract (ownership +
+  requester + approval, via _strict_v25_errors) on every v2.5
+  manifest — omitting a keyword argument can never downgrade a
+  v2.5 Timeline to structural-only validation. Only a manifest
+  whose schema_version is exactly "2.3" keeps its historical
+  legacy structural contract by default; any other version is
+  validated strictly (a non-2.5 version under an explicit
+  strict=True call is itself an error). Passing strict=False for
+  a v2.5 manifest is REFUSED (an error is returned): structural-
+  only validation of a v2.5 Timeline is available ONLY through
+  the explicitly named validate_timeline_structural() below.
+- Structural / legacy (validate_timeline_structural): the P0-007
+  relationship contract ONLY. Every cross-reference rule
+  (shot/scene/dialogue-line/character/voice/audio/clip/track/
+  sync-group existence, timing, speaker/listener agreement, no
+  silent character/voice/audio switch) is enforced against the
+  registry. A registry section that is ABSENT is skipped (partial
+  registries allowed); a section that is PRESENT is authoritative.
+  Valid v2.3 timelines still pass under this contract. This entry
+  point performs NO ownership, requester, authorization or
+  approval check: a structurally clean result ([]) is NOT an
+  authorization, is NOT proof a Timeline may be used in
+  production, and MUST NEVER be used to authorize or export a
+  v2.5 Timeline. It exists for legacy v2.3 workflows and for
+  structural diagnosis only.
 
 The timeline registry holds MINIMAL reference records (id,
 character_id, approval_status, ownership) — not full voice
@@ -94,30 +94,15 @@ except ImportError:  # pragma: no cover - direct execution
 NON_DIALOGUE_AUDIO_TYPES = ("music", "ambience", "sound-effect", "foley")
 
 
-def validate_timeline_cross_references(manifest, registry,
-                                       requesting_owner_id=None,
-                                       requesting_workspace_id=None,
-                                       *, strict=False):
-    """Validate a timeline manifest's cross-references against a registry.
+def _structural_errors(manifest, registry):
+    """Structural cross-reference validation only (P0-007 contract).
 
-    Args:
-        manifest: a timeline-manifest record (dict).
-        registry: a dict of reference records, keyed as documented in the
-            module docstring (shots, scenes, dialogue_lines, characters,
-            voice_profiles, audio_assets). A section that is absent is
-            skipped in structural mode; a section that is present is
-            authoritative.
-        requesting_owner_id / requesting_workspace_id: the requester
-            identity. Required in strict mode whenever the timeline
-            references a character, voice or dialogue line; ignored
-            (not consulted) in structural mode.
-        strict: when True, enforce the strict v2.5 production contract
-            (ownership + requester + approval) in addition to the
-            structural contract. Strict applies only to schema_version
-            "2.5" manifests.
-    Returns:
-        A list of error strings; empty means the manifest's relationships
-        are valid against the registry.
+    Internal implementation shared by validate_timeline_structural()
+    and validate_timeline_cross_references(). Performs NO ownership,
+    requester, authorization or approval check: its result must
+    NEVER be treated as production authorization for a v2.5
+    Timeline. Returns a list of error strings; empty means the
+    manifest's relationships are structurally valid.
     """
     errors = []
     if not isinstance(manifest, dict):
@@ -430,10 +415,128 @@ def validate_timeline_cross_references(manifest, registry,
                     if acid not in clips:
                         errors.append(f"{sw}: audio_clip_id '{acid}' does "
                                       "not exist in the timeline")
-    if strict:
+    return errors
+
+
+def validate_timeline_structural(manifest, registry):
+    """Structural / legacy timeline validation ONLY — NOT authorization.
+
+    Runs the P0-007 structural relationship contract and nothing
+    else: cross-reference existence, timing, speaker/listener
+    agreement, no silent character/voice/audio switch. It performs
+    NO ownership, requester, authorization or approval check.
+
+    Use ONLY for legacy v2.3 workflows and for structural
+    diagnosis. A structurally clean result ([]) is NOT an
+    authorization, is NOT proof a Timeline may be used in
+    production, and MUST NEVER be used to authorize or export a
+    v2.5 Timeline — for that, call
+    validate_timeline_cross_references(), which is strict by
+    default on v2.5 manifests.
+
+    Args:
+        manifest: a timeline-manifest record (dict).
+        registry: a dict of reference records, keyed as documented
+            in the module docstring. A section that is absent is
+            skipped; a section that is present is authoritative.
+    Returns:
+        A list of structural error strings; empty means the
+        manifest's relationships are structurally valid.
+    """
+    return _structural_errors(manifest, registry)
+
+
+def validate_timeline_cross_references(manifest, registry,
+                                       requesting_owner_id=None,
+                                       requesting_workspace_id=None,
+                                       *, strict=None):
+    """Validate a timeline manifest — PRODUCTION entry point.
+
+    This is the entry point suitable for production,
+    authorization-sensitive validation. It ALWAYS runs the
+    structural contract, and — by default, with no `strict`
+    argument — it ALSO runs the full strict v2.5 production
+    contract (fail-closed ownership enforcement, via
+    _strict_v25_errors) on every v2.5 manifest. Omitting the
+    `strict` keyword can never downgrade a v2.5 Timeline to
+    structural-only validation.
+
+    Strict v2.5 contract (applies only to schema_version "2.5"
+    manifests): every kind of asset the manifest references must
+    have its registry section present (missing registry data
+    fails closed); requester owner + workspace identity is
+    required whenever the timeline references a character, voice
+    or dialogue line (legitimate non-character tracks —
+    narration, music, ambience, SFX, foley — reference none of
+    these and remain valid without a requester); every referenced
+    character, voice and dialogue-bound audio asset must carry a
+    valid ownership binding and must be accessible to the
+    requester (asset_policy.authorize_action, action
+    "use_in_project"); every referenced voice must be approved;
+    and every referenced voice profile's ownership must match
+    the ownership of the character it claims to represent
+    (asset_policy.ownerships_match — the same binding the
+    production voice resolver enforces). A voice audio reference
+    from another user/character is never silently attached to a
+    private character's production.
+
+    Args:
+        manifest: a timeline-manifest record (dict).
+        registry: a dict of reference records, keyed as documented
+            in the module docstring. A section that is absent is
+            skipped in structural mode; a section that is present
+            is authoritative.
+        requesting_owner_id / requesting_workspace_id: the
+            requester identity. Required in strict mode whenever
+            the timeline references a character, voice or dialogue
+            line; ignored (not consulted) in structural mode.
+        strict: None (default) — production default: strict v2.5
+            checks run for a v2.5 manifest; a manifest whose
+            schema_version is exactly "2.3" keeps its historical
+            legacy structural contract; any other/missing version
+            is validated strictly (fail closed). True — force the
+            strict v2.5 contract (a strict call on a v2.3 file is
+            an error: a v2.3 file is valid only under the legacy
+            structural contract, never as an authorized private
+            v2.5 production). False — request structural-only
+            validation; REFUSED for a v2.5 manifest (an error is
+            returned) — use the explicitly named
+            validate_timeline_structural() for legacy structural
+            work instead, and never to authorize or export.
+    Returns:
+        A list of error strings; empty means the manifest is
+        valid against the registry under the contract that
+        applies (structural + strict v2.5 for a v2.5 manifest by
+        default).
+    """
+    errors = _structural_errors(manifest, registry)
+    if not isinstance(manifest, dict) or not isinstance(registry, dict):
+        return errors
+    version = manifest.get("schema_version")
+    if strict is True:
         errors.extend(_strict_v25_errors(
             manifest, registry, requesting_owner_id,
             requesting_workspace_id))
+    elif strict is False:
+        if version == "2.5":
+            errors.append(
+                "strict=False refused for a v2.5 timeline manifest — "
+                "structural-only validation must never silently "
+                "downgrade v2.5 production validation; use the "
+                "explicitly named validate_timeline_structural() "
+                "for legacy structural work only, and never to "
+                "authorize or export a v2.5 Timeline")
+    elif strict is None:
+        # Production default: strict for v2.5 (and for any
+        # unknown/missing version — fail closed); only an explicit
+        # "2.3" keeps the historical legacy structural contract.
+        if version != "2.3":
+            errors.extend(_strict_v25_errors(
+                manifest, registry, requesting_owner_id,
+                requesting_workspace_id))
+    else:
+        errors.append(
+            f"strict must be True, False or None, got {strict!r}")
     return errors
 
 
@@ -636,6 +739,53 @@ def _strict_v25_errors(manifest, registry, requesting_owner_id,
                           f"{rec.get('approval_status')!r}) — only an "
                           "approved voice may be selected for "
                           "production")
+        # CF-WO-P0-009 D: the voice profile's ownership must match
+        # the ownership of the character it claims to represent —
+        # the same ownership-binding rule the production voice
+        # resolver (asset_policy.resolve_voice_for_production /
+        # check_voice_binding) enforces, via the shared
+        # asset_policy.ownerships_match helper (never a second
+        # comparison algorithm). This applies EVEN when both
+        # records are individually accessible to the requester
+        # (e.g. both shared in the same workspace): shared-
+        # workspace access to each asset separately never
+        # authorizes linking a voice to another owner's
+        # character. Ownership is never silently repaired,
+        # replaced or reassigned — a mismatch is a rejection.
+        char_id = rec.get("character_id")
+        if not char_id or not isinstance(char_id, str):
+            errors.append(f"strict v2.5: voice_profile_id '{vpid}' "
+                          "has no valid character_id link — a voice "
+                          "profile must belong to exactly one "
+                          "character")
+        else:
+            char_rec = characters.get(char_id) \
+                if isinstance(characters, dict) else None
+            if char_rec is None or not isinstance(char_rec, dict):
+                errors.append(f"strict v2.5: voice_profile_id "
+                              f"'{vpid}' belongs to character "
+                              f"'{char_id}', which does not resolve "
+                              "to a registered character record — a "
+                              "voice profile must not be linked to "
+                              "an unknown character")
+            else:
+                char_ownership = char_rec.get("ownership")
+                if validate_ownership(char_ownership):
+                    errors.append(f"strict v2.5: voice_profile_id "
+                                  f"'{vpid}' belongs to character "
+                                  f"'{char_id}', which has no valid "
+                                  "ownership binding — a voice "
+                                  "profile must not be linked to a "
+                                  "character without ownership")
+                elif not ownerships_match(ownership, char_ownership):
+                    errors.append(f"strict v2.5: voice_profile_id "
+                                  f"'{vpid}' ownership does not match "
+                                  f"character '{char_id}' ownership "
+                                  "(owner/workspace must match) — a "
+                                  "voice profile must not be linked "
+                                  "to a character with different "
+                                  "ownership, even when both are "
+                                  "shared in the same workspace")
     for aid in sorted(refs["bound_audio_assets"]):
         rec = audio_assets.get(aid) if isinstance(audio_assets, dict) \
             else None
