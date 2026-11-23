@@ -57,6 +57,11 @@ jobs:
     # P1-001/R1.
     runs-on: windows-latest
     strategy:
+      # fail-fast is false (R2 follow-up): the default fail-fast
+      # cancelled the Python 3.10 job when 3.12 failed in PR run
+      # #216, so 3.10 never ran any test. Each version's result
+      # must stand on its own.
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.12"]
     steps:
@@ -73,14 +78,20 @@ jobs:
         run: |
           python --version
           python -c "import multiprocessing, sys; print('start method:', multiprocessing.get_start_method()); print(sys.platform)"
-      - name: Run runtime regression suites
+      - name: Run local session runtime suite
         # bash (Git Bash on the Windows runner) so a non-zero
-        # exit from any suite fails the step immediately, the
-        # same as on Linux. The race test (FIRST-01..07) runs
-        # for real here under spawn; its PASS lines must appear
-        # in the log — no test is skipped for the platform.
+        # exit fails the step immediately, the same as on Linux.
+        # One step per suite (R2 follow-up): a failure in one
+        # suite must not hide the other two — the single-step
+        # form stopped at the first failure and left the other
+        # suites unrun. The race test (FIRST-01..07) runs for
+        # real here under spawn; its PASS lines must appear in
+        # the log — no test is skipped for the platform.
         shell: bash
-        run: |
-          python tests/test_local_session_runtime.py
-          python tests/test_session_authorization.py
-          python tests/test_private_voice_security.py
+        run: python tests/test_local_session_runtime.py
+      - name: Run session authorization suite
+        shell: bash
+        run: python tests/test_session_authorization.py
+      - name: Run private voice security suite
+        shell: bash
+        run: python tests/test_private_voice_security.py
