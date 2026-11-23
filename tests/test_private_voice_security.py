@@ -33,9 +33,11 @@ Run: python3 tests/test_private_voice_security.py
 Exit 0 = PASS, 1 = FAIL. Test IDs: CF-P0-008-SEC.
 """
 import copy
+import dataclasses
 import importlib.util
 import json
 import os
+import pickle
 import sys
 import tempfile
 from types import SimpleNamespace
@@ -371,11 +373,25 @@ def main():
           bool(asset_policy.validate_private_voice_export(
               nila_voice, trusted_context=export_ctx(
                   expires_at="2000-01-01T00:00:00Z"))))
+    # CF-WO-P0-009 (A): revocation is registry state, NOT a mutated
+    # field — the context is immutable, so `revoked_ctx.revoked =
+    # True` (the P0-008 test) must no longer be the revocation
+    # path. Revoking goes through
+    # asset_policy.revoke_trusted_authorization_context, the
+    # issued context itself is unchanged, and export rejects.
     revoked_ctx = export_ctx()
-    revoked_ctx.revoked = True
+    revoked_before = (revoked_ctx.authorization_id,
+                      revoked_ctx.actor_owner_id,
+                      revoked_ctx.scope, revoked_ctx.revoked)
+    asset_policy.revoke_trusted_authorization_context(revoked_ctx)
     check("CF-P0-008-SEC(b13): a revoked context rejects",
           bool(asset_policy.validate_private_voice_export(
               nila_voice, trusted_context=revoked_ctx)))
+    check("CF-P0-008-SEC(b13b): revoking does not mutate the issued "
+          "context (revoked field still False, all fields unchanged)",
+          (revoked_ctx.authorization_id, revoked_ctx.actor_owner_id,
+           revoked_ctx.scope, revoked_ctx.revoked) == revoked_before
+          and revoked_ctx.revoked is False)
     check("CF-P0-008-SEC(b14): to_provider=True without "
           "provider-transmission approval rejects",
           bool(asset_policy.validate_private_voice_export(
@@ -644,6 +660,12 @@ def main():
           is test_timeline_manifest.validate_timeline_cross_references)
     mina_voice = load_fixture("voice-profile-user-recording.json")
     mina_registry = {mina_voice["voice_profile_id"]: mina_voice}
+    # CF-WO-P0-009 (B): Mina's voice is v2.5, so the wrapper must
+    # be given the Character Registry — a v2.5 voice is never
+    # resolvable without it.
+    mina_character = load_fixture("character-registration-valid.json")
+    mina_character_registry = {mina_character["character_id"]:
+                               mina_character}
     original_resolver = asset_policy.resolve_voice_for_production
     calls = {"n": 0}
 
@@ -656,6 +678,7 @@ def main():
         resolved, spy_errs = \
             test_character_registration.resolve_voice_for_character(
                 mina_registry, "char-001",
+                character_registry=mina_character_registry,
                 requesting_owner_id="owner-a",
                 requesting_workspace_id="workspace-a")
     finally:
@@ -673,6 +696,29 @@ def main():
           "asset_policy.resolve_for_user",
           asset_policy.resolve_for_user
           is test_character_registration.resolve_for_user)
+    # CF-WO-P0-009 (cross-cutting): the wrapper has no fallback of
+    # its own — if the production resolver is unavailable, the
+    # wrapper must surface the failure, never resolve on its own.
+    def _unavailable_resolver(*args, **kwargs):
+        raise RuntimeError("production resolver unavailable")
+
+    asset_policy.resolve_voice_for_production = _unavailable_resolver
+    try:
+        try:
+            test_character_registration.resolve_voice_for_character(
+                mina_registry, "char-001",
+                character_registry=mina_character_registry,
+                requesting_owner_id="owner-a",
+                requesting_workspace_id="workspace-a")
+            unavailable_propagated = False
+        except RuntimeError:
+            unavailable_propagated = True
+    finally:
+        asset_policy.resolve_voice_for_production = original_resolver
+    check("CF-P0-008-SEC(d5): the character-registration wrapper "
+          "has no fallback — an unavailable production resolver "
+          "propagates instead of resolving on its own",
+          unavailable_propagated)
 
     # ------------------------------------------------------------------
     # (e) Path escape (regression pin)
@@ -747,6 +793,253 @@ def main():
           "is NOT automatically exportable (export without a "
           "trusted context still rejects)",
           bool(asset_policy.validate_private_voice_export(voice)))
+
+    # ------------------------------------------------------------------
+    # (h) CF-WO-P0-009 (A) — the trusted context is genuinely
+    # immutable after issuance; revocation is separate registry
+    # state, never a mutated field.
+    # ------------------------------------------------------------------
+    fresh = export_ctx()
+    check("CF-P0-009-SEC(h1): a newly issued context carries the "
+          "expected identity / scope / action / approval",
+          fresh.actor_owner_id == "owner-a"
+          and fresh.actor_workspace_id == "workspace-a"
+          and fresh.granted_by == "owner-a"
+          and fresh.scope == "export voice-nila-001 for backup"
+          and fresh.action == "export_private_asset"
+          and fresh.character_id == "char-nila-001"
+          and fresh.voice_profile_id == "voice-nila-001"
+          and fresh.provider_transmission_approved is False
+          and fresh.expires_at is None
+          and fresh.revoked is False
+          and isinstance(fresh.authorization_id, str)
+          and bool(fresh.authorization_id))
+    forged_values = {
+        "authorization_id": "forged-authorization-id",
+        "actor_owner_id": "owner-b",
+        "actor_workspace_id": "workspace-b",
+        "granted_by": "owner-b",
+        "scope": "forged scope",
+        "action": "use_in_production",
+        "character_id": "char-aria-001",
+        "voice_profile_id": "voice-aria-001",
+        "provider_transmission_approved": True,
+        "expires_at": "2000-01-01T00:00:00Z",
+        "revoked": True}
+    for field, forged in forged_values.items():
+        before_value = getattr(fresh, field)
+        try:
+            setattr(fresh, field, forged)
+            reassignment_raised = False
+        except AttributeError:
+            reassignment_raised = True
+        check(f"CF-P0-009-SEC(h2): reassigning {field} raises "
+              "AttributeError and leaves the issued value unchanged",
+              reassignment_raised
+              and getattr(fresh, field) == before_value)
+    try:
+        fresh.forged_field = "forged"
+        new_attr_raised = False
+    except AttributeError:
+        new_attr_raised = True
+    check("CF-P0-009-SEC(h3): adding a NEW attribute to an issued "
+          "context raises AttributeError",
+          new_attr_raised and not hasattr(fresh, "forged_field"))
+    try:
+        del fresh.scope
+        delete_raised = False
+    except AttributeError:
+        delete_raised = True
+    check("CF-P0-009-SEC(h4): deleting a field of an issued context "
+          "raises AttributeError",
+          delete_raised and fresh.scope
+          == "export voice-nila-001 for backup")
+    check("CF-P0-009-SEC(h5): an issued context has no __dict__ "
+          "escape (vars() raises TypeError)",
+          not hasattr(fresh, "__dict__"))
+    try:
+        vars(fresh)
+        vars_raised = False
+    except TypeError:
+        vars_raised = True
+    check("CF-P0-009-SEC(h5b): vars() on an issued context raises "
+          "TypeError",
+          vars_raised)
+    copied = copy.copy(fresh)
+    deep_copied = copy.deepcopy(fresh)
+    unpickled = pickle.loads(pickle.dumps(fresh))
+    for label, clone in (("copy", copied), ("deepcopy", deep_copied),
+                         ("pickle round-trip", unpickled)):
+        try:
+            clone.scope = "forged scope"
+            clone_raised = False
+        except AttributeError:
+            clone_raised = True
+        check(f"CF-P0-009-SEC(h6): a {label} of an issued context "
+              "is frozen too (reassignment raises) and keeps the "
+              "issued values",
+              clone_raised and clone.scope
+              == "export voice-nila-001 for backup"
+              and clone.authorization_id == fresh.authorization_id)
+    try:
+        dataclasses.replace(fresh, scope="forged scope")
+        replace_raised = False
+    except TypeError:
+        replace_raised = True
+    check("CF-P0-009-SEC(h7): dataclasses.replace on an issued "
+          "context raises TypeError (no replace backdoor)",
+          replace_raised
+          and fresh.scope == "export voice-nila-001 for backup")
+    ctx_a = export_ctx()
+    ctx_b = export_ctx()
+    check("CF-P0-009-SEC(h8): two issued contexts have distinct "
+          "authorization_ids",
+          ctx_a.authorization_id != ctx_b.authorization_id)
+    snapshot_a = (ctx_a.authorization_id, ctx_a.actor_owner_id,
+                  ctx_a.actor_workspace_id, ctx_a.granted_by,
+                  ctx_a.scope, ctx_a.action, ctx_a.character_id,
+                  ctx_a.voice_profile_id,
+                  ctx_a.provider_transmission_approved,
+                  ctx_a.expires_at, ctx_a.revoked)
+    check("CF-P0-009-SEC(h9): a fresh context is not revoked",
+          not asset_policy.is_trusted_authorization_revoked(ctx_a))
+    asset_policy.revoke_trusted_authorization_context(ctx_a)
+    check("CF-P0-009-SEC(h10): revocation does not mutate the "
+          "original context (every field, including revoked, keeps "
+          "its issued value)",
+          (ctx_a.authorization_id, ctx_a.actor_owner_id,
+           ctx_a.actor_workspace_id, ctx_a.granted_by, ctx_a.scope,
+           ctx_a.action, ctx_a.character_id, ctx_a.voice_profile_id,
+           ctx_a.provider_transmission_approved, ctx_a.expires_at,
+           ctx_a.revoked) == snapshot_a
+          and ctx_a.revoked is False)
+    check("CF-P0-009-SEC(h11): a revoked context is rejected by "
+          "the export authorization path",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=ctx_a)))
+    check("CF-P0-009-SEC(h12): revoking one context does not revoke "
+          "another — the unrevoked context still authorizes export",
+          not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=ctx_b))
+    try:
+        asset_policy.revoke_trusted_authorization_context(
+            {"authorization_id": ctx_b.authorization_id})
+        revoke_fake_raised = False
+    except TypeError:
+        revoke_fake_raised = True
+    check("CF-P0-009-SEC(h13): revoking a dict fake raises "
+          "TypeError and leaves the real context unrevoked",
+          revoke_fake_raised
+          and not asset_policy.is_trusted_authorization_revoked(ctx_b))
+    try:
+        asset_policy.is_trusted_authorization_revoked(
+            SimpleNamespace(authorization_id=ctx_b.authorization_id))
+        check_fake_raised = False
+    except TypeError:
+        check_fake_raised = True
+    check("CF-P0-009-SEC(h14): checking revocation of a fake "
+          "context raises TypeError (fail closed)",
+          check_fake_raised)
+    forged_ctx = export_ctx(voice_profile_id="voice-aria-001")
+    try:
+        forged_ctx.voice_profile_id = "voice-nila-001"
+        retarget_raised = False
+    except AttributeError:
+        retarget_raised = True
+    check("CF-P0-009-SEC(h15): a context issued for another voice "
+          "cannot be retargeted by reassignment, and export for "
+          "the other voice still rejects",
+          retarget_raised
+          and forged_ctx.voice_profile_id == "voice-aria-001"
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=forged_ctx)))
+    check("CF-P0-009-SEC(h16): existing valid authorization use "
+          "cases still work (fresh context allows export, and "
+          "allows provider transmission when approved)",
+          not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx())
+          and not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx(
+                  provider_transmission_approved=True),
+              to_provider=True))
+
+    # ------------------------------------------------------------------
+    # (i) CF-WO-P0-009 (B) — v2.5 resolution fails closed without
+    # a Character Registry; legacy v2.3 keeps its contract.
+    # ------------------------------------------------------------------
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, None, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a")
+    check("CF-P0-009-SEC(i1): v2.5 resolution WITHOUT a Character "
+          "Registry fails (voice unresolved, explicit registry "
+          "reason)",
+          voice is None and bool(errs)
+          and "v2.5 private voice resolution requires a valid "
+          "Character Registry" in "; ".join(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, None, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a",
+        require_approved=False)
+    check("CF-P0-009-SEC(i2): v2.5 resolution without a registry "
+          "fails even when approval is not required (no silent "
+          "fallback)",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, None, "char-nila-001",
+        "voice-nila-001")
+    check("CF-P0-009-SEC(i3): v2.5 resolution without a registry "
+          "fails even with no requester either (registry is "
+          "checked first, fail closed)",
+          voice is None and bool(errs)
+          and "Character Registry" in "; ".join(errs),
+          "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, ["not-a-registry"], "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a")
+    check("CF-P0-009-SEC(i4): v2.5 resolution with a non-dict "
+          "Character Registry fails closed",
+          voice is None and bool(errs)
+          and "Character Registry" in "; ".join(errs),
+          "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, {}, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a")
+    check("CF-P0-009-SEC(i5): v2.5 resolution with a registry "
+          "missing the Character fails",
+          voice is None and bool(errs)
+          and "unknown character_id 'char-nila-001'" in "; ".join(errs),
+          "; ".join(errs))
+    mismatched_character = {"character_id": "char-nila-001",
+                            "ownership": copy.deepcopy(OWNER_B)}
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry,
+        {"char-nila-001": mismatched_character}, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a")
+    check("CF-P0-009-SEC(i6): v2.5 resolution with mismatched "
+          "Character/Voice ownership fails",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-aria-001",
+        "voice-aria-001", "owner-a", "workspace-a")
+    check("CF-P0-009-SEC(i7): v2.5 resolution with matching "
+          "ownership + valid permissions succeeds (second record)",
+          voice is not None and not errs
+          and voice["voice_profile_id"] == "voice-aria-001",
+          "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-nila-001", "owner-b", "workspace-b")
+    check("CF-P0-009-SEC(i8): requester authorization is still "
+          "enforced with a registry present (wrong owner rejects)",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        legacy_registry, None, "char-nila-001", "voice-nila-001",
+        require_approved=False)
+    check("CF-P0-009-SEC(i9): legacy v2.3 keeps its historical "
+          "contract — the same no-registry call shape that fails "
+          "for v2.5 still resolves for v2.3 (version-aware, never "
+          "a silent v2.5 fallback)",
+          voice is not None and not errs, "; ".join(errs))
 
     print(f"test_private_voice_security: "
           f"{'PASS' if not failures else 'FAIL'} "
