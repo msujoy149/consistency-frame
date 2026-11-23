@@ -138,6 +138,15 @@ echo "-- Installing bundled components (VoiceStudio + OpenMontage) --"
 # overwritten, and the user is told what to do instead. A directory
 # merely containing a `.git` entry proves nothing on its own.
 
+# is_git_work_tree: exit 0 iff $1 is a valid git working tree — a
+# normal clone (a `.git` directory) or a linked worktree / submodule
+# (a `.git` file). Uses real git plumbing, never a `[ -d .git ]`
+# test: a directory merely containing a `.git` entry proves nothing,
+# and a `.git` directory test silently excludes valid worktrees.
+is_git_work_tree() {
+  [ "$(git -C "$1" rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]
+}
+
 # canonical_github_repo: print the "owner/repo" for a recognised
 # GitHub remote URL, or fail. Accepted standard forms:
 #   https://github.com/<owner>/<repo>[.git][/]
@@ -270,59 +279,76 @@ fi
 
 # 3. VoiceStudio setup (only if the clone succeeded) ----------------------
 VOICE_OK=1
-if [ "$STATUS_VOICESTUDIO" = "SUCCESS" ] && [ -d "components/voicestudio/.git" ]; then
-  echo "-- VoiceStudio found. Setting up its API (needs bun + uv) --"
-  if command -v bun >/dev/null 2>&1; then
-    if ! command -v uv >/dev/null 2>&1 && [ -x "$HOME/.local/bin/uv" ]; then
-      export PATH="$HOME/.local/bin:$PATH"
-    fi
-    if ! (cd components/voicestudio && bun install); then
-      echo "WARNING: bun install failed for VoiceStudio." >&2
-      VOICE_OK=0
-    fi
-    if command -v uv >/dev/null 2>&1; then
-      echo "-- Installing the VoiceStudio Python API (setup:api; downloads about 1 GB, takes a few minutes) --"
-      if ! (cd components/voicestudio && bun run setup:api); then
-        echo "WARNING: setup:api failed. Run it manually: cd components/voicestudio && bun run setup:api" >&2
+if [ "$STATUS_VOICESTUDIO" = "SUCCESS" ]; then
+  if is_git_work_tree "components/voicestudio"; then
+    echo "-- VoiceStudio found. Setting up its API (needs bun + uv) --"
+    if command -v bun >/dev/null 2>&1; then
+      if ! command -v uv >/dev/null 2>&1 && [ -x "$HOME/.local/bin/uv" ]; then
+        export PATH="$HOME/.local/bin:$PATH"
+      fi
+      if ! (cd components/voicestudio && bun install); then
+        echo "WARNING: bun install failed for VoiceStudio." >&2
+        VOICE_OK=0
+      fi
+      if command -v uv >/dev/null 2>&1; then
+        echo "-- Installing the VoiceStudio Python API (setup:api; downloads about 1 GB, takes a few minutes) --"
+        if ! (cd components/voicestudio && bun run setup:api); then
+          echo "WARNING: setup:api failed. Run it manually: cd components/voicestudio && bun run setup:api" >&2
+          VOICE_OK=0
+        fi
+      else
+        echo "uv is not installed, so the VoiceStudio Python API cannot be set up here."
+        echo "Install uv (https://docs.astral.sh/uv/getting-started/installation/), then run:"
+        echo "  cd components/voicestudio && bun run setup:api"
         VOICE_OK=0
       fi
     else
-      echo "uv is not installed, so the VoiceStudio Python API cannot be set up here."
-      echo "Install uv (https://docs.astral.sh/uv/getting-started/installation/), then run:"
-      echo "  cd components/voicestudio && bun run setup:api"
+      echo "bun is not installed, so VoiceStudio cannot be set up here."
+      echo "Install bun (https://bun.sh), then run this script again, or"
+      echo "follow components/voicestudio README instructions manually."
       VOICE_OK=0
     fi
+    if [ "$VOICE_OK" = 0 ]; then
+      STATUS_VOICESTUDIO="PARTIAL"
+    fi
   else
-    echo "bun is not installed, so VoiceStudio cannot be set up here."
-    echo "Install bun (https://bun.sh), then run this script again, or"
-    echo "follow components/voicestudio README instructions manually."
-    VOICE_OK=0
-  fi
-  if [ "$VOICE_OK" = 0 ]; then
-    STATUS_VOICESTUDIO="PARTIAL"
+    # The clone step verified this directory, so reaching here means it
+    # stopped being a valid working tree in between (or git broke).
+    # Never report SUCCESS for a component whose setup never ran.
+    echo "ERROR: components/voicestudio passed verification but is no longer a valid git working tree; refusing to report SUCCESS." >&2
+    echo "Remove it yourself or move it aside, then run bash setup.sh --with-components again." >&2
+    STATUS_VOICESTUDIO="FAILED"
   fi
 fi
 
 # 4. OpenMontage setup (only if the clone succeeded) -----------------------
-if [ "$STATUS_OPENMONTAGE" = "SUCCESS" ] && [ -d "components/openmontage/.git" ]; then
-  echo "-- OpenMontage found. Running its own setup (make setup; downloads the Node + Python dependencies, takes a few minutes) --"
-  echo "  (Needs Python 3.10+ — uv provides it if installed — plus Node and ffmpeg."
-  echo "  No API keys are set by this script. Add provider keys to"
-  echo "  components/openmontage/.env only when you need a paid provider.)"
-  if command -v make >/dev/null 2>&1; then
-    if (cd components/openmontage && make setup); then
-      echo "OpenMontage set up."
+if [ "$STATUS_OPENMONTAGE" = "SUCCESS" ]; then
+  if is_git_work_tree "components/openmontage"; then
+    echo "-- OpenMontage found. Running its own setup (make setup; downloads the Node + Python dependencies, takes a few minutes) --"
+    echo "  (Needs Python 3.10+ — uv provides it if installed — plus Node and ffmpeg."
+    echo "  No API keys are set by this script. Add provider keys to"
+    echo "  components/openmontage/.env only when you need a paid provider.)"
+    if command -v make >/dev/null 2>&1; then
+      if (cd components/openmontage && make setup); then
+        echo "OpenMontage set up."
+      else
+        echo "WARNING: OpenMontage 'make setup' failed. Run it manually to see the error:" >&2
+        echo "  cd components/openmontage && make setup" >&2
+        STATUS_OPENMONTAGE="PARTIAL"
+      fi
     else
-      echo "WARNING: OpenMontage 'make setup' failed. Run it manually to see the error:" >&2
+      echo "WARNING: 'make' is not installed, so OpenMontage cannot be set up here." >&2
+      echo "On macOS/Linux install it with your package manager; on Windows use WSL"
+      echo "(Git Bash does not always ship make). Then run:" >&2
       echo "  cd components/openmontage && make setup" >&2
       STATUS_OPENMONTAGE="PARTIAL"
     fi
   else
-    echo "WARNING: 'make' is not installed, so OpenMontage cannot be set up here." >&2
-    echo "On macOS/Linux install it with your package manager; on Windows use WSL"
-    echo "(Git Bash does not always ship make). Then run:" >&2
-    echo "  cd components/openmontage && make setup" >&2
-    STATUS_OPENMONTAGE="PARTIAL"
+    # Same defence as VoiceStudio above: the clone step verified this
+    # directory, so a failed gate here must not leave a SUCCESS status.
+    echo "ERROR: components/openmontage passed verification but is no longer a valid git working tree; refusing to report SUCCESS." >&2
+    echo "Remove it yourself or move it aside, then run bash setup.sh --with-components again." >&2
+    STATUS_OPENMONTAGE="FAILED"
   fi
 fi
 

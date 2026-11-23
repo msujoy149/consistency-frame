@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# P0 installer status + component-pin tests (CF-P0-014-INST, CF-P0-014-PIN).
+# P0 installer status + component-pin tests (CF-P0-014-INST, CF-P0-014-PIN)
+# plus worktree setup-gate tests (CF-P0-015-WT).
 # Uses isolated temporary fixtures only — never touches the real repo,
 # never touches the network, never downloads the components. Every git
 # fixture is created fresh here (git init + local commits); component
@@ -11,7 +12,7 @@ set -uo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 FAILURES=0
 TMP="$(mktemp -d)"
-trap 'rm -rf "$TMP"' EXIT
+trap 'rm -rf "$TMP" ${WT_BASE:+"$WT_BASE"}' EXIT
 
 ok()   { echo "PASS $1"; }
 bad()  { echo "FAIL $1"; FAILURES=$((FAILURES + 1)); }
@@ -132,7 +133,7 @@ fi
 # Extract the real verification functions from setup.sh and source
 # them, so these tests exercise the production code, not a copy.
 FUNCS="$TMP/funcs.sh"
-awk '/^(canonical_github_repo|verify_component_checkout|clone_component)\(\) \{/ { on=1 } on { print } /^}$/ { on=0 }' \
+awk '/^(is_git_work_tree|canonical_github_repo|verify_component_checkout|clone_component)\(\) \{/ { on=1 } on { print } /^}$/ { on=0 }' \
   "$REPO_ROOT/setup.sh" > "$FUNCS"
 PIN_NAMES=(
   "CF-P0-014-PIN-02: verification helpers present in setup.sh"
@@ -346,6 +347,193 @@ else
     || ok "CF-P0-014-PIN-16: no false SUCCESS for a rejected checkout"
 
   unset GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 GIT_CONFIG_KEY_1 GIT_CONFIG_VALUE_1
+fi
+
+# --- Section 3: worktree setup gates (CF-P0-015-WT) ----------------------
+# P0-014's verify_component_checkout() accepts valid .git files
+# (worktrees), but the old setup gates only accepted .git directories
+# (`[ -d "components/<name>/.git" ]`), so a valid worktree passed
+# verification and then silently skipped its setup while the run still
+# reported SUCCESS. The gates now use is_git_work_tree() (real git
+# plumbing). The end-to-end cases below run a copy of the real
+# setup.sh in an isolated fixture whose component directories are
+# worktrees (or normal clones), with mocked bun/uv/make on PATH that
+# log their invocations — no real component command ever runs.
+WT_NAMES=(
+  "CF-P0-015-WT-01: gate accepts a normal .git directory"
+  "CF-P0-015-WT-02: gate accepts a valid worktree (.git file)"
+  "CF-P0-015-WT-03: gate rejects invalid git metadata"
+  "CF-P0-015-WT-04: VoiceStudio setup runs for a valid worktree"
+  "CF-P0-015-WT-05: OpenMontage setup runs for a valid worktree"
+  "CF-P0-015-WT-06: setup runs for valid normal clones"
+  "CF-P0-015-WT-07: invalid metadata ends FAILED, never SUCCESS"
+  "CF-P0-015-WT-08: worktree is preserved by a successful run"
+)
+if ! grep -q "^is_git_work_tree() {" "$FUNCS"; then
+  for n in "${WT_NAMES[@]}"; do bad "$n (helper missing from setup.sh)"; done
+else
+  # shellcheck disable=SC1090
+  source "$FUNCS"
+
+  # WT-01/WT-02/WT-03: the helper itself, on local fixtures.
+  WT_MAIN="$TMP/wt-main"
+  WT_MAIN_PIN="$(make_git_repo "$WT_MAIN")"
+  git -C "$WT_MAIN" remote add origin "$VS_URL"
+  WT_VS="$TMP/wt-vs"
+  git -C "$WT_MAIN" worktree add -q --detach "$WT_VS" "$WT_MAIN_PIN"
+  if is_git_work_tree "$WT_MAIN"; then
+    ok "CF-P0-015-WT-01: gate accepts a normal .git directory"
+  else
+    bad "CF-P0-015-WT-01: gate accepts a normal .git directory"
+  fi
+  [ -f "$WT_VS/.git" ] && is_git_work_tree "$WT_VS" \
+    && ok "CF-P0-015-WT-02: gate accepts a valid worktree (.git file)" \
+    || bad "CF-P0-015-WT-02: gate accepts a valid worktree (.git file)"
+  WT_BAD_DIR="$TMP/wt-bad-empty-git"
+  mkdir -p "$WT_BAD_DIR/.git"
+  WT_GARBAGE_DIR="$TMP/wt-bad-git-file"
+  mkdir -p "$WT_GARBAGE_DIR"
+  printf 'garbage, not a gitdir\n' > "$WT_GARBAGE_DIR/.git"
+  if is_git_work_tree "$WT_BAD_DIR" || is_git_work_tree "$WT_GARBAGE_DIR"; then
+    bad "CF-P0-015-WT-03: gate rejects invalid git metadata"
+  else
+    ok "CF-P0-015-WT-03: gate rejects invalid git metadata"
+  fi
+
+  # End-to-end fixtures live under $WT_BASE, not $TMP: setup.sh
+  # refuses --with-components when its disk-space check sees under
+  # 5 GB free, and $TMP is a 512 MB tmpfs — so a fixture there would
+  # fail before any component logic runs. The repo lives on the main
+  # disk, so fixtures under it see the real free space. $WT_BASE is
+  # removed at the end of this section (and by the EXIT trap).
+  WT_BASE="$(mktemp -d "$REPO_ROOT/.tmp-wt-XXXXXX")"
+  # Shared end-to-end harness: a fixture copy of the real setup.sh,
+  # stub sync, mocked bun/uv/make logging to $WT_LOG. The fixture pins
+  # are rewritten to local fixture commits, and the component origins
+  # are the official URL strings (verify only compares the string).
+  # Both components are always pre-created, so no run ever clones —
+  # the insteadOf redirects below are a safety net only, and no real
+  # URL is ever fetched.
+  WT_VS_MAIN="$TMP/wt-vs-main"
+  WT_VS_PIN="$(make_git_repo "$WT_VS_MAIN")"
+  git -C "$WT_VS_MAIN" remote add origin "$VS_URL"
+  WT_OM_MAIN="$TMP/wt-om-main"
+  WT_OM_PIN="$(make_git_repo "$WT_OM_MAIN")"
+  git -C "$WT_OM_MAIN" remote add origin "$OM_URL"
+  export GIT_CONFIG_COUNT=2
+  export GIT_CONFIG_KEY_0="url.file://$WT_VS_MAIN.insteadOf"
+  export GIT_CONFIG_VALUE_0="$VS_URL"
+  export GIT_CONFIG_KEY_1="url.file://$WT_OM_MAIN.insteadOf"
+  export GIT_CONFIG_VALUE_1="$OM_URL"
+  WT_BIN="$TMP/wt-bin"
+  mkdir -p "$WT_BIN"
+  cat > "$WT_BIN/bun" <<'EOF'
+#!/usr/bin/env bash
+echo "bun $*" >> "${WT_LOG:?}"
+exit 0
+EOF
+  cat > "$WT_BIN/make" <<'EOF'
+#!/usr/bin/env bash
+echo "make $*" >> "${WT_LOG:?}"
+exit 0
+EOF
+  cat > "$WT_BIN/uv" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+  chmod +x "$WT_BIN/bun" "$WT_BIN/make" "$WT_BIN/uv"
+  setup_wt_fixture() {  # $1 = fixture dir; $2 = worktree|normal
+    local fix="$1" mode="$2"
+    mkdir -p "$fix/scripts" "$fix/components"
+    git init -q -b main "$fix"
+    cp "$REPO_ROOT/setup.sh" "$fix/setup.sh"
+    cat > "$fix/scripts/sync-skills.sh" <<'EOF'
+#!/usr/bin/env bash
+echo "STUB-SYNC-MARKER exit=${SYNC_EXIT:-0}" >&2
+exit "${SYNC_EXIT:-0}"
+EOF
+    chmod +x "$fix/scripts/sync-skills.sh"
+    if [ "$mode" = "worktree" ]; then
+      git -C "$WT_VS_MAIN" worktree add -q --detach "$fix/components/voicestudio" "$WT_VS_PIN"
+      git -C "$WT_OM_MAIN" worktree add -q --detach "$fix/components/openmontage" "$WT_OM_PIN"
+    else
+      git clone -q "$WT_VS_MAIN" "$fix/components/voicestudio"
+      git -C "$fix/components/voicestudio" remote set-url origin "$VS_URL"
+      git clone -q "$WT_OM_MAIN" "$fix/components/openmontage"
+      git -C "$fix/components/openmontage" remote set-url origin "$OM_URL"
+    fi
+    sed -i "s/$VS_PIN_REAL/$WT_VS_PIN/; s/$OM_PIN_REAL/$WT_OM_PIN/" "$fix/setup.sh"
+  }
+
+  # WT-04/WT-05: both components as worktrees — both setup sections
+  # must execute (mocked commands log), and the run reports SUCCESS
+  # only because setup actually ran.
+  WT_FIX="$WT_BASE/wt-setup-fixture"
+  setup_wt_fixture "$WT_FIX" "worktree"
+  export WT_LOG="$TMP/wt.log"
+  : > "$WT_LOG"
+  OUT_WT="$(cd "$WT_FIX" && PATH="$WT_BIN:$PATH" SYNC_EXIT=0 bash setup.sh --with-components 2>&1)"; CODE_WT=$?
+  grep -q "^bun install$" "$WT_LOG" \
+    && ok "CF-P0-015-WT-04: VoiceStudio bun install runs for a worktree" \
+    || bad "CF-P0-015-WT-04: VoiceStudio bun install runs for a worktree"
+  grep -q "^bun run setup:api$" "$WT_LOG" \
+    && ok "CF-P0-015-WT-04: VoiceStudio setup:api runs for a worktree" \
+    || bad "CF-P0-015-WT-04: VoiceStudio setup:api runs for a worktree"
+  [ "$CODE_WT" = 0 ] && echo "$OUT_WT" | grep -q "== Setup SUCCESS:" \
+    && ok "CF-P0-015-WT-04: worktree run exits 0 with SUCCESS" \
+    || bad "CF-P0-015-WT-04: worktree run exits 0 with SUCCESS (code=$CODE_WT)"
+  grep -q "^make setup$" "$WT_LOG" \
+    && ok "CF-P0-015-WT-05: OpenMontage make setup runs for a worktree" \
+    || bad "CF-P0-015-WT-05: OpenMontage make setup runs for a worktree"
+  echo "$OUT_WT" | grep -q "voicestudio=SUCCESS openmontage=SUCCESS" \
+    && ok "CF-P0-015-WT-05: summary names both components SUCCESS" \
+    || bad "CF-P0-015-WT-05: summary names both components SUCCESS"
+
+  # WT-06: the same run with valid NORMAL clones — the fix must not
+  # have broken the ordinary path.
+  WT_FIX_N="$WT_BASE/wt-setup-fixture-normal"
+  setup_wt_fixture "$WT_FIX_N" "normal"
+  export WT_LOG="$TMP/wt-normal.log"
+  : > "$WT_LOG"
+  OUT_WTN="$(cd "$WT_FIX_N" && PATH="$WT_BIN:$PATH" SYNC_EXIT=0 bash setup.sh --with-components 2>&1)"; CODE_WTN=$?
+  grep -q "^bun install$" "$WT_LOG" && grep -q "^make setup$" "$WT_LOG" \
+    && ok "CF-P0-015-WT-06: setup runs for valid normal clones" \
+    || bad "CF-P0-015-WT-06: setup runs for valid normal clones"
+  [ "$CODE_WTN" = 0 ] && echo "$OUT_WTN" | grep -q "== Setup SUCCESS:" \
+    && ok "CF-P0-015-WT-06: normal-clone run exits 0 with SUCCESS" \
+    || bad "CF-P0-015-WT-06: normal-clone run exits 0 with SUCCESS (code=$CODE_WTN)"
+
+  # WT-07: invalid metadata end-to-end — the run ends FAILED and
+  # never reports SUCCESS.
+  WT_FIX_BAD="$WT_BASE/wt-setup-fixture-bad"
+  setup_wt_fixture "$WT_FIX_BAD" "normal"
+  rm -rf "$WT_FIX_BAD/components/voicestudio"
+  mkdir -p "$WT_FIX_BAD/components/voicestudio"
+  printf 'garbage, not a gitdir\n' > "$WT_FIX_BAD/components/voicestudio/.git"
+  export WT_LOG="$TMP/wt-bad.log"
+  : > "$WT_LOG"
+  OUT_WTB="$(cd "$WT_FIX_BAD" && PATH="$WT_BIN:$PATH" SYNC_EXIT=0 bash setup.sh --with-components 2>&1)"; CODE_WTB=$?
+  [ "$CODE_WTB" = 1 ] \
+    && ok "CF-P0-015-WT-07: invalid metadata run exits 1" \
+    || bad "CF-P0-015-WT-07: invalid metadata run exits 1 (code=$CODE_WTB)"
+  echo "$OUT_WTB" | grep -q "== Setup FAILED:" && ! echo "$OUT_WTB" | grep -q "== Setup SUCCESS:" \
+    && ok "CF-P0-015-WT-07: run reports FAILED, never SUCCESS" \
+    || bad "CF-P0-015-WT-07: run reports FAILED, never SUCCESS"
+  [ -f "$WT_FIX_BAD/components/voicestudio/.git" ] \
+    && ok "CF-P0-015-WT-07: invalid dir preserved after rejection" \
+    || bad "CF-P0-015-WT-07: invalid dir preserved after rejection"
+
+  # WT-08: a successful worktree run leaves the worktree intact —
+  # still a .git file, still at the pinned commit, user content kept.
+  WT_VS_AFTER="$WT_FIX/components/voicestudio"
+  [ -f "$WT_VS_AFTER/.git" ] \
+    && [ -n "$(git -C "$WT_VS_AFTER" rev-parse HEAD 2>/dev/null)" ] \
+    && grep -q "fixture" "$WT_VS_AFTER/file.txt" \
+    && ok "CF-P0-015-WT-08: worktree is preserved by a successful run" \
+    || bad "CF-P0-015-WT-08: worktree is preserved by a successful run"
+  unset WT_LOG
+  unset GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 GIT_CONFIG_KEY_1 GIT_CONFIG_VALUE_1
+  rm -rf "$WT_BASE"
 fi
 
 echo "test_installer_status: $([ "$FAILURES" = 0 ] && echo PASS || echo FAIL) ($FAILURES failure(s))"
