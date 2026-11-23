@@ -57,6 +57,7 @@ import os
 import platform
 import secrets
 import sys
+import tempfile
 import uuid
 import weakref
 from dataclasses import dataclass
@@ -81,7 +82,6 @@ if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
 import asset_policy  # noqa: E402
-from atomic_write import atomic_write_json  # noqa: E402
 
 APP_DIR_NAME = "consistency-frame"
 PROFILE_FILENAME = "profile.json"
@@ -327,20 +327,73 @@ def _read_profile(path: str) -> tuple[str, str]:
     return _validate_profile_data(data)
 
 
+def _publish_profile_atomic(path: str, payload: dict) -> bool:
+    """Publish ``payload`` as the profile at ``path`` exactly once
+    (CF-WO-P1-001-R1, Task B).
+
+    Atomic create-if-absent publication. The payload is written
+    to an unguessable temporary file in the same directory
+    (exclusive creation via ``tempfile.mkstemp`` — O_CREAT |
+    O_EXCL — mode 0600, flushed + fsynced), then published with
+    ``os.link()``: a single atomic filesystem operation that
+    FAILS with FileExistsError when ``path`` already exists, so
+    it can never overwrite another process's profile. Returns
+    True when this call published the profile; False when
+    another process published first (the temporary file is
+    removed either way, so no artefact remains). Any other
+    failure raises OSError, with the temporary file removed and
+    ``path`` untouched. A crash before the link leaves only a
+    temporary file — never a partially written profile at the
+    final path — and the next load reads whatever is actually at
+    ``path`` (a valid profile, or a fail-closed corrupt one),
+    never a half-written one. The P0 ``scripts/atomic_write.py``
+    helper is deliberately NOT used here: its ``os.replace()``
+    unconditionally overwrites the target, which is exactly the
+    race being closed; the helper itself is unchanged.
+    """
+    parent = os.path.dirname(os.path.abspath(path))
+    fd, tmp = tempfile.mkstemp(dir=parent, prefix=".profile-",
+                               suffix=".tmp")
+    try:
+        os.fchmod(fd, 0o600)
+        try:
+            f = os.fdopen(fd, "wb")
+        except BaseException:
+            os.close(fd)
+            raise
+        blob = (json.dumps(payload, indent=2, sort_keys=True)
+                + "\n").encode("utf-8")
+        with f:
+            f.write(blob)
+            f.flush()
+            os.fsync(f.fileno())
+        try:
+            os.link(tmp, path)
+        except FileExistsError:
+            return False
+        return True
+    finally:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+
+
 def load_or_create_profile(data_root=None) -> InstallationProfile:
     """Load the validated installation profile, creating it on
     first use.
 
-    First use: fresh opaque IDs are generated and written
-    atomically (mode 0600) into a 0700 directory; the written
-    profile is re-read and validated before it is returned.
-    Later use: the existing profile is read and strictly
-    validated — a corrupt, invalid or tampered profile raises
-    ProfileError and is left untouched on disk. A profile that
-    appears between the existence check and the write (a
-    concurrent first run) is loaded and returned instead of
-    being overwritten. No repository-local fallback exists at
-    any point in this function.
+    First use: fresh opaque IDs are generated and published with
+    an atomic create-if-absent operation (mode 0600) into a 0700
+    directory; the profile on disk is re-read and validated
+    before it is returned — whether this process published it or
+    another concurrent first run won (the winner's profile is
+    loaded, the loser's candidate is discarded, nothing is
+    overwritten). Later use: the existing profile is read and
+    strictly validated — a corrupt, invalid or tampered profile
+    raises ProfileError and is left untouched on disk. No
+    repository-local fallback exists at any point in this
+    function.
     """
     root = resolve_data_root(data_root)
     _ensure_private_dir(root)
@@ -354,30 +407,26 @@ def load_or_create_profile(data_root=None) -> InstallationProfile:
         return InstallationProfile(owner_id=owner_id,
                                    workspace_id=workspace_id,
                                    data_root=root, profile_path=path)
-    # First use: generate, then re-check for a concurrent first
-    # run before writing, so a racing process's profile wins
-    # instead of being silently overwritten.
+    # First use: generate a candidate identity, then publish it
+    # atomically. A concurrent first run that published first
+    # wins — the link fails with FileExistsError and the winner's
+    # profile is loaded instead of being overwritten. No
+    # check-then-write window exists: the link IS the atomic
+    # decision point.
     owner_id = _new_opaque_id()
     workspace_id = _new_opaque_id()
-    if os.path.lexists(path):
-        if os.path.islink(path):
-            raise ProfileError(
-                f"installation profile {path!r} is a symlink — "
-                "refusing to read or overwrite a symlinked profile")
-        owner_id, workspace_id = _read_profile(path)
-        return InstallationProfile(owner_id=owner_id,
-                                   workspace_id=workspace_id,
-                                   data_root=root, profile_path=path)
     payload = {"schema_version": PROFILE_SCHEMA_VERSION,
                "owner_id": owner_id, "workspace_id": workspace_id}
     try:
-        atomic_write_json(path, payload, mode=0o600)
+        _publish_profile_atomic(path, payload)
     except OSError as exc:
         raise ProfileError(
             "cannot write the installation profile "
             f"{path!r}: {exc} — the previous profile (if any) is "
             "untouched")
-    # Prove the write landed valid before trusting it.
+    # Prove the profile on disk is valid before trusting it —
+    # whether this process published it or another process won.
+    # A corrupt winner fails closed here and stays untouched.
     owner_id, workspace_id = _read_profile(path)
     return InstallationProfile(owner_id=owner_id,
                                workspace_id=workspace_id,
