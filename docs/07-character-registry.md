@@ -454,6 +454,13 @@ regression suite is `tests/test_private_voice_security.py`
   a bare type check; a directly constructed, copied or
   deserialized object is rejected however genuine its fields
   look, and serialization of a context is refused outright.
+  P0-011 tightens that check: only the exact concrete type
+  (`type(context) is TrustedAuthorizationContext`) is accepted,
+  and the registry is an `id()`-keyed dict of weak references
+  verified with `is`, never with equality — a subclass that
+  overrides `__eq__`/`__hash__` to compare equal to a genuine
+  context is rejected, and verification never invokes a
+  candidate's `__eq__` or `__hash__`.
 - **Private sharing and export remain disabled by default.**
   No context, no export. No default sharing, no automatic
   provider transmission, and permission for local production use

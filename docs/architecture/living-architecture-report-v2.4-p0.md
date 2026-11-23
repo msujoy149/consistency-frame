@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-23 09:43 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-23 10:38 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p0-safe-foundations`
-**Head commit:** `5df74cfaf434fbc204a9add6d039f113633b3027`
-**GitHub branch head:** `3aa31f92bbeb0fbb9e9ca1fce2b816b1d1bed13c` (remote head of `feat/cf-p0-safe-foundations` at
+**Head commit:** `81c624fd3a52b072cf1460773f53eafff678e68b`
+**GitHub branch head:** `81c624fd3a52b072cf1460773f53eafff678e68b` (remote head of `feat/cf-p0-safe-foundations` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -200,6 +200,7 @@ docs/implementation/CF-WO-P0-007-corrections.md
 docs/implementation/CF-WO-P0-008-corrections.md
 docs/implementation/CF-WO-P0-009-corrections.md
 docs/implementation/CF-WO-P0-010-corrections.md
+docs/implementation/CF-WO-P0-011-corrections.md
 docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
@@ -461,4 +462,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-23 09:43 UTC.
+- Report generated: 2026-11-23 10:38 UTC.
