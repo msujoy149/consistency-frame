@@ -294,6 +294,12 @@
       "command": "python3 tests/test_reports.py",
       "exit_code": 0,
       "result": "PASS"
+    },
+    {
+      "id": "CF-P0-REPORT-005",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS"
     }
   ]
 }

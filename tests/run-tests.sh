@@ -103,6 +103,7 @@ run_one "CF-P0-REPORT-001" python3 tests/test_reports.py
 run_one "CF-P0-REPORT-002" python3 tests/test_reports.py
 run_one "CF-P0-REPORT-003" python3 tests/test_reports.py
 run_one "CF-P0-REPORT-004" python3 tests/test_reports.py
+run_one "CF-P0-REPORT-005" python3 tests/test_reports.py
 
 python3 - "$TMP_RESULTS" "$RESULTS_JSON" "$OVERALL" <<'PYEOF'
 import json, sys

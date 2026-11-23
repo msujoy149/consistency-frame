@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """P0-002 §7 report/provenance tests. Run via tests/run-tests.sh or
 directly: python3 tests/test_reports.py
-Exit 0 = PASS, 1 = FAIL. Test IDs: CF-P0-REPORT-001/002/003/004.
+Exit 0 = PASS, 1 = FAIL. Test IDs: CF-P0-REPORT-001/002/003/004/005.
+
+CF-P0-REPORT-005 (CF-WO-P0-012) checks that the README installation
+guidance matches the actual setup.sh implementation: core-only by
+default, --with-components as the explicit opt-in component path, and
+the OmniVoice model never downloaded by setup.sh.
 
 These tests read the GENERATED artifacts (docs/implementation/
 BUILD_REPORT_P0.md, build-report.json, CHECKSUMS.txt,
@@ -193,6 +198,72 @@ def main():
         errs = errors_for(schema, value)
         check(f"CF-P0-REPORT-004: {label} validates against its schema",
               not errs, "; ".join(errs))
+
+    # --- CF-P0-REPORT-005: README installation guidance matches --------
+    # setup.sh (CF-WO-P0-012). The README is the public install guide;
+    # it must not describe the core-only default as an automatic
+    # component install, and it must not claim setup.sh downloads the
+    # voice model. Assertions are phrase-level (not byte-identical
+    # paragraphs) so honest rewording does not break them, but the
+    # forbidden phrases are the exact false claims found in the
+    # pre-P0-012 README.
+    readme = read_text("README.md")
+    setup = read_text("setup.sh")
+    install_start = readme.find("## Install")
+    install_end = readme.find("\n## ", install_start + 1)
+    install = readme[install_start:install_end if install_end != -1
+                     else len(readme)]
+    check("CF-P0-REPORT-005: README Install section states the "
+          "core-only default",
+          install_start != -1 and "core-only" in install.lower()
+          and "default" in install.lower(),
+          "Install section must say the default is core-only")
+    check("CF-P0-REPORT-005: README identifies --with-components as "
+          "the optional component path",
+          "--with-components" in install
+          and ("optional" in install.lower()
+               or "opt in" in install.lower())
+          and "VoiceStudio" in install and "OpenMontage" in install,
+          "Install section must name --with-components as opt-in")
+    # Bold markers ("**not**") sit between words, so strip them before
+    # matching the "not downloaded by" statement.
+    readme_plain = readme.replace("**", "")
+    check("CF-P0-REPORT-005: README states the voice model is not "
+          "downloaded by setup.sh",
+          re.search(r"voice model.{0,120}?not downloaded by",
+                    readme_plain, re.I | re.S) is not None
+          or "never downloaded by `setup.sh`" in readme_plain,
+          "README must say setup.sh does not download the voice model")
+    # Whitespace-normalized README for the forbidden-phrase checks:
+    # the false claims may wrap across lines, so collapse every
+    # whitespace run to one space before matching.
+    readme_flat = re.sub(r"\s+", " ", readme)
+    forbidden = [
+        "no separate install is needed",
+        "fetches and installs the bundled components",
+        "walks you through downloading",
+        "downloads the voice model",
+    ]
+    for phrase in forbidden:
+        check(f"CF-P0-REPORT-005: README has no false claim: "
+              f"{phrase!r}", phrase not in readme_flat)
+    check("CF-P0-REPORT-005: README never claims components are "
+          "installed by default",
+          re.search(r"components are installed (automatically )?by "
+                    r"default", readme, re.I) is None
+          and re.search(r"installs the bundled components.{0,80}"
+                        r"automatically", readme, re.I | re.S) is None,
+          "README must not describe an automatic default install")
+    check("CF-P0-REPORT-005: setup.sh default is core-only "
+          "(WITH_COMPONENTS=0)",
+          "WITH_COMPONENTS=0" in setup
+          and "--with-components) WITH_COMPONENTS=1" in setup,
+          "setup.sh must default to core-only with an explicit opt-in")
+    check("CF-P0-REPORT-005: setup.sh never downloads the OmniVoice "
+          "model",
+          "is NEVER downloaded by this script" in setup
+          and "Components were NOT installed (default)" in setup,
+          "setup.sh must refuse the model download and say so")
 
     print(f"test_reports: {'PASS' if not failures else 'FAIL'} "
           f"({len(failures)} failure(s))")
