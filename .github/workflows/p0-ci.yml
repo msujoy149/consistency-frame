@@ -4,8 +4,16 @@
 # living-report consistency. No services, no model downloads, no paid APIs.
 #
 # actions/checkout is pinned to its full commit SHA (v4.2.2).
-# No other third-party action is used: the runner's preinstalled
-# python3 / bash / git are sufficient.
+# actions/setup-python is pinned to its full commit SHA (v5.6.0, the
+# v5 tag — verified with git ls-remote against the upstream repo).
+# No other third-party action is used.
+#
+# Two jobs: p0-validate runs the full Linux suite; windows-compat
+# (added CF-WO-P1-001-R2) runs the runtime regression suites
+# natively on Windows (Python 3.10 and 3.12), including the real
+# multiprocessing first-run race test under the spawn start
+# method. The Windows job produces no last-run.json artefact —
+# its evidence is the job log (the three suites' PASS lines).
 name: P0 CI
 
 on:
@@ -36,3 +44,43 @@ jobs:
         with:
           name: p0-test-results
           path: tests/last-run.json
+
+  windows-compat:
+    # Native Windows verification of the runtime suites
+    # (CF-WO-P1-001-R2): the profile-publication path must work
+    # without os.fchmod (absent on Windows Python 3.10-3.12),
+    # and the first-run race test must pass under the spawn
+    # start method — spawn is the only start method on Windows.
+    # Runs on pull_request (and the same push branches as
+    # p0-validate); the P1 branch is deliberately NOT added to
+    # the push list — the PR run is the CI evidence, as in
+    # P1-001/R1.
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - name: Check out
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0 (v5)
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Show versions
+        shell: bash
+        run: |
+          python --version
+          python -c "import multiprocessing, sys; print('start method:', multiprocessing.get_start_method()); print(sys.platform)"
+      - name: Run runtime regression suites
+        # bash (Git Bash on the Windows runner) so a non-zero
+        # exit from any suite fails the step immediately, the
+        # same as on Linux. The race test (FIRST-01..07) runs
+        # for real here under spawn; its PASS lines must appear
+        # in the log — no test is skipped for the platform.
+        shell: bash
+        run: |
+          python tests/test_local_session_runtime.py
+          python tests/test_session_authorization.py
+          python tests/test_private_voice_security.py
