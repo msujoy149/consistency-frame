@@ -340,7 +340,9 @@ since the branch started at `c36bfaa` whose tree is main's tree
 - **First-run race.** Two processes initializing at the same
   instant can each generate an identity; the second write wins.
   Documented in the runtime doc; writes are atomic, so no
-  half-written profile results.
+  half-written profile results. — CLOSED by R1, see §12: first-run
+  publication is now an atomic create-if-absent operation and
+  concurrent processes agree on one identity.
 - **Windows permissions.** POSIX 0700/0600 bits have no
   equivalent enforcement on Windows; documented honestly.
 - **Platform coverage.** Tests run on this Linux VM only.
@@ -425,3 +427,244 @@ since the branch started at `c36bfaa` whose tree is main's tree
 - Changes to VoiceStudio or OpenMontage internals.
 - Persistent (cross-restart) revocation.
 - `setup.sh --with-components` end-to-end run.
+
+## 12. R1 addendum (2026-11-23) — CF-WO-P1-001-R1
+
+Two independently reproduced defects in the P1-001 code above,
+fixed without redesigning the runtime and without changing any P0
+policy code. Everything in §§1–11 stands as written; this section
+only adds the R1 findings, fixes, tests and verification.
+
+### 12.1 Finding R1-A — forged-session context enumeration
+
+`runtime/authorization.py::issued_contexts_for_session()` checked
+only `type(session) is local_session.LocalSession`. It did not
+verify exact factory issuance or active-session status. A copied
+`LocalSession` fails `is_active_session()` but could still
+retrieve the original session's genuine authorization contexts
+through this function — and the returned context passed P0's
+private-voice export validator (`validate_private_voice_export`
+returned `[]`).
+
+Reproduced before the fix
+(`~/workspace/consistency-frame-p1-delivery/p1-001-r1-repro-enum-before.txt`,
+exit 1): `copy.copy(session)`, `copy.deepcopy(session)` and a
+populated `object.__new__(LocalSession)` carrying the genuine
+session ID each retrieved 1 context, usable for private export
+(1/1). A different genuine session retrieved 0 (correct — it has
+no contexts of its own).
+
+### 12.2 Fix R1-A
+
+`issued_contexts_for_session()` now requires
+`local_session.is_active_session(session)` — the same exact-type
++ `id()`-keyed weak-reference registry check with `is` that the
+bridge (`authorize`) and the issuance path (`_issue`) already
+used — before reading `_SESSION_CONTEXTS`. Anything else raises
+`ValueError`, the fail-closed error this function already used
+for non-sessions. Missing, forged, copied, deep-copied,
+`__new__`-built, expired and closed sessions are all refused;
+the genuine active session that issued the contexts still
+enumerates them. No P0 factory-issued context check was weakened
+or replaced: the returned contexts are still filtered through
+`is_factory_issued_trusted_authorization_context`, and the
+session-close revocation handler is untouched.
+
+One existing assertion changed by design: EXP-18 previously
+expected `issued_contexts_for_session(closed_session) == []`
+after shutdown; a closed session now raises `ValueError`
+instead, so the check now expects the refusal (the
+closed-session case is also pinned directly by ENUM-07). No test
+was removed and no other assertion was weakened.
+
+### 12.3 Finding R1-B — first-run profile race
+
+`load_or_create_profile()` checked whether the profile exists
+and then called `atomic_write_json()`, whose `os.replace()`
+unconditionally overwrites the target. Two concurrent first-run
+processes could each generate an identity and return different
+owner/workspace IDs while only one identity persisted on disk.
+
+Reproduced before the fix
+(`~/workspace/consistency-frame-p1-delivery/p1-001-r1-repro-first-run-before.txt`,
+exit 1): 4 processes released simultaneously by a barrier
+against the same absent data root diverged in 11 of 12 rounds
+(2–3 distinct identities per round; the persisted profile
+matched one of the returned IDs, the others were lost).
+
+### 12.4 Fix R1-B
+
+First-run publication is now an atomic create-if-absent
+operation, implemented in `runtime/local_session.py` as
+`_publish_profile_atomic(path, payload)`:
+
+- The candidate payload is written to an unguessable temporary
+  file in the same directory (exclusive creation via
+  `tempfile.mkstemp` — O_CREAT | O_EXCL — mode 0600, flushed +
+  fsynced).
+- It is published with `os.link()` — one atomic filesystem
+  operation that FAILS with `FileExistsError` when the profile
+  already exists, so it can never overwrite another process's
+  profile. The temporary file is removed in a `finally` either
+  way, so no artefact remains after a successful initialization.
+- When the link fails with `FileExistsError`, the losing
+  process discards its candidate and loads the winner's profile
+  (re-read + strictly validated before it is returned). A
+  corrupt winner fails closed and stays untouched; a symlinked
+  profile is refused as before.
+- A crash before the link leaves only a temporary file — never
+  a partially written profile at the final path — so no process
+  can read a half-written profile. The old check-then-write
+  window (existence re-check before `atomic_write_json`) is
+  gone: the link IS the atomic decision point.
+- The P0 `scripts/atomic_write.py` helper was NOT modified and
+  is no longer used for the profile at all: its `os.replace()`
+  is exactly the overwrite this fix removes. The helper's own
+  guarantees (and its tests) are unchanged. `local_session.py`
+  no longer imports `atomic_write_json`.
+- Failure behaviour: any other `OSError` during publication
+  raises `ProfileError` with the previous profile (if any)
+  untouched; a failed first-use write leaves no profile and no
+  temporary file.
+
+Portability note: `os.link()` (hard links) is available on
+POSIX and on Windows NTFS. On a filesystem without hard-link
+support the link raises `OSError` and first-run initialization
+fails closed with `ProfileError` rather than silently falling
+back to an overwriting write.
+
+### 12.5 Regression tests
+
+`tests/test_session_authorization.py` — new group
+CF-P1-001-R1-ENUM (8 checks), placed between EXP-16 and EXP-17
+so the genuine session is still active:
+
+- ENUM-01: the genuine active session enumerates its own 4
+  issued contexts.
+- ENUM-02: `copy.copy(session)` cannot enumerate (ValueError).
+- ENUM-03: `copy.deepcopy(session)` cannot enumerate (ValueError).
+- ENUM-04: a populated `object.__new__(LocalSession)` with the
+  genuine session ID cannot enumerate (ValueError).
+- ENUM-05: a different genuine session enumerates only its own
+  contexts — `[]`, none of the first session's.
+- ENUM-06: an expired session cannot enumerate (ValueError).
+- ENUM-07: a closed session cannot enumerate (ValueError) — the
+  session first issues a context, so the refusal is about the
+  closed state, not about having nothing to list.
+- ENUM-08: no unissued session recovers any context at all, so
+  nothing it holds can validate for private export or provider
+  transmission; the other genuine session likewise recovers none
+  of the first session's contexts.
+
+`tests/test_local_session_runtime.py` — new group
+CF-P1-001-R1-FIRST (7 checks), using a process pool (fork
+context) with a barrier release so the workers hit first-run
+initialization at the same instant; every wait and result
+carries a 30-second timeout, no unbounded sleep race:
+
+- FIRST-01: 5 rounds x 4 concurrent processes against a fresh
+  absent data root — all return one shared identity.
+- FIRST-02: the persisted profile holds exactly the returned
+  identity.
+- FIRST-03: no temporary file or lock artefact remains after
+  successful initialization (directory listing is exactly
+  `["profile.json"]`).
+- FIRST-04/05: collision with an already existing valid profile
+  — all processes return its identity and its bytes are
+  unchanged.
+- FIRST-06/07: collision with a corrupt profile — all processes
+  fail closed with `ProfileError` and the corrupt bytes are
+  untouched.
+
+One existing test changed by design: FS-07 (first-use write
+failure leaves no profile) now injects its failure at
+`_publish_profile_atomic` instead of `atomic_write_json`, and
+additionally asserts no artefact remains. The observable
+behaviour it pins (ProfileError, no profile) is unchanged.
+
+### 12.6 After-fix evidence
+
+- `p1-001-r1-repro-enum-after.txt` (exit 0): copy, deepcopy and
+  `__new__`-built objects refused with ValueError; the different
+  genuine session retrieved 0; the genuine session still
+  enumerates its context.
+- `p1-001-r1-repro-first-run-after.txt` (exit 0): all 12 rounds
+  agreed on one identity, persisted profile matched, no
+  leftovers.
+- `tests/test_session_authorization.py`: 39 → 47 PASS lines
+  (exit 0). `tests/test_local_session_runtime.py`: 56 → 63 PASS
+  lines (exit 0). `tests/test_private_voice_security.py`:
+  158 checks, unmodified, PASS (exit 0).
+- Full suite counts recalculated from the final
+  `tests/last-run.json` — see §12.7.
+
+### 12.7 Verification (R1 final state)
+
+- `python3 tests/test_local_session_runtime.py` — exit 0, 63 PASS.
+- `python3 tests/test_session_authorization.py` — exit 0, 47 PASS.
+- `python3 tests/test_private_voice_security.py` — exit 0, 158 PASS.
+- `bash tests/run-tests.sh` — twice, exit 0 both times:
+  56 recorded entries / 43 distinct test IDs / 34 distinct
+  commands, 56 PASS, 0 FAIL, 0 SKIP. (Entry counts unchanged
+  from P1-001 — the 15 new checks live inside the same two
+  test files.) Per-file PASS lines, one run each, all 0 FAIL:
+  14 Python files total **1,414** (was 1,399; +7 runtime, +8
+  authorization — `test_private_voice_security.py` 158
+  unchanged, `test_reports.py` 47); `test_installer_status.sh`
+  61; `test_installer.sh` 40; `test_installer_security.sh` 15;
+  `test_installer_manifest_security.sh` 24;
+  `test_installer_metadata_failure.sh` 13. First suite run had
+  one failure before the fix was complete: `P0-DIFF-CHECK`
+  (`git diff --check` exit 2) flagged a trailing blank line at
+  the end of this record, added by the R1 edit — the blank line
+  was removed, `git diff --check` is clean, and both recorded
+  runs after that are exit 0.
+- `tests/last-run.json` SHA-256
+  `ddd94ee1502d77d22105ab6a6a5cc3a752bbdfe3e5c4d65eec7ff1c8b4e559c5`
+  — identical to P1-001's, because the recorded entries (IDs,
+  commands, results) are unchanged; only the per-file check
+  counts inside the two R1 test files grew.
+- `python3 scripts/validate-repo.py` — PASS.
+- `python3 scripts/generate-registries.py --check` — CHECK OK.
+- `python3 scripts/generate-report.py --check` — CHECK OK (same
+  `--github-head` as generation).
+- `git diff --check` — clean. `bash -n setup.sh` — exit 0.
+- `bash setup.sh --dry-run` — exit 0 (core-only).
+- `bash setup.sh --with-components` — NOT RUN (standing
+  limitation, untouched by this round).
+- P0 files untouched: `scripts/asset_policy.py`,
+  `scripts/atomic_write.py`, `scripts/timeline_policy.py` —
+  zero diff lines. No new dependencies (stdlib only). No server,
+  API, database, cloud identity, graphical UI, or companion
+  changes.
+
+### 12.8 ADRs added by R1
+
+- **R1-1 — enumeration is an authorization decision, not a
+  lookup.** `issued_contexts_for_session` applies the same
+  `is_active_session` gate as `authorize` and `_issue`. A
+  session ID string is never enough to name a session's
+  contexts; only the exact live object enumerates.
+- **R1-2 — first-run publication is create-if-absent via
+  `os.link()`.** Chosen over a cross-process lock file (no lock
+  artefact to leak, no lock-holder crash to recover from) and
+  over O_CREAT|O_EXCL direct write (a crash mid-write would
+  leave a partial profile at the final path that fails closed
+  forever). The link publishes a complete, fsynced file in one
+  atomic step; the loser loads the winner. The P0 atomic-write
+  helper stays untouched because its replace semantics are the
+  bug, not the fix.
+
+### 12.9 Limitations removed / still standing
+
+- REMOVED: the accepted first-run identity race (§8) — closed
+  and verified by FIRST-01..07; the trust-boundary doc no
+  longer lists it as an accepted limitation.
+- REMOVED (as a gap): unissued-session context enumeration —
+  closed and verified by ENUM-01..08.
+- STILL STANDING: local OS-user boundary only; no graphical UI;
+  one workspace per installation; process-local revocation;
+  Windows permission limits; macOS/Windows first-run branches
+  tested only on Linux (the concurrency tests run on this Linux
+  VM; the link primitive is documented as POSIX + Windows
+  NTFS).
