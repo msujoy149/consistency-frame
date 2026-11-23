@@ -8,14 +8,19 @@ temporary directories and synthetic IDs; no real character data,
 voice data, credentials, or network use.
 
 Test IDs: CF-P1-001-PROF (profile lifecycle), CF-P1-001-SESS
-(session integrity), CF-P1-001-FS (filesystem security).
+(session integrity), CF-P1-001-FS (filesystem security),
+CF-P1-001-R1-FIRST (R1: atomic first-run identity across
+concurrent processes — one identity wins, nothing overwritten,
+no artefacts left).
 
 Run: python3 tests/test_local_session_runtime.py
 Exit 0 = PASS, 1 = FAIL.
 """
 
+import concurrent.futures
 import copy
 import json
+import multiprocessing as mp
 import os
 import pickle
 import platform
@@ -77,6 +82,31 @@ def _define_spoof_subclass(name):
         return type(name, (LocalSession,), {})
     finally:
         LocalSession.__init_subclass__ = original
+
+
+_FIRST_RUN_BARRIER = None
+
+
+def _init_first_run_worker(barrier):
+    """Process-pool initializer: every worker shares the barrier
+    so all of them hit first-run initialization at the same
+    instant (a real race, not a staggered start)."""
+    global _FIRST_RUN_BARRIER
+    _FIRST_RUN_BARRIER = barrier
+
+
+def _load_profile_worker(root):
+    """Load-or-create the profile at ``root`` in a worker
+    process. Returns ("ok", owner_id, workspace_id) or
+    ("error", exception type name) — a worker never raises, so
+    the parent can compare every process's outcome."""
+    if _FIRST_RUN_BARRIER is not None:
+        _FIRST_RUN_BARRIER.wait(timeout=30)
+    try:
+        profile = load_or_create_profile(root)
+    except Exception as exc:  # noqa: BLE001 — reported, not hidden
+        return ("error", type(exc).__name__)
+    return ("ok", profile.owner_id, profile.workspace_id)
 
 
 def main():
@@ -566,10 +596,14 @@ def main():
               raised and open(atomic_path, "rb").read() == atomic_before)
 
         # First-use write failure leaves no half-written profile.
+        # R1: the injection point moved from atomic_write_json to
+        # the new atomic publication helper — the observable
+        # behaviour (ProfileError, no profile, no artefact) is
+        # unchanged.
         root_nowrite = new_root()
         with mock.patch.object(
-                local_session, "atomic_write_json",
-                side_effect=OSError("injected write failure")):
+                local_session, "_publish_profile_atomic",
+                side_effect=OSError("injected publish failure")):
             try:
                 load_or_create_profile(root_nowrite)
                 raised = False
@@ -578,7 +612,87 @@ def main():
         check("CF-P1-001-FS-07: first-use write failure leaves no profile",
               raised
               and not os.path.exists(
-                  os.path.join(root_nowrite, "profile.json")))
+                  os.path.join(root_nowrite, "profile.json"))
+              and os.listdir(root_nowrite) == [])
+
+        # ----------------------------------------------------------
+        # R1: atomic first-run identity (CF-P1-001-R1-FIRST)
+        # ----------------------------------------------------------
+        # Four independent processes, released simultaneously by a
+        # barrier, against the same previously absent data root.
+        # Bounded: every wait/result carries a 30-second timeout;
+        # no unbounded sleep race anywhere in this section.
+        def _run_first_run_workers(root, workers=4):
+            context = mp.get_context("fork")
+            barrier = context.Barrier(workers)
+            with concurrent.futures.ProcessPoolExecutor(
+                    max_workers=workers, mp_context=context,
+                    initializer=_init_first_run_worker,
+                    initargs=(barrier,)) as pool:
+                futures = [pool.submit(_load_profile_worker, root)
+                           for _ in range(workers)]
+                return [f.result(timeout=30) for f in futures]
+
+        first_all_agree = True
+        first_persisted_match = True
+        first_no_leftovers = True
+        for _round in range(5):
+            race_root = new_root()
+            results = _run_first_run_workers(race_root)
+            distinct = set(results)
+            with open(os.path.join(race_root, "profile.json"),
+                      encoding="utf-8") as f:
+                persisted = json.load(f)
+            if not (len(distinct) == 1
+                    and distinct.pop()[0] == "ok"):
+                first_all_agree = False
+            if (persisted["owner_id"],
+                    persisted["workspace_id"]) not in {
+                        (r[1], r[2]) for r in results if r[0] == "ok"}:
+                first_persisted_match = False
+            if sorted(os.listdir(race_root)) != ["profile.json"]:
+                first_no_leftovers = False
+        check("CF-P1-001-R1-FIRST-01: concurrent first runs return one "
+              "shared identity (5 rounds x 4 processes)",
+              first_all_agree)
+        check("CF-P1-001-R1-FIRST-02: the persisted profile holds the "
+              "returned identity",
+              first_persisted_match)
+        check("CF-P1-001-R1-FIRST-03: no temporary file or lock artefact "
+              "remains after successful initialization",
+              first_no_leftovers)
+
+        # Collision with an already existing valid profile: the
+        # loser must never overwrite it.
+        root_existing = new_root()
+        existing = load_or_create_profile(root_existing)
+        existing_before = open(
+            os.path.join(root_existing, "profile.json"), "rb").read()
+        existing_results = _run_first_run_workers(root_existing)
+        check("CF-P1-001-R1-FIRST-04: concurrent loads against an "
+              "existing valid profile all return its identity",
+              set(existing_results) == {
+                  ("ok", existing.owner_id, existing.workspace_id)})
+        check("CF-P1-001-R1-FIRST-05: the existing valid profile is "
+              "never overwritten by a losing process",
+              open(os.path.join(root_existing, "profile.json"),
+                   "rb").read() == existing_before
+              and sorted(os.listdir(root_existing)) == ["profile.json"])
+
+        # Collision with a corrupt profile: every process fails
+        # closed and the corrupt file is untouched.
+        root_corrupt_race = new_root()
+        corrupt_race_path = _write_profile_bytes(
+            root_corrupt_race, b"not json {")
+        corrupt_race_before = open(corrupt_race_path, "rb").read()
+        corrupt_results = _run_first_run_workers(root_corrupt_race)
+        check("CF-P1-001-R1-FIRST-06: concurrent loads against a "
+              "corrupt profile all fail closed",
+              set(corrupt_results) == {("error", "ProfileError")})
+        check("CF-P1-001-R1-FIRST-07: the corrupt profile is untouched "
+              "by the losing processes",
+              open(corrupt_race_path, "rb").read()
+              == corrupt_race_before)
     finally:
         for root in tmp_roots:
             shutil.rmtree(root, ignore_errors=True)
