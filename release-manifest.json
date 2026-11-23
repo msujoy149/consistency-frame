@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p0-safe-foundations",
-  "commit": "95eb7adee33a0bf7780823a65f3d350695620aaa",
-  "github_branch_head": "6ff9dbd451d265d315b49f4513221b13ec66764d",
+  "commit": "05a3fd3ddce20e5227be47acd3d721c99838f160",
+  "github_branch_head": "9da842f465f4369a3a29d225f93980684bb6a474",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
@@ -122,8 +122,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "2687944f14bd5befd0fada31983fea61bc3ccbbc8ea6320aafcec341b764b44f",
-      "bytes": 24230
+      "sha256": "d5027afa43aba12d88711138710f55931c27787d2f60fc74a724172c379857f1",
+      "bytes": 24309
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -132,8 +132,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "5461a6514edcf00625007cef7aabdcfb7fd77f7c53b00f3a8d7ee9f82638c9a1",
-      "bytes": 44821
+      "sha256": "81ac88b15816f33127066da56b6e6893e8d660e1db8a8331a7cfabbec903ef06",
+      "bytes": 45033
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -196,14 +196,19 @@
       "bytes": 16369
     },
     {
+      "path": "docs/implementation/CF-WO-P0-014-corrections.md",
+      "sha256": "376412cb99bd0b7cb422c93350a6f2c774e48ce9d78c77b87b883c8c9e573e6c",
+      "bytes": 18769
+    },
+    {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
       "sha256": "23bb2a5aa29fde3bbacbec7996625c52b25e9d67106c278da8bb35ed0f855099",
       "bytes": 27096
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "63c0fe615e1d93aa6efa689f8525dd99c38a4c2f14f1ded5896a83d98bac479a",
-      "bytes": 18061
+      "sha256": "35d57c48911b8ac139ba663e79c9ed88603a04be86bd0a97413ee7cbdab385ca",
+      "bytes": 18154
     },
     {
       "path": "registry/adapters.json",
@@ -751,6 +756,11 @@
       "bytes": 8174
     },
     {
+      "path": "tests/test_installer_status.sh",
+      "sha256": "dc90dfc1bb1cbf4e35f1107bcc8b147da0a3439efa676f6b6649457cc4462625",
+      "bytes": 18031
+    },
+    {
       "path": "tests/test_modes.py",
       "sha256": "d5adf757a9340b3d42433423195196d935a24af3ff670a34c9d1863a767c7fbe",
       "bytes": 7410
@@ -963,5 +973,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-23T13:33:20Z"
+  "generated_at_utc": "2026-11-23T14:37:53Z"
 }
