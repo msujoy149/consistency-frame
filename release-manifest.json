@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p0-safe-foundations",
-  "commit": "5df74cfaf434fbc204a9add6d039f113633b3027",
-  "github_branch_head": "3aa31f92bbeb0fbb9e9ca1fce2b816b1d1bed13c",
+  "commit": "e35fcb657efd2fb864e3891012e26d836b09337d",
+  "github_branch_head": "15c82c9643d583ff9c95d069a4403e01ff32d84b",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
@@ -17,13 +17,13 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "d80e4f3040eb0ccfc2bfcf1360207fbb31bb50de331f3cc3a5efa6fdf48ab266",
-      "bytes": 22713
+      "sha256": "4f1c04029220a4d95901d9e8070ed8de034b33725a9a5cbd5ea9c045f31b2dd8",
+      "bytes": 25332
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "f5bc15a0457e5ed2057649312724cc71a6c28d21c64cb669a9cd16b27dcae5cb",
-      "bytes": 58632
+      "sha256": "3d3a086deea746507448130c498d84c3197cea375029fe53045bfd93053d87ef",
+      "bytes": 61579
     },
     {
       "path": "README.md",
@@ -82,8 +82,8 @@
     },
     {
       "path": "docs/07-character-registry.md",
-      "sha256": "ac7324558b3b4481dc76688c35c6d5d504752e1ae158fdb01061a44a061699f9",
-      "bytes": 22258
+      "sha256": "caf02e7a4fae25e13b14a3a68f9df900f0af739d15d438244daf0bb3dbde530b",
+      "bytes": 22661
     },
     {
       "path": "docs/08-agency-advertising.md",
@@ -122,7 +122,7 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "b47ce2d75568f7b86e3c3af3d8a4db84f8a1fbcf8a41aee2efe896cb6222227e",
+      "sha256": "e6ac0ca2985ca569a2061f9cb6a50ba38e97320a658fdd3cb1a5a6005a51c11c",
       "bytes": 23818
     },
     {
@@ -132,8 +132,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "9df39d19678e958e0b67a01d55a66e2de7eac322617b599a1da6fc8789968310",
-      "bytes": 43963
+      "sha256": "8e759d57073242a5611fcc7009a14452b0aa4bfe6dc5362f830172d4ff2bfbb8",
+      "bytes": 44072
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -192,7 +192,7 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "95b5463c7f1cc52aa5e843fc0105d862fdf43e1798ef6515ebc6ec437625091d",
+      "sha256": "a748573d800b3a4334a36249634ba1a2c51223582bb6285c6b91c43b0ce6b4e8",
       "bytes": 17401
     },
     {
@@ -352,8 +352,8 @@
     },
     {
       "path": "scripts/asset_policy.py",
-      "sha256": "728862da48b5dbf4f34455542de135bb89040cececae0c661aac477ecf373ab0",
-      "bytes": 67491
+      "sha256": "6cdfd32914e9cd93de56904e77529a788e113b707b1e996bd73871437ddd4e3a",
+      "bytes": 73029
     },
     {
       "path": "scripts/atomic_write.py",
@@ -757,8 +757,8 @@
     },
     {
       "path": "tests/test_private_voice_security.py",
-      "sha256": "65b74a48d35dcded5d134e4884518ea75794e5c1ae6f21c909ff0ab594d3e322",
-      "bytes": 69595
+      "sha256": "cfe233805a0ac425071ed4fbb2a77f2066cc109ae52b7681b42fc8d3988341cb",
+      "bytes": 88062
     },
     {
       "path": "tests/test_production_direction.py",
@@ -941,5 +941,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-23T09:43:49Z"
+  "generated_at_utc": "2026-11-23T09:48:43Z"
 }

@@ -352,6 +352,10 @@ step-by-step order for every video, in §7).
   `__reduce_ex__` raise `TypeError`); copies are frozen but
   unregistered and have no authority. Full record:
   `docs/implementation/CF-WO-P0-010-corrections.md`.
+  P0-011 replaced the WeakSet with an `id()`-keyed dict of weak
+  references -- see the P0-011 section below -- because WeakSet
+  membership invokes the candidate's `__eq__`/`__hash__` and a
+  forged subclass could compare equal to a genuine context.
 - **This is a process-level integrity contract, not identity
   proof.** It proves an object was issued by the factory in
   this process; it does not prove the owner/workspace IDs
@@ -359,6 +363,50 @@ step-by-step order for every video, in §7).
   the application, and it does not stop malicious code running
   with the same process privileges. Authenticated
   application-session identity remains P1 work.
+
+## P0-011 Exact object identity for authorization issuance (2026-11-23)
+
+- **Exact concrete type, not ancestry.** The verifier now
+  requires `type(context) is TrustedAuthorizationContext` --
+  a subclass instance is rejected before any registry lookup,
+  however faithfully it mimics a genuine context.
+  `TrustedAuthorizationContext.__init_subclass__` raises
+  `TypeError`, so a subclass cannot even be defined -- but
+  that prohibition is defence-in-depth only; the verifier
+  enforces exact type independently, and a subclass built by
+  low-level construction is still rejected.
+- **Identity verification, no equality anywhere in the
+  registry.** The P0-010 WeakSet was insufficient: set
+  membership hashes the candidate and compares with `==`, so
+  a forged subclass overriding `__eq__` (always True) and
+  `__hash__` (the genuine object's hash) passed with zero
+  factory calls -- and a raising `__eq__` made the verifier
+  itself raise. The registry is now a plain `dict[int,
+  weakref.ref]` keyed by `id()`, values are weak references,
+  and the verifier checks `target is context` -- an int-keyed
+  lookup plus one `is`, never `==`, never a hash of the
+  candidate. An `id()` lookup alone is never proof; the
+  stored weak reference must still point at the exact object.
+- **Guarded cleanup.** Dead entries are removed by the
+  weak-reference callback, and only when the stored value is
+  still that exact dead ref -- so a newer registration that
+  reuses the same `id()` is never removed. A stale dead entry
+  met during verification is pruned and the check fails
+  closed.
+- **Hostile subclasses are irrelevant.** Always-True
+  `__eq__`, raising `__eq__`, genuine-hash `__hash__`,
+  constant hash, inconsistent eq/hash, and multiple equal
+  subclasses are all rejected without granting authorization,
+  mutating or revoking the genuine context, corrupting the
+  registry, or raising an unhandled exception. Verification
+  never invokes a candidate's `__eq__` or `__hash__`.
+- **P0-009 + P0-010 preserved.** Immutability, separate
+  revocation, serialization refusal, and copy non-registration
+  all stand; revoking one identical-field context never revokes
+  another; a forged subclass cannot revoke a genuine context
+  or inspect its revocation status via a stolen
+  `authorization_id`. Full record:
+  `docs/implementation/CF-WO-P0-011-corrections.md`.
 
 ## Rules that always apply
 
