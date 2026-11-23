@@ -508,6 +508,20 @@ a check, or a test, recorded with its result).
    with P0-006 + Addendum C as given. If that addendum appears, it
    is reconciled separately and may add unresolved decisions to
    this list.
+9. **Follow-up in P0-007 (CF-WO-P0-007, 2026-11-22).** This
+   record's open items were completed by the follow-up work order:
+   the timeline manifest is v2.5 with clip/shot/audio bindings,
+   synchronization groups, and cross-reference validation
+   (Correction A); character/voice ownership is a structured
+   record with a both-conditions resolver rule (Correction B);
+   v2.5 voice profiles follow conditional validation rules that
+   differ by source and approval state (Correction C); the
+   speaking-bird fixtures are corrected to `cgi-animal`
+   (Correction D); and the OmniVoice CC-BY-NC commercial-use
+   limitation is recorded in the companion capability registry
+   with no verified commercial voice provider, so the commercial
+   voice adapter stays unsupported (Correction E). The full
+   record is `docs/implementation/CF-WO-P0-007-corrections.md`.
 
 ## 13. Test results
 
