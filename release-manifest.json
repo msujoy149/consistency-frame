@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-001-trusted-session",
-  "commit": "c1c52dabceb7191bfec8791f6660d5e9965e321d",
-  "github_branch_head": "ac7d5b08d6279577f86e520db2b5431efcae02f0",
+  "commit": "8fc1ba78a013b69657b7a40b2ce924322970ef30",
+  "github_branch_head": "66a01204d5fa49a131cde6398b934f4b0697a53b",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
@@ -122,7 +122,7 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "e453b569371e077bf63e27a0467f03e1af60dde68b32f22d54220cc30e090082",
+      "sha256": "86ce6e91c3d797223311e88181adbf8f7a2a3b8ce26c99fab9a64150be7b939b",
       "bytes": 24863
     },
     {
@@ -132,8 +132,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "cf90a0cf94fffea4a6a8dd3283ef09765042e23c2fa254b6f5c9654e10031ab9",
-      "bytes": 46696
+      "sha256": "c5e196e594ef0268017a3e26964a8709a8e05ce79e0fe71f084537999b49b727",
+      "bytes": 46802
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -217,7 +217,7 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "c3ccbc2debc4d921fa3ade4404b024fd57095d4e356a21ab6bfdc889e81e71eb",
+      "sha256": "6555a5bbdbcf55fe31321895ad803bf0a6a612b1a9e5505bf96d25e9861980ae",
       "bytes": 19073
     },
     {
@@ -1025,5 +1025,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-23T19:14:23Z"
+  "generated_at_utc": "2026-11-23T19:18:52Z"
 }
