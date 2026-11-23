@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p0-safe-foundations",
-  "commit": "6224bbaf240a0a9a50fcd1f61c74544db10d6757",
-  "github_branch_head": "6224bbaf240a0a9a50fcd1f61c74544db10d6757",
+  "commit": "bc169255cbe388976de3baee5357c141aa03379f",
+  "github_branch_head": "0a123219a41a24630d9581e0e3133d70a4bfaf5d",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
@@ -22,8 +22,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "2373a7a6dd7b85e43b867560c40a4e72ff01d7133f11b4d92932b5d23bf7f855",
-      "bytes": 52449
+      "sha256": "4eab9b5493d8cb3dd047390cdb6f8e557b88f62cc9ec0604a83bc69d3109700f",
+      "bytes": 52469
     },
     {
       "path": "README.md",
@@ -122,8 +122,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "2d1e9be6de8239d5ba548243d80db73658113c80c148d00630df20ea9dd57c57",
-      "bytes": 23637
+      "sha256": "d1bc940bf6dc6aff8fe446d48f6a91a50d7fd9f7bf2beba56251c7c8ac21eac0",
+      "bytes": 23722
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -132,8 +132,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "abd6072070e52681347dc3fd3d73fda07e027b809530da4457a54a2707fc7fc6",
-      "bytes": 41842
+      "sha256": "95d598c996c0a241cb4e71857340cbb76a5457279296ce328326602fc7b01e52",
+      "bytes": 42256
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -171,14 +171,19 @@
       "bytes": 41993
     },
     {
+      "path": "docs/implementation/CF-WO-P0-008-corrections.md",
+      "sha256": "a5dfc46f7e3466c6b45fdb694323b32c3d47eac9db4f0a2f16cd000e80fe3e54",
+      "bytes": 29646
+    },
+    {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
       "sha256": "23bb2a5aa29fde3bbacbec7996625c52b25e9d67106c278da8bb35ed0f855099",
       "bytes": 27096
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "16c4608b23d4564e44438c206159a9099d3d26e5e0f76a9ccb7cb2d30faf3cae",
-      "bytes": 17192
+      "sha256": "a9cd807ac5c916203bc781c8311102af4ac64146dd674ca762c26971b3bf3df5",
+      "bytes": 17291
     },
     {
       "path": "registry/adapters.json",
@@ -741,6 +746,11 @@
       "bytes": 8129
     },
     {
+      "path": "tests/test_private_voice_security.py",
+      "sha256": "7e896f58703866ccbae30926478d609db38a93b3f42d7b73fe82809ab9dca22a",
+      "bytes": 37085
+    },
+    {
       "path": "tests/test_production_direction.py",
       "sha256": "a3103607f3a8233f8bf546b43d8ea3049d491cd6f59d7f7d7cd1a491aa513973",
       "bytes": 63743
@@ -921,5 +931,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-23T06:32:37Z"
+  "generated_at_utc": "2026-11-23T06:40:57Z"
 }
