@@ -181,6 +181,15 @@ or later for bun.
    Their AGPL-3.0 licences stay intact inside each component. Nothing
    is vendored into this repo; the components are fetched at install
    time, and a clone failure is reported as FAILED, never hidden.
+   An existing checkout is reused only after verification: it must be
+   a valid git working tree with the official origin, HEAD at the
+   exact pinned commit, and a clean working tree. A checkout at a
+   different commit, with a wrong origin, or with uncommitted or
+   untracked changes is rejected with a clear error and left
+   untouched — it is never silently reset, force-checked-out, or
+   deleted. A fresh clone is verified the same way (HEAD equals the
+   pinned commit, origin is the official repository) before the
+   component is reported as ready.
 3. **Only with `--with-components`: sets up VoiceStudio** — `bun install`,
    then the Python API (`bun run setup:api`, needs bun + uv; downloads
    about 1 GB). A failed step reports PARTIAL, never success.
@@ -194,10 +203,12 @@ or later for bun.
 
 Re-running `bash setup.sh` is safe: skills are re-synced idempotently
 (unchanged files are left alone), and with `--with-components`,
-components already present are skipped and the component setups run
-again. `setup.sh` exits 0 only when every requested component reports
-SUCCESS; otherwise it exits 1 (FAILED) or 2 (PARTIAL) with a
-per-component summary.
+components already present are verified against the pinned release
+and reused only if they match (see item 2 above); the component
+setups then run again. `setup.sh` exits 0 only when every requested
+component reports SUCCESS; otherwise it exits 1 (FAILED) or 2
+(PARTIAL) with a per-component summary. A PARTIAL skill sync
+(exit 2) stops the run before any component is installed.
 
 ### Managed-file conflicts and backups
 

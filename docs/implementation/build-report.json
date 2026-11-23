@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "0bd4dd4e81954b55bbc79a2ee7fd61dbfbfd7ab7",
-  "github_branch_head": "b45b25b4c2d9c99de70f881bea7a47f110885865",
+  "head_commit": "95eb7adee33a0bf7780823a65f3d350695620aaa",
+  "github_branch_head": "6ff9dbd451d265d315b49f4513221b13ec66764d",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -228,6 +228,20 @@
     {
       "id": "CF-P0-008-SEC",
       "command": "python3 tests/test_private_voice_security.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-014-INST",
+      "command": "bash tests/test_installer_status.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-014-PIN",
+      "command": "bash tests/test_installer_status.sh",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"

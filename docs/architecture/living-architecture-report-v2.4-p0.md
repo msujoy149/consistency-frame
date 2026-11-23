@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-23 13:00 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-23 14:37 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p0-safe-foundations`
-**Head commit:** `0bd4dd4e81954b55bbc79a2ee7fd61dbfbfd7ab7`
-**GitHub branch head:** `b45b25b4c2d9c99de70f881bea7a47f110885865` (remote head of `feat/cf-p0-safe-foundations` at
+**Head commit:** `05a3fd3ddce20e5227be47acd3d721c99838f160`
+**GitHub branch head:** `05a3fd3ddce20e5227be47acd3d721c99838f160` (remote head of `feat/cf-p0-safe-foundations` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -202,6 +202,7 @@ docs/implementation/CF-WO-P0-009-corrections.md
 docs/implementation/CF-WO-P0-010-corrections.md
 docs/implementation/CF-WO-P0-011-corrections.md
 docs/implementation/CF-WO-P0-012-corrections.md
+docs/implementation/CF-WO-P0-014-corrections.md
 docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
@@ -315,6 +316,7 @@ tests/test_installer.sh
 tests/test_installer_manifest_security.sh
 tests/test_installer_metadata_failure.sh
 tests/test_installer_security.sh
+tests/test_installer_status.sh
 tests/test_modes.py
 tests/test_performance_semantics.py
 tests/test_private_overlay.py
@@ -335,6 +337,7 @@ tests/test_timeline_manifest.py
 - `P0-SHELL` — bash -n tests/test_installer_security.sh — **PASS** (exit 0)
 - `P0-SHELL` — bash -n tests/test_installer_manifest_security.sh — **PASS** (exit 0)
 - `P0-SHELL` — bash -n tests/test_installer_metadata_failure.sh — **PASS** (exit 0)
+- `P0-SHELL` — bash -n tests/test_installer_status.sh — **PASS** (exit 0)
 - `P0-SHELL` — bash -n tests/run-tests.sh — **PASS** (exit 0)
 - `P0-SCHEMA` — python3 scripts/validate-repo.py — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-registries.py --check — **PASS** (exit 0)
@@ -369,6 +372,8 @@ tests/test_timeline_manifest.py
 - `CF-P0-SEC-METADATA-05` — bash tests/test_installer_metadata_failure.sh — **PASS** (exit 0)
 - `CF-P0-SEC-METADATA-06` — bash tests/test_installer_metadata_failure.sh no-change — **PASS** (exit 0)
 - `CF-P0-SEC-METADATA-07` — bash tests/test_installer_metadata_failure.sh failed-no-backup — **PASS** (exit 0)
+- `CF-P0-014-INST` — bash tests/test_installer_status.sh — **PASS** (exit 0)
+- `CF-P0-014-PIN` — bash tests/test_installer_status.sh — **PASS** (exit 0)
 - `CF-P0-ATOMIC-001` — python3 tests/test_atomic_write.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-report.py — **PASS** (exit 0)
@@ -464,4 +469,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-23 13:00 UTC.
+- Report generated: 2026-11-23 14:37 UTC.
