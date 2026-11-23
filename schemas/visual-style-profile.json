@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://consistencyframe.blogspot.com/schemas/v2.5/visual-style-profile.json",
+  "title": "VisualStyleProfile",
+  "description": "A locked visual style for a project/series. Identity stays fixed; style is project-scoped. v2.5 ADDITIVE MIGRATION (CF-WO-P0-006): visual_style (canonical VISUAL_STYLE vocabulary), production_medium and motion_methods added; all new fields are optional, no existing required field was removed or retyped, so every valid v2.3 record remains valid. The legacy `medium`/`realism` fields are kept for existing records; new records should use visual_style + production_medium.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "2.3",
+        "2.5"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "medium": {
+      "type": "string",
+      "enum": [
+        "2d_animation",
+        "3d_animation",
+        "stylised",
+        "explainer",
+        "realistic_person",
+        "live_action",
+        "hybrid"
+      ]
+    },
+    "realism": {
+      "type": "string",
+      "enum": [
+        "cartoon",
+        "stylised",
+        "photorealistic",
+        "documentary"
+      ]
+    },
+    "palette": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "lighting": {
+      "type": "string"
+    },
+    "texture": {
+      "type": "string"
+    },
+    "camera_language": {
+      "type": "string"
+    },
+    "grade": {
+      "type": "string"
+    },
+    "render_constraints": {
+      "type": "string"
+    },
+    "reference_sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "visual_style": {
+      "description": "Canonical visual style (v2.5 vocabulary). Animation is not cartoon-only: photorealistic CGI and digital humans are styles here, not a separate medium.",
+      "type": "string",
+      "enum": [
+        "flat-2d-vector",
+        "hand-drawn-2d",
+        "illustrated-2d",
+        "anime",
+        "cartoon-2d",
+        "stylized-3d",
+        "semi-realistic-3d",
+        "photorealistic-3d-cgi",
+        "photorealistic-digital-human",
+        "photorealistic-digital-animal-creature",
+        "mixed",
+        "captured-live-action"
+      ]
+    },
+    "production_medium": {
+      "description": "Production medium (v2.5 vocabulary), separate from visual style: the same style can be produced in more than one medium, and one production can mix media per subject/shot.",
+      "type": "string",
+      "enum": [
+        "2d-drawn-vector",
+        "3d-cgi-rigged",
+        "ai-digital-human",
+        "ai-digital-creature",
+        "live-action-footage",
+        "hybrid-live-action-cgi"
+      ]
+    },
+    "motion_methods": {
+      "description": "Motion/generation methods used under this style, where applicable.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "rig-2d-keyframe",
+          "rig-3d-keyframe",
+          "ai-image-to-video",
+          "ai-video-to-video",
+          "motion-capture",
+          "performance-transfer",
+          "face-animation",
+          "body-animation",
+          "pose-gesture-transfer",
+          "lip-sync-phoneme-viseme",
+          "creature-articulation",
+          "rotoscoping-compositing",
+          "captured-motion"
+        ]
+      }
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "approved",
+        "deprecated"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "name",
+    "medium",
+    "version",
+    "status"
+  ],
+  "additionalProperties": false
+}

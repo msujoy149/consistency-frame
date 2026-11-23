@@ -1,0 +1,308 @@
+{
+  "$id": "https://consistencyframe.blogspot.com/schemas/v2.5/shot-plan.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Shot-level plan: camera, framing and lighting per shot, linked to a scene and its beats. Camera choices serve the scene's dramatic intent; they never override the script. v2.5 ADDITIVE MIGRATION (CF-WO-P0-006): new fields are optional; no existing required field was removed or retyped, so every valid v2.4 record remains valid.",
+  "properties": {
+    "id": {
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "project_id": {
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "scene_plan_id": {
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "schema_version": {
+      "enum": [
+        "2.4",
+        "2.5"
+      ],
+      "type": "string"
+    },
+    "shots": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "angle": {
+            "description": "Camera angle for this shot (same vocabulary as the legacy camera_angle field, which is kept).",
+            "enum": [
+              "eye-level",
+              "low",
+              "high",
+              "birds-eye",
+              "dutch",
+              "worms-eye"
+            ],
+            "type": "string"
+          },
+          "beat_id": {
+            "type": "string"
+          },
+          "camera_angle": {
+            "enum": [
+              "eye-level",
+              "low",
+              "high",
+              "birds-eye",
+              "dutch",
+              "worms-eye"
+            ],
+            "type": "string"
+          },
+          "camera_height": {
+            "description": "Camera height, e.g. 'eye-level', 'ground-level', 'shoulder-height'.",
+            "type": "string"
+          },
+          "camera_movement": {
+            "description": "Camera movement for this shot. Must be motivated by the shot's dramatic intent, never arbitrary; static is a valid deliberate choice. v2.5 adds dolly-in, dolly-out, push-in, pull-back and follow; legacy v2.4 values are kept so existing records stay valid.",
+            "enum": [
+              "static",
+              "pan",
+              "tilt",
+              "dolly",
+              "tracking",
+              "crane",
+              "handheld",
+              "zoom",
+              "orbit",
+              "aerial-move",
+              "dolly-in",
+              "dolly-out",
+              "push-in",
+              "pull-back",
+              "follow"
+            ],
+            "type": "string"
+          },
+          "character_ids": {
+            "items": {
+              "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "depth_of_field": {
+            "description": "Depth of field for this shot.",
+            "enum": [
+              "shallow",
+              "deep",
+              "rack-focus"
+            ],
+            "type": "string"
+          },
+          "duration_seconds": {
+            "description": "Shot duration in seconds; strictly positive (a zero-length shot is invalid).",
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "focus_target": {
+            "description": "What the shot focuses on (character_id, object or detail).",
+            "type": "string"
+          },
+          "framing": {
+            "enum": [
+              "extreme-wide",
+              "wide",
+              "full",
+              "medium-wide",
+              "medium",
+              "medium-close-up",
+              "close-up",
+              "extreme-close-up",
+              "over-the-shoulder",
+              "two-shot",
+              "aerial",
+              "insert"
+            ],
+            "type": "string"
+          },
+          "lens_intent": {
+            "description": "Lens intent, e.g. 'long lens to compress the background and isolate the speaker'.",
+            "type": "string"
+          },
+          "lighting": {
+            "type": "string"
+          },
+          "scene_id": {
+            "type": "string"
+          },
+          "shot_id": {
+            "type": "string"
+          },
+          "shot_size": {
+            "description": "Shot size (scale of the subject in frame).",
+            "enum": [
+              "extreme-wide",
+              "wide",
+              "full",
+              "medium-wide",
+              "medium",
+              "medium-close-up",
+              "close-up",
+              "extreme-close-up",
+              "insert"
+            ],
+            "type": "string"
+          },
+          "subjects": {
+            "description": "Per-subject details for this shot (same shape as scene-plan subjects). Subjects are independent: no shot is required to use the same rendering medium for every character.",
+            "items": {
+              "additionalProperties": false,
+              "description": "Per-subject details for this scene/shot. Each subject may use its own representation, source media, rendering style and motion method.",
+              "properties": {
+                "articulation_target": {
+                  "description": "Subject-specific articulation. Never apply human lip movement to a bird, animal or creature.",
+                  "enum": [
+                    "human-mouth-lips",
+                    "bird-beak",
+                    "animal-muzzle",
+                    "creature-jaw-mandibles",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                "character_id": {
+                  "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+                  "type": "string"
+                },
+                "contact": {
+                  "description": "Physical contact with an object, surface or another character in this scene/shot, e.g. 'hand on the branch'.",
+                  "type": "string"
+                },
+                "continuity": {
+                  "description": "Continuity notes for this subject in this scene/shot (position, costume, prop state carried from the previous shot).",
+                  "type": "string"
+                },
+                "eyeline_target": {
+                  "description": "What this subject is looking at (character_id, object or direction); drives eyelines and the 180-degree rule.",
+                  "type": "string"
+                },
+                "is_live_action_footage": {
+                  "description": "Per-subject provenance: false for any generated subject, even inside a hybrid production.",
+                  "type": "boolean"
+                },
+                "motion_method": {
+                  "description": "Motion/generation method for this subject in this scene/shot.",
+                  "enum": [
+                    "rig-2d-keyframe",
+                    "rig-3d-keyframe",
+                    "ai-image-to-video",
+                    "ai-video-to-video",
+                    "motion-capture",
+                    "performance-transfer",
+                    "face-animation",
+                    "body-animation",
+                    "pose-gesture-transfer",
+                    "lip-sync-phoneme-viseme",
+                    "creature-articulation",
+                    "rotoscoping-compositing"
+                  ],
+                  "type": "string"
+                },
+                "position": {
+                  "description": "Position of this subject in the frame/scene, e.g. 'foreground-left'.",
+                  "type": "string"
+                },
+                "rendering_style": {
+                  "description": "Rendering style for this subject.",
+                  "enum": [
+                    "flat-2d-vector",
+                    "hand-drawn-2d",
+                    "illustrated-2d",
+                    "anime",
+                    "cartoon-2d",
+                    "stylized-3d",
+                    "semi-realistic-3d",
+                    "photorealistic-3d-cgi",
+                    "photorealistic-digital-human",
+                    "photorealistic-digital-animal-creature",
+                    "mixed"
+                  ],
+                  "type": "string"
+                },
+                "representation": {
+                  "description": "How this subject is represented (medium).",
+                  "enum": [
+                    "2d-drawn-vector",
+                    "3d-cgi-rigged",
+                    "ai-digital-human",
+                    "ai-digital-creature",
+                    "live-action-footage",
+                    "hybrid-live-action-cgi"
+                  ],
+                  "type": "string"
+                },
+                "scale": {
+                  "description": "Relative scale of this subject, e.g. 'life-size' or '0.8x'.",
+                  "type": "string"
+                },
+                "source_media": {
+                  "description": "Source media for this subject.",
+                  "enum": [
+                    "script-only",
+                    "reference-image",
+                    "reference-video",
+                    "captured-footage",
+                    "generated-image",
+                    "generated-video",
+                    "mixed"
+                  ],
+                  "type": "string"
+                },
+                "species": {
+                  "description": "Species, e.g. 'African grey parrot'. Needed so articulation can be checked against the subject.",
+                  "type": "string"
+                },
+                "subject_kind": {
+                  "description": "What kind of subject this is.",
+                  "enum": [
+                    "human",
+                    "digital-human",
+                    "real-animal",
+                    "cgi-animal",
+                    "fictional-creature",
+                    "anthropomorphic",
+                    "mixed",
+                    "non-character"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "character_id"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "transition_to_next_shot": {
+            "description": "Transition from this shot to the next, e.g. 'cut', 'dissolve', 'flash-frame'.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "shot_id",
+          "scene_id",
+          "framing"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "shots"
+  ],
+  "title": "ShotPlan",
+  "type": "object"
+}

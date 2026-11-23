@@ -1,0 +1,1830 @@
+#!/usr/bin/env python3
+"""CF-WO-P0-008 Correction F — fail-closed private voice security
+regression suite.
+
+Tests the actual production functions in scripts/asset_policy.py
+(resolver, export authorization, centralized authorize_action,
+path safety) and scripts/timeline_policy.py (strict v2.5 timeline
+validation). Every check executes production code; no check passes
+through a test-only wrapper that mimics the rule.
+
+Honest before/after experiment (CF-WO-P0-008 §7): the reproduction
+script ~/workspace/consistency-frame-p0-delivery/p0-008-repro.py was
+run BEFORE the fix and reproduced all three failures — (A) the
+production resolver RESOLVED a private v2.5 voice with NO requester
+identity; (B1) export of an owner-a voice with a dict claiming
+granted_by 'owner-b' was ALLOWED; (B2) export with a plain caller
+dict claiming granted_by 'owner-a' (no trusted context) was ALLOWED;
+(C) a timeline referencing a private voice VALIDATED with no
+requester identity in the call. Outputs:
+p0-008-repro-before.txt ("RESULT: ALL THREE FAILURES REPRODUCED").
+After the fix the same inputs are REJECTED (p0-008-repro-after.txt:
+"RESULT: ALL THREE FAILURES FIXED"). This suite pins the AFTER
+behaviour on every one of those inputs. No other historical numbers
+are claimed here.
+
+Test identities (deterministic, shared with
+tests/test_character_registration.py): owner-a / workspace-a own
+Mina + Nila (char-nila-001, voice-nila-001) and Aria
+(char-aria-001, voice-aria-001); owner-b / workspace-b is the other
+user / workspace.
+
+Run: python3 tests/test_private_voice_security.py
+Exit 0 = PASS, 1 = FAIL. Test IDs: CF-P0-008-SEC.
+
+CF-WO-P0-009 added groups (h) (genuine immutability, separate
+revocation) and (i) (v2.5 resolution fails closed without a
+Character Registry), IDs CF-P0-009-SEC. CF-WO-P0-010 adds group
+(j) (factory-issuance integrity), IDs CF-P0-010-SEC: only the
+exact object issued by issue_trusted_authorization_context is
+trusted — direct construction (even with the imported private
+sentinel), __new__ / __setstate__, pickle and copy can never
+manufacture an accepted context. Reproduction:
+~/workspace/consistency-frame-p0-delivery/p0-010-repro.py
+(before: all forged paths authorized with factory_calls=0;
+after: all forged paths rejected, genuine factory context
+still authorizes). CF-WO-P0-011 adds group (k), IDs
+CF-P0-011-SEC: exact concrete type plus identity-based
+verification — a forged subclass overriding __eq__/__hash__ to
+match a genuine context is rejected by the verifier itself
+(the P0-010 WeakSet membership test hashed the candidate and
+compared with ==, so the spoof compared equal and passed).
+Reproduction: ~/workspace/consistency-frame-p0-delivery/p0-011-repro.py
+(before: spoof issued True, export [] — and a hostile __eq__
+with the genuine hash was even invoked, raising RuntimeError;
+after: subclass definition raises TypeError, the verifier
+returns False without invoking __eq__/__hash__, export rejects,
+genuine context still authorizes).
+"""
+import copy
+import dataclasses
+import gc
+import importlib.util
+import json
+import os
+import pickle
+import sys
+import tempfile
+import weakref
+from types import SimpleNamespace
+
+ROOT = os.path.join(os.path.dirname(__file__), "..")
+sys.path.insert(0, os.path.join(ROOT, "scripts"))
+sys.path.insert(0, os.path.join(ROOT, "tests"))
+import asset_policy  # noqa: E402
+import timeline_policy  # noqa: E402
+
+_spec = importlib.util.spec_from_file_location(
+    "test_timeline_manifest",
+    os.path.join(ROOT, "tests", "test_timeline_manifest.py"))
+test_timeline_manifest = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(test_timeline_manifest)
+validate_timeline_cross_references = (
+    timeline_policy.validate_timeline_cross_references)
+
+_spec = importlib.util.spec_from_file_location(
+    "test_character_registration",
+    os.path.join(ROOT, "tests", "test_character_registration.py"))
+test_character_registration = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(test_character_registration)
+
+failures = []
+
+
+def check(name, cond, detail=""):
+    print(("PASS " if cond else "FAIL ") + name
+          + (f" — {detail}" if detail and not cond else ""))
+    if not cond:
+        failures.append(name)
+
+
+def load_fixture(name):
+    with open(os.path.join(ROOT, "tests", "fixtures", name),
+              encoding="utf-8") as f:
+        return json.load(f)
+
+
+OWNER_A = {"owner_id": "owner-a", "workspace_id": "workspace-a",
+           "visibility": "private", "sharing": "none"}
+OWNER_B = {"owner_id": "owner-b", "workspace_id": "workspace-b",
+           "visibility": "private", "sharing": "none"}
+OWNER_A_WS_B = {"owner_id": "owner-a", "workspace_id": "workspace-b",
+                "visibility": "private", "sharing": "none"}
+SHARED_WS = {"owner_id": "owner-a", "workspace_id": "workspace-a",
+             "visibility": "shared", "sharing": "workspace"}
+
+
+def owned_registry():
+    """mini_registry() with owner-a ownership injected on every
+    character, voice profile and audio asset, so a strict v2.5
+    timeline under requester owner-a / workspace-a passes."""
+    reg = test_timeline_manifest.mini_registry()
+    for rec in reg["characters"].values():
+        rec["ownership"] = copy.deepcopy(OWNER_A)
+    for rec in reg["voice_profiles"].values():
+        rec["ownership"] = copy.deepcopy(OWNER_A)
+    audio_chars = {"aud-ana-01": "char-ana-001",
+                   "aud-ben-01": "char-ben-002",
+                   "aud-kiki-01": "char-kiki-003"}
+    for aid, rec in reg["audio_assets"].items():
+        rec["ownership"] = copy.deepcopy(OWNER_A)
+        if aid in audio_chars:
+            rec["character_id"] = audio_chars[aid]
+    return reg
+
+
+def dialogue_timeline():
+    """One human speaker, synchronized dialogue + video (the §4
+    scenario 1 shape)."""
+    m = test_timeline_manifest.manifest
+    track = test_timeline_manifest.track
+    video_clip = test_timeline_manifest.video_clip
+    dialogue_audio = test_timeline_manifest.dialogue_audio
+    sync_group = test_timeline_manifest.sync_group
+    return m([
+        track("v1", "video", [video_clip(
+            "clip-v-01", "shot-a-01", "sc-01", ["char-ana-001"],
+            timeline_start_seconds=0, timeline_end_seconds=4,
+            duration_seconds=4)]),
+        track("a1", "audio", [dialogue_audio(
+            "clip-a-01", "l-ana-01", "char-ana-001", "vp-ana-001",
+            "aud-ana-01", ["shot-a-01"])]),
+    ], synchronization_groups=[sync_group(
+        "sync-01", ["clip-v-01"], ["clip-a-01"], ["l-ana-01"],
+        ["shot-a-01"])])
+
+
+def two_speaker_timeline():
+    """Two characters with separate voice profiles (§4 scenario 8)."""
+    m = test_timeline_manifest.manifest
+    track = test_timeline_manifest.track
+    video_clip = test_timeline_manifest.video_clip
+    dialogue_audio = test_timeline_manifest.dialogue_audio
+    return m([
+        track("v1", "video", [video_clip(
+            "clip-v-02", "shot-a-02", "sc-01",
+            ["char-ana-001", "char-ben-002"],
+            timeline_start_seconds=0, timeline_end_seconds=8,
+            duration_seconds=8)]),
+        track("a1", "audio", [
+            dialogue_audio("clip-a-02a", "l-ana-01", "char-ana-001",
+                           "vp-ana-001", "aud-ana-01", ["shot-a-02"]),
+            dialogue_audio("clip-a-02b", "l-ben-01", "char-ben-002",
+                           "vp-ben-001", "aud-ben-01", ["shot-a-02"],
+                           timeline_start_seconds=4,
+                           timeline_end_seconds=8),
+        ]),
+    ])
+
+
+def export_ctx(actor_owner="owner-a", actor_workspace="workspace-a",
+               granted_by="owner-a", scope="export voice-nila-001 "
+               "for backup", action="export_private_asset",
+               character_id="char-nila-001",
+               voice_profile_id="voice-nila-001",
+               provider_transmission_approved=False,
+               expires_at=None):
+    return asset_policy.issue_trusted_authorization_context(
+        actor_owner_id=actor_owner, actor_workspace_id=actor_workspace,
+        granted_by=granted_by, scope=scope, action=action,
+        character_id=character_id, voice_profile_id=voice_profile_id,
+        provider_transmission_approved=provider_transmission_approved,
+        expires_at=expires_at)
+
+
+def _define_spoof_subclass(name, eq=None, hash_fn=None):
+    """Test-only fixture (CF-WO-P0-011): define a
+    TrustedAuthorizationContext subclass while the
+    __init_subclass__ prohibition is temporarily neutralized,
+    then restore it. This proves the VERIFIER rejects subclass
+    instances on its own — the prohibition alone is not the
+    defense. The subclass is built with type(); eq/hash_fn are
+    installed as overrides (None = inherit the base class's
+    identity versions)."""
+    original = asset_policy.TrustedAuthorizationContext.__init_subclass__
+    try:
+        asset_policy.TrustedAuthorizationContext.__init_subclass__ = (
+            classmethod(lambda cls, **kwargs: None))
+        namespace = {}
+        if eq is not None:
+            namespace["__eq__"] = eq
+        if hash_fn is not None:
+            namespace["__hash__"] = hash_fn
+        return type(name, (asset_policy.TrustedAuthorizationContext,),
+                    namespace)
+    finally:
+        asset_policy.TrustedAuthorizationContext.__init_subclass__ = (
+            original)
+
+
+def main():
+    nila = load_fixture("character-registration-valid-human.json")
+    nila_voice = load_fixture("voice-profile-valid-user-recorded.json")
+    aria_voice = load_fixture("voice-profile-valid-ai-generated.json")
+    aria_character = {"character_id": "char-aria-001",
+                      "ownership": copy.deepcopy(OWNER_A)}
+    v25_voice_registry = {
+        nila_voice["voice_profile_id"]: nila_voice,
+        aria_voice["voice_profile_id"]: aria_voice}
+    v25_registries = {nila["character_id"]: nila,
+                      aria_character["character_id"]: aria_character}
+
+    # ------------------------------------------------------------------
+    # (a) Resolver reproduced failure (CF-WO-P0-008 §2 / §7)
+    # ------------------------------------------------------------------
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-nila-001")
+    check("CF-P0-008-SEC(a1): resolver with NO requester rejects a "
+          "private v2.5 voice",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-nila-001", None, "workspace-a")
+    check("CF-P0-008-SEC(a2): resolver with owner only (no workspace) "
+          "rejects",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-nila-001", "owner-a", None)
+    check("CF-P0-008-SEC(a3): resolver with workspace only (no owner) "
+          "rejects",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-nila-001", "owner-b", "workspace-b")
+    check("CF-P0-008-SEC(a4): resolver rejects the wrong owner",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-b")
+    check("CF-P0-008-SEC(a5): resolver rejects the wrong workspace",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-aria-001",
+        "voice-aria-001", "owner-a", "workspace-b")
+    check("CF-P0-008-SEC(a6): correct owner in the wrong workspace "
+          "rejects (second record)",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-aria-001",
+        "voice-aria-001", "owner-b", "workspace-a")
+    check("CF-P0-008-SEC(a7): correct workspace with the wrong owner "
+          "rejects (private sharing none)",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-aria-001", "owner-a", "workspace-a")
+    check("CF-P0-008-SEC(a8): voice of another character rejects",
+          voice is None and bool(errs), "; ".join(errs))
+    other_owner_voice = copy.deepcopy(nila_voice)
+    other_owner_voice["ownership"] = copy.deepcopy(OWNER_B)
+    voice, errs = asset_policy.resolve_voice_for_production(
+        {other_owner_voice["voice_profile_id"]: other_owner_voice},
+        v25_registries, "char-nila-001", "voice-nila-001",
+        "owner-a", "workspace-a")
+    check("CF-P0-008-SEC(a9): voice owned by another owner rejects",
+          voice is None and bool(errs), "; ".join(errs))
+    other_ws_voice = copy.deepcopy(nila_voice)
+    other_ws_voice["ownership"] = copy.deepcopy(OWNER_A_WS_B)
+    voice, errs = asset_policy.resolve_voice_for_production(
+        {other_ws_voice["voice_profile_id"]: other_ws_voice},
+        v25_registries, "char-nila-001", "voice-nila-001",
+        "owner-a", "workspace-a")
+    check("CF-P0-008-SEC(a10): voice owned by another workspace "
+          "rejects",
+          voice is None and bool(errs), "; ".join(errs))
+    pending_voice = copy.deepcopy(nila_voice)
+    pending_voice["approval_status"] = "pending"
+    pending_voice["status"] = "pending"
+    voice, errs = asset_policy.resolve_voice_for_production(
+        {pending_voice["voice_profile_id"]: pending_voice},
+        v25_registries, "char-nila-001", "voice-nila-001",
+        "owner-a", "workspace-a", require_approved=True)
+    check("CF-P0-008-SEC(a11): pending voice rejects when approval "
+          "is required",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a")
+    check("CF-P0-008-SEC(a12): correct owner + workspace, approved "
+          "voice resolves",
+          voice is not None and not errs
+          and voice["voice_profile_id"] == "voice-nila-001",
+          "; ".join(errs))
+    shared_voice = copy.deepcopy(nila_voice)
+    shared_voice["ownership"] = copy.deepcopy(SHARED_WS)
+    voice, errs = asset_policy.resolve_voice_for_production(
+        {shared_voice["voice_profile_id"]: shared_voice},
+        v25_registries, "char-nila-001", "voice-nila-001",
+        "owner-b", "workspace-a")
+    check("CF-P0-008-SEC(a13): shared + workspace admits another "
+          "owner in the same workspace",
+          voice is not None and not errs, "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        {shared_voice["voice_profile_id"]: shared_voice},
+        v25_registries, "char-nila-001", "voice-nila-001",
+        "owner-b", "workspace-b")
+    check("CF-P0-008-SEC(a14): shared + workspace rejects another "
+          "workspace",
+          voice is None and bool(errs), "; ".join(errs))
+    # Legacy v2.3 contract (pinned, not invented): the v2.3 fixture
+    # carries no voice_profile_id / ownership / approval_status, so
+    # it resolves without a requester ONLY with require_approved
+    # False and no character registry given.
+    legacy_voice = load_fixture("voice-profile-valid.json")
+    legacy_registry = {legacy_voice["id"]: legacy_voice}
+    voice, errs = asset_policy.resolve_voice_for_production(
+        legacy_registry, None, "char-nila-001", "voice-nila-001",
+        require_approved=False)
+    check("CF-P0-008-SEC(a15): legacy v2.3 record keeps its "
+          "historical contract (resolves without requester when "
+          "require_approved=False, no character registry)",
+          voice is not None and not errs, "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        legacy_registry, None, "char-nila-001", "voice-nila-001")
+    check("CF-P0-008-SEC(a16): legacy v2.3 record still rejects "
+          "under the default require_approved=True (no approval "
+          "record)",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        legacy_registry, v25_registries, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a",
+        require_approved=False)
+    check("CF-P0-008-SEC(a17): legacy v2.3 record with a character "
+          "registry rejects (no ownership to match the character)",
+          voice is None and bool(errs), "; ".join(errs))
+
+    # ------------------------------------------------------------------
+    # (b) Export reproduced failure (CF-WO-P0-008 §3 / §7)
+    # ------------------------------------------------------------------
+    check("CF-P0-008-SEC(b1): export without any authorization "
+          "context rejects",
+          bool(asset_policy.validate_private_voice_export(nila_voice)))
+    check("CF-P0-008-SEC(b2): export with a dict-only authorization "
+          "(granted_by owner-a, full explicit) rejects — a dict is "
+          "never authority",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, {"granted_by": "owner-a",
+                           "scope": "export voice-nila-001 for backup",
+                           "explicit_authorisation": True})))
+    check("CF-P0-008-SEC(b3): export with a forged granted_by "
+          "(owner-b) rejects",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, {"granted_by": "owner-b",
+                           "scope": "export voice-nila-001 for backup",
+                           "explicit_authorisation": True})))
+    check("CF-P0-008-SEC(b4): trusted context whose actor is owner-b "
+          "with granted_by owner-a rejects",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx(
+                  actor_owner="owner-b", actor_workspace="workspace-b",
+                  granted_by="owner-a"))))
+    check("CF-P0-008-SEC(b5): trusted context with actor owner-a but "
+          "granted_by owner-b rejects",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx(
+                  actor_owner="owner-a", granted_by="owner-b"))))
+    check("CF-P0-008-SEC(b6): owner-a in the wrong workspace rejects",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx(
+                  actor_owner="owner-a",
+                  actor_workspace="workspace-b"))))
+    try:
+        export_ctx(scope="")
+        scope_raised = False
+    except ValueError:
+        scope_raised = True
+    check("CF-P0-008-SEC(b7): the factory raises ValueError on an "
+          "empty scope (fail closed at issuance)",
+          scope_raised)
+    try:
+        export_ctx(scope="   ")
+        ws_scope_raised = False
+    except ValueError:
+        ws_scope_raised = True
+    check("CF-P0-008-SEC(b8): the factory raises ValueError on a "
+          "whitespace-only scope",
+          ws_scope_raised)
+    check("CF-P0-008-SEC(b9): a context for the wrong action "
+          "(use_in_production) rejects export",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx(
+                  action="use_in_production"))))
+    check("CF-P0-008-SEC(b10): a context for another character "
+          "rejects",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx(
+                  character_id="char-aria-001"))))
+    check("CF-P0-008-SEC(b11): a context for another voice rejects",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx(
+                  voice_profile_id="voice-aria-001"))))
+    check("CF-P0-008-SEC(b12): an expired context rejects",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx(
+                  expires_at="2000-01-01T00:00:00Z"))))
+    # CF-WO-P0-009 (A): revocation is registry state, NOT a mutated
+    # field — the context is immutable, so `revoked_ctx.revoked =
+    # True` (the P0-008 test) must no longer be the revocation
+    # path. Revoking goes through
+    # asset_policy.revoke_trusted_authorization_context, the
+    # issued context itself is unchanged, and export rejects.
+    revoked_ctx = export_ctx()
+    revoked_before = (revoked_ctx.authorization_id,
+                      revoked_ctx.actor_owner_id,
+                      revoked_ctx.scope, revoked_ctx.revoked)
+    asset_policy.revoke_trusted_authorization_context(revoked_ctx)
+    check("CF-P0-008-SEC(b13): a revoked context rejects",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=revoked_ctx)))
+    check("CF-P0-008-SEC(b13b): revoking does not mutate the issued "
+          "context (revoked field still False, all fields unchanged)",
+          (revoked_ctx.authorization_id, revoked_ctx.actor_owner_id,
+           revoked_ctx.scope, revoked_ctx.revoked) == revoked_before
+          and revoked_ctx.revoked is False)
+    check("CF-P0-008-SEC(b14): to_provider=True without "
+          "provider-transmission approval rejects",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx(),
+              to_provider=True)))
+    check("CF-P0-008-SEC(b15): to_provider=True with "
+          "provider-transmission approval allows",
+          not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx(
+                  provider_transmission_approved=True),
+              to_provider=True))
+    check("CF-P0-008-SEC(b16): correct owner export within scope "
+          "allows",
+          not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx()))
+    shared_voice_export = copy.deepcopy(nila_voice)
+    shared_voice_export["ownership"] = copy.deepcopy(SHARED_WS)
+    check("CF-P0-008-SEC(b17): shared + workspace does NOT authorize "
+          "export by owner-b (export is owner-only)",
+          bool(asset_policy.validate_private_voice_export(
+              shared_voice_export, trusted_context=export_ctx(
+                  actor_owner="owner-b",
+                  actor_workspace="workspace-a",
+                  granted_by="owner-a"))))
+    try:
+        asset_policy.TrustedAuthorizationContext(
+            actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+            granted_by="owner-a", scope="export voice-nila-001",
+            action="export_private_asset",
+            character_id="char-nila-001",
+            voice_profile_id="voice-nila-001")
+        direct_raised = False
+    except TypeError:
+        direct_raised = True
+    check("CF-P0-008-SEC(b18): direct TrustedAuthorizationContext "
+          "construction raises TypeError (factory-only boundary)",
+          direct_raised)
+    check("CF-P0-008-SEC(b19): a dict fake context is rejected (not "
+          "a trusted context instance)",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context={
+                  "actor_owner_id": "owner-a",
+                  "actor_workspace_id": "workspace-a",
+                  "granted_by": "owner-a",
+                  "scope": "export voice-nila-001 for backup",
+                  "action": "export_private_asset",
+                  "character_id": "char-nila-001",
+                  "voice_profile_id": "voice-nila-001"})))
+    check("CF-P0-008-SEC(b20): a SimpleNamespace fake context is "
+          "rejected (not a trusted context instance)",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=SimpleNamespace(
+                  actor_owner_id="owner-a",
+                  actor_workspace_id="workspace-a",
+                  granted_by="owner-a",
+                  scope="export voice-nila-001 for backup",
+                  action="export_private_asset",
+                  character_id="char-nila-001",
+                  voice_profile_id="voice-nila-001",
+                  provider_transmission_approved=False,
+                  expires_at=None, revoked=False))))
+
+    # ------------------------------------------------------------------
+    # (c) Timeline reproduced failure + WO §4 scenarios 1–17 (strict)
+    # ------------------------------------------------------------------
+    strict = validate_timeline_cross_references
+    reg = owned_registry()
+    errs = strict(dialogue_timeline(), reg, "owner-a", "workspace-a",
+                  strict=True)
+    check("CF-P0-008-SEC(c1): §4 scenario 1 — owner-a timeline, "
+          "owner-a character + voice passes (strict)",
+          not errs, "; ".join(errs))
+    errs = strict(dialogue_timeline(), reg, "owner-b", "workspace-b",
+                  strict=True)
+    check("CF-P0-008-SEC(c2): §4 scenario 2 — owner-b requester "
+          "rejects (strict)",
+          bool(errs), "; ".join(errs))
+    reg_ws_b_voice = owned_registry()
+    reg_ws_b_voice["voice_profiles"]["vp-ana-001"]["ownership"] = \
+        copy.deepcopy(OWNER_A_WS_B)
+    errs = strict(dialogue_timeline(), reg_ws_b_voice, "owner-a",
+                  "workspace-a", strict=True)
+    check("CF-P0-008-SEC(c3): §4 scenario 3 — owner-a requester, "
+          "voice from workspace-b rejects (strict)",
+          bool(errs), "; ".join(errs))
+    reg_b_voice = owned_registry()
+    reg_b_voice["voice_profiles"]["vp-ana-001"]["ownership"] = \
+        copy.deepcopy(OWNER_B)
+    errs = strict(dialogue_timeline(), reg_b_voice, "owner-a",
+                  "workspace-a", strict=True)
+    check("CF-P0-008-SEC(c4): §4 scenario 4 — character owner-a, "
+          "voice owner-b rejects (strict)",
+          bool(errs), "; ".join(errs))
+    reg_no_voice_owner = owned_registry()
+    del reg_no_voice_owner["voice_profiles"]["vp-ana-001"]["ownership"]
+    errs = strict(dialogue_timeline(), reg_no_voice_owner, "owner-a",
+                  "workspace-a", strict=True)
+    check("CF-P0-008-SEC(c5): §4 scenario 5 — voice with no "
+          "ownership rejects (strict)",
+          bool(errs), "; ".join(errs))
+    errs = strict(dialogue_timeline(), reg, None, "workspace-a",
+                  strict=True)
+    check("CF-P0-008-SEC(c6): §4 scenario 6 — missing requester "
+          "owner rejects (strict)",
+          bool(errs), "; ".join(errs))
+    errs = strict(dialogue_timeline(), reg, "owner-a", None,
+                  strict=True)
+    check("CF-P0-008-SEC(c7): §4 scenario 7 — missing requester "
+          "workspace rejects (strict)",
+          bool(errs), "; ".join(errs))
+    errs = strict(two_speaker_timeline(), reg, "owner-a",
+                  "workspace-a", strict=True)
+    check("CF-P0-008-SEC(c8): §4 scenario 8 — correct owner + "
+          "workspace with the correct voices passes (strict)",
+          not errs, "; ".join(errs))
+    narration = test_timeline_manifest.manifest([
+        test_timeline_manifest.track("v1", "video", [
+            test_timeline_manifest.video_clip(
+                "clip-v-04", "shot-n-01", "sc-03", [],
+                timeline_start_seconds=0, timeline_end_seconds=4,
+                duration_seconds=4)]),
+        test_timeline_manifest.track("a1", "audio", [
+            test_timeline_manifest.audio_clip(
+                "clip-a-04", "narration", language="en",
+                role="narrator", timeline_start_seconds=0,
+                timeline_end_seconds=4, duration_seconds=4)]),
+    ])
+    errs = strict(narration, reg, "owner-a", "workspace-a",
+                  strict=True)
+    check("CF-P0-008-SEC(c9a): §4 scenario 9 — narration without a "
+          "visible character passes (strict, with requester)",
+          not errs, "; ".join(errs))
+    errs = strict(narration, reg, strict=True)
+    check("CF-P0-008-SEC(c9b): §4 scenario 9 — narration without a "
+          "visible character passes (strict, no requester at all)",
+          not errs, "; ".join(errs))
+    music = test_timeline_manifest.manifest([
+        test_timeline_manifest.track("a1", "audio", [
+            test_timeline_manifest.audio_clip(
+                "clip-a-m", "music", audio_asset_id="aud-music-01",
+                timeline_start_seconds=0, timeline_end_seconds=4,
+                duration_seconds=4)]),
+    ])
+    errs = strict(music, reg, strict=True)
+    check("CF-P0-008-SEC(c10): §4 scenario 10 — music without a "
+          "Character ID passes (strict, no requester)",
+          not errs, "; ".join(errs))
+    ambience_sfx = test_timeline_manifest.manifest([
+        test_timeline_manifest.track("a1", "audio", [
+            test_timeline_manifest.audio_clip(
+                "clip-a-b", "ambience", audio_asset_id="aud-amb-01",
+                timeline_start_seconds=0, timeline_end_seconds=4,
+                duration_seconds=4),
+            test_timeline_manifest.audio_clip(
+                "clip-a-s", "sound-effect",
+                timeline_start_seconds=0, timeline_end_seconds=4,
+                duration_seconds=4)]),
+    ])
+    errs = strict(ambience_sfx, reg, strict=True)
+    check("CF-P0-008-SEC(c11): §4 scenario 11 — ambience + SFX "
+          "without a Character ID passes (strict, no requester)",
+          not errs, "; ".join(errs))
+    wrong_speaker = test_timeline_manifest.manifest([
+        test_timeline_manifest.track("a1", "audio", [
+            test_timeline_manifest.dialogue_audio(
+                "clip-a-12", "l-ana-01", "char-ben-002", "vp-ana-001",
+                "aud-ana-01", ["shot-a-01"])]),
+    ])
+    errs = strict(wrong_speaker, reg, "owner-a", "workspace-a",
+                  strict=True)
+    check("CF-P0-008-SEC(c12): §4 scenario 12 — dialogue line with "
+          "the wrong speaker rejects (strict)",
+          bool(errs), "; ".join(errs))
+    wrong_voice = test_timeline_manifest.manifest([
+        test_timeline_manifest.track("a1", "audio", [
+            test_timeline_manifest.dialogue_audio(
+                "clip-a-13", "l-ana-01", "char-ana-001", "vp-ben-001",
+                "aud-ana-01", ["shot-a-01"])]),
+    ])
+    errs = strict(wrong_voice, reg, "owner-a", "workspace-a",
+                  strict=True)
+    check("CF-P0-008-SEC(c13): §4 scenario 13 — audio clip with the "
+          "wrong Voice Profile rejects (strict)",
+          bool(errs), "; ".join(errs))
+    unrelated_char = test_timeline_manifest.manifest([
+        test_timeline_manifest.track("v1", "video", [
+            test_timeline_manifest.video_clip(
+                "clip-v-14", "shot-a-01", "sc-01",
+                ["char-ana-001", "char-ben-002"])]),
+    ])
+    errs = strict(unrelated_char, reg, "owner-a", "workspace-a",
+                  strict=True)
+    check("CF-P0-008-SEC(c14): §4 scenario 14 — video clip with an "
+          "unrelated Character ID rejects (strict)",
+          bool(errs), "; ".join(errs))
+    bad_sync = test_timeline_manifest.manifest([
+        test_timeline_manifest.track("v1", "video", [
+            test_timeline_manifest.video_clip(
+                "clip-v-15", "shot-a-01", "sc-01",
+                ["char-ana-001"])]),
+        test_timeline_manifest.track("a1", "audio", [
+            test_timeline_manifest.dialogue_audio(
+                "clip-a-15", "l-ana-01", "char-ana-001", "vp-ana-001",
+                "aud-ana-01", ["shot-a-01"])]),
+    ], synchronization_groups=[test_timeline_manifest.sync_group(
+        "sync-15", ["clip-nope"], ["clip-a-15"], ["l-ana-01"],
+        ["shot-a-01"])])
+    errs = strict(bad_sync, reg, "owner-a", "workspace-a", strict=True)
+    check("CF-P0-008-SEC(c15): §4 scenario 15 — sync group with a "
+          "nonexistent clip rejects (strict)",
+          bool(errs), "; ".join(errs))
+    legacy = load_fixture("timeline-valid-v23.json")
+    errs = validate_timeline_cross_references(legacy, {})
+    check("CF-P0-008-SEC(c16a): §4 scenario 16 — valid legacy v2.3 "
+          "timeline passes under the legacy structural contract "
+          "(empty registry)",
+          not errs, "; ".join(errs))
+    check("CF-P0-008-SEC(c16b): §4 scenario 16 — the legacy fixture "
+          "really is v2.3",
+          legacy["schema_version"] == "2.3")
+    reg_combined = owned_registry()
+    del reg_combined["voice_profiles"]["vp-ana-001"]["ownership"]
+    errs = strict(dialogue_timeline(), reg_combined, "owner-b",
+                  "workspace-b", strict=True)
+    check("CF-P0-008-SEC(c17): §4 scenario 17 — strict enforces "
+          "requester + ownership together (wrong requester AND a "
+          "voice without ownership reject)",
+          bool(errs), "; ".join(errs))
+    errs = strict(test_timeline_manifest.manifest(
+        [test_timeline_manifest.track("a1", "audio", [
+            test_timeline_manifest.dialogue_audio(
+                "clip-a-v", "l-ana-01", "char-ana-001", "vp-ana-001",
+                "aud-ana-01", ["shot-a-01"])])], version="2.3"),
+        reg, "owner-a", "workspace-a", strict=True)
+    check("CF-P0-008-SEC(c18): strict validation on a v2.3 manifest "
+          "returns a version error",
+          bool(errs) and "2.3" in "; ".join(errs),
+          "; ".join(errs))
+    reg_missing_chars = owned_registry()
+    del reg_missing_chars["characters"]
+    errs = strict(dialogue_timeline(), reg_missing_chars, "owner-a",
+                  "workspace-a", strict=True)
+    check("CF-P0-008-SEC(c19): strict rejects when a referenced "
+          "kind's registry section is absent (missing registry "
+          "data fails closed)",
+          bool(errs), "; ".join(errs))
+    reg_no_audio_owner = owned_registry()
+    del reg_no_audio_owner["audio_assets"]["aud-ana-01"]["ownership"]
+    errs = strict(dialogue_timeline(), reg_no_audio_owner, "owner-a",
+                  "workspace-a", strict=True)
+    check("CF-P0-008-SEC(c20): strict rejects a dialogue-bound "
+          "audio asset without ownership",
+          bool(errs), "; ".join(errs))
+    errs = strict(music, reg, strict=True)
+    check("CF-P0-008-SEC(c21): strict music-only timeline with a "
+          "full registry and no requester passes",
+          not errs, "; ".join(errs))
+
+    # ------------------------------------------------------------------
+    # (d) Bypass regression (CF-WO-P0-008 §5 / Correction D)
+    # ------------------------------------------------------------------
+    check("CF-P0-008-SEC(d1): timeline validation in the test file "
+          "IS the production function (same object — no second "
+          "implementation)",
+          timeline_policy.validate_timeline_cross_references
+          is test_timeline_manifest.validate_timeline_cross_references)
+    mina_voice = load_fixture("voice-profile-user-recording.json")
+    mina_registry = {mina_voice["voice_profile_id"]: mina_voice}
+    # CF-WO-P0-009 (B): Mina's voice is v2.5, so the wrapper must
+    # be given the Character Registry — a v2.5 voice is never
+    # resolvable without it.
+    mina_character = load_fixture("character-registration-valid.json")
+    mina_character_registry = {mina_character["character_id"]:
+                               mina_character}
+    original_resolver = asset_policy.resolve_voice_for_production
+    calls = {"n": 0}
+
+    def counting_resolver(*args, **kwargs):
+        calls["n"] += 1
+        return original_resolver(*args, **kwargs)
+
+    asset_policy.resolve_voice_for_production = counting_resolver
+    try:
+        resolved, spy_errs = \
+            test_character_registration.resolve_voice_for_character(
+                mina_registry, "char-001",
+                character_registry=mina_character_registry,
+                requesting_owner_id="owner-a",
+                requesting_workspace_id="workspace-a")
+    finally:
+        asset_policy.resolve_voice_for_production = original_resolver
+    check("CF-P0-008-SEC(d2): the character-registration resolver "
+          "calls the production resolver (spy: production resolver "
+          "invoked, voice resolved)",
+          calls["n"] >= 1 and resolved is not None and not spy_errs,
+          f"calls={calls['n']} errs={'; '.join(spy_errs)}")
+    check("CF-P0-008-SEC(d3): check_voice_binding in the test file "
+          "IS asset_policy.check_voice_binding",
+          asset_policy.check_voice_binding
+          is test_character_registration.check_voice_binding)
+    check("CF-P0-008-SEC(d4): resolve_for_user in the test file IS "
+          "asset_policy.resolve_for_user",
+          asset_policy.resolve_for_user
+          is test_character_registration.resolve_for_user)
+    # CF-WO-P0-009 (cross-cutting): the wrapper has no fallback of
+    # its own — if the production resolver is unavailable, the
+    # wrapper must surface the failure, never resolve on its own.
+    def _unavailable_resolver(*args, **kwargs):
+        raise RuntimeError("production resolver unavailable")
+
+    asset_policy.resolve_voice_for_production = _unavailable_resolver
+    try:
+        try:
+            test_character_registration.resolve_voice_for_character(
+                mina_registry, "char-001",
+                character_registry=mina_character_registry,
+                requesting_owner_id="owner-a",
+                requesting_workspace_id="workspace-a")
+            unavailable_propagated = False
+        except RuntimeError:
+            unavailable_propagated = True
+    finally:
+        asset_policy.resolve_voice_for_production = original_resolver
+    check("CF-P0-008-SEC(d5): the character-registration wrapper "
+          "has no fallback — an unavailable production resolver "
+          "propagates instead of resolving on its own",
+          unavailable_propagated)
+
+    # ------------------------------------------------------------------
+    # (e) Path escape (regression pin)
+    # ------------------------------------------------------------------
+    _, errs = asset_policy.resolve_private_path(
+        "characters", "../outside/secret.jpg")
+    check("CF-P0-008-SEC(e1): private path traversal "
+          "'../outside/secret.jpg' rejects",
+          bool(errs), "; ".join(errs))
+    _, errs = asset_policy.resolve_private_path(
+        "characters", "/etc/passwd")
+    check("CF-P0-008-SEC(e2): absolute private path '/etc/passwd' "
+          "rejects",
+          bool(errs), "; ".join(errs))
+    with tempfile.TemporaryDirectory() as tmp:
+        base = os.path.join(tmp, "characters")
+        outside = os.path.join(tmp, "outside")
+        os.makedirs(os.path.join(base, "char-nila-001"))
+        os.makedirs(outside)
+        with open(os.path.join(outside, "secret.jpg"), "w") as f:
+            f.write("not yours")
+        os.symlink(outside, os.path.join(base, "escape"))
+        _, errs = asset_policy.resolve_private_path(
+            base, "escape/secret.jpg")
+        check("CF-P0-008-SEC(e3): symlink escape out of the private "
+              "base rejects",
+              bool(errs), "; ".join(errs))
+        resolved, errs = asset_policy.resolve_private_path(
+            base, "char-nila-001/voice-reference.mp3")
+        check("CF-P0-008-SEC(e4): a safe path inside the base "
+              "resolves",
+              not errs and resolved is not None
+              and resolved.startswith(os.path.realpath(base)),
+              "; ".join(errs))
+
+    # ------------------------------------------------------------------
+    # (f) Invalid sharing mode
+    # ------------------------------------------------------------------
+    check("CF-P0-008-SEC(f1): authorize_action rejects ownership "
+          "with sharing 'everyone'",
+          bool(asset_policy.authorize_action(
+              "use_in_production",
+              {"owner_id": "owner-a", "workspace_id": "workspace-a",
+               "visibility": "private", "sharing": "everyone"},
+              "owner-a", "workspace-a")))
+    check("CF-P0-008-SEC(f2): validate_ownership rejects visibility "
+          "'shared' + sharing 'none'",
+          bool(asset_policy.validate_ownership(
+              {"owner_id": "owner-a", "workspace_id": "workspace-a",
+               "visibility": "shared", "sharing": "none"})))
+
+    # ------------------------------------------------------------------
+    # (g) Centralization (CF-WO-P0-008 §6 / Correction E)
+    # ------------------------------------------------------------------
+    check("CF-P0-008-SEC(g1): authorize_action rejects an unknown "
+          "action",
+          bool(asset_policy.authorize_action(
+              "delete_everything", copy.deepcopy(OWNER_A), "owner-a",
+              "workspace-a")))
+    check("CF-P0-008-SEC(g2): authorize_action rejects a missing "
+          "requester",
+          bool(asset_policy.authorize_action(
+              "use_in_production", copy.deepcopy(OWNER_A), None,
+              None)))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a")
+    check("CF-P0-008-SEC(g3): production use is allowed for the "
+          "correct owner (setup for the separation pin)",
+          voice is not None and not errs, "; ".join(errs))
+    check("CF-P0-008-SEC(g4): a voice allowed for use_in_production "
+          "is NOT automatically exportable (export without a "
+          "trusted context still rejects)",
+          bool(asset_policy.validate_private_voice_export(voice)))
+
+    # ------------------------------------------------------------------
+    # (h) CF-WO-P0-009 (A) — the trusted context is genuinely
+    # immutable after issuance; revocation is separate registry
+    # state, never a mutated field.
+    # ------------------------------------------------------------------
+    fresh = export_ctx()
+    check("CF-P0-009-SEC(h1): a newly issued context carries the "
+          "expected identity / scope / action / approval",
+          fresh.actor_owner_id == "owner-a"
+          and fresh.actor_workspace_id == "workspace-a"
+          and fresh.granted_by == "owner-a"
+          and fresh.scope == "export voice-nila-001 for backup"
+          and fresh.action == "export_private_asset"
+          and fresh.character_id == "char-nila-001"
+          and fresh.voice_profile_id == "voice-nila-001"
+          and fresh.provider_transmission_approved is False
+          and fresh.expires_at is None
+          and fresh.revoked is False
+          and isinstance(fresh.authorization_id, str)
+          and bool(fresh.authorization_id))
+    forged_values = {
+        "authorization_id": "forged-authorization-id",
+        "actor_owner_id": "owner-b",
+        "actor_workspace_id": "workspace-b",
+        "granted_by": "owner-b",
+        "scope": "forged scope",
+        "action": "use_in_production",
+        "character_id": "char-aria-001",
+        "voice_profile_id": "voice-aria-001",
+        "provider_transmission_approved": True,
+        "expires_at": "2000-01-01T00:00:00Z",
+        "revoked": True}
+    for field, forged in forged_values.items():
+        before_value = getattr(fresh, field)
+        try:
+            setattr(fresh, field, forged)
+            reassignment_raised = False
+        except AttributeError:
+            reassignment_raised = True
+        check(f"CF-P0-009-SEC(h2): reassigning {field} raises "
+              "AttributeError and leaves the issued value unchanged",
+              reassignment_raised
+              and getattr(fresh, field) == before_value)
+    try:
+        fresh.forged_field = "forged"
+        new_attr_raised = False
+    except AttributeError:
+        new_attr_raised = True
+    check("CF-P0-009-SEC(h3): adding a NEW attribute to an issued "
+          "context raises AttributeError",
+          new_attr_raised and not hasattr(fresh, "forged_field"))
+    try:
+        del fresh.scope
+        delete_raised = False
+    except AttributeError:
+        delete_raised = True
+    check("CF-P0-009-SEC(h4): deleting a field of an issued context "
+          "raises AttributeError",
+          delete_raised and fresh.scope
+          == "export voice-nila-001 for backup")
+    check("CF-P0-009-SEC(h5): an issued context has no __dict__ "
+          "escape (vars() raises TypeError)",
+          not hasattr(fresh, "__dict__"))
+    try:
+        vars(fresh)
+        vars_raised = False
+    except TypeError:
+        vars_raised = True
+    check("CF-P0-009-SEC(h5b): vars() on an issued context raises "
+          "TypeError",
+          vars_raised)
+    # CF-WO-P0-010: pickle of a trusted context is now REFUSED
+    # outright (see group (j): __reduce_ex__ raises TypeError),
+    # so the pickle round-trip no longer belongs in this frozen-
+    # clone check. Copy/deepcopy still return frozen clones —
+    # but unregistered ones with no authority (also pinned in
+    # group (j)). The security property tested here is that a
+    # copy cannot manufacture a MUTABLE context.
+    copied = copy.copy(fresh)
+    deep_copied = copy.deepcopy(fresh)
+    for label, clone in (("copy", copied),
+                         ("deepcopy", deep_copied)):
+        try:
+            clone.scope = "forged scope"
+            clone_raised = False
+        except AttributeError:
+            clone_raised = True
+        check(f"CF-P0-009-SEC(h6): a {label} of an issued context "
+              "is frozen too (reassignment raises) and keeps the "
+              "issued values",
+              clone_raised and clone.scope
+              == "export voice-nila-001 for backup"
+              and clone.authorization_id == fresh.authorization_id)
+    try:
+        dataclasses.replace(fresh, scope="forged scope")
+        replace_raised = False
+    except TypeError:
+        replace_raised = True
+    check("CF-P0-009-SEC(h7): dataclasses.replace on an issued "
+          "context raises TypeError (no replace backdoor)",
+          replace_raised
+          and fresh.scope == "export voice-nila-001 for backup")
+    ctx_a = export_ctx()
+    ctx_b = export_ctx()
+    check("CF-P0-009-SEC(h8): two issued contexts have distinct "
+          "authorization_ids",
+          ctx_a.authorization_id != ctx_b.authorization_id)
+    snapshot_a = (ctx_a.authorization_id, ctx_a.actor_owner_id,
+                  ctx_a.actor_workspace_id, ctx_a.granted_by,
+                  ctx_a.scope, ctx_a.action, ctx_a.character_id,
+                  ctx_a.voice_profile_id,
+                  ctx_a.provider_transmission_approved,
+                  ctx_a.expires_at, ctx_a.revoked)
+    check("CF-P0-009-SEC(h9): a fresh context is not revoked",
+          not asset_policy.is_trusted_authorization_revoked(ctx_a))
+    asset_policy.revoke_trusted_authorization_context(ctx_a)
+    check("CF-P0-009-SEC(h10): revocation does not mutate the "
+          "original context (every field, including revoked, keeps "
+          "its issued value)",
+          (ctx_a.authorization_id, ctx_a.actor_owner_id,
+           ctx_a.actor_workspace_id, ctx_a.granted_by, ctx_a.scope,
+           ctx_a.action, ctx_a.character_id, ctx_a.voice_profile_id,
+           ctx_a.provider_transmission_approved, ctx_a.expires_at,
+           ctx_a.revoked) == snapshot_a
+          and ctx_a.revoked is False)
+    check("CF-P0-009-SEC(h11): a revoked context is rejected by "
+          "the export authorization path",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=ctx_a)))
+    check("CF-P0-009-SEC(h12): revoking one context does not revoke "
+          "another — the unrevoked context still authorizes export",
+          not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=ctx_b))
+    try:
+        asset_policy.revoke_trusted_authorization_context(
+            {"authorization_id": ctx_b.authorization_id})
+        revoke_fake_raised = False
+    except TypeError:
+        revoke_fake_raised = True
+    check("CF-P0-009-SEC(h13): revoking a dict fake raises "
+          "TypeError and leaves the real context unrevoked",
+          revoke_fake_raised
+          and not asset_policy.is_trusted_authorization_revoked(ctx_b))
+    try:
+        asset_policy.is_trusted_authorization_revoked(
+            SimpleNamespace(authorization_id=ctx_b.authorization_id))
+        check_fake_raised = False
+    except TypeError:
+        check_fake_raised = True
+    check("CF-P0-009-SEC(h14): checking revocation of a fake "
+          "context raises TypeError (fail closed)",
+          check_fake_raised)
+    forged_ctx = export_ctx(voice_profile_id="voice-aria-001")
+    try:
+        forged_ctx.voice_profile_id = "voice-nila-001"
+        retarget_raised = False
+    except AttributeError:
+        retarget_raised = True
+    check("CF-P0-009-SEC(h15): a context issued for another voice "
+          "cannot be retargeted by reassignment, and export for "
+          "the other voice still rejects",
+          retarget_raised
+          and forged_ctx.voice_profile_id == "voice-aria-001"
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=forged_ctx)))
+    check("CF-P0-009-SEC(h16): existing valid authorization use "
+          "cases still work (fresh context allows export, and "
+          "allows provider transmission when approved)",
+          not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx())
+          and not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx(
+                  provider_transmission_approved=True),
+              to_provider=True))
+
+    # ------------------------------------------------------------------
+    # (i) CF-WO-P0-009 (B) — v2.5 resolution fails closed without
+    # a Character Registry; legacy v2.3 keeps its contract.
+    # ------------------------------------------------------------------
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, None, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a")
+    check("CF-P0-009-SEC(i1): v2.5 resolution WITHOUT a Character "
+          "Registry fails (voice unresolved, explicit registry "
+          "reason)",
+          voice is None and bool(errs)
+          and "v2.5 private voice resolution requires a valid "
+          "Character Registry" in "; ".join(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, None, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a",
+        require_approved=False)
+    check("CF-P0-009-SEC(i2): v2.5 resolution without a registry "
+          "fails even when approval is not required (no silent "
+          "fallback)",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, None, "char-nila-001",
+        "voice-nila-001")
+    check("CF-P0-009-SEC(i3): v2.5 resolution without a registry "
+          "fails even with no requester either (registry is "
+          "checked first, fail closed)",
+          voice is None and bool(errs)
+          and "Character Registry" in "; ".join(errs),
+          "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, ["not-a-registry"], "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a")
+    check("CF-P0-009-SEC(i4): v2.5 resolution with a non-dict "
+          "Character Registry fails closed",
+          voice is None and bool(errs)
+          and "Character Registry" in "; ".join(errs),
+          "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, {}, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a")
+    check("CF-P0-009-SEC(i5): v2.5 resolution with a registry "
+          "missing the Character fails",
+          voice is None and bool(errs)
+          and "unknown character_id 'char-nila-001'" in "; ".join(errs),
+          "; ".join(errs))
+    mismatched_character = {"character_id": "char-nila-001",
+                            "ownership": copy.deepcopy(OWNER_B)}
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry,
+        {"char-nila-001": mismatched_character}, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a")
+    check("CF-P0-009-SEC(i6): v2.5 resolution with mismatched "
+          "Character/Voice ownership fails",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-aria-001",
+        "voice-aria-001", "owner-a", "workspace-a")
+    check("CF-P0-009-SEC(i7): v2.5 resolution with matching "
+          "ownership + valid permissions succeeds (second record)",
+          voice is not None and not errs
+          and voice["voice_profile_id"] == "voice-aria-001",
+          "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, v25_registries, "char-nila-001",
+        "voice-nila-001", "owner-b", "workspace-b")
+    check("CF-P0-009-SEC(i8): requester authorization is still "
+          "enforced with a registry present (wrong owner rejects)",
+          voice is None and bool(errs), "; ".join(errs))
+    voice, errs = asset_policy.resolve_voice_for_production(
+        legacy_registry, None, "char-nila-001", "voice-nila-001",
+        require_approved=False)
+    check("CF-P0-009-SEC(i9): legacy v2.3 keeps its historical "
+          "contract — the same no-registry call shape that fails "
+          "for v2.5 still resolves for v2.3 (version-aware, never "
+          "a silent v2.5 fallback)",
+          voice is not None and not errs, "; ".join(errs))
+
+    # ------------------------------------------------------------------
+    # (j) CF-WO-P0-010 — factory-issuance integrity: only the
+    # exact object issued by issue_trusted_authorization_context
+    # is trusted. Type, field values, the private sentinel,
+    # immutability, __new__, __setstate__, pickle and copy are
+    # all NOT proof of issuance. Reproduction:
+    # ~/workspace/consistency-frame-p0-delivery/p0-010-repro.py
+    # (before: all five forged paths authorized with
+    # factory_calls=0; after: all five rejected, genuine
+    # factory context still authorizes).
+    # ------------------------------------------------------------------
+    issued = asset_policy.is_factory_issued_trusted_authorization_context
+    genuine = export_ctx()
+    check("CF-P0-010-SEC(j1): a context created by the factory is "
+          "recognized as factory-issued",
+          issued(genuine) is True)
+    twin_a = export_ctx()
+    twin_b = export_ctx()
+    check("CF-P0-010-SEC(j2): two contexts issued with identical "
+          "field values are independently recognized as "
+          "factory-issued, are distinct objects, compare unequal "
+          "and hash differently (identity, not value, equality)",
+          issued(twin_a) is True and issued(twin_b) is True
+          and twin_a is not twin_b and twin_a != twin_b
+          and hash(twin_a) != hash(twin_b)
+          and twin_a.authorization_id != twin_b.authorization_id)
+    before_n = len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+    reg_a = export_ctx()
+    reg_b = export_ctx()
+    after_n = len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+    check("CF-P0-010-SEC(j3): the issuance registry holds one "
+          "entry per issued object (two fresh issuances grow it "
+          "by exactly two — identical fields are not merged)",
+          after_n == before_n + 2
+          and issued(reg_a) is True
+          and issued(reg_b) is True)
+    # NOTE (CF-WO-P0-011): the registry is now an id()-keyed
+    # dict of weak references, so membership is asserted through
+    # the verifier (issued(...)), not through `in` — `in` on the
+    # dict would test int keys, not objects. The property tested
+    # here (one entry per issued object, each independently
+    # recognized) is unchanged.
+    check("CF-P0-010-SEC(j4): a genuine factory-issued context "
+          "still authorizes its intended export",
+          not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=genuine))
+    check("CF-P0-010-SEC(j5): legitimate provider-transmission "
+          "authorization still works (factory context with "
+          "provider_transmission_approved=True, to_provider=True)",
+          not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx(
+                  provider_transmission_approved=True),
+              to_provider=True))
+    n_before = len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+
+    def _issue_temporary():
+        return export_ctx()
+    _issue_temporary()
+    gc.collect()
+    check("CF-P0-010-SEC(j6): the issuance registry does not leak "
+          "— a context whose only reference is dropped is "
+          "garbage-collected out of the registry",
+          len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS) == n_before)
+    # (B) Direct constructor bypass.
+    forged_sentinel = asset_policy.TrustedAuthorizationContext(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    check("CF-P0-010-SEC(j7): direct construction using the "
+          "imported private sentinel creates an object but NOT a "
+          "factory-issued context",
+          isinstance(forged_sentinel,
+                     asset_policy.TrustedAuthorizationContext)
+          and issued(forged_sentinel) is False)
+    export_errs = asset_policy.validate_private_voice_export(
+        nila_voice, trusted_context=forged_sentinel)
+    check("CF-P0-010-SEC(j8): the sentinel-constructed instance "
+          "is rejected by export authorization with a clear "
+          "not-issued error",
+          bool(export_errs)
+          and "not issued by" in "; ".join(export_errs),
+          "; ".join(export_errs))
+    try:
+        asset_policy.revoke_trusted_authorization_context(
+            forged_sentinel)
+        revoke_forged_raised = False
+    except TypeError:
+        revoke_forged_raised = True
+    try:
+        asset_policy.is_trusted_authorization_revoked(
+            forged_sentinel)
+        check_forged_raised = False
+    except TypeError:
+        check_forged_raised = True
+    check("CF-P0-010-SEC(j9): the sentinel-constructed instance "
+          "cannot revoke anything and its revocation state "
+          "cannot be read (both raise TypeError)",
+          revoke_forged_raised and check_forged_raised)
+    n_before_sentinel = len(
+        asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+    asset_policy.TrustedAuthorizationContext(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    check("CF-P0-010-SEC(j10): importing or accessing the private "
+          "sentinel and constructing with it registers nothing "
+          "(registry size unchanged)",
+          len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+          == n_before_sentinel)
+    check("CF-P0-010-SEC(j11): the sentinel-constructed instance "
+          "is rejected by every other relevant consumer too "
+          "(provider-transmission export rejects; revocation "
+          "functions raise)",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=forged_sentinel,
+              to_provider=True))
+          and revoke_forged_raised and check_forged_raised)
+    # (C) __new__() and __setstate__() bypass.
+    new_only = object.__new__(
+        asset_policy.TrustedAuthorizationContext)
+    check("CF-P0-010-SEC(j12): an object from __new__() alone is "
+          "not factory-issued and is rejected by export "
+          "authorization",
+          issued(new_only) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=new_only)))
+    genuine_state = (None, {slot: getattr(genuine, slot)
+                            for slot in genuine._DATA_SLOTS})
+    try:
+        new_only.__setstate__(genuine_state)
+        setstate_raised = False
+    except TypeError:
+        setstate_raised = True
+    check("CF-P0-010-SEC(j13): calling __setstate__() manually "
+          "with genuine-looking identity and approval fields "
+          "raises TypeError and registers nothing",
+          setstate_raised and issued(new_only) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=new_only)))
+    try:
+        genuine.__setstate__(genuine_state)
+        setstate_genuine_raised = False
+    except TypeError:
+        setstate_genuine_raised = True
+    check("CF-P0-010-SEC(j14): __setstate__() on a genuine issued "
+          "context raises TypeError AND the genuine context "
+          "stays issued and still authorizes export afterwards",
+          setstate_genuine_raised and issued(genuine) is True
+          and not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=genuine))
+    populated = object.__new__(
+        asset_policy.TrustedAuthorizationContext)
+    for _name, _value in dict(
+            actor_owner_id="owner-a",
+            actor_workspace_id="workspace-a", granted_by="owner-a",
+            scope="export voice-nila-001",
+            action="export_private_asset",
+            character_id="char-nila-001",
+            voice_profile_id="voice-nila-001",
+            provider_transmission_approved=False, expires_at=None,
+            authorization_id="forged-populated-id",
+            revoked=False).items():
+        object.__setattr__(populated, _name, _value)
+    object.__setattr__(populated, "_frozen", True)
+    check("CF-P0-010-SEC(j15): a __new__() instance whose slots "
+          "were populated directly (frozen, genuine-looking "
+          "fields) remains untrusted and is rejected by export",
+          populated.scope == "export voice-nila-001"
+          and populated.revoked is False
+          and issued(populated) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=populated)))
+    setstate_bad = True
+    for _bad_state in (None, ("only-one",), {}, (None, None),
+                       (None, {"scope": "forged"})):
+        try:
+            new_only.__setstate__(_bad_state)
+            setstate_bad = False
+        except TypeError:
+            pass
+    check("CF-P0-010-SEC(j16): invalid state restoration fails "
+          "safely — every malformed __setstate__() call raises "
+          "TypeError (never a partial or trusted object)",
+          setstate_bad and issued(new_only) is False)
+    # (D) Pickle and copy bypass.
+    try:
+        pickle.dumps(genuine)
+        pickle_genuine_raised = False
+    except TypeError:
+        pickle_genuine_raised = True
+    try:
+        pickle.dumps(forged_sentinel)
+        pickle_forged_raised = False
+    except TypeError:
+        pickle_forged_raised = True
+    check("CF-P0-010-SEC(j17): pickling a valid trusted context "
+          "is refused (TypeError — serialization is rejected, "
+          "not transferred)",
+          pickle_genuine_raised)
+    check("CF-P0-010-SEC(j18): pickling a forged context is "
+          "refused too (TypeError)",
+          pickle_forged_raised)
+    try:
+        genuine.__getstate__()
+        getstate_raised = False
+    except TypeError:
+        getstate_raised = True
+    try:
+        genuine.__reduce_ex__(4)
+        reduce_raised = False
+    except TypeError:
+        reduce_raised = True
+    check("CF-P0-010-SEC(j19): no serialization path exists — "
+          "__getstate__ and __reduce_ex__ raise TypeError, the "
+          "genuine context still authorizes, and nothing new "
+          "was registered by the failed attempts",
+          getstate_raised and reduce_raised
+          and issued(genuine) is True
+          and not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=genuine))
+    copied_genuine = copy.copy(genuine)
+    check("CF-P0-010-SEC(j20): copy.copy() of a genuine context "
+          "returns a frozen value-identical clone that is NOT "
+          "factory-issued and is rejected by export",
+          copied_genuine is not genuine
+          and copied_genuine.scope == genuine.scope
+          and copied_genuine.authorization_id
+          == genuine.authorization_id
+          and issued(copied_genuine) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=copied_genuine)))
+    deep_genuine = copy.deepcopy(genuine)
+    check("CF-P0-010-SEC(j21): copy.deepcopy() of a genuine "
+          "context likewise returns an unregistered clone that "
+          "export rejects",
+          deep_genuine is not genuine
+          and deep_genuine.authorization_id
+          == genuine.authorization_id
+          and issued(deep_genuine) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=deep_genuine)))
+    to_revoke = export_ctx()
+    copy_before_revoke = copy.copy(to_revoke)
+    asset_policy.revoke_trusted_authorization_context(to_revoke)
+    check("CF-P0-010-SEC(j22): copying cannot reset revocation "
+          "— the copy shares the revoked authorization_id, the "
+          "revoked original is rejected, the copy is rejected, "
+          "and the copy cannot be un-revoked or re-authorized",
+          asset_policy.is_trusted_authorization_revoked(to_revoke)
+          is True
+          and copy_before_revoke.authorization_id
+          == to_revoke.authorization_id
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=to_revoke))
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=copy_before_revoke)))
+    try:
+        forged_sentinel.revoked = False
+        forged_revoked_raised = False
+    except AttributeError:
+        forged_revoked_raised = True
+    check("CF-P0-010-SEC(j23): a forged context cannot be made "
+          "valid by setting its revoked attribute (frozen — "
+          "reassignment raises) and export still rejects it",
+          forged_revoked_raised
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=forged_sentinel)))
+    # (E) Immutability / identity semantics, strengthened.
+    check("CF-P0-010-SEC(j24): identity equality is pinned — a "
+          "forged object with field values identical to a "
+          "genuine context does NOT equal it and no registered "
+          "reference points at it",
+          forged_sentinel != genuine
+          and not any(ref() is forged_sentinel
+                      for ref in asset_policy
+                      ._ISSUED_AUTHORIZATION_CONTEXTS.values())
+          and hash(forged_sentinel) != hash(genuine))
+    # NOTE (CF-WO-P0-011): the registry is now an id()-keyed
+    # dict of weak references, so "not in the registry" is
+    # asserted by checking no stored reference's target `is`
+    # the forged object — `not in` on the dict would only test
+    # int keys and would prove nothing. The property tested
+    # here is unchanged.
+    _orig = export_ctx()
+    _orig_copy = copy.copy(_orig)
+    asset_policy.revoke_trusted_authorization_context(_orig)
+    check("CF-P0-010-SEC(j25): revocation never mutates any "
+          "object — revoking the original leaves the copy's "
+          "fields (including revoked=False) untouched, while "
+          "the original is reported revoked",
+          _orig.revoked is False
+          and _orig_copy.revoked is False
+          and _orig_copy.authorization_id
+          == _orig.authorization_id
+          and asset_policy.is_trusted_authorization_revoked(_orig)
+          is True)
+    # (F) Consumer coverage matrix.
+    _matrix = []
+    for _label, _ctx, _want_ok in (
+            ("genuine", genuine, True),
+            ("forged-sentinel", forged_sentinel, False),
+            ("__new__-only", new_only, False),
+            ("populated-__new__", populated, False),
+            ("copy-of-genuine", copied_genuine, False),
+            ("deepcopy-of-genuine", deep_genuine, False),
+            ("revoked-genuine", to_revoke, False)):
+        _errs = asset_policy.validate_private_voice_export(
+            nila_voice, trusted_context=_ctx)
+        _matrix.append((not _errs) == _want_ok)
+    check("CF-P0-010-SEC(j26): consumer matrix — export accepts "
+          "only the genuine factory-issued context and rejects "
+          "forged / __new__ / populated / copy / deepcopy / "
+          "revoked contexts",
+          all(_matrix), f"matrix={_matrix}")
+    _revoke_matrix = []
+    _revoke_genuine = export_ctx()
+    for _label, _ctx, _want_raise in (
+            ("genuine", _revoke_genuine, False),
+            ("forged-sentinel", forged_sentinel, True),
+            ("copy-of-genuine", copied_genuine, True),
+            ("populated-__new__", populated, True)):
+        try:
+            asset_policy.revoke_trusted_authorization_context(_ctx)
+            _revoke_matrix.append(not _want_raise)
+        except TypeError:
+            _revoke_matrix.append(_want_raise)
+    check("CF-P0-010-SEC(j27): revocation matrix — revoke "
+          "accepts only a factory-issued context and raises "
+          "TypeError for forged / copy / populated contexts",
+          all(_revoke_matrix), f"matrix={_revoke_matrix}")
+    _check_matrix = []
+    for _label, _ctx, _want_raise in (
+            ("genuine-unrevoked", reg_b, False),
+            ("forged-sentinel", forged_sentinel, True),
+            ("copy-of-genuine", copied_genuine, True),
+            ("__new__-only", new_only, True)):
+        try:
+            _rev = asset_policy.is_trusted_authorization_revoked(
+                _ctx)
+            _check_matrix.append(
+                (not _want_raise) and _rev is False)
+        except TypeError:
+            _check_matrix.append(_want_raise)
+    check("CF-P0-010-SEC(j28): revocation-check matrix — "
+          "is_trusted_authorization_revoked answers only for a "
+          "factory-issued context (False when unrevoked) and "
+          "raises TypeError for forged / copy / __new__ "
+          "contexts",
+          all(_check_matrix), f"matrix={_check_matrix}")
+    # (G) Regression protection pins (full coverage lives in
+    # groups (a)–(i) and the rest of the suite).
+    _v, _e = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, None, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a")
+    _tl_errs = validate_timeline_cross_references(
+        dialogue_timeline(), owned_registry())
+    check("CF-P0-010-SEC(j29): regression pins still hold — v2.5 "
+          "resolution without a Character Registry fails closed "
+          "and the strict timeline default still rejects a "
+          "no-requester private dialogue timeline",
+          _v is None and bool(_e)
+          and "Character Registry" in "; ".join(_e)
+          and bool(_tl_errs)
+          and "requesting owner identity" in "; ".join(_tl_errs),
+          "; ".join(_e) + " | " + "; ".join(_tl_errs))
+
+    # ------------------------------------------------------------------
+    # (k) Exact concrete type + identity verification
+    # (CF-WO-P0-011). The P0-010 registry was a weakref.WeakSet:
+    # its membership test hashed the candidate and compared with
+    # ==, so a forged subclass overriding __eq__/__hash__ could
+    # compare equal to a genuine issued context and pass with
+    # zero factory calls (reproduced:
+    # ~/workspace/consistency-frame-p0-delivery/p0-011-repro.py).
+    # The verifier now requires the exact concrete type and
+    # compares a stored weak reference's target with `is` —
+    # never ==, never a hash — and subclassing is prohibited
+    # outright. The spoof subclasses below are built with the
+    # _define_spoof_subclass fixture, which temporarily
+    # neutralizes the prohibition so the VERIFIER itself is
+    # exercised (the prohibition alone is not the defense).
+    # ------------------------------------------------------------------
+    _k_genuine = export_ctx()
+    check("CF-P0-011-SEC(k1): an exact factory-issued context "
+          "is recognized and has the exact concrete type",
+          issued(_k_genuine) is True
+          and type(_k_genuine)
+          is asset_policy.TrustedAuthorizationContext)
+    try:
+        class _PlainSubclass(asset_policy.TrustedAuthorizationContext):
+            pass
+        _plain_blocked = False
+    except TypeError:
+        _plain_blocked = True
+    check("CF-P0-011-SEC(k2): subclass creation is prohibited "
+          "outright — defining a subclass raises TypeError",
+          _plain_blocked)
+    _AlwaysEqualSpoof = _define_spoof_subclass(
+        "AlwaysEqualSpoof",
+        lambda self, other: True,
+        lambda self: hash(_k_genuine))
+    _spoof = _AlwaysEqualSpoof(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    _reg_before_spoof = len(
+        asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+    _spoof_errs = asset_policy.validate_private_voice_export(
+        nila_voice, trusted_context=_spoof)
+    check("CF-P0-011-SEC(k3): an always-equal spoof subclass "
+          "(hash == genuine hash, __eq__ always True) is "
+          "rejected by the verifier and by export, while the "
+          "genuine context stays valid, the registry is "
+          "untouched and its revocation state is unchanged",
+          isinstance(_spoof, asset_policy.TrustedAuthorizationContext)
+          and type(_spoof)
+          is not asset_policy.TrustedAuthorizationContext
+          and _spoof == _k_genuine
+          and hash(_spoof) == hash(_k_genuine)
+          and issued(_spoof) is False
+          and bool(_spoof_errs)
+          and "not issued by" in "; ".join(_spoof_errs)
+          and issued(_k_genuine) is True
+          and not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_k_genuine)
+          and len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+          == _reg_before_spoof
+          and asset_policy.is_trusted_authorization_revoked(
+              _k_genuine) is False,
+          "; ".join(_spoof_errs))
+    _ConstantHashSpoof = _define_spoof_subclass(
+        "ConstantHashSpoof",
+        lambda self, other: True,
+        lambda self: 12345)
+    _const_spoof = _ConstantHashSpoof(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    check("CF-P0-011-SEC(k4): a constant-hash spoof subclass "
+          "(__eq__ always True, __hash__ == 12345) is rejected "
+          "by the verifier and by export",
+          issued(_const_spoof) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_const_spoof)))
+    _InconsistentSpoof = _define_spoof_subclass(
+        "InconsistentSpoof",
+        lambda self, other: other is _k_genuine,
+        lambda self: 999)
+    _inconsistent = _InconsistentSpoof(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    check("CF-P0-011-SEC(k5): an inconsistent eq/hash spoof "
+          "(equal only to the genuine object, unrelated hash) "
+          "is rejected by the verifier and by export",
+          _inconsistent == _k_genuine
+          and hash(_inconsistent) != hash(_k_genuine)
+          and issued(_inconsistent) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_inconsistent)))
+    _spoof_a = _AlwaysEqualSpoof(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    _spoof_b = _AlwaysEqualSpoof(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    check("CF-P0-011-SEC(k6): multiple spoof instances that "
+          "compare equal to one another are all rejected, and "
+          "the genuine context is unaffected",
+          _spoof_a == _spoof_b
+          and issued(_spoof_a) is False
+          and issued(_spoof_b) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_spoof_a))
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_spoof_b))
+          and issued(_k_genuine) is True)
+    _eq_calls = []
+
+    def _raising_eq(self, other):
+        _eq_calls.append(1)
+        raise RuntimeError("untrusted equality executed")
+
+    _RaisingSpoof = _define_spoof_subclass(
+        "RaisingEqSpoof", _raising_eq,
+        lambda self: hash(_k_genuine))
+    _raising = _RaisingSpoof(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    _raising_issued = None
+    _raising_exc = None
+    try:
+        _raising_issued = issued(_raising)
+    except Exception as _exc:  # noqa: BLE001 — must not happen
+        _raising_exc = _exc
+    check("CF-P0-011-SEC(k7): a hostile __eq__ that raises "
+          "(with the genuine hash, so a hash-based membership "
+          "test WOULD invoke it) is never invoked — the "
+          "verifier returns False with no exception and no "
+          "__eq__ call",
+          _raising_exc is None and _raising_issued is False
+          and _eq_calls == [])
+    _raising_errs = None
+    _raising_export_exc = None
+    try:
+        _raising_errs = asset_policy.validate_private_voice_export(
+            nila_voice, trusted_context=_raising)
+    except Exception as _exc:  # noqa: BLE001 — must not happen
+        _raising_export_exc = _exc
+    check("CF-P0-011-SEC(k8): the same hostile object is "
+          "rejected by the real export consumer with no "
+          "unhandled exception and still no __eq__ call",
+          _raising_export_exc is None
+          and bool(_raising_errs)
+          and _eq_calls == [],
+          str(_raising_export_exc))
+    _dup_a = export_ctx()
+    _dup_b = export_ctx()
+    asset_policy.revoke_trusted_authorization_context(_dup_a)
+    check("CF-P0-011-SEC(k9): two genuine contexts with "
+          "identical fields are distinct issued objects, and "
+          "revoking one does not revoke the other",
+          _dup_a is not _dup_b
+          and issued(_dup_a) is True and issued(_dup_b) is True
+          and asset_policy.is_trusted_authorization_revoked(
+              _dup_a) is True
+          and asset_policy.is_trusted_authorization_revoked(
+              _dup_b) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_dup_a))
+          and not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_dup_b))
+    _same_id = object.__new__(
+        asset_policy.TrustedAuthorizationContext)
+    for _name, _value in dict(
+            actor_owner_id="owner-a",
+            actor_workspace_id="workspace-a", granted_by="owner-a",
+            scope="export voice-nila-001",
+            action="export_private_asset",
+            character_id="char-nila-001",
+            voice_profile_id="voice-nila-001",
+            provider_transmission_approved=False, expires_at=None,
+            authorization_id=_k_genuine.authorization_id,
+            revoked=False).items():
+        object.__setattr__(_same_id, _name, _value)
+    object.__setattr__(_same_id, "_frozen", True)
+    check("CF-P0-011-SEC(k10): an unissued object with the same "
+          "field values AND the same authorization_id as a "
+          "genuine context is rejected — only the exact issued "
+          "instance is trusted",
+          _same_id.authorization_id
+          == _k_genuine.authorization_id
+          and issued(_same_id) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_same_id))
+          and issued(_k_genuine) is True)
+    _gc_before = len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+
+    def _issue_temporary_k():
+        return export_ctx()
+    _issue_temporary_k()
+    gc.collect()
+    check("CF-P0-011-SEC(k11): garbage collection removes the "
+          "dead entry — a context whose only reference is "
+          "dropped leaves the registry at its previous size, "
+          "and a live issued context is unaffected",
+          len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+          == _gc_before
+          and issued(_k_genuine) is True
+          and not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_k_genuine))
+    _guard_live = export_ctx()
+    _guard_key = id(_guard_live)
+    _guard_len = len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+
+    class _Weakrefable:
+        pass
+
+    _tmp = _Weakrefable()
+    _dead_ref = weakref.ref(_tmp)
+    del _tmp
+    gc.collect()
+    asset_policy._drop_issued_context(_guard_key, _dead_ref)
+    check("CF-P0-011-SEC(k12): id-reuse guard — dropping a dead "
+          "reference under a live context's id never removes "
+          "that live context's registration",
+          _dead_ref() is None
+          and issued(_guard_live) is True
+          and len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+          == _guard_len)
+    _stale_forged = asset_policy.TrustedAuthorizationContext(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    _stale_obj = _Weakrefable()
+    _stale_ref = weakref.ref(_stale_obj)
+    del _stale_obj
+    gc.collect()
+    _stale_key = id(_stale_forged)
+    _len_before_prune = len(
+        asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+    asset_policy._ISSUED_AUTHORIZATION_CONTEXTS[_stale_key] = (
+        _stale_ref)
+    _prune_result = issued(_stale_forged)
+    check("CF-P0-011-SEC(k13): a stale dead entry met during "
+          "verification is pruned and the check fails closed — "
+          "the forged object is rejected and the dead entry "
+          "is gone",
+          _stale_ref() is None
+          and _prune_result is False
+          and _stale_key not in
+          asset_policy._ISSUED_AUTHORIZATION_CONTEXTS
+          and len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+          == _len_before_prune)
+    _k_matrix = []
+    for _label, _ctx, _want_ok in (
+            ("genuine", _k_genuine, True),
+            ("always-equal-spoof", _spoof, False),
+            ("constant-hash-spoof", _const_spoof, False),
+            ("raising-eq-spoof", _raising, False),
+            ("forged-sentinel", forged_sentinel, False),
+            ("revoked-genuine", _dup_a, False)):
+        _errs = asset_policy.validate_private_voice_export(
+            nila_voice, trusted_context=_ctx)
+        _k_matrix.append((not _errs) == _want_ok)
+    _k_provider = not asset_policy.validate_private_voice_export(
+        nila_voice, trusted_context=export_ctx(
+            provider_transmission_approved=True),
+        to_provider=True)
+    _k_provider_spoof = bool(
+        asset_policy.validate_private_voice_export(
+            nila_voice, trusted_context=_spoof, to_provider=True))
+    check("CF-P0-011-SEC(k14): consumer matrix — export and "
+          "provider-transmission accept only the genuine "
+          "factory-issued context and reject every spoof, the "
+          "sentinel-forged object and the revoked context",
+          all(_k_matrix) and _k_provider and _k_provider_spoof,
+          f"matrix={_k_matrix}")
+    try:
+        asset_policy.revoke_trusted_authorization_context(_spoof)
+        _spoof_revoke_raised = False
+    except TypeError:
+        _spoof_revoke_raised = True
+    try:
+        asset_policy.is_trusted_authorization_revoked(_spoof)
+        _spoof_check_raised = False
+    except TypeError:
+        _spoof_check_raised = True
+    check("CF-P0-011-SEC(k15): a forged subclass cannot revoke "
+          "a genuine context or inspect its revocation state — "
+          "both raise TypeError, and the genuine context stays "
+          "unrevoked",
+          _spoof_revoke_raised and _spoof_check_raised
+          and asset_policy.is_trusted_authorization_revoked(
+              _k_genuine) is False)
+    _k_prior = asset_policy.TrustedAuthorizationContext(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    try:
+        pickle.dumps(_k_genuine)
+        _k_pickle_raised = False
+    except TypeError:
+        _k_pickle_raised = True
+    _k_copy = copy.copy(_k_genuine)
+    try:
+        _k_genuine.scope = "forged scope"
+        _k_immutable_raised = False
+    except AttributeError:
+        _k_immutable_raised = True
+    _k_revoke_ctx = export_ctx()
+    asset_policy.revoke_trusted_authorization_context(_k_revoke_ctx)
+    check("CF-P0-011-SEC(k16): prior P0-009/P0-010 protections "
+          "still hold — sentinel construction unregistered, "
+          "__new__ unregistered, pickle refused, copy "
+          "unregistered, fields immutable, revocation "
+          "effective, and the genuine context still authorizes",
+          issued(_k_prior) is False
+          and issued(new_only) is False
+          and _k_pickle_raised
+          and issued(_k_copy) is False
+          and _k_immutable_raised
+          and asset_policy.is_trusted_authorization_revoked(
+              _k_revoke_ctx) is True
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_k_revoke_ctx))
+          and not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_k_genuine))
+
+    print(f"test_private_voice_security: "
+          f"{'PASS' if not failures else 'FAIL'} "
+          f"({len(failures)} failure(s))")
+    return 0 if not failures else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

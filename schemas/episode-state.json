@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://consistencyframe.blogspot.com/schemas/v2.3/episode-state.json",
+  "title": "EpisodeState",
+  "description": "Episode continuity state: what each character/location/prop looked like at the end of an episode, read before the next episode.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "2.3"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "episode_number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "character_states": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "character_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+          },
+          "wardrobe_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+          },
+          "location_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "character_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "continuity_out": {
+      "type": "string"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "in_production",
+        "delivered",
+        "archived"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "project_id",
+    "episode_number",
+    "version",
+    "status"
+  ],
+  "additionalProperties": false
+}

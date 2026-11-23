@@ -1,0 +1,501 @@
+{
+  "schema_version": "2.3",
+  "work_order_id": "CF-WO-P0-001",
+  "product": "Consistency Frame",
+  "product_scope": "general-purpose-video-production-and-editing",
+  "repository_url": "https://github.com/msujoy149/consistency-frame",
+  "base_branch": "main",
+  "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
+  "branch": "feat/cf-p0-safe-foundations",
+  "head_commit": "ede564bcb187657104f9682839830213ac03fe43",
+  "github_branch_head": "232a714b29b8a2c09a79acbf4dbc82e1035d099b",
+  "status": "PASS",
+  "changed_files": [
+    ".github/workflows/p0-ci.yml",
+    ".gitignore",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "README.md",
+    "architecture/AGENT_COMPATIBILITY_MATRIX.yaml",
+    "architecture/COMPANION_CAPABILITY_REGISTRY.yaml",
+    "architecture/SKILL_ROUTING_MATRIX.yaml",
+    "architecture/WORKFLOW_GRAPH.yaml",
+    "architecture/audio-delivery-profiles.json",
+    "architecture/intent-modes.yaml",
+    "architecture/platform-capabilities.md",
+    "characters/README.md",
+    "docs/02-extended-systems.md",
+    "docs/06-installation.md",
+    "docs/07-character-registry.md",
+    "docs/08-agency-advertising.md",
+    "docs/09-video-regeneration.md",
+    "docs/15-realistic-person.md",
+    "docs/17-command-authority.md",
+    "docs/19-audio-delivery-profiles.md",
+    "docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md",
+    "docs/architecture/living-architecture-report-v2.3-p0.md",
+    "docs/architecture/living-architecture-report-v2.4-p0.md",
+    "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
+    "docs/implementation/BUILD_REPORT_P0.md",
+    "docs/implementation/CF-WO-P0-001-plan.md",
+    "docs/implementation/CF-WO-P0-002-corrections.md",
+    "docs/implementation/CF-WO-P0-003-corrections.md",
+    "docs/implementation/CF-WO-P0-004-corrections.md",
+    "docs/implementation/CF-WO-P0-005-corrections.md",
+    "docs/implementation/CF-WO-P0-006-corrections.md",
+    "docs/implementation/CF-WO-P0-007-corrections.md",
+    "docs/implementation/CF-WO-P0-008-corrections.md",
+    "docs/implementation/CF-WO-P0-009-corrections.md",
+    "docs/implementation/CF-WO-P0-010-corrections.md",
+    "docs/implementation/CF-WO-P0-011-corrections.md",
+    "docs/implementation/CF-WO-P0-012-corrections.md",
+    "docs/implementation/CF-WO-P0-014-corrections.md",
+    "docs/implementation/CF-WO-P0-015-corrections.md",
+    "docs/implementation/CHECKSUMS.txt",
+    "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
+    "docs/implementation/build-report.json",
+    "registry/adapters.json",
+    "registry/features.json",
+    "registry/skills.json",
+    "registry/workflows.json",
+    "release-manifest.json",
+    "schemas/README.md",
+    "schemas/approval.json",
+    "schemas/build-report.json",
+    "schemas/character-registration.json",
+    "schemas/character.json",
+    "schemas/episode-state.json",
+    "schemas/evidence.json",
+    "schemas/installer-result.json",
+    "schemas/intake-job.json",
+    "schemas/location.json",
+    "schemas/performance-plan.json",
+    "schemas/production-profile.json",
+    "schemas/project.json",
+    "schemas/prop.json",
+    "schemas/reference-learning.json",
+    "schemas/reference-review.json",
+    "schemas/release-manifest.json",
+    "schemas/scene-plan.json",
+    "schemas/script-contract.json",
+    "schemas/script-to-performance.json",
+    "schemas/shot-plan.json",
+    "schemas/sound-asset.json",
+    "schemas/story-bible.json",
+    "schemas/timeline-manifest.json",
+    "schemas/visual-style-profile.json",
+    "schemas/voice-profile.json",
+    "schemas/wardrobe.json",
+    "scripts/asset_policy.py",
+    "scripts/atomic_write.py",
+    "scripts/generate-build-report.py",
+    "scripts/generate-registries.py",
+    "scripts/generate-report.py",
+    "scripts/sync-skills.sh",
+    "scripts/timeline_policy.py",
+    "scripts/validate-repo.py",
+    "setup.sh",
+    "skills/agency-advertising/SKILL.md",
+    "skills/character-consistency/SKILL.md",
+    "skills/cinematic-power/SKILL.md",
+    "skills/command-authority/SKILL.md",
+    "skills/emotional-performance/SKILL.md",
+    "skills/explainer-animation/SKILL.md",
+    "skills/humanized-production/SKILL.md",
+    "skills/language-authenticity/SKILL.md",
+    "skills/live-action-vfx/SKILL.md",
+    "skills/production-systems/SKILL.md",
+    "skills/realistic-person/SKILL.md",
+    "skills/video-regeneration/SKILL.md",
+    "skills/voice-consistency/SKILL.md",
+    "tests/fixtures/character-extended-valid.json",
+    "tests/fixtures/character-registration-bird-valid.json",
+    "tests/fixtures/character-registration-invalid-duplicate-id.json",
+    "tests/fixtures/character-registration-invalid-missing-id.json",
+    "tests/fixtures/character-registration-valid-bird.json",
+    "tests/fixtures/character-registration-valid-human.json",
+    "tests/fixtures/character-registration-valid.json",
+    "tests/fixtures/character-valid-v25-animal.json",
+    "tests/fixtures/character-valid.json",
+    "tests/fixtures/intake-temporary.json",
+    "tests/fixtures/performance-plan-bird.json",
+    "tests/fixtures/performance-plan-human.json",
+    "tests/fixtures/performance-plan-invalid-bird-human-lips.json",
+    "tests/fixtures/performance-plan-two-person.json",
+    "tests/fixtures/performance-plan-valid-bird.json",
+    "tests/fixtures/performance-plan-valid.json",
+    "tests/fixtures/production-profile-invalid-animation-type.json",
+    "tests/fixtures/production-profile-invalid-digital-human-live-action.json",
+    "tests/fixtures/production-profile-reference-video.json",
+    "tests/fixtures/production-profile-script-only.json",
+    "tests/fixtures/production-profile-valid-digital-human.json",
+    "tests/fixtures/registration-invitation.json",
+    "tests/fixtures/routing-profile-s1-explainer-2d.json",
+    "tests/fixtures/routing-profile-s2-stylized-3d.json",
+    "tests/fixtures/routing-profile-s4-human-bird.json",
+    "tests/fixtures/routing-profile-s5-live-action-creature.json",
+    "tests/fixtures/routing-profile-s6-real-animal.json",
+    "tests/fixtures/routing-profile-s7-video-to-video.json",
+    "tests/fixtures/routing-profile-s8-photorealistic-explainer.json",
+    "tests/fixtures/scene-plan-two-person.json",
+    "tests/fixtures/scene-plan-valid-human-bird.json",
+    "tests/fixtures/scene-plan-valid.json",
+    "tests/fixtures/script-to-performance-binding.json",
+    "tests/fixtures/script-to-performance-valid-bindings.json",
+    "tests/fixtures/script-to-performance-valid.json",
+    "tests/fixtures/shot-plan-directed.json",
+    "tests/fixtures/shot-plan-valid-human-bird.json",
+    "tests/fixtures/shot-plan-valid.json",
+    "tests/fixtures/sound-asset-valid.json",
+    "tests/fixtures/temporary-asset-use.json",
+    "tests/fixtures/timeline-valid-v23.json",
+    "tests/fixtures/timeline-valid-v25-multicharacter.json",
+    "tests/fixtures/visual-style-profile-valid.json",
+    "tests/fixtures/voice-profile-ai-generated.json",
+    "tests/fixtures/voice-profile-user-recording.json",
+    "tests/fixtures/voice-profile-valid-ai-generated.json",
+    "tests/fixtures/voice-profile-valid-user-recorded.json",
+    "tests/fixtures/voice-profile-valid.json",
+    "tests/last-run.json",
+    "tests/run-tests.sh",
+    "tests/test_atomic_write.py",
+    "tests/test_character_registration.py",
+    "tests/test_installer.sh",
+    "tests/test_installer_manifest_security.sh",
+    "tests/test_installer_metadata_failure.sh",
+    "tests/test_installer_security.sh",
+    "tests/test_installer_status.sh",
+    "tests/test_modes.py",
+    "tests/test_performance_semantics.py",
+    "tests/test_private_overlay.py",
+    "tests/test_private_voice_security.py",
+    "tests/test_production_direction.py",
+    "tests/test_registries.py",
+    "tests/test_reports.py",
+    "tests/test_routing.py",
+    "tests/test_schemas.py",
+    "tests/test_timeline_manifest.py"
+  ],
+  "ci": {
+    "head": "33dc78b88bba9cc83ecfc35c7b28a3ef3de7f90b",
+    "result": "PASS",
+    "checks_passed": 2,
+    "checks_total": 2,
+    "run_url": "https://github.com/msujoy149/consistency-frame/actions/runs/45063530337",
+    "pull_request": "https://github.com/msujoy149/consistency-frame/pull/1",
+    "note": "Remote CI PASSED on the GitHub branch head named here (push run #83 + PR run #84, 2/2 checks; p0-test-results artifact (784 bytes, ID 14770342860, digest sha256:017c91538a628aeda58eaada9b0563f0bab43f62e4abf42a200d6011be73cb44): 47 recorded test-run entries, 35 distinct test IDs, 28 distinct command strings, all PASS). The corrections in this package are pushed after that run; their CI run is checked by the parent after the push \u2014 this record is evidence for the head it names, not a claim about a later head."
+  },
+  "tests": [
+    {
+      "id": "CF-INT-014",
+      "command": "bash tests/test_installer.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-INT-015",
+      "command": "bash tests/test_installer.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-INT-023",
+      "command": "python3 scripts/generate-registries.py --check",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-006-AC-DIR",
+      "command": "python3 tests/test_production_direction.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-006-AC-REG",
+      "command": "python3 tests/test_character_registration.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-007-AC-TIMELINE",
+      "command": "python3 tests/test_timeline_manifest.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-008-SEC",
+      "command": "python3 tests/test_private_voice_security.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-014-INST",
+      "command": "bash tests/test_installer_status.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-014-PIN",
+      "command": "bash tests/test_installer_status.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-015-WT",
+      "command": "bash tests/test_installer_status.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ASSET-001",
+      "command": "python3 tests/test_modes.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ASSET-002",
+      "command": "python3 tests/test_modes.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ASSET-003",
+      "command": "python3 tests/test_modes.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ATOMIC-001",
+      "command": "python3 tests/test_atomic_write.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-LEARN-001",
+      "command": "python3 tests/test_modes.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-PERF-001",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-PERF-002",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-PERF-003",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-PERF-004",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-PERF-005",
+      "command": "python3 tests/test_performance_semantics.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-REPORT-001",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-REPORT-002",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-REPORT-003",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-REPORT-004",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-REPORT-005",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ROUTING-001",
+      "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ROUTING-002",
+      "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ROUTING-003",
+      "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-ROUTING-004",
+      "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-01",
+      "command": "bash tests/test_installer_manifest_security.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-02",
+      "command": "bash tests/test_installer_manifest_security.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-03",
+      "command": "bash tests/test_installer_manifest_security.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-04",
+      "command": "bash tests/test_installer_manifest_security.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-SEC-METADATA-05",
+      "command": "bash tests/test_installer_metadata_failure.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-SEC-METADATA-06",
+      "command": "bash tests/test_installer_metadata_failure.sh no-change",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-SEC-METADATA-07",
+      "command": "bash tests/test_installer_metadata_failure.sh failed-no-backup",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "P0-DIFF-CHECK",
+      "command": "git diff --check",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "P0-PRIVACY",
+      "command": "python3 tests/test_private_overlay.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "P0-ROUTING",
+      "command": "python3 tests/test_routing.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "P0-SCHEMA",
+      "command": "python3 scripts/validate-repo.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "P0-SHELL",
+      "command": "bash -n scripts/sync-skills.sh",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    }
+  ],
+  "not_run": [
+    "CF-INT-015 (component-clone failure path via setup.sh --with-components end-to-end): the full --with-components run downloads ~5 GB + ~1 GB deps; failure reporting is unit-tested in tests/test_installer.sh, the live run is NOT RUN.",
+    "setup.sh --with-components end-to-end on a clean machine: NOT RUN (network + disk); core-only path executed end-to-end locally (exit 0)."
+  ],
+  "known_issues": [
+    "Registry reconciliation deferred to P1: 165 derived features vs historical 109/120 claim (different counting units).",
+    "All 12 adapters are NOT_TESTED; no adapter may be called supported until a conformance test passes.",
+    "Private-overlay runtime adapter deferred to P2 (P0 adds schemas, validation and tests).",
+    "Research-register reconciliation (gaps-research-20261112.md staleness) deferred.",
+    "Media intelligence, reference-learning runtime, provider orchestration, benchmarks and repair loop are out of scope for P0 by design (P1-P4).",
+    "v2.4: runtime skill-routing engine and script-to-performance runtime are P1 work (matrix/graph/schemas are canonical data, not a runtime).",
+    "v2.4: OpenMontage paid provider routes have evidence_level present_locally (documented in the companion's provider guide only, never exercised); no live paid call was made."
+  ],
+  "security_and_licence_notes": [
+    "Secret scan (validate-repo.py): PASS \u2014 no credentials or private keys in tracked text files.",
+    "Private-data check: PASS \u2014 characters/ tracks only .gitkeep + README.md; no media tracked; .gitignore covers characters/*, private-data/, media extensions, .env, secrets.",
+    "Licences intact: own work Apache-2.0; VoiceStudio + OpenMontage AGPL-3.0; OmniVoice weights CC-BY-NC, never downloaded by setup.sh.",
+    "Installer safety: no whole-directory deletion; manifest-owned sync only; symlink/traversal and unsafe-root rejection tested."
+  ],
+  "private_data_check": "PASS",
+  "package": {
+    "archive": "consistency-frame-p0-feat-branch.zip",
+    "release_manifest": "release-manifest.json"
+  }
+}

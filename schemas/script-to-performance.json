@@ -1,0 +1,291 @@
+{
+  "$id": "https://consistencyframe.blogspot.com/schemas/v2.5/script-to-performance.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Script-to-Performance contract (v2.4 headline deliverable, also filed as SCRIPT_TO_PERFORMANCE_SCHEMA.json). One record binds a script to its Scene Plan, Shot Plan and Performance Plan, plus the audio and editing plans. RULE: the user's original dialogue is preserved verbatim unless rewriting was explicitly requested \u2014 dialogue_mode VERBATIM_SCRIPT with dialogue_rewrite_authorised false is the default, and a rewrite needs an explicit user request. Performance direction never changes the words. v2.5 ADDITIVE MIGRATION (CF-WO-P0-006): new fields are optional; no existing required field was removed or retyped, so every valid v2.4 record remains valid.",
+  "properties": {
+    "audio_plan": {
+      "additionalProperties": false,
+      "properties": {
+        "ambience": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "cue": {
+                "type": "string"
+              },
+              "timing": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "cue"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "music": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "cue": {
+                "type": "string"
+              },
+              "timing": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "cue"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "sfx": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "cue": {
+                "type": "string"
+              },
+              "timing": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "cue"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "character_voice_binding": {
+      "additionalProperties": false,
+      "description": "Character-voice binding for a single dialogue line / shot (use character_voice_bindings when a record binds more than one line).",
+      "properties": {
+        "articulation": {
+          "description": "Subject-specific articulation for this binding (same vocabulary as articulation_target).",
+          "enum": [
+            "human-mouth-lips",
+            "bird-beak",
+            "animal-muzzle",
+            "creature-jaw-mandibles",
+            "other"
+          ],
+          "type": "string"
+        },
+        "audio_asset_id": {
+          "description": "Audio asset ID for this line's rendered dialogue.",
+          "type": "string"
+        },
+        "character_id": {
+          "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+          "type": "string"
+        },
+        "delivery": {
+          "description": "Delivery direction for this line.",
+          "type": "string"
+        },
+        "dialogue_line_id": {
+          "description": "Stable dialogue-line ID shared with the Performance Plan.",
+          "type": "string"
+        },
+        "emotion": {
+          "description": "Emotion carried by this line.",
+          "type": "string"
+        },
+        "reference_asset_ids": {
+          "description": "Reference asset IDs for this line/shot.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "shot_id": {
+          "description": "Shot this binding belongs to.",
+          "type": "string"
+        },
+        "speaking_state": {
+          "description": "Speaking state on this line.",
+          "enum": [
+            "speaking",
+            "listening",
+            "silent",
+            "reacting"
+          ],
+          "type": "string"
+        },
+        "voice_profile_id": {
+          "description": "Voice profile bound to this line.",
+          "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "character_id",
+        "dialogue_line_id"
+      ],
+      "type": "object"
+    },
+    "character_voice_bindings": {
+      "description": "Character-voice bindings, one object per dialogue line / shot. Each entry binds character + reference assets + voice profile + dialogue line + audio asset, with speaking state, emotion, delivery and articulation.",
+      "items": {
+        "additionalProperties": false,
+        "description": "Character-voice binding for one dialogue line / shot: which character, which reference assets, which voice profile, which dialogue line, which audio asset, and how it is performed. dialogue_line_id + shot_id are stable across the Scene, Shot and Performance Plans so VoiceStudio and OpenMontage receive one shared audio-visual timeline.",
+        "properties": {
+          "articulation": {
+            "description": "Subject-specific articulation for this binding (same vocabulary as articulation_target).",
+            "enum": [
+              "human-mouth-lips",
+              "bird-beak",
+              "animal-muzzle",
+              "creature-jaw-mandibles",
+              "other"
+            ],
+            "type": "string"
+          },
+          "audio_asset_id": {
+            "description": "Audio asset ID for this line's rendered dialogue.",
+            "type": "string"
+          },
+          "character_id": {
+            "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+            "type": "string"
+          },
+          "delivery": {
+            "description": "Delivery direction for this line.",
+            "type": "string"
+          },
+          "dialogue_line_id": {
+            "description": "Stable dialogue-line ID shared with the Performance Plan.",
+            "type": "string"
+          },
+          "emotion": {
+            "description": "Emotion carried by this line.",
+            "type": "string"
+          },
+          "reference_asset_ids": {
+            "description": "Reference asset IDs for this line/shot.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "shot_id": {
+            "description": "Shot this binding belongs to.",
+            "type": "string"
+          },
+          "speaking_state": {
+            "description": "Speaking state on this line.",
+            "enum": [
+              "speaking",
+              "listening",
+              "silent",
+              "reacting"
+            ],
+            "type": "string"
+          },
+          "voice_profile_id": {
+            "description": "Voice profile bound to this line.",
+            "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "character_id",
+          "dialogue_line_id"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "dialogue_mode": {
+      "enum": [
+        "VERBATIM_SCRIPT",
+        "SCRIPT_EDIT_REQUESTED"
+      ],
+      "type": "string"
+    },
+    "dialogue_rewrite_authorised": {
+      "type": "boolean"
+    },
+    "editing_plan": {
+      "additionalProperties": false,
+      "properties": {
+        "reaction_holds": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "after_line_id": {
+                "type": "string"
+              },
+              "hold_seconds": {
+                "description": "Reaction-hold length in seconds; strictly positive (a zero-length hold is invalid).",
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "purpose": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "after_line_id",
+              "hold_seconds"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "rhythm": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "id": {
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "performance_plan_id": {
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "project_id": {
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "scene_plan_id": {
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "schema_version": {
+      "enum": [
+        "2.4",
+        "2.5"
+      ],
+      "type": "string"
+    },
+    "shot_plan_id": {
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "dialogue_mode",
+    "dialogue_rewrite_authorised",
+    "scene_plan_id",
+    "shot_plan_id",
+    "performance_plan_id"
+  ],
+  "title": "ScriptToPerformance",
+  "type": "object"
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://consistencyframe.blogspot.com/schemas/v2.3/intake-job.json",
+  "title": "IntakeJob",
+  "description": "An upload/intake + job-state record. UPLOAD_ONLY and TEMPORARY_ASSET_USE must have retention=temporary and permanent_records_created empty.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "2.3"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "UPLOAD_ONLY",
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "REGISTER_CHARACTER",
+        "REGISTER_VOICE_PROFILE",
+        "REGISTER_SOUND_ASSET",
+        "GENERATE_FROM_SCRIPT",
+        "EDIT_EXISTING_MEDIA",
+        "REFERENCE_REVIEW",
+        "REFERENCE_LEARN_AND_UPDATE",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM",
+        "REPORT_UPDATE_ONLY"
+      ]
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^(?!/)(?!.*\\.\\./)[A-Za-z0-9._/\\-]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "media_type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "received",
+        "validated",
+        "in_progress",
+        "awaiting_approval",
+        "completed",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "retention": {
+      "type": "string",
+      "enum": [
+        "temporary",
+        "project",
+        "permanent_registered"
+      ]
+    },
+    "permanent_records_created": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "mode",
+    "state",
+    "retention"
+  ],
+  "additionalProperties": false
+}

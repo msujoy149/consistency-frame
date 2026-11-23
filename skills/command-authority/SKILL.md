@@ -24,7 +24,7 @@ This repo is the command master. After a user installs it, videos are made WITH 
 ## 3. Missing Skill Fallback — Check the Repo First, Then Generate
 
 - If a needed skill is NOT in the repo, check the repo's comments and notes about that topic FIRST — the README, the docs, AGENTS.md, and the skill descriptions. If the repo has a comment on it, follow the comment.
-- If the repo gives no comment, the repo issues a generation command (§5): generate the needed system from that command, in the repo's skill format, and save it as a new skill in `skills/` so the repo now has it. The order is fixed by the skill-first loop (§9): the skill is written and saved BEFORE any video is generated from it.
+- If the repo gives no comment, the repo issues a generation command (§5): generate the needed system from that command, in the repo's skill format, and draft it for this task so the video is made from it. The order is fixed by the skill-first loop (§9): the skill is drafted BEFORE any video is generated from it; it becomes a permanent skill only on the user's explicit authorisation (§9B).
 - Tell the user plainly what was added and why.
 - Never silently invent a system that contradicts a repo skill or a repo comment.
 
@@ -39,9 +39,9 @@ When a skill is missing, the repo does not leave the assistant guessing — it i
 
 - **Generate:** [the missing system, in one line — what it must do].
 - **Preserve:** the fixed identity — the character's face, structure, hands, and feet; the character's voice (tags + seed + reference audio); the locked visual style; continuity with the episode and the series. Nothing fixed is ever redesigned.
-- **Quality bar:** correct, cinematic, human-generated — human-feeling, never robotic. Realism target 100%, 99.9% as the floor.
+- **Quality bar:** correct, cinematic, human-generated — human-feeling, never robotic. Realism target: the closest achievable match to the reference, verified shot by shot against the approved reference with a human-review gate; no absolute percentage is guaranteed.
 - **Verify:** check the result against the fixed reference; run the episode QC checklist; the user approves before anything is locked in.
-- **Save:** write it as a new skill in `skills/` in the repo's skill format, and tell the user plainly what was added and why.
+- **Save:** draft it first for this task (§9A); it becomes a new skill in `skills/` only on the user's explicit authorisation (§9B). Tell the user plainly what was added and why.
 
 ## 6. Light Details Are Delegated — the AI Decides Them, the Repo Directs Them
 
@@ -64,7 +64,7 @@ When the repo has no instruction at all for something, it explicitly says "do it
 4. **Decide the voice/video order for this project and keep it.** Voice first, then video matched to it — or video first, then voice. One order, followed consistently through the whole project (`production-systems` A10, `voice-consistency` §8).
 5. **Generate shot by shot, line by line, from the script.** Dialogue in each character's language, in natural spoken language, short lines with pauses; lip-sync matched to the sounds of that language (`production-systems` A8, A10, D2). Apply the standing defect list (`production-systems` A3); keep the locked style and the scene's colour grade (C7).
 6. **Keep continuity while generating.** Story bible and continuity tracker (`production-systems` A6, A7); no overlap between characters (C2); check each shot against the fixed reference as you go — a drifted face is regenerated fresh, never inpainted (`character-consistency` §14); clip boundaries must match (B5).
-7. **Add the sound.** Ambience and room tone, foley on visible beats, dialogue, music ducked under dialogue; scene music follows the scene's emotion (`production-systems` A4, A5). Master to −14 LUFS, true peak below −1 dBTP (B14).
+7. **Add the sound.** Ambience and room tone, foley on visible beats, dialogue, music ducked under dialogue; scene music follows the scene's emotion (`production-systems` A4, A5). Master to the project's named delivery profile (B14; `architecture/audio-delivery-profiles.json`).
 8. **Run the QC checklist before delivery.** Faces, voices, emotions, dialogue exact, no defects, clothing, sound matched, no contradiction with the story bible or the continuity tracker (`production-systems` A11). Never deliver a failed check without telling the user what failed.
 9. **Deliver in the requested format, and get approval.** Aspect ratio and platform as asked (`production-systems` D3). The user approves before anything is locked in.
 10. **If the work grows into a system, save it.** Generate it as a new skill from the generation command (§5) so the repo now has it.
@@ -79,7 +79,8 @@ The core instruction is short — it does not explain everything in detail — b
 
 - **Human-like, never robotic** — characters move, talk, and act like people; voices sound like people; nothing sits as a still with a voice over it (`humanized-production`, `voice-consistency` §4).
 - **No overlap** — characters never overlap each other; each character keeps their own space (`character-consistency` multi-character scenes).
-- **Lip-sync** — if a character speaks, the mouth moves with the voice: the lips match the sounds of the language being spoken. A talking character with a still mouth is a defect (`language-authenticity`, `voice-consistency`).
+- **Lip-sync** — if a character speaks, the mouth moves with the voice: the lips match the sounds of the language being spoken. A talking character with a still mouth is a defect (`language-authenticity`, `voice-consistency`). For a non-human speaking character, the articulation follows its own articulation_target (`bird-beak`, `animal-muzzle`, `creature-jaw-mandibles`, or `other`) — never human lips on a bird, animal, or creature.
+- **Multi-dimensional, never one animation type** — visual style, production medium, motion method, subject kind, and interaction pattern are separate, composable dimensions, never one single `animation_type`. Animation is not cartoon-only: it covers 2D, 3D, photorealistic digital humans, digital animals and creatures, and live-action/VFX hybrids alike.
 - **Fixed identity** — a character's face, structure, hands, and feet never change; their voice (tags + seed + reference audio) never changes (`character-consistency`, `voice-consistency` §1–§2).
 - **The script decides** — the user's script and instructions outrank everything else (§4).
 - **Physical realism and continuity** — movement, objects, and light stay believable and continuous across cuts (`production-systems`).
@@ -96,12 +97,37 @@ The core carries the rules; the main flow in §7 carries the order — a "do it 
 
 1. **Detect the gap.** No skill has the command for the thing being made (§2 step 5).
 2. **Check the repo's comments and notes first** — the README, the docs, AGENTS.md, and the skill descriptions. If the repo has a comment on it, follow the comment.
-3. **Write the new skill FIRST.** If the repo gives no comment, build the missing system from the script's need, the common core (§8), the main flow (§7), and the generation command (§5) — in the repo's skill format: YAML frontmatter with name and description, numbered sections, and citations to the existing systems it builds on. Save it in `skills/` BEFORE generating any video.
-4. **Then make the video by following that new skill exactly** — the normal skill-first path (§2). Never improvise the video from the generation command alone.
+3. **Write the new skill FIRST — as a task-local draft (§9A).** If the repo gives no comment, build the missing system from the script's need, the common core (§8), the main flow (§7), and the generation command (§5) — in the repo's skill format: YAML frontmatter with name and description, numbered sections, and citations to the existing systems it builds on. Draft it BEFORE generating any video.
+4. **Then make the video by following that draft exactly** — the normal skill-first path (§2). Never improvise the video from the generation command alone.
 5. **Run the QC checklist before delivery.** The user approves before anything is locked in.
 6. **Tell the user plainly what was added and why.**
-7. **Keep the repo's own numbers true.** When a new skill is actually added this way, update the counts, the README, docs/01, the CHANGELOG, and the plugin manifests (which list every skill) — so the repo's own numbers never go stale.
+7. **Keep the repo's own numbers true.** When a new skill is actually added this way, update the counts, the README, docs/01, the CHANGELOG, and the plugin manifests (which list every skill) — so the repo's own numbers never go stale. Run `scripts/generate-registries.py` and `scripts/validate-repo.py` after any such change.
 
-The guarantee: with this loop, no video is ever improvised — every video is made by following some skill — and every gap is closed permanently the first time it appears. The next time the same kind of video is asked for, the skill is already there, and the work takes the ordinary §2 path.
+### 9A. Task-local draft — the video is made from a draft, not from thin air
+
+Steps 1–6 above use the new system as a **task-local draft**: the draft
+guides this one video and is shown to the user with the video. A draft
+does **not** by itself change any canonical skill in `skills/`, does not
+change the registry counts, and is not committed as a permanent rule.
+That is what keeps the loop safe: the video is never improvised, and the
+repo is never silently rewritten by one video.
+
+### 9B. Permanent canonical mutation — explicit user authorisation only
+
+A draft becomes a **permanent canonical skill** (a new file in `skills/`,
+a change to an existing skill, or a registry/count update) only when the
+user explicitly authorises it — for example "save this as a skill" or
+"add it to the repo" — and the change is then made on a reviewable
+branch, validated (`scripts/validate-repo.py`), and reported to the user
+with what changed and why. Without that explicit authorisation, the
+draft stays task-local and the canonical skills are untouched.
+
+This split resolves the pre-P0 conflict: the skill-first loop still
+guarantees no video is improvised (§9A), while permanent learning is a
+separate, authorised act (§9B) — the same gate as
+`REFERENCE_LEARN_AND_UPDATE` (see `architecture/intent-modes.yaml` and
+`schemas/reference-learning.json`).
+
+The guarantee: with this loop, no video is ever improvised — every video is made by following some skill — and no gap is closed permanently without the user's say-so. The next time the same kind of video is asked for and the skill was authorised, the skill is already there, and the work takes the ordinary §2 path.
 
 What this loop is NOT: it does not change §7. Small work with no repo instruction at all still takes the "do it yourself" path — quality commands plus the main flow. The loop is only for a genuinely missing SYSTEM — a skill the repo does not have.

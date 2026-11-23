@@ -67,6 +67,19 @@ may be used temporarily for a current video task without becoming a
 permanent character. Permanent registration and temporary image use must
 always remain separate.
 
+The canonical permanent-registration record is
+`schemas/character-registration.json` (v2.5). It carries a structured
+`ownership` record — `owner_id` + `workspace_id` (stable, opaque,
+randomly generated local identifiers, never a real name, email, or
+account detail), `visibility` (`private` by default), and `sharing`
+(`none` by default; shared access needs an explicit future sharing
+permission). A character never becomes public merely because an image
+was uploaded, and a voice profile is resolvable only when BOTH its
+Character ID binding and its ownership match the character's
+(see `docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md`
+§C3, §C5, §C6). The older free-text `ownership_scope` is kept only as
+a deprecated legacy field.
+
 ### Name on the image
 
 A character name visibly written ON the image is NOT mandatory. If the
@@ -209,9 +222,9 @@ The current outfit per character per scene is recorded in the wardrobe
 registry (docs/02-extended-systems.md, item 4); the continuity tracker
 and the QC check verify clothing against it in every shot.
 
-## 100% Reference Fidelity
+## Measured Reference Fidelity
 
-The character is built 100% from the reference image(s) provided.
+The character is built from the reference image(s) provided, aiming for the closest achievable match to the reference (see the fidelity section below).
 
 - Face and height are the most important identity features and must match
   the reference as closely as the platform allows.
@@ -234,7 +247,7 @@ sheet, the same fixed prompt block, and the same seed. The identity is
 never rebuilt from a fresh interpretation, and a new render is never
 treated as the reference.
 
-The structure must stay 100% identical across scenes and episodes —
+The structure must stay unchanged against the approved reference across scenes and episodes —
 face, eyes, nose, mouth, hands, feet, proportions, height. If a render
 drifts from the sheet, regenerate against the sheet; do not accept the
 drift and do not quietly update the stored identity to match it.
@@ -272,7 +285,7 @@ works. Use it for every generation, not only after a drift is noticed.
    angles drift the face more, so use them only when the script needs
    them.
 3. **Explicit no-change instruction in every prompt.** Every prompt
-   states it: face and structure 100% identical; do not change the
+   states it: face and structure unchanged against the approved reference; do not change the
    face.
 4. **Fresh generation, never edit, when the face drifts.** Never
    continue from a drifted image — never edit, inpaint, or "fix" the
@@ -331,7 +344,7 @@ handles that gap automatically.
 1. **Generate the missing ones.** If the user does not supply all
    expressions, the assistant generates the missing ones itself —
    from the character's definitive reference, keeping face and
-   structure 100% identical, changing only the expression. Each
+   structure unchanged against the approved reference, changing only the expression. Each
    generated expression is verified against the definitive reference
    before it is saved (see "Face-Consistency Correction Method" and
    "Reference Matching and Angle-Matched Verification").
@@ -392,3 +405,63 @@ public repository.
 The public repository contains the system, the skills, and the
 documentation. The private overlay contains the characters. That
 separation is what makes the repository safe to publish.
+
+## Fail-Closed Private Voice Security (P0-008)
+
+The ownership record above is enforced, not merely described.
+The production rules live in `scripts/asset_policy.py` (resolver,
+export authorization, centralized `authorize_action`) and
+`scripts/timeline_policy.py` (strict timeline validation); the
+regression suite is `tests/test_private_voice_security.py`
+(`CF-P0-008-SEC`, 74 checks). Full record:
+`docs/implementation/CF-WO-P0-008-corrections.md`.
+
+- **Fail-closed resolver.** For a private v2.5 voice,
+  `resolve_voice_for_production` REQUIRES the requester identity
+  — both `requesting_owner_id` and `requesting_workspace_id`.
+  A missing requester is never an authorized internal request,
+  there is no silent fallback to the character's owner, and
+  `None` is never an authorization bypass. The voice must also
+  belong to the requested character, match the character's
+  ownership, pass the v2.5 validation, and be approved when
+  production approval is required. Wrong owner, wrong workspace,
+  cross-character assignment, and a voice owned by another owner
+  or workspace are all rejected. Legacy v2.3 records keep their
+  historical contract and gain v2.5 protection only by explicit
+  ownership assignment — ownership is never inferred from a
+  filename, name, or image.
+- **Owner-bound export.** A private voice export requires a
+  `TrustedAuthorizationContext` issued by
+  `issue_trusted_authorization_context` — the local application
+  authorization boundary. A caller-created dictionary claiming
+  `granted_by`, `scope`, and `explicit_authorisation` is an
+  untrusted request, never authority; a forged `granted_by` is
+  rejected. The context is checked against the voice on every
+  point: the trusted actor is the voice owner in the voice
+  workspace, the issuer is the voice owner, the action is an
+  explicit `export_private_asset`, the scope is non-empty, the
+  context covers exactly this character and voice, and it is not
+  expired or revoked. Export is owner-only even under `shared` +
+  `workspace`. Sending the voice to an external provider is a
+  separate permission (`provider_transmission_approved`) from
+  export. The trusted context is a structural (type) boundary,
+  not cryptographic proof of identity: the P1 app/session
+  runtime must supply the actor identity at the boundary.
+  P0-010 adds that only the exact object issued by
+  `issue_trusted_authorization_context` is accepted — issuance
+  is verified against a process-local, identity-based registry
+  (`is_factory_issued_trusted_authorization_context`), never by
+  a bare type check; a directly constructed, copied or
+  deserialized object is rejected however genuine its fields
+  look, and serialization of a context is refused outright.
+  P0-011 tightens that check: only the exact concrete type
+  (`type(context) is TrustedAuthorizationContext`) is accepted,
+  and the registry is an `id()`-keyed dict of weak references
+  verified with `is`, never with equality — a subclass that
+  overrides `__eq__`/`__hash__` to compare equal to a genuine
+  context is rejected, and verification never invokes a
+  candidate's `__eq__` or `__hash__`.
+- **Private sharing and export remain disabled by default.**
+  No context, no export. No default sharing, no automatic
+  provider transmission, and permission for local production use
+  never implies permission to export.

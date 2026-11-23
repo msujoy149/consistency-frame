@@ -2,6 +2,7 @@
 node_modules/
 # Install outputs — created by setup.sh, never committed
 .agents/skills/
+.agents/skills-backup/
 components/
 .venv/
 venv/
@@ -38,6 +39,7 @@ hf-cache/
 characters/*
 !characters/.gitkeep
 !characters/README.md
+private-data/
 demo/*
 !demo/README.md
 

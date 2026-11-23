@@ -1,0 +1,317 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://consistencyframe.blogspot.com/schemas/v2.5/voice-profile.json",
+  "title": "VoiceProfile",
+  "description": "A character voice profile. Separate from character identity and from sound assets. Requires explicit authorisation + rights/consent. v2.5 ADDITIVE MIGRATION (CF-WO-P0-006 Addendum C \u00a75): Voice Profile data added (voice_profile_id, source, audio_reference_assets, accent, vocal_characteristics, pitch_range, speaking_pace, pronunciation_preferences, emotional_delivery_range, model, approval_status, consent_status). All new fields are optional; no existing required field was removed or retyped, so every valid v2.3 record remains valid. Voice profiles are private, owner/workspace-scoped, and bound to exactly one character (character_id) \u2014 never shared across characters or users, and never sent to a provider without disclosing that transmission. CF-WO-P0-007 Correction B/C: structured 'ownership' (owner_id + workspace_id + visibility + sharing) is REQUIRED for v2.5 records, enforced conditionally by scripts/asset_policy.py validate_voice_profile \u2014 the repo's JSON-Schema validator subset has no if/then, allOf or dependentRequired, so the JSON Schema alone cannot express conditional-required and stays permissive here; a record is fully valid v2.5 only when both the schema and the Python validator pass. For v2.5 the minimum fields are voice_profile_id, character_id, source, ownership, voice asset references, approval_status and consent_status, with source-conditional rules (user-recording: audio reference + granted consent; ai-generated: provider + model identification + approval state). consent_status governs consent and must agree with consent.granted; consent_status 'not-required' is legitimate only when human_voice_donor is false. approval_status is 'pending' until the user explicitly approves \u2014 a generated voice is never approved automatically, and only an approved, correctly owned profile may be selected for production. Provider transmission must be disclosed, approved and recorded (provider_transmission); nothing here promises data never leaves the device.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "2.3",
+        "2.5"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "character_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "provider_voice_id": {
+      "type": "string"
+    },
+    "model_version": {
+      "type": "string"
+    },
+    "reference_audio": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*\\.\\./)[A-Za-z0-9._/\\-]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "media_type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "tags": {
+      "type": "string"
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[A-Z]{2})?$"
+    },
+    "delivery_traits": {
+      "type": "string"
+    },
+    "use_scope": {
+      "type": "string"
+    },
+    "voice_profile_id": {
+      "description": "Voice Profile ID (Addendum C \u00a75). Stable ID for this voice profile; the same ID is referenced from character.voice_profile_ids, performance-plan lines and script-to-performance character_voice_bindings so VoiceStudio receives a consistent handoff.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "source": {
+      "description": "Where this voice came from: user-recording (the user/owner recorded reference audio) or ai-generated (synthesised voice, no human voice donor). Provider limits for AI-generated voices must be disclosed to the user.",
+      "type": "string",
+      "enum": [
+        "user-recording",
+        "ai-generated"
+      ]
+    },
+    "audio_reference_assets": {
+      "description": "Reference audio assets for this voice (recordings/samples). Pointers only \u2014 relative path + optional hash; the audio itself lives in the private overlay, workspace-scoped.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^(?!/)(?!.*\\.\\./)[A-Za-z0-9._/\\-]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "media_type": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "voice-reference",
+              "voice-sample",
+              "other"
+            ]
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "accent": {
+      "description": "Accent/regional colour of the voice, e.g. 'Dhaka Bengali', 'General American'.",
+      "type": "string"
+    },
+    "vocal_characteristics": {
+      "description": "Timbre and character of the voice, e.g. 'warm, bright, slightly breathy'.",
+      "type": "string"
+    },
+    "pitch_range": {
+      "description": "Usable pitch range of the voice, e.g. 'high, child female'.",
+      "type": "string"
+    },
+    "speaking_pace": {
+      "description": "Default speaking pace for this voice.",
+      "type": "string",
+      "enum": [
+        "very-slow",
+        "slow",
+        "natural",
+        "brisk",
+        "fast",
+        "very-fast"
+      ]
+    },
+    "pronunciation_preferences": {
+      "description": "Pronunciation preferences, e.g. per-language sound rules or words that need special care.",
+      "type": "string"
+    },
+    "emotional_delivery_range": {
+      "description": "Emotions this voice can deliver (subset of the performance emotion vocabulary).",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "model": {
+      "description": "Voice model used (e.g. 'OmniVoice'). Distinct from model_version, which pins the model build.",
+      "type": "string"
+    },
+    "ownership": {
+      "type": "object",
+      "description": "Structured private ownership. owner_id + workspace_id are stable, opaque, randomly generated local identifiers \u2014 never a real name, email or account detail. visibility is private by default; sharing is none by default and requires an explicit future sharing permission.",
+      "properties": {
+        "owner_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+        },
+        "workspace_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": [
+            "private",
+            "shared"
+          ]
+        },
+        "sharing": {
+          "type": "string",
+          "enum": [
+            "none",
+            "workspace",
+            "explicit"
+          ]
+        }
+      },
+      "required": [
+        "owner_id",
+        "workspace_id",
+        "visibility",
+        "sharing"
+      ],
+      "additionalProperties": false
+    },
+    "human_voice_donor": {
+      "description": "Whether a real person's voice was used as the donor for this voice (recorded, or cloned from a real person). True: explicit permission + granted consent are required. False: no real person's voice was used; consent_status 'not-required' is legitimate only with this field false. Absent: donor status unrecorded, so 'not-required' is not legitimate.",
+      "type": "boolean"
+    },
+    "approval_status": {
+      "description": "Whether this voice profile is approved for use in productions.",
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ]
+    },
+    "consent_status": {
+      "description": "Consent state for this voice. A user-recorded voice requires granted consent; an AI-generated voice with no human donor is not-required only when no real person's voice was used (human_voice_donor false) \u2014 never use 'not-required' to bypass actual permission requirements.",
+      "type": "string",
+      "enum": [
+        "granted",
+        "pending",
+        "denied",
+        "not-required"
+      ]
+    },
+    "consent": {
+      "type": "object",
+      "properties": {
+        "granted": {
+          "type": "boolean"
+        },
+        "granted_by": {
+          "type": "string"
+        },
+        "granted_at": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "user",
+            "rights_holder",
+            "licence",
+            "unknown"
+          ]
+        }
+      },
+      "required": [
+        "granted",
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "created_by": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "licence": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "provider_transmission": {
+      "description": "Disclosure record for voice data sent to a provider. Voice data must never be sent to a provider without disclosing that transmission, user approval, and the provider + data-use scope. This record must never promise that data never leaves the device; it records what was disclosed and approved for this transmission.",
+      "type": "object",
+      "properties": {
+        "disclosed": {
+          "type": "boolean"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "data_use_scope": {
+          "type": "string"
+        },
+        "approved_by": {
+          "type": "string"
+        },
+        "external": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "disclosed",
+        "provider",
+        "data_use_scope"
+      ],
+      "additionalProperties": false
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "approved",
+        "deprecated"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "character_id",
+    "reference_audio",
+    "consent",
+    "version",
+    "status"
+  ],
+  "additionalProperties": false
+}

@@ -4,7 +4,7 @@ This document describes the advertising layer of Consistency Frame: how a regist
 
 The model is a synthetic person with no real existence. It is introduced once — registered as a character through the Character Generator (`docs/07-character-registry.md`, "Character Generator — Two Ways to Create a Character", option 2: AI-generated, shown first, permanent only on explicit "done" approval) — and then used across every ad for a business's services, with the same face, the same voice, and the same brand in each one.
 
-Nothing in this layer replaces the character system. Registration, 100% reference fidelity, identity anchoring, face-consistency correction, angle-matched verification, and the expression library all still apply, unchanged, to every ad. The seven systems below add only the advertising layer on top.
+Nothing in this layer replaces the character system. Registration, measured reference fidelity, identity anchoring, face-consistency correction, angle-matched verification, and the expression library all still apply, unchanged, to every ad. The seven systems below add only the advertising layer on top.
 
 Counting note: these 7 systems are part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, and 1 on-demand resource management, and 1 language authenticity, and 1 realistic person video, 1 2D explainer animation, 1 command authority, and 1 kids & family animation systems, the repo holds 109 distinct systems, presented as 120 numbered entries.
 

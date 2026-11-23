@@ -169,26 +169,80 @@ or later for bun.
 
 ### What setup.sh does
 
-1. **Clones the bundled components, pinned to tested commits** —
-   VoiceStudio (`2f2f5a9`) for voice and OpenMontage (`fecb9a1`) for
-   long-form video — into `components/`. Their AGPL-3.0 licences stay
-   intact inside each component. Nothing is vendored into this repo;
-   the components are fetched at install time.
-2. **Copies `skills/` into `.agents/skills/`** (clearing it first, so a
-   re-run is exact).
-3. **Sets up VoiceStudio** — `bun install`, then the Python API
-   (`bun run setup:api`, needs bun + uv; downloads about 1 GB).
-4. **Runs OpenMontage's `make setup`** — creates its Python virtual
-   environment and installs the Node dependencies. If `make` is missing
-   or the step fails, `setup.sh` says so plainly instead of claiming
-   success; run `cd components/openmontage && make setup` yourself to
-   see the error.
+1. **Syncs `skills/` into `.agents/skills/` — non-destructively** —
+   only Consistency Frame-owned files are updated, tracked by a
+   manifest (`.agents/skills/.consistency-frame-manifest.json`).
+   Unmanaged user and third-party skills are never deleted; stale
+   owned files are pruned only with the opt-in `--prune` flag.
+   This is the default: `bash setup.sh` does this and nothing else.
+2. **Only with `--with-components`: clones the bundled components,
+   pinned to tested commits** — VoiceStudio (`2f2f5a9`) for voice and
+   OpenMontage (`fecb9a1`) for long-form video — into `components/`.
+   Their AGPL-3.0 licences stay intact inside each component. Nothing
+   is vendored into this repo; the components are fetched at install
+   time, and a clone failure is reported as FAILED, never hidden.
+   An existing checkout is reused only after verification: it must be
+   a valid git working tree with the official origin, HEAD at the
+   exact pinned commit, and a clean working tree. A checkout at a
+   different commit, with a wrong origin, or with uncommitted or
+   untracked changes is rejected with a clear error and left
+   untouched — it is never silently reset, force-checked-out, or
+   deleted. A fresh clone is verified the same way (HEAD equals the
+   pinned commit, origin is the official repository) before the
+   component is reported as ready. A linked git worktree (a `.git`
+   file instead of a `.git` directory) is a valid working tree and
+   is verified and set up the same way as a normal clone.
+3. **Only with `--with-components`: sets up VoiceStudio** — `bun install`,
+   then the Python API (`bun run setup:api`, needs bun + uv; downloads
+   about 1 GB). A failed step reports PARTIAL, never success.
+4. **Only with `--with-components`: runs OpenMontage's `make setup`** —
+   creates its Python virtual environment and installs the Node
+   dependencies. If `make` is missing or the step fails, `setup.sh`
+   says so plainly instead of claiming success; run
+   `cd components/openmontage && make setup` yourself to see the error.
 5. **Walks you through the voice-model download** (next section) — it
    does not download the model itself.
 
-Re-running `bash setup.sh` is safe: components already present are
-skipped, skills are re-copied exactly, and the component setups run
-again.
+Re-running `bash setup.sh` is safe: skills are re-synced idempotently
+(unchanged files are left alone), and with `--with-components`,
+components already present are verified against the pinned release
+and reused only if they match (see item 2 above); the component
+setups then run again. `setup.sh` exits 0 only when every requested
+component reports SUCCESS; otherwise it exits 1 (FAILED) or 2
+(PARTIAL) with a per-component summary. A PARTIAL skill sync
+(exit 2) stops the run before any component is installed.
+
+### Managed-file conflicts and backups
+
+`scripts/sync-skills.sh` never silently overwrites a managed file you
+edited: a file counts as user-modified when its current content differs
+from both the manifest hash and the source file. By default
+(`--conflict keep`) such files are left alone and listed as conflicts
+in `.agents/skills/.consistency-frame-last-sync.json` (a `conflicts`
+array with manifest/source/current hashes, plus a `conflict_policy`
+field); pass `--conflict overwrite` to replace them explicitly.
+Prune never deletes a user-modified stale file — it is listed under
+`prune_refused` instead.
+
+Every sync that changes or prunes a file keeps a backup in a run
+directory under `.agents/skills-backup/` (named `run-XXXXXX`, with a
+`.run-owner.json` marker tying it to its destination).
+`bash scripts/sync-skills.sh --rollback` restores the latest backup
+for that destination. Old backups are removed only with the explicit
+`--prune-backups <days>` option, which deletes only this
+destination's run directories older than `<days>` days.
+
+Installer metadata (the ownership manifest, the last-sync record and
+the run-owner marker) is written atomically and symlink-safely through
+one helper, `scripts/atomic_write.py`: the temporary file is created
+exclusively with `tempfile.mkstemp()` (unique, unguessable name, in
+the same directory), written through its file descriptor, fsynced, and
+then moved over the target with `os.replace()`. A planted symlink at
+a predictable temporary name — or at the target itself — is never
+followed, so no write can escape the destination directory. A failed
+write leaves no temporary file behind and is reported as a failure,
+never as SUCCESS. Regression tests: SEC-MANIFEST-01..04 and
+`tests/test_atomic_write.py`.
 
 ### The voice model (OmniVoice) — download step
 
@@ -228,7 +282,7 @@ present, `SKILL.md` frontmatter, no character data installed).
   PATH for new shells only.
 - **`make: command not found`** — install make (macOS: Xcode Command
   Line Tools; Linux: `sudo apt install -y make`; Windows: use WSL).
-- **Component clone fails** — check the network, then run `bash setup.sh`
+- **Component clone fails** — check the network, then run `bash setup.sh --with-components`
   again. A failed pin checkout removes the partial clone, so a re-run
   starts clean.
 - **VoiceStudio `setup:api` fails** — run it manually to see the error:
@@ -305,10 +359,7 @@ and `GEMINI.md`.
 
 ## Muse (Meta's personal app)
 
-Muse has no documented skill-install flow. Install by cloning the
-repository into the workspace and running the bundled setup script,
-which installs the bundled components (VoiceStudio for voice,
-OpenMontage for video) and copies the skills into `.agents/skills/`.
+Muse has no documented skill-install flow, so there is no native custom-skill install to claim. Use the repo as a versioned knowledge pack: clone it into the workspace and read the skills from there. Running `bash setup.sh` only syncs the skills into the local `.agents/skills/` copies (non-destructive, core-only by default); the bundled components (VoiceStudio for voice, OpenMontage for video) are installed only with the opt-in `bash setup.sh --with-components`.
 
 ```bash
 git clone https://github.com/msujoy149/consistency-frame
@@ -316,12 +367,7 @@ cd consistency-frame
 bash setup.sh
 ```
 
-`setup.sh` installs the bundled components and copies `skills/` into
-`.agents/skills/`. The two components (VoiceStudio for voice,
-OpenMontage for video) are fetched automatically by `setup.sh` — no
-separate install is needed. Character data is not installed by the setup
-script — it is linked in separately from the private overlay (see
-"Character Registry").
+`bash setup.sh` (core-only, the default) syncs `skills/` into `.agents/skills/` without deleting unmanaged skills. **A core-only install does NOT include VoiceStudio or OpenMontage** — the two components (VoiceStudio for voice, OpenMontage for video) are fetched only with `bash setup.sh --with-components` — they are never installed silently. The voice model (OmniVoice) is never downloaded by `setup.sh`. Character data is not installed by the setup script — it is linked in separately from the private overlay (see "Character Registry").
 
 ## Generic installers
 

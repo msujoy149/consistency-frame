@@ -1,0 +1,986 @@
+{
+  "schema_version": "2.3",
+  "version": "2.4-p0",
+  "branch": "feat/cf-p0-safe-foundations",
+  "commit": "ede564bcb187657104f9682839830213ac03fe43",
+  "github_branch_head": "232a714b29b8a2c09a79acbf4dbc82e1035d099b",
+  "files": [
+    {
+      "path": ".github/workflows/p0-ci.yml",
+      "sha256": "2b6b00740bd68af84c25eeec2d8dbed1e539a90d92aa42c06a3028520c280dd4",
+      "bytes": 1363
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "ef6cc917cc2cd7d1836fe5174ccb692239079fab1848b28c2e15c1ee3bd766d6",
+      "bytes": 701
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "4f1c04029220a4d95901d9e8070ed8de034b33725a9a5cbd5ea9c045f31b2dd8",
+      "bytes": 25332
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "338edf59d1e81e5d6501c40643ea292e53579ca8c4d5559343f5e64c880ada4e",
+      "bytes": 68096
+    },
+    {
+      "path": "README.md",
+      "sha256": "7df9056ad25601455119e59a1b75b944315185b6f9c74677ddda396ce83f47c5",
+      "bytes": 41843
+    },
+    {
+      "path": "architecture/AGENT_COMPATIBILITY_MATRIX.yaml",
+      "sha256": "48f62000f49829bb246d080c53e0d28ff28879069284419e1ea8092f12300f36",
+      "bytes": 8377
+    },
+    {
+      "path": "architecture/COMPANION_CAPABILITY_REGISTRY.yaml",
+      "sha256": "d1520145cd55b14961c9dd6d71d7b07d04777b0687abacc4df94bc19ef6057ea",
+      "bytes": 26409
+    },
+    {
+      "path": "architecture/SKILL_ROUTING_MATRIX.yaml",
+      "sha256": "0481794d7de12b939f757c9a35c57f46043e90c314dd934013c3f9ae62942ef2",
+      "bytes": 52097
+    },
+    {
+      "path": "architecture/WORKFLOW_GRAPH.yaml",
+      "sha256": "dca1503e0f766ad3ffa7afbc428004a5c150200c0b8130012e5240aef01f5561",
+      "bytes": 30637
+    },
+    {
+      "path": "architecture/audio-delivery-profiles.json",
+      "sha256": "a6a714f42323a9dc2edef606f0ca919994c17606a5b39c5628f5c5fb3bd44a37",
+      "bytes": 1851
+    },
+    {
+      "path": "architecture/intent-modes.yaml",
+      "sha256": "7e459b6236bba20ac927ff0129e8a5047ecf441c0f57cced58477da501fe748b",
+      "bytes": 2793
+    },
+    {
+      "path": "architecture/platform-capabilities.md",
+      "sha256": "a48c58feaa0758658dc1ffd7f581ab1a3ca5c1d3fd3c04708c1042a7dac49180",
+      "bytes": 3456
+    },
+    {
+      "path": "characters/README.md",
+      "sha256": "a84078b45c58d738f6f302f061f2304c7429b215c2ff3575f7de12ee9092adc7",
+      "bytes": 5313
+    },
+    {
+      "path": "docs/02-extended-systems.md",
+      "sha256": "7e7e6a13aa1c61edf3a1dacb71901f7b6c0b612374d99f9cfdb5d73b46d8ba51",
+      "bytes": 11287
+    },
+    {
+      "path": "docs/06-installation.md",
+      "sha256": "755f612dd13e2b8da5085dc1411a8f64c63cd93473cdad3c5c5f585f064924a9",
+      "bytes": 18485
+    },
+    {
+      "path": "docs/07-character-registry.md",
+      "sha256": "caf02e7a4fae25e13b14a3a68f9df900f0af739d15d438244daf0bb3dbde530b",
+      "bytes": 22661
+    },
+    {
+      "path": "docs/08-agency-advertising.md",
+      "sha256": "74217e49cb1296975e5e6f6a904ef8bc10b4c7fd8d44897cc356e68ae277d998",
+      "bytes": 11852
+    },
+    {
+      "path": "docs/09-video-regeneration.md",
+      "sha256": "22de4ef0206986be4e6f05e64dfc52fd9a3b15f7bbebe20d6d397ca686880a5a",
+      "bytes": 12195
+    },
+    {
+      "path": "docs/15-realistic-person.md",
+      "sha256": "07e4c7f26049b0d348d51dfdd627d3e7233c018c42e664779cce4833d0d12282",
+      "bytes": 2906
+    },
+    {
+      "path": "docs/17-command-authority.md",
+      "sha256": "589c0372762a2d11060c4e8f5bd09e58aa12fae8f4568147e7815a57e9457060",
+      "bytes": 11575
+    },
+    {
+      "path": "docs/19-audio-delivery-profiles.md",
+      "sha256": "3bb341ccd4b34161c5c2b5158f2370eb44abbe22b298e26851be0886d3b0a80e",
+      "bytes": 2085
+    },
+    {
+      "path": "docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md",
+      "sha256": "b2d6d558e2090415e59848ca2be76b8f74b2e9bb8bbc305630a5640b1f759399",
+      "bytes": 72208
+    },
+    {
+      "path": "docs/architecture/living-architecture-report-v2.3-p0.md",
+      "sha256": "725ec466ef595dfa3a93bf3e81eb095776908f5650b4ad8ea55ccb6d5e448b7e",
+      "bytes": 12621
+    },
+    {
+      "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
+      "sha256": "7adb9afda66b6be0488eaa168f329568a9756fe2f9ebf3e349fffb1d4e262fcf",
+      "bytes": 24436
+    },
+    {
+      "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
+      "sha256": "1bac666a33293244910d83d7639bab9b99500d2f3da709de5bc5d7653fdd4ffa",
+      "bytes": 15380
+    },
+    {
+      "path": "docs/implementation/BUILD_REPORT_P0.md",
+      "sha256": "e87b2d3987a0ae91ba3774eefc501ba04b7e204e7ee45cd55e3d71ae851c2457",
+      "bytes": 45346
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-001-plan.md",
+      "sha256": "0df54766d19f29f7f82a2023388a26d778b5da8d5dd98c435bc0c1db27d2d71a",
+      "bytes": 7196
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-002-corrections.md",
+      "sha256": "5c2813c203d2b965f9f3fe3626d0d6d1466cab105e1f09029aaee8976ff6daef",
+      "bytes": 12785
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-003-corrections.md",
+      "sha256": "5101b7d8b8aa94137eb63df54728c347b4cbf0dd1cb0aab49b4a0b4e9e503586",
+      "bytes": 8476
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-004-corrections.md",
+      "sha256": "132e6e9c77f570e6e8bdf9e3b74828b2b3572d6d94e7905615084e974245fdfe",
+      "bytes": 15333
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-005-corrections.md",
+      "sha256": "b9e6c1082fd58de217d37a918c68bf0214a1eb6eb8f0037451f03a8ae4d0bc35",
+      "bytes": 16582
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-006-corrections.md",
+      "sha256": "b84502f34736316ccb4904ed920ead9f4075c2f5d392d5d7a79dd10b780825af",
+      "bytes": 47935
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-007-corrections.md",
+      "sha256": "3f192f908d70c0704e6def3866d87df941e8327c45bd5624c591518adf423cf5",
+      "bytes": 41993
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-008-corrections.md",
+      "sha256": "a5dfc46f7e3466c6b45fdb694323b32c3d47eac9db4f0a2f16cd000e80fe3e54",
+      "bytes": 29646
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-009-corrections.md",
+      "sha256": "c53013ff1cc53f54328dd97b0e0436441df645a66e691a3aeb045716cf3b2d3c",
+      "bytes": 28259
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-010-corrections.md",
+      "sha256": "da9414a37f53811aa152c206b582908fb3375898c90fc66b31d1931f6ae7a791",
+      "bytes": 24763
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-011-corrections.md",
+      "sha256": "e8b29614df1a1a96f6361708511429569b685efdf7c8e88564c1f8fd30e47a30",
+      "bytes": 21677
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-012-corrections.md",
+      "sha256": "6593800fa49973ada6e36af6549b2b4e5f0c84e95b17d587d2c64b32e8ca4e4b",
+      "bytes": 16369
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-014-corrections.md",
+      "sha256": "376412cb99bd0b7cb422c93350a6f2c774e48ce9d78c77b87b883c8c9e573e6c",
+      "bytes": 18769
+    },
+    {
+      "path": "docs/implementation/CF-WO-P0-015-corrections.md",
+      "sha256": "6443882e23275e8a223805b00b6d101dfe3ce40621c251e7fbc285940113c2c1",
+      "bytes": 16191
+    },
+    {
+      "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
+      "sha256": "23bb2a5aa29fde3bbacbec7996625c52b25e9d67106c278da8bb35ed0f855099",
+      "bytes": 27096
+    },
+    {
+      "path": "docs/implementation/build-report.json",
+      "sha256": "00967992b880054e9771ba3e88ccf6f9c14c58bb5c09198e5ab1b3b40e9baa7b",
+      "bytes": 18392
+    },
+    {
+      "path": "registry/adapters.json",
+      "sha256": "44a0ee859df0188d04d918e05b48931158754d2bd65819fd664cfab02e09f9ea",
+      "bytes": 10856
+    },
+    {
+      "path": "registry/features.json",
+      "sha256": "2476bca9ecf00ed178a89fba6d4eef7d5f023f3c92a58d121e0da7a4a29a3f35",
+      "bytes": 90083
+    },
+    {
+      "path": "registry/skills.json",
+      "sha256": "4d6756579220fddc5c558cd911690bff6ca360c463e516e3312eca1f9f4a3820",
+      "bytes": 23769
+    },
+    {
+      "path": "registry/workflows.json",
+      "sha256": "ec00c445e5e73e0bdc6ff1d9196c41c5a892f7aa0aa615f2dc3409ac3f8a937c",
+      "bytes": 7509
+    },
+    {
+      "path": "schemas/README.md",
+      "sha256": "a968cff7c83ba515b2f766f6901cdae036d357dc0aec6677f4d9a02994a7b477",
+      "bytes": 8252
+    },
+    {
+      "path": "schemas/approval.json",
+      "sha256": "b95dc7a2e8d778fae248a46c3456b846f5d3b2a4496e5a640ef454b287d49f0b",
+      "bytes": 1998
+    },
+    {
+      "path": "schemas/build-report.json",
+      "sha256": "0cc24bf28ddbe6cb06041a4248259bfc14e104fe09c7fedb1208c99c88d27083",
+      "bytes": 3927
+    },
+    {
+      "path": "schemas/character-registration.json",
+      "sha256": "847525d7f38889b80a95c0c31de5a436fb3cb14e2734bb50a79802660560df26",
+      "bytes": 8910
+    },
+    {
+      "path": "schemas/character.json",
+      "sha256": "8625bd465db50942ec14205576eba59507468f7755725d02d9b697a6702a3e35",
+      "bytes": 9771
+    },
+    {
+      "path": "schemas/episode-state.json",
+      "sha256": "63c87e482b6aa999eab0d9dba1b2bd652b007abc868cbc765db6a036f89aa624",
+      "bytes": 1863
+    },
+    {
+      "path": "schemas/evidence.json",
+      "sha256": "6023bb59088a562b00b97a78ab7190875722e547957c4a06b07dede9592a4c3d",
+      "bytes": 1408
+    },
+    {
+      "path": "schemas/installer-result.json",
+      "sha256": "5b4bfe44d4dc0482ee68237c789fd68569b4edd3790a25dd630240e00a720aea",
+      "bytes": 1501
+    },
+    {
+      "path": "schemas/intake-job.json",
+      "sha256": "c41d40317c4b903e45a0f5f4051fc69d7393b6053ee17be079ac22e8e967d81d",
+      "bytes": 2332
+    },
+    {
+      "path": "schemas/location.json",
+      "sha256": "2a8b9ff345f624deaa55229ec8aba1fc3f693877fd9f50ac1458ea9270bf6602",
+      "bytes": 1647
+    },
+    {
+      "path": "schemas/performance-plan.json",
+      "sha256": "372bdba850971fb366d3bf96676c7258e7844469daa800387bbeec7e444fae5d",
+      "bytes": 10781
+    },
+    {
+      "path": "schemas/production-profile.json",
+      "sha256": "47c6efa98a04f4c241754c67fea1b0dcc0e2135ea97c2af5a6470c839d4f81cb",
+      "bytes": 6631
+    },
+    {
+      "path": "schemas/project.json",
+      "sha256": "890adb57a458e9e5c82ec150160988cee86ec5ce908d0e4140b4aaf2472c04e7",
+      "bytes": 1926
+    },
+    {
+      "path": "schemas/prop.json",
+      "sha256": "9d3231f4e3946ec22d5d6a5cb5e4b74377f016d730eeb41b835d6c69898680b6",
+      "bytes": 1635
+    },
+    {
+      "path": "schemas/reference-learning.json",
+      "sha256": "42c11a55b050dade746c2d7d5a0473a93dd0bc4c5ed8e8b735dc73678ce1824f",
+      "bytes": 2175
+    },
+    {
+      "path": "schemas/reference-review.json",
+      "sha256": "3645e801a871c9729225bc15cbc453c0f7e89aaa21f39842132dc9886f474800",
+      "bytes": 3355
+    },
+    {
+      "path": "schemas/release-manifest.json",
+      "sha256": "67d8a534b56398c06a7708f637db2d357d257c5e0e3e6b76d47e664941c17c78",
+      "bytes": 1907
+    },
+    {
+      "path": "schemas/scene-plan.json",
+      "sha256": "9fcd3b9d4af98f02d76dd35c7081929251445397cce2525f858000fb41d31f9d",
+      "bytes": 11465
+    },
+    {
+      "path": "schemas/script-contract.json",
+      "sha256": "a015692dba8f88544f2f2bc421cdba64e4ca0a2a14cd80fe63d05150cb6f557b",
+      "bytes": 2518
+    },
+    {
+      "path": "schemas/script-to-performance.json",
+      "sha256": "4c882da699126c2479cb4c8954dce37bbac0f24518fb076bc3032b93f39467d2",
+      "bytes": 9098
+    },
+    {
+      "path": "schemas/shot-plan.json",
+      "sha256": "4160831e2347bbab91d205874775eb2d50745137898428b4470440f416234199",
+      "bytes": 10830
+    },
+    {
+      "path": "schemas/sound-asset.json",
+      "sha256": "85fbf240515bb202da75fcdfeb569f78e70b5cd58a8c617ff3aaacdc5f33118e",
+      "bytes": 3448
+    },
+    {
+      "path": "schemas/story-bible.json",
+      "sha256": "417569299362fc6a51c360581d8a39adb2a91bb60d207ea92b10f5d25982363a",
+      "bytes": 1250
+    },
+    {
+      "path": "schemas/timeline-manifest.json",
+      "sha256": "dc8ebeeff3719be14bc4c1d463d59b52dc9474dfbc30ff4bc887d4ef55895dcf",
+      "bytes": 18206
+    },
+    {
+      "path": "schemas/visual-style-profile.json",
+      "sha256": "e85d62591216cb2b90db28ead60d2e21f2233b8ef458df4684ad28405eb94163",
+      "bytes": 3941
+    },
+    {
+      "path": "schemas/voice-profile.json",
+      "sha256": "f0573cbb8dbf70fada6c2c6f85da67fdb9176a6e8610ae0a783f66676e6d77ed",
+      "bytes": 10863
+    },
+    {
+      "path": "schemas/wardrobe.json",
+      "sha256": "58a38d1fe491ec8df467d1f3092bb1c7a2c13a4edde0d417444c5f43c09c19f8",
+      "bytes": 1765
+    },
+    {
+      "path": "scripts/asset_policy.py",
+      "sha256": "6cdfd32914e9cd93de56904e77529a788e113b707b1e996bd73871437ddd4e3a",
+      "bytes": 73029
+    },
+    {
+      "path": "scripts/atomic_write.py",
+      "sha256": "76d01b29e2e495d8eece67915664dd180561c18d7b255ee9b4ca683c49b207ab",
+      "bytes": 3822
+    },
+    {
+      "path": "scripts/generate-build-report.py",
+      "sha256": "c6140f2a0794d340535bf366ebe59f80282066d218594d84a64a99a551dba67f",
+      "bytes": 40427
+    },
+    {
+      "path": "scripts/generate-registries.py",
+      "sha256": "d5f402e960f04b6ab3ff41e43e6d7a15755ed07f5b7619e3490ae35424569e02",
+      "bytes": 14434
+    },
+    {
+      "path": "scripts/generate-report.py",
+      "sha256": "66e5931e16c5df7d2b53228cc9384491210939fcf8e7ceb4f91e78d7d3390126",
+      "bytes": 18589
+    },
+    {
+      "path": "scripts/sync-skills.sh",
+      "sha256": "cd9427766aeb07e4a282145b2416f0add5cd9f1eb6292d62a6dc053a3ac97400",
+      "bytes": 39460
+    },
+    {
+      "path": "scripts/timeline_policy.py",
+      "sha256": "fde352444c12a4c68c0e20c6b92186f9209b1a2d4ef975ca9f9caffe4d0f5c76",
+      "bytes": 42620
+    },
+    {
+      "path": "scripts/validate-repo.py",
+      "sha256": "4cb12fdd8606ebbb99ce1c81900c0f90d7b3ed7e990a23de927733630dee5c90",
+      "bytes": 29362
+    },
+    {
+      "path": "setup.sh",
+      "sha256": "134bc6896650e9ecdb7ead21f79f131ba8401603cd4f0d4bd3a83662ab837bad",
+      "bytes": 18637
+    },
+    {
+      "path": "skills/agency-advertising/SKILL.md",
+      "sha256": "c3ee45ac2cd769270204a8d38fd4517d1d43dc168b9c33e45b918a558c5fa184",
+      "bytes": 10939
+    },
+    {
+      "path": "skills/character-consistency/SKILL.md",
+      "sha256": "1e3d587f2124350e1cb74d3fcdb1d089838330b580f1ce69bcabb74ea790d78c",
+      "bytes": 24669
+    },
+    {
+      "path": "skills/cinematic-power/SKILL.md",
+      "sha256": "db7f6fb3e34ceb3d2408cde57d45b408b241bd8861365ed4209567d4a482fba9",
+      "bytes": 13490
+    },
+    {
+      "path": "skills/command-authority/SKILL.md",
+      "sha256": "39ac0fcaf40aa89a92f19c4c067872b9c50fd578457ba782ae6e3c4298981e78",
+      "bytes": 15240
+    },
+    {
+      "path": "skills/emotional-performance/SKILL.md",
+      "sha256": "2f2cd2a5d403c9e6c86e40571c8dbbcb84a5f1676e0e5cbd421dad1a28e839a0",
+      "bytes": 15129
+    },
+    {
+      "path": "skills/explainer-animation/SKILL.md",
+      "sha256": "4b5067959f622ceeb46f1697aaa16e1bd9478b0a0f7faa6856c1e3866c2bb7ce",
+      "bytes": 4770
+    },
+    {
+      "path": "skills/humanized-production/SKILL.md",
+      "sha256": "2bdfdb6a958337c2f654295571b1c615d919e7833762cc9340d9b4be46b0aee2",
+      "bytes": 23894
+    },
+    {
+      "path": "skills/language-authenticity/SKILL.md",
+      "sha256": "a370ecc948b3ba5f6621f2cdc5caa8c01e2ed8827a9903f6b8c61ea14788a0ee",
+      "bytes": 8236
+    },
+    {
+      "path": "skills/live-action-vfx/SKILL.md",
+      "sha256": "32acf307dc86f2e3ef06331668f371e73457f15ecc9700d828575a82eccd0a8b",
+      "bytes": 13697
+    },
+    {
+      "path": "skills/production-systems/SKILL.md",
+      "sha256": "85958c281d391e172d40543be5d59a7473d1efc3d22c4a6ce307ca57f8acfc2c",
+      "bytes": 31844
+    },
+    {
+      "path": "skills/realistic-person/SKILL.md",
+      "sha256": "5fc7f7fb69bfce8159ad6c7399b071b56b075f47114099fdecfb13c44b35664e",
+      "bytes": 7025
+    },
+    {
+      "path": "skills/video-regeneration/SKILL.md",
+      "sha256": "ea47ad9ec1a96661b52180f1512aa4f72cc815d20c38d99e57d76481f36bdc92",
+      "bytes": 13451
+    },
+    {
+      "path": "skills/voice-consistency/SKILL.md",
+      "sha256": "9e604e1b568d6649ff3ac4a75a69ee1d26d85eae255512c8b5b742be031bbf71",
+      "bytes": 15558
+    },
+    {
+      "path": "tests/fixtures/character-extended-valid.json",
+      "sha256": "1520b9ef381a170df99c0494e8dad8096c27765232c25df81fd882ff28277c24",
+      "bytes": 1176
+    },
+    {
+      "path": "tests/fixtures/character-registration-bird-valid.json",
+      "sha256": "7877f11b41387518719bc42bf27dd612f00a71b688884c4ede2efc37ad81935c",
+      "bytes": 1692
+    },
+    {
+      "path": "tests/fixtures/character-registration-invalid-duplicate-id.json",
+      "sha256": "c917c2752199fb202ec612a0731a48b93dfd06063bbaba2c8a0e108616e82253",
+      "bytes": 781
+    },
+    {
+      "path": "tests/fixtures/character-registration-invalid-missing-id.json",
+      "sha256": "1790c0a243377568a2cd91c1b4baca8810cb0130689735cf71b96899046ee162",
+      "bytes": 349
+    },
+    {
+      "path": "tests/fixtures/character-registration-valid-bird.json",
+      "sha256": "25a1800f08d0e71965b6f0e3bce151e8811010bfd4446e1a1fb09b53826d11e8",
+      "bytes": 1815
+    },
+    {
+      "path": "tests/fixtures/character-registration-valid-human.json",
+      "sha256": "4e99f6120c40f8fb7f74da2c6580df8a52ee35611f32e129e031c25584b7bdc7",
+      "bytes": 1669
+    },
+    {
+      "path": "tests/fixtures/character-registration-valid.json",
+      "sha256": "652ccd28d141d131ee2a63bbe7c8de87e6c8d3612721b498642c54727fe175b1",
+      "bytes": 1433
+    },
+    {
+      "path": "tests/fixtures/character-valid-v25-animal.json",
+      "sha256": "5988ddea576dd91f561ea41b7ba09cc676d0265756a488b24afb4cecae380a4b",
+      "bytes": 1393
+    },
+    {
+      "path": "tests/fixtures/character-valid.json",
+      "sha256": "6dd90d1abdeb5228e1294aaef786e83f70d898af4827f5d3ccd7ac9f909683e9",
+      "bytes": 766
+    },
+    {
+      "path": "tests/fixtures/intake-temporary.json",
+      "sha256": "dee8f44e27536019f2de03594809cf6215916b1c558252dbd9e9e1698217c8fe",
+      "bytes": 221
+    },
+    {
+      "path": "tests/fixtures/performance-plan-bird.json",
+      "sha256": "b5f6fd604ac77ac2b84fd77a38f1623b8c9174991401812913591fbea1140e4b",
+      "bytes": 649
+    },
+    {
+      "path": "tests/fixtures/performance-plan-human.json",
+      "sha256": "498b4e56a59475647444679958318d2302fea8acdbba7a144eca176ec0a6bb84",
+      "bytes": 683
+    },
+    {
+      "path": "tests/fixtures/performance-plan-invalid-bird-human-lips.json",
+      "sha256": "5911dca5d49ca74f5833e4a2a3ebadf51aa6ed5cfec1ffc81bec6b78500f8d9a",
+      "bytes": 832
+    },
+    {
+      "path": "tests/fixtures/performance-plan-two-person.json",
+      "sha256": "8db8fa64a565e8c415643ab60898b5b84b5ff9174ccd03eae5924faf45d6141b",
+      "bytes": 2099
+    },
+    {
+      "path": "tests/fixtures/performance-plan-valid-bird.json",
+      "sha256": "fabb6144d06798dd2af4929ee78bce92441a7f67c918d3fe428cfeeb7a72c2e2",
+      "bytes": 1519
+    },
+    {
+      "path": "tests/fixtures/performance-plan-valid.json",
+      "sha256": "1afee174e1f6242e798a4a55bd05d58f154eca2dc4e441540b03ac377dc0bb63",
+      "bytes": 1209
+    },
+    {
+      "path": "tests/fixtures/production-profile-invalid-animation-type.json",
+      "sha256": "950ca0309fcc3b61c79c0d5e89525458eea169cee5764148143efe843301000b",
+      "bytes": 412
+    },
+    {
+      "path": "tests/fixtures/production-profile-invalid-digital-human-live-action.json",
+      "sha256": "715deb700d50c771ef6654bb209fc80e1c524a4a8c6db4e52ba7bf89fcc7d8d1",
+      "bytes": 420
+    },
+    {
+      "path": "tests/fixtures/production-profile-reference-video.json",
+      "sha256": "3b8dd5c58b43a20ee3a750292b41b5c45b01984e96237bece1de70d341034156",
+      "bytes": 523
+    },
+    {
+      "path": "tests/fixtures/production-profile-script-only.json",
+      "sha256": "9d335ab84e1213980b5a0ca1aaf6c552f13660fe81b5d17ee0a0a615f2b4d717",
+      "bytes": 517
+    },
+    {
+      "path": "tests/fixtures/production-profile-valid-digital-human.json",
+      "sha256": "44c1bd6a66ac1f6787c4e554a4c02777b1449f5a6e7ac702b4e8c96a098b337e",
+      "bytes": 1152
+    },
+    {
+      "path": "tests/fixtures/registration-invitation.json",
+      "sha256": "eab293b6560c24116f7b662dabed303f7da0547d19446ea8edccac95863c7733",
+      "bytes": 184
+    },
+    {
+      "path": "tests/fixtures/routing-profile-s1-explainer-2d.json",
+      "sha256": "3d54ed6aa810ad1721f905fa469bf72f59186bc14c64ab6ace98efb3bac92ca5",
+      "bytes": 1024
+    },
+    {
+      "path": "tests/fixtures/routing-profile-s2-stylized-3d.json",
+      "sha256": "d88ff5cbe75c7f0429552bbe2efcc228a65415b58120ec601a60224cdb446a75",
+      "bytes": 762
+    },
+    {
+      "path": "tests/fixtures/routing-profile-s4-human-bird.json",
+      "sha256": "44f758a76798ea7431ecdac5f32352a107b5c2429f5073a8f44302074af19865",
+      "bytes": 1239
+    },
+    {
+      "path": "tests/fixtures/routing-profile-s5-live-action-creature.json",
+      "sha256": "2cc37b8a728bd66c59fe2523bdfecd56911a5ae35ba4a5a1e9e3dd9acba4b4ae",
+      "bytes": 1070
+    },
+    {
+      "path": "tests/fixtures/routing-profile-s6-real-animal.json",
+      "sha256": "465d4faf66d268c7828cbdef1b3aa66b4f8bb9fcb5d7f6fd6f5235aef490a293",
+      "bytes": 608
+    },
+    {
+      "path": "tests/fixtures/routing-profile-s7-video-to-video.json",
+      "sha256": "1e76203519175f19ea6b02029d9c4c1576815c8a95a3bd9f102e744cda27463d",
+      "bytes": 783
+    },
+    {
+      "path": "tests/fixtures/routing-profile-s8-photorealistic-explainer.json",
+      "sha256": "803efcd610264fdf17581b6365bef56f0d1e07870da07b282e24246bc22f098c",
+      "bytes": 854
+    },
+    {
+      "path": "tests/fixtures/scene-plan-two-person.json",
+      "sha256": "2613f015cc9b38950037828687c401ae7b790b2d412c9d14f5d962305db2ac57",
+      "bytes": 1500
+    },
+    {
+      "path": "tests/fixtures/scene-plan-valid-human-bird.json",
+      "sha256": "d789144b65a7e203ee9a26be0ea253b1149aabcf0cf2d0ebcf51c7521db01b01",
+      "bytes": 1853
+    },
+    {
+      "path": "tests/fixtures/scene-plan-valid.json",
+      "sha256": "2f1e0f8d67113413b7716e836675e685d99ff64215d20b3f8a7e385e6277a2a7",
+      "bytes": 988
+    },
+    {
+      "path": "tests/fixtures/script-to-performance-binding.json",
+      "sha256": "dc66ab9a886a664f175be54b8df7af7b1768e6000eca203381cb49119f2a26f2",
+      "bytes": 1271
+    },
+    {
+      "path": "tests/fixtures/script-to-performance-valid-bindings.json",
+      "sha256": "2e5487f78f03f3954c1ff62ad45f360dd6ec0f8fef0d5618a407b2b5b64ae39b",
+      "bytes": 1283
+    },
+    {
+      "path": "tests/fixtures/script-to-performance-valid.json",
+      "sha256": "b5acdcae071a0b4945c266643ef4d173900fc39613cc58e35c471ba848ad04e8",
+      "bytes": 734
+    },
+    {
+      "path": "tests/fixtures/shot-plan-directed.json",
+      "sha256": "55037cf9f2fca56f64b97302b6eb338b228d998e14e9d3f44a5a86b21cb58831",
+      "bytes": 3283
+    },
+    {
+      "path": "tests/fixtures/shot-plan-valid-human-bird.json",
+      "sha256": "06e993d7a60cc2c7237a5a5e339c40d6694ac6952d88eb34ff5bd630b5f63d0b",
+      "bytes": 1630
+    },
+    {
+      "path": "tests/fixtures/shot-plan-valid.json",
+      "sha256": "5363579c251329e1194433677f8c40e32afe2c31efc7743a0a353d1be4c262b7",
+      "bytes": 704
+    },
+    {
+      "path": "tests/fixtures/sound-asset-valid.json",
+      "sha256": "7aa65dfbb178690856fcb8900b0b10f79a430e5ffd4b2daecb16d440ebd01e90",
+      "bytes": 588
+    },
+    {
+      "path": "tests/fixtures/temporary-asset-use.json",
+      "sha256": "556dd14c08fcad15a9c17009ed29912c9b19c2e15ebb23959307afe741f7e689",
+      "bytes": 187
+    },
+    {
+      "path": "tests/fixtures/timeline-valid-v23.json",
+      "sha256": "a164c83cc7dbf981903799d24c2289f89464d7f0fbb79a70147fe4a77921e2c8",
+      "bytes": 711
+    },
+    {
+      "path": "tests/fixtures/timeline-valid-v25-multicharacter.json",
+      "sha256": "c7758f2c575cd4d345746e4a157c4562cdc119cf7856b28c8a9a1108497443db",
+      "bytes": 3991
+    },
+    {
+      "path": "tests/fixtures/visual-style-profile-valid.json",
+      "sha256": "52fa873a2f9c1fc7c5cd382ee77052eb747a9db36b4ab76dba28ef69ccf36b8b",
+      "bytes": 576
+    },
+    {
+      "path": "tests/fixtures/voice-profile-ai-generated.json",
+      "sha256": "50fd77e6320ba40cf12168cfaaac5a7e614b9057dbef8f51c7a15103275089e5",
+      "bytes": 830
+    },
+    {
+      "path": "tests/fixtures/voice-profile-user-recording.json",
+      "sha256": "dcee038dae5a404f752aaee1738ed390781b1b8c3fb3272ee039b57a73dc2cd8",
+      "bytes": 906
+    },
+    {
+      "path": "tests/fixtures/voice-profile-valid-ai-generated.json",
+      "sha256": "135b87a0508277297fa19235a9056456de32de32fc2f2ea00f805c5029eabe94",
+      "bytes": 1401
+    },
+    {
+      "path": "tests/fixtures/voice-profile-valid-user-recorded.json",
+      "sha256": "3381b485f116e45eca6978f1638c195d9ca3c4965931c869bac8c9797e499b95",
+      "bytes": 1409
+    },
+    {
+      "path": "tests/fixtures/voice-profile-valid.json",
+      "sha256": "f877ffe979ccc9b38f1412ca718fff3d70b25b53020ebf14ac5c37e740e762d8",
+      "bytes": 640
+    },
+    {
+      "path": "tests/last-run.json",
+      "sha256": "5f5db58343832be2864eef5455879cffb3b9270ebc45b6c518539e23c9268595",
+      "bytes": 7850
+    },
+    {
+      "path": "tests/run-tests.sh",
+      "sha256": "5b43523562dd7491a7ff2bb8c709d2a84f5e5bb6ac0e6385b2386da6e1517830",
+      "bytes": 5725
+    },
+    {
+      "path": "tests/test_atomic_write.py",
+      "sha256": "bef3f2bab95c018d94d953fba440e34ccf8f832cc181ad881052acdcb8bad2a4",
+      "bytes": 5325
+    },
+    {
+      "path": "tests/test_character_registration.py",
+      "sha256": "be8e6862dd3f21fd50d138c4785e63f72666afd406b44925f0c752312101410f",
+      "bytes": 54096
+    },
+    {
+      "path": "tests/test_installer.sh",
+      "sha256": "1dca3d6e6b1aa2f08e476849d9cfa25dbd97f96b90bac0335700e7a952d4ddc2",
+      "bytes": 11441
+    },
+    {
+      "path": "tests/test_installer_manifest_security.sh",
+      "sha256": "9d99fadaeaa44bb78b361cc58a3fa7f3f89eb401ed13b49e67a26bb695f888b4",
+      "bytes": 6788
+    },
+    {
+      "path": "tests/test_installer_metadata_failure.sh",
+      "sha256": "9f03248d79e0d3f116f8a2f38e29db29515f8f1ae90322895f91dbd4a348ee1f",
+      "bytes": 14146
+    },
+    {
+      "path": "tests/test_installer_security.sh",
+      "sha256": "9ad8b36acf1b2330f927767b7b8c4d202ebd70f464eca1bbfe57949a9653e299",
+      "bytes": 8174
+    },
+    {
+      "path": "tests/test_installer_status.sh",
+      "sha256": "b85b9f8a234f2d6fb604fd813dc43580a4dd765c1447f433878dbdec8a8d061a",
+      "bytes": 27177
+    },
+    {
+      "path": "tests/test_modes.py",
+      "sha256": "d5adf757a9340b3d42433423195196d935a24af3ff670a34c9d1863a767c7fbe",
+      "bytes": 7410
+    },
+    {
+      "path": "tests/test_performance_semantics.py",
+      "sha256": "9584cc95a2c35a17f0a3524bc691e6da2e0d8ade1ab83ca7d8125c100997fd15",
+      "bytes": 10243
+    },
+    {
+      "path": "tests/test_private_overlay.py",
+      "sha256": "4c6def31217b136e08374f8a68dd9ceb7cb7078086c78aacbe3b7d9bdb8ab8b4",
+      "bytes": 8129
+    },
+    {
+      "path": "tests/test_private_voice_security.py",
+      "sha256": "cfe233805a0ac425071ed4fbb2a77f2066cc109ae52b7681b42fc8d3988341cb",
+      "bytes": 88062
+    },
+    {
+      "path": "tests/test_production_direction.py",
+      "sha256": "a3103607f3a8233f8bf546b43d8ea3049d491cd6f59d7f7d7cd1a491aa513973",
+      "bytes": 63743
+    },
+    {
+      "path": "tests/test_registries.py",
+      "sha256": "04c75956370ac0aac5e88ff9ecf3ddaaf984343eb3ad4e3f3e8d92ccd6a293e5",
+      "bytes": 5033
+    },
+    {
+      "path": "tests/test_reports.py",
+      "sha256": "6ae8b65843f601b90161622bc197aaa3bb3172713bee8f9e27b371eee313b6ed",
+      "bytes": 13525
+    },
+    {
+      "path": "tests/test_routing.py",
+      "sha256": "c69477e7570e317af4baf252e4bcc2621a8b3935838766da9de2e31ce6118862",
+      "bytes": 44848
+    },
+    {
+      "path": "tests/test_schemas.py",
+      "sha256": "f26779f24e35ec210e251b44c909cb7ee380488b09e99c406a2864f48389a309",
+      "bytes": 29783
+    },
+    {
+      "path": "tests/test_timeline_manifest.py",
+      "sha256": "13cd4810f424082c11f03512ea1ac8c6401cb62b236fd275cc801e09c5ec4808",
+      "bytes": 42651
+    }
+  ],
+  "tests": [
+    {
+      "id": "CF-INT-014",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-INT-015",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-INT-023",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-006-AC-DIR",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-006-AC-REG",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-007-AC-TIMELINE",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-008-SEC",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-014-INST",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-014-PIN",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-015-WT",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ASSET-001",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ASSET-002",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ASSET-003",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ATOMIC-001",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-LEARN-001",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-PERF-001",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-PERF-002",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-PERF-003",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-PERF-004",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-PERF-005",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-REPORT-001",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-REPORT-002",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-REPORT-003",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-REPORT-004",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-REPORT-005",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ROUTING-001",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ROUTING-002",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ROUTING-003",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ROUTING-004",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-01",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-02",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-03",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-MANIFEST-04",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-METADATA-05",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-METADATA-06",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-SEC-METADATA-07",
+      "result": "PASS"
+    },
+    {
+      "id": "P0-DIFF-CHECK",
+      "result": "PASS"
+    },
+    {
+      "id": "P0-PRIVACY",
+      "result": "PASS"
+    },
+    {
+      "id": "P0-ROUTING",
+      "result": "PASS"
+    },
+    {
+      "id": "P0-SCHEMA",
+      "result": "PASS"
+    },
+    {
+      "id": "P0-SHELL",
+      "result": "PASS"
+    }
+  ],
+  "generated_at_utc": "2026-11-23T15:24:40Z"
+}

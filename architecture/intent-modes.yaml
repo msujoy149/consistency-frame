@@ -1,0 +1,62 @@
+# Consistency Frame — intent modes (v2.3, P0)
+# Canonical mode list. A mode is never inferred from an upload alone.
+# Machine-readable copy of the mode contract in the P0 Start-Now prompt §4
+# and PRODUCT_MODES_AND_ASSET_LIFECYCLE_BN.md. Enforced by
+# scripts/asset_policy.py and tested in tests/test_modes.py.
+version: "2.3"
+modes:
+  UPLOAD_ONLY:
+    allowed: [store_in_temporary_intake, show_available_commands]
+    forbidden: [analyse, register, learn, edit, generate, report_mutation, commit, push, publish]
+    creates_permanent_record: false
+  TEMPORARY_ASSET_USE:
+    allowed: [use_for_current_job_only]
+    forbidden: [permanent_registration, cross_project_reuse, skill_mutation]
+    creates_permanent_record: false
+  PROJECT_CONSISTENCY:
+    allowed: [load_private_project_records, reuse_by_stable_id]
+    forbidden: [silent_create, silent_overwrite, silent_merge, global_registration]
+    creates_permanent_record: false
+  REGISTER_CHARACTER:
+    allowed: [permanent_character_registration]
+    requires: [explicit_authorisation, name, unique_id, approved_reference]
+    creates_permanent_record: true
+  REGISTER_VOICE_PROFILE:
+    allowed: [permanent_voice_profile_registration]
+    requires: [explicit_authorisation, rights_consent, character_link, reference_audio]
+    creates_permanent_record: true
+  REGISTER_SOUND_ASSET:
+    allowed: [permanent_sound_asset_registration]
+    requires: [explicit_instruction, source, licence_or_permission, owner, project_scope]
+    creates_permanent_record: true
+  GENERATE_FROM_SCRIPT:
+    allowed: [production_planning, shot_performance_audio_timeline_plan]
+    forbidden: [silent_dialogue_rewrite]
+    dialogue_mode_default: VERBATIM_SCRIPT
+    creates_permanent_record: false
+  EDIT_EXISTING_MEDIA:
+    allowed: [edit_via_verified_adapters_only]
+    forbidden: [edit_via_untested_adapter]
+    creates_permanent_record: false
+  REFERENCE_REVIEW:
+    allowed: [analyse, timecoded_report]
+    forbidden: [skill_mutation, permanent_registry_change]
+    creates_permanent_record: false
+  REFERENCE_LEARN_AND_UPDATE:
+    allowed: [analyse, evidence_backed_candidate, reviewable_patch]
+    requires: [explicit_user_instruction]
+    forbidden: [direct_canonical_write, push_to_main, publish]
+    creates_permanent_record: false
+  VIDEO_QC:
+    allowed: [inspect, report_defects]
+    forbidden: [regenerate_without_repair_authorisation]
+    creates_permanent_record: false
+  REMAKE_OR_TRANSFORM:
+    allowed: [transform_as_expressly_requested]
+    requires: [explicit_request, rights_provenance_check]
+    forbidden: [treat_as_skill_learning_by_default]
+    creates_permanent_record: false
+  REPORT_UPDATE_ONLY:
+    allowed: [regenerate_reports_from_canonical_records]
+    forbidden: [change_production_rules]
+    creates_permanent_record: false

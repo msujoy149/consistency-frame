@@ -1,6 +1,6 @@
 # Command Authority — Repo First, Self-Generate Only When Missing
 
-This repo is the command master. After a user installs it, videos are made WITH PERMISSION from the repo — the assistant reads and uses the repo's skills FIRST for every video, before generating anything itself. A skill that exists in the repo is used, not reinvented; a missing system is first written and saved as a new skill, and the video is then made by following that skill (the skill-first loop) — and reported to the user.
+This repo is the command master. After a user installs it, videos are made WITH PERMISSION from the repo — the assistant reads and uses the repo's skills FIRST for every video, before generating anything itself. A skill that exists in the repo is used, not reinvented; a missing system is first drafted for the task, and the video is then made by following that draft (the skill-first loop) — and reported to the user. The draft becomes a permanent skill only on the user's explicit authorisation.
 
 Counting note: this 1 system is part of the repo total. Together with the 12 professional, 18 extended, 3 language/captions/format, 7 additional, 36 humanization, 7 agency advertising, 1 video regeneration, 5 cinematic power, 6 live-action & VFX, 7 emotional performance, 1 user-supplied voice cloning, 1 on-demand resource management, 1 language authenticity, 1 realistic person video, 1 2D explainer animation, and 1 kids & family animation systems, the repo holds 109 distinct systems, presented as 120 numbered entries.
 
@@ -16,7 +16,7 @@ Never generate on your own while ignoring the repo.
 
 ## Missing skill fallback
 
-If a needed skill is NOT in the repo, check the repo's comments and notes about that topic FIRST — the README, the docs, AGENTS.md, and the skill descriptions. If the repo has a comment on it, follow the comment. If the repo gives no comment, the repo issues a generation command (see below): generate the needed system from that command, in the repo's skill format, save it as a new skill in `skills/` so the repo now has it, and tell the user plainly what was added and why. The order is fixed by the skill-first loop below: the skill is written and saved BEFORE any video is generated from it. Never silently invent a system that contradicts a repo skill or a repo comment.
+If a needed skill is NOT in the repo, check the repo's comments and notes about that topic FIRST — the README, the docs, AGENTS.md, and the skill descriptions. If the repo has a comment on it, follow the comment. If the repo gives no comment, the repo issues a generation command (see below): generate the needed system from that command, in the repo's skill format, draft it for this task so the video is made from it, and tell the user plainly what was added and why. The order is fixed by the skill-first loop below: the skill is drafted BEFORE any video is generated from it; it becomes a permanent skill only on the user's explicit authorisation. Never silently invent a system that contradicts a repo skill or a repo comment.
 
 ## The generation command
 
@@ -24,9 +24,9 @@ When a skill is missing, the repo issues a generation command in this standard f
 
 - **Generate:** [the missing system, in one line — what it must do].
 - **Preserve:** the fixed identity — the character's face, structure, hands, and feet; the character's voice (tags + seed + reference audio); the locked visual style; continuity with the episode and the series. Nothing fixed is ever redesigned.
-- **Quality bar:** correct, cinematic, human-generated — human-feeling, never robotic. Realism target 100%, 99.9% as the floor.
+- **Quality bar:** correct, cinematic, human-generated — human-feeling, never robotic. Realism target: the closest achievable match to the reference, verified shot by shot against the approved reference with a human-review gate; no absolute percentage is guaranteed.
 - **Verify:** check the result against the fixed reference; run the episode QC checklist; the user approves before anything is locked in.
-- **Save:** write it as a new skill in `skills/` in the repo's skill format, and tell the user plainly what was added and why.
+- **Save:** draft it first for this task; it becomes a new skill in `skills/` only on the user's explicit authorisation. Tell the user plainly what was added and why.
 
 ## Light details are delegated
 
@@ -44,7 +44,7 @@ When the repo has no instruction at all for something, it explicitly says "do it
 4. Decide the voice/video order for this project and keep it: voice first, then video matched to it — or video first, then voice. One order, followed consistently through the whole project.
 5. Generate shot by shot, line by line, from the script. Dialogue in each character's language, in natural spoken language, short lines with pauses; lip-sync matched to the sounds of that language. Apply the standing defect list; keep the locked style and the scene's colour grade.
 6. Keep continuity while generating: story bible and continuity tracker; no overlap between characters; check each shot against the fixed reference as you go — a drifted face is regenerated fresh, never inpainted; clip boundaries must match.
-7. Add the sound: ambience and room tone, foley on visible beats, dialogue, music ducked under dialogue; scene music follows the scene's emotion. Master to −14 LUFS, true peak below −1 dBTP.
+7. Add the sound: ambience and room tone, foley on visible beats, dialogue, music ducked under dialogue; scene music follows the scene's emotion. Master to the project's named delivery profile (B14).
 8. Run the QC checklist before delivery: faces, voices, emotions, dialogue exact, no defects, clothing, sound matched, no contradiction with the story bible or the continuity tracker. Never deliver a failed check without telling the user what failed.
 9. Deliver in the requested format, and get approval. Aspect ratio and platform as asked. The user approves before anything is locked in.
 10. If the work grows into a system, save it: generate it as a new skill from the generation command above so the repo now has it.
@@ -61,13 +61,15 @@ The missing-skill fallback and the generation command say a missing skill is gen
 
 1. Detect the gap: no skill has the command for the thing being made.
 2. Check the repo's comments and notes first — the README, the docs, AGENTS.md, and the skill descriptions. If the repo has a comment on it, follow the comment.
-3. Write the new skill FIRST. If the repo gives no comment, build the missing system from the script's need, the common core, the main flow, and the generation command — in the repo's skill format: YAML frontmatter with name and description, numbered sections, and citations to the existing systems it builds on. Save it in `skills/` BEFORE generating any video.
-4. Then make the video by following that new skill exactly — the normal skill-first path. Never improvise the video from the generation command alone.
+3. Write the new skill FIRST — as a task-local draft (see below). If the repo gives no comment, build the missing system from the script's need, the common core, the main flow, and the generation command — in the repo's skill format: YAML frontmatter with name and description, numbered sections, and citations to the existing systems it builds on. Draft it BEFORE generating any video.
+4. Then make the video by following that draft exactly — the normal skill-first path. Never improvise the video from the generation command alone.
 5. Run the QC checklist before delivery. The user approves before anything is locked in.
 6. Tell the user plainly what was added and why.
-7. Keep the repo's own numbers true. When a new skill is actually added this way, update the counts, the README, docs/01, the CHANGELOG, and the plugin manifests (which list every skill) — so the repo's own numbers never go stale.
+7. Keep the repo's own numbers true. When a new skill is actually added this way, update the counts, the README, docs/01, the CHANGELOG, and the plugin manifests (which list every skill) — so the repo's own numbers never go stale. Run `scripts/generate-registries.py` and `scripts/validate-repo.py` after any such change.
 
-The guarantee: with this loop, no video is ever improvised — every video is made by following some skill — and every gap is closed permanently the first time it appears. The next time the same kind of video is asked for, the skill is already there, and the work takes the ordinary skill-first path.
+**Task-local draft vs permanent mutation.** Steps 1–6 use the new system as a task-local draft: it guides this one video and is shown to the user with it, but it does not by itself change any canonical skill, registry count, or committed rule. A draft becomes a permanent canonical skill only when the user explicitly authorises it ("save this as a skill" / "add it to the repo"), and the change is then made on a reviewable branch, validated, and reported. Without that authorisation the draft stays task-local and the canonical skills are untouched. This is the same gate as `REFERENCE_LEARN_AND_UPDATE` (see `architecture/intent-modes.yaml`).
+
+The guarantee: with this loop, no video is ever improvised — every video is made by following some skill — and no gap is closed permanently without the user's say-so. The next time the same kind of video is asked for and the skill was authorised, the skill is already there, and the work takes the ordinary skill-first path.
 
 What this loop is NOT: it does not change "do it yourself". Small work with no repo instruction at all still takes that path — quality commands plus the main flow. The loop is only for a genuinely missing SYSTEM — a skill the repo does not have.
 

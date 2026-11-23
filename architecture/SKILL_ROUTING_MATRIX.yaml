@@ -1,0 +1,878 @@
+# Consistency Frame — Skill Routing Matrix (v2.4, P0)
+# Canonical routing record for the Brain's Intelligent Skill Routing.
+# One entry per skill (all 15, ids skill-<slug> matching registry/skills.json).
+# Every value is grounded in skills/<slug>/SKILL.md or registry/skills.json;
+# where a skill does not state something, the value is "not_stated_in_skill".
+# Precedence is unique 1-15, lower runs earlier. Precedence is a ROUTING order
+# and a TIE-BREAKER only, never exclusion: several skills routinely run in one
+# production (see WORKFLOW_GRAPH.yaml routing_model). Only TRUE conflicts
+# apply — two rules that cannot both hold for the SAME subject in the SAME
+# shot. The full scoped rules are defined in WORKFLOW_GRAPH.yaml
+# true_conflicts (TC-1..TC-10). The per-skill `conflicts` list holds only the
+# blocking pairs the resolver enforces (a pair listed here blocks the two
+# skills being selected together for one production); its scope is given per
+# skill in `conflict_scope`. A pair that can combine across different
+# subjects or shots is a scoped graph rule, not a matrix blocker.
+# Routing rule: sequential when a stage depends on an earlier stage's output;
+# parallel only when safe (no dependency between the skills). Execution order
+# is architecture/WORKFLOW_GRAPH.yaml. Validated by tests/test_routing.py
+# and scripts/validate-repo.py (check 8).
+# Source of truth: skills/<slug>/SKILL.md (15 skills), registry/skills.json,
+# architecture/intent-modes.yaml. No value here is invented: where a skill does
+# not state something, the value is "not_stated_in_skill".
+# Precedence is unique 1-15, lower runs earlier. Precedence is a ROUTING order
+# and a TIE-BREAKER only, never exclusion: several skills routinely run in one
+# production (see WORKFLOW_GRAPH.yaml routing_model). Only TRUE conflicts
+# apply — two rules that cannot both hold for the SAME subject in the SAME
+# shot. The full scoped rules are defined in WORKFLOW_GRAPH.yaml
+# true_conflicts (TC-1..TC-10). The per-skill `conflicts` list holds only the
+# blocking pairs the resolver enforces (a pair listed here blocks the two
+# skills being selected together for one production); its scope is given per
+# skill in `conflict_scope`. A pair that can combine across different
+# subjects or shots is a scoped graph rule, not a matrix blocker.
+# Routing rule: sequential when a stage depends on an earlier stage's output;
+# parallel only when safe (no dependency between the skills). See
+# WORKFLOW_GRAPH.yaml for the execution graph.
+# DRAFT — do not copy into the repo without coordinator review.
+# FIXED VOCABULARIES (P0-006, canonical doc; never a single `animation_type` enum):
+# VISUAL_STYLE: flat-2d-vector, hand-drawn-2d, illustrated-2d, anime, cartoon-2d,
+#   stylized-3d, semi-realistic-3d, photorealistic-3d-cgi,
+#   photorealistic-digital-human, photorealistic-digital-animal-creature, mixed,
+#   captured-live-action
+# PRODUCTION_MEDIUM: 2d-drawn-vector, 3d-cgi-rigged, ai-digital-human,
+#   ai-digital-creature, live-action-footage, hybrid-live-action-cgi
+# SOURCE_MEDIA: script-only, reference-image, reference-video, captured-footage,
+#   generated-image, generated-video, mixed
+# MOTION_METHOD: rig-2d-keyframe, rig-3d-keyframe, ai-image-to-video,
+#   ai-video-to-video, motion-capture, performance-transfer, face-animation,
+#   body-animation, pose-gesture-transfer, lip-sync-phoneme-viseme,
+#   creature-articulation, rotoscoping-compositing, captured-motion
+# SUBJECT_KIND: human, digital-human, real-animal, cgi-animal, fictional-creature,
+#   anthropomorphic, mixed, non-character
+# INTERACTION_PATTERN: single-performance, two-person-conversation,
+#   multi-person-conversation, human-animal, human-creature,
+#   multiple-animals-creatures, group-scene, silent-reaction, physical-contact-object
+# ARTICULATION_TARGET: human-mouth-lips, bird-beak, animal-muzzle,
+#   creature-jaw-mandibles, other
+# `routing_dimensions` below uses exactly these values, per skill, where relevant.
+# Dimension-agnostic skills (resource-management) omit it. The router
+# (command-authority) and the universal layers list every value they route/cover.
+version: "2.4"
+skills:
+  - skill_id: skill-command-authority
+    skill: command-authority
+    activation_trigger: |-
+      MUST run first for every video and task: the repo is the command master
+      and every video is made by reading and using the repo's skills FIRST
+      (command-authority §1-§2). It also runs whenever no skill covers the
+      work, to issue the generation command (§5), the distilled common core
+      (§8), or "do it yourself" with quality commands and the main flow (§7).
+    non_trigger: |-
+      It never generates a video itself while a skill with the command exists
+      — skill commands take priority whenever they exist (§2 step 2). It is
+      not a substitute for a type skill.
+    required_inputs:
+      - user script and named video type (§2 step 1)
+      - repo skill inventory (skills/ plus registry/skills.json)
+      - repo comments and notes on the topic (README, docs, AGENTS.md) (§3)
+      - production profile dimensions for the task: visual_style, production_medium, source_media, motion_method, subject_kind per subject, interaction_pattern per scene, plus the per-character / per-shot representation (schemas/production-profile.json)
+    expected_outputs:
+      - selected skill(s) and their order for the task (§2)
+      - OR a generation command for a missing system (§5)
+      - OR the distilled common core for a new task type (§8)
+      - OR "do it yourself" plus quality commands plus the main flow (§7)
+      - task-local draft of a missing skill, written BEFORE any video is made from it (§9)
+      - primary pathway, style profiles, subject capabilities, and compatible layers chosen, with the per-character / per-shot representation recorded
+    dependencies: []
+    precedence: 1
+    conflicts: []
+    routing_dimensions:
+      visual_style: [flat-2d-vector, hand-drawn-2d, illustrated-2d, anime, cartoon-2d, stylized-3d, semi-realistic-3d, photorealistic-3d-cgi, photorealistic-digital-human, photorealistic-digital-animal-creature, mixed, captured-live-action]
+      production_medium: [2d-drawn-vector, 3d-cgi-rigged, ai-digital-human, ai-digital-creature, live-action-footage, hybrid-live-action-cgi]
+      source_media: [script-only, reference-image, reference-video, captured-footage, generated-image, generated-video, mixed]
+      motion_method: [rig-2d-keyframe, rig-3d-keyframe, ai-image-to-video, ai-video-to-video, motion-capture, performance-transfer, face-animation, body-animation, pose-gesture-transfer, lip-sync-phoneme-viseme, creature-articulation, rotoscoping-compositing, captured-motion]
+      subject_kind: [human, digital-human, real-animal, cgi-animal, fictional-creature, anthropomorphic, mixed, non-character]
+      interaction_pattern: [single-performance, two-person-conversation, multi-person-conversation, human-animal, human-creature, multiple-animals-creatures, group-scene, silent-reaction, physical-contact-object]
+      articulation_target: [human-mouth-lips, bird-beak, animal-muzzle, creature-jaw-mandibles, other]
+    applicable_modes:
+      - UPLOAD_ONLY
+      - TEMPORARY_ASSET_USE
+      - PROJECT_CONSISTENCY
+      - REGISTER_CHARACTER
+      - REGISTER_VOICE_PROFILE
+      - REGISTER_SOUND_ASSET
+      - GENERATE_FROM_SCRIPT
+      - EDIT_EXISTING_MEDIA
+      - REFERENCE_REVIEW
+      - REFERENCE_LEARN_AND_UPDATE
+      - VIDEO_QC
+      - REMAKE_OR_TRANSFORM
+      - REPORT_UPDATE_ONLY
+    quality_gate: |-
+      The skill-first loop (§9): no video is ever improvised, and no draft
+      becomes a permanent canonical skill without the user's explicit
+      authorisation (§9B).
+    approval_conditions: |-
+      User approval before anything is locked in (§5 Verify; §7 step 9), and
+      before any draft becomes a permanent canonical skill (§9B).
+
+  - skill_id: skill-resource-management
+    skill: resource-management
+    activation_trigger: |-
+      Consulted at every phase of every job: each phase loads only what it
+      needs — the voice plugin only for voice work, the video plugin only
+      for video assembly, and working memory only for the current phase
+      (resource-management §1-§3).
+    non_trigger: |-
+      Must NOT run as a standalone production step, and must never be used
+      to cut quality, skip checks, or degrade output (§8). Never loads both
+      plugins "just in case" (§4).
+    required_inputs:
+      - current phase (planning / voice generation / video assembly / QC and delivery) (§3)
+      - which plugin(s) that phase genuinely needs (§3-§4)
+    expected_outputs:
+      - phase load plan: which plugin runs and which stays off (§3)
+      - stop actions at the end of each phase (§7)
+      - quality-guard decision when a step genuinely needs both plugins (§8)
+    dependencies: []
+    precedence: 2
+    conflicts: []
+    applicable_modes:
+      - TEMPORARY_ASSET_USE
+      - PROJECT_CONSISTENCY
+      - REGISTER_CHARACTER
+      - REGISTER_VOICE_PROFILE
+      - GENERATE_FROM_SCRIPT
+      - EDIT_EXISTING_MEDIA
+      - REFERENCE_REVIEW
+      - REFERENCE_LEARN_AND_UPDATE
+      - VIDEO_QC
+      - REMAKE_OR_TRANSFORM
+    quality_gate: |-
+      Quality guard (§8): resource discipline never degrades quality — the
+      episode QC checklist is never skipped to save resources.
+    approval_conditions: |-
+      none — not_stated_in_skill; it imposes no approval of its own and only
+      sequences loads; approval is governed by the skills it serves.
+
+  - skill_id: skill-character-consistency
+    skill: character-consistency
+    activation_trigger: |-
+      MUST run whenever a registered character appears, is resolved from a
+      script name, or is registered: it keeps every registered character
+      visually identical across all videos and episodes
+      (character-consistency intro; §3).
+    non_trigger: |-
+      Must NOT run to register a character when any of the three conditions
+      is missing (reference image, name plus unique ID, explicit
+      authorisation) — ask instead (§2). Must NOT treat a temporarily used
+      image as a permanent registration (§2). Must NOT substitute, merge, or
+      silently replace one character with another (§3, §11).
+    required_inputs:
+      - character name and/or unique ID (§3)
+      - approved reference images, 3-4 minimum: front view, three-quarter view, full body, expressions sheet (§1)
+      - character.yaml record including fixed prompt block and fixed seed (§1, §4)
+      - model-sheet.jpg turnaround plus detail sheet (§6)
+      - script names to resolve (§3)
+      - per-character representation: subject_kind, visual_style, production_medium, source_media, motion_method, articulation_target (schemas/character.json; production-profile per_subject_overrides)
+    expected_outputs:
+      - resolved character record (ID, references, voice profile, fixed prompt block) per script name (§3)
+      - fixed prompt block and fixed seed injected into every generation (§4)
+      - expression library entries reused, or generated from the definitive reference and saved (§16)
+      - character QC result against the model sheet (§10)
+      - wardrobe/outfit record per character per scene (§13)
+    dependencies: []
+    precedence: 3
+    conflicts: []
+    routing_dimensions:
+      visual_style: [flat-2d-vector, hand-drawn-2d, illustrated-2d, anime, cartoon-2d, stylized-3d, semi-realistic-3d, photorealistic-3d-cgi, photorealistic-digital-human, photorealistic-digital-animal-creature, mixed, captured-live-action]
+      production_medium: [2d-drawn-vector, 3d-cgi-rigged, ai-digital-human, ai-digital-creature, live-action-footage, hybrid-live-action-cgi]
+      source_media: [script-only, reference-image, reference-video, captured-footage, generated-image, generated-video, mixed]
+      subject_kind: [human, digital-human, real-animal, cgi-animal, fictional-creature, anthropomorphic, mixed]
+      interaction_pattern: [single-performance, two-person-conversation, multi-person-conversation, human-animal, human-creature, multiple-animals-creatures, group-scene, silent-reaction, physical-contact-object]
+      articulation_target: [human-mouth-lips, bird-beak, animal-muzzle, creature-jaw-mandibles, other]
+    applicable_modes:
+      - TEMPORARY_ASSET_USE
+      - PROJECT_CONSISTENCY
+      - REGISTER_CHARACTER
+      - GENERATE_FROM_SCRIPT
+      - EDIT_EXISTING_MEDIA
+      - VIDEO_QC
+      - REMAKE_OR_TRANSFORM
+    quality_gate: |-
+      §10/§15: faces and heights verified against the model sheet and the
+      matching-angle/expression panels, with face-embedding similarity above
+      the project threshold, before delivery.
+    approval_conditions: |-
+      Explicit authorisation required for permanent registration (§2, all
+      three conditions), for any modification or deletion of a character
+      record (§1), and for a generated character to become permanent — the
+      user's explicit "done" (§12.3).
+
+  - skill_id: skill-voice-consistency
+    skill: voice-consistency
+    activation_trigger: |-
+      MUST run whenever a registered character speaks or a voice profile is
+      created: it keeps every character's voice identical across all
+      episodes, like their visual identity (voice-consistency intro; §1).
+    non_trigger: |-
+      Must NOT swap voices between characters or assign one character's
+      dialogue to another without the user explicitly asking (§1). Must NOT
+      regenerate a character's voice from scratch for every line — reuse the
+      saved reference audio (§2). Must NOT use the bundled OmniVoice weights
+      for commercial voice work (CC-BY-NC, §3).
+    required_inputs:
+      - registered character (name plus ID) (§1)
+      - fixed voice profile: voice ID, tags, seed, reference audio (§1)
+      - script dialogue per character, with emotion per line (§4)
+      - voice/video order decision for the project, voice-first or video-first (§8)
+      - for cloning: clean recording, whose voice, character name plus ID, transcript/ref_text (§13)
+      - articulation_target per speaking subject, from the subject's anatomy (§C8; schemas/character.json)
+    expected_outputs:
+      - fixed per-character voice profile reused every episode (§1)
+      - generated lines built from the saved reference audio (§2)
+      - single-pass multi-speaker dialogue (§5)
+      - voice-drift scores recorded in the provenance log (§7)
+      - cloned voice locked only after user approval of a test line (§13)
+    dependencies:
+      - character-consistency
+    precedence: 4
+    conflicts: []
+    routing_dimensions:
+      source_media: [script-only, reference-video, captured-footage, generated-video, mixed]
+      motion_method: [lip-sync-phoneme-viseme, creature-articulation, performance-transfer, face-animation]
+      subject_kind: [human, digital-human, cgi-animal, fictional-creature, anthropomorphic, mixed]
+      interaction_pattern: [single-performance, two-person-conversation, multi-person-conversation, human-animal, human-creature, multiple-animals-creatures, group-scene]
+      articulation_target: [human-mouth-lips, bird-beak, animal-muzzle, creature-jaw-mandibles, other]
+    applicable_modes:
+      - PROJECT_CONSISTENCY
+      - REGISTER_VOICE_PROFILE
+      - GENERATE_FROM_SCRIPT
+      - EDIT_EXISTING_MEDIA
+      - VIDEO_QC
+      - REMAKE_OR_TRANSFORM
+    quality_gate: |-
+      §7/§12: speaker-embedding similarity and prosody fingerprint per line
+      and per episode against the reference audio, confirmed by a human
+      listening check, before delivery.
+    approval_conditions: |-
+      A voice clone is locked only on the user's explicit approval after a
+      test line (§13); never swap voices between characters without the user
+      explicitly asking (§1).
+
+  - skill_id: skill-production-systems
+    skill: production-systems
+    activation_trigger: |-
+      MUST run for every series/episode production: the professional
+      production layer — style bible, camera language and shot list, sound,
+      music, story bible, continuity tracker, dialogue rules, lip-sync
+      workflow, and the episode QC checklist
+      (production-systems intro; A1-A12, B1-B18, C1-C7).
+    non_trigger: |-
+      Must NOT run as a replacement for character, voice, or humanization
+      rules — it sits alongside them (intro). Must NOT treat character
+      consistency as a minor visual preference (Part E). Must NOT add
+      captions automatically — captions are opt-in (D1). Must NOT assume
+      "Made for Kids" (B16).
+    required_inputs:
+      - user script and video type
+      - episode intake answers: characters, per-character language, captions yes/no plus language, aspect ratio/platform, length, script (C3)
+      - locked visual style (A1)
+      - story bible and episode continuity tracker (A6, A7)
+      - named audio delivery profile, or the destination video is for (B14)
+      - production profile dimensions for the shots it covers: visual_style, production_medium, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)
+    expected_outputs:
+      - visual style bible (A1)
+      - camera language plus shot list with script-driven angles (A2, A12)
+      - sound design and music plan (A4, A5)
+      - story bible and continuity tracker updates (A6, A7)
+      - dialogue in natural spoken language (A8)
+      - episode QC checklist result (A11)
+      - distribution package in the requested ratio (B16, D3)
+      - production profile record with per-subject / per-shot overrides (schemas/production-profile.json)
+    dependencies: []
+    precedence: 5
+    conflicts: []
+    routing_dimensions:
+      visual_style: [flat-2d-vector, hand-drawn-2d, illustrated-2d, anime, cartoon-2d, stylized-3d, semi-realistic-3d, photorealistic-3d-cgi, photorealistic-digital-human, photorealistic-digital-animal-creature, mixed, captured-live-action]
+      production_medium: [2d-drawn-vector, 3d-cgi-rigged, ai-digital-human, ai-digital-creature, live-action-footage, hybrid-live-action-cgi]
+      source_media: [script-only, reference-image, reference-video, captured-footage, generated-image, generated-video, mixed]
+      motion_method: [rig-2d-keyframe, rig-3d-keyframe, ai-image-to-video, ai-video-to-video, motion-capture, performance-transfer, face-animation, body-animation, pose-gesture-transfer, lip-sync-phoneme-viseme, creature-articulation, rotoscoping-compositing, captured-motion]
+      subject_kind: [human, digital-human, real-animal, cgi-animal, fictional-creature, anthropomorphic, mixed, non-character]
+      interaction_pattern: [single-performance, two-person-conversation, multi-person-conversation, human-animal, human-creature, multiple-animals-creatures, group-scene, silent-reaction, physical-contact-object]
+      articulation_target: [human-mouth-lips, bird-beak, animal-muzzle, creature-jaw-mandibles, other]
+    applicable_modes:
+      - TEMPORARY_ASSET_USE
+      - PROJECT_CONSISTENCY
+      - REGISTER_CHARACTER
+      - GENERATE_FROM_SCRIPT
+      - EDIT_EXISTING_MEDIA
+      - VIDEO_QC
+      - REMAKE_OR_TRANSFORM
+    quality_gate: |-
+      A11 episode QC checklist — faces, voices, emotions, dialogue exact, no
+      defects, clothing, sound, story-bible/continuity agreement — before
+      delivery; never deliver a failed check without telling the user.
+    approval_conditions: |-
+      User approves the finished episode before lock-in (command-authority
+      §7 step 9); missing intake answers must be asked, not guessed (C3); no
+      separate per-system approval stated in skill.
+
+  - skill_id: skill-language-authenticity
+    skill: language-authenticity
+    activation_trigger: |-
+      MUST run whenever dialogue is spoken in a language other than the
+      default, a video is delivered in more than one language, or
+      per-character languages differ: every language is spoken the way its
+      native speakers speak it, with lip-sync matched to that language's
+      sounds (language-authenticity intro; §1, §4, §6).
+    non_trigger: |-
+      Must NOT force all characters into one language unless the user asks
+      (§3). Must NOT deliver a version in the wrong language or promise the
+      remaining languages later without saying so (§4). Must NOT burn one
+      language's text over another language's version (§7).
+    required_inputs:
+      - per-character language(s) (production-systems D2)
+      - script dialogue per character per language
+      - fixed voice profile per character (voice-consistency §1)
+      - language version(s) requested by the user (§4)
+      - articulation_target per speaking subject, matched to the language's sounds (§6)
+    expected_outputs:
+      - dialogue performed in each language's native pattern (§1-§2)
+      - one complete video version per requested language: dialogue, voice, lip-sync, on-screen text, captions (§4, §7)
+      - per-language QC result (§8)
+    dependencies:
+      - voice-consistency
+      - production-systems
+    precedence: 6
+    conflicts: []
+    routing_dimensions:
+      motion_method: [lip-sync-phoneme-viseme, creature-articulation]
+      subject_kind: [human, digital-human, cgi-animal, fictional-creature, anthropomorphic, mixed]
+      interaction_pattern: [single-performance, two-person-conversation, multi-person-conversation, human-animal, human-creature, multiple-animals-creatures, group-scene]
+      articulation_target: [human-mouth-lips, bird-beak, animal-muzzle, creature-jaw-mandibles, other]
+    applicable_modes:
+      - PROJECT_CONSISTENCY
+      - GENERATE_FROM_SCRIPT
+      - EDIT_EXISTING_MEDIA
+      - VIDEO_QC
+      - REMAKE_OR_TRANSFORM
+    quality_gate: |-
+      §8: native-plausibility listening test plus per-line lip-sync check
+      for every language version before delivery.
+    approval_conditions: |-
+      User names the languages to deliver (§4); no separate approval gate
+      stated in skill — a version failing either §8 check must not be
+      delivered without telling the user what failed.
+
+  - skill_id: skill-humanized-production
+    skill: humanized-production
+    activation_trigger: |-
+      MUST run on every project: the 36 systems that make every video feel
+      human-made, not AI-made (humanized-production intro).
+    non_trigger: |-
+      Must NOT be skipped for any video type. Must NOT patch temporal
+      problems in grading (§30.11). Must NOT present a detector score as a
+      verdict (§30.21). Must NOT use a real person's photo or voice without
+      permission (§30.34).
+    required_inputs:
+      - locked style and shot list (production-systems A1/A2/A12)
+      - fixed character and voice references
+      - script emotion per line
+      - sound spotting plan per shot (§30.19)
+      - pinned model versions and golden set (§30.25)
+      - production profile dimensions for the shots it covers: visual_style, production_medium, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)
+    expected_outputs:
+      - performance, micro-motion, and gaze specs per shot (§30.1-§30.7)
+      - four-layer sound plan (§30.5, §30.19)
+      - film-finish pipeline output (§30.11)
+      - drift and artifact QC findings (§30.12-§30.13, §30.21, §30.29)
+      - blind-test "felt off" notes acted on (§30.28)
+      - imperfection budget and failure-playbook entries (§30.31, §30.33)
+    dependencies:
+      # "defers-to" dependencies: the skill states the full rules live in
+      # these skills (dialogue/non-verbal/drift/mix in voice-consistency;
+      # QC checklist and colour grading in production-systems), not that it
+      # "builds on" them. See NOTES.md.
+      - production-systems
+      - voice-consistency
+    precedence: 7
+    conflicts: []
+    routing_dimensions:
+      visual_style: [flat-2d-vector, hand-drawn-2d, illustrated-2d, anime, cartoon-2d, stylized-3d, semi-realistic-3d, photorealistic-3d-cgi, photorealistic-digital-human, photorealistic-digital-animal-creature, mixed, captured-live-action]
+      production_medium: [2d-drawn-vector, 3d-cgi-rigged, ai-digital-human, ai-digital-creature, live-action-footage, hybrid-live-action-cgi]
+      source_media: [script-only, reference-image, reference-video, captured-footage, generated-image, generated-video, mixed]
+      motion_method: [rig-2d-keyframe, rig-3d-keyframe, ai-image-to-video, ai-video-to-video, motion-capture, performance-transfer, face-animation, body-animation, pose-gesture-transfer, lip-sync-phoneme-viseme, creature-articulation, rotoscoping-compositing, captured-motion]
+      subject_kind: [human, digital-human, real-animal, cgi-animal, fictional-creature, anthropomorphic, mixed, non-character]
+      interaction_pattern: [single-performance, two-person-conversation, multi-person-conversation, human-animal, human-creature, multiple-animals-creatures, group-scene, silent-reaction, physical-contact-object]
+      articulation_target: [human-mouth-lips, bird-beak, animal-muzzle, creature-jaw-mandibles, other]
+    applicable_modes:
+      - TEMPORARY_ASSET_USE
+      - PROJECT_CONSISTENCY
+      - GENERATE_FROM_SCRIPT
+      - EDIT_EXISTING_MEDIA
+      - VIDEO_QC
+      - REMAKE_OR_TRANSFORM
+    quality_gate: |-
+      §30.13/§30.21/§30.28: temporal-artifact scrub of every take and clip
+      join, detector self-QC as triage only, and the human blind-test gate
+      before release.
+    approval_conditions: |-
+      Human review gate before release (§30.28 blind-test; production-systems
+      A11); no separate per-system approval stated in skill.
+
+  - skill_id: skill-cinematic-power
+    skill: cinematic-power
+    activation_trigger: |-
+      MUST run when the video needs feature-trailer or music-video quality:
+      style locked first, animals/creatures performing, cuts on the musical
+      beat, trailer structure, or scripted scale and colour
+      (cinematic-power intro; §1-§5).
+    non_trigger: |-
+      Must NOT run as a standalone video type — a trailer/teaser belongs
+      INSIDE a web-series/episode production (§4). Must NOT drift between
+      styles inside one video (§1). Its anime / 3D / photorealistic
+      style-lock rules must NOT be applied inside a flat-2D explainer shot
+      (true conflict TC-3, same shot) — anime/3D styles live here instead
+      (explainer-animation §1); its other layers (music-beat, title cards)
+      may still combine with an explainer profile in other shots.
+    required_inputs:
+      - locked visual style choice: 2D anime, 3D stylized CG, or photorealistic (§1)
+      - style bible and shot list (production-systems A1/A2/A12)
+      - song structure (verse, chorus, drop) for music-driven pieces (§3)
+      - creature records (<creature-id>) (§2)
+      - production profile dimensions for the shots it covers: visual_style, production_medium, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)
+    expected_outputs:
+      - style lock held in every shot (§1)
+      - creature performance per record (§2)
+      - music-beat edit with one shared ensemble timing reference (§3)
+      - six-beat trailer/teaser structure with title and release cards (§4)
+      - scale and colour script for the whole piece (§5)
+    dependencies:
+      - production-systems
+      - humanized-production
+    precedence: 8
+    conflicts: []
+    routing_dimensions:
+      visual_style: [anime, stylized-3d, semi-realistic-3d, photorealistic-3d-cgi, photorealistic-digital-human, photorealistic-digital-animal-creature, cartoon-2d, illustrated-2d, mixed]
+      production_medium: [2d-drawn-vector, 3d-cgi-rigged, ai-digital-human, ai-digital-creature, hybrid-live-action-cgi]
+      source_media: [script-only, reference-image, reference-video, generated-image, generated-video, mixed]
+      motion_method: [rig-2d-keyframe, rig-3d-keyframe, ai-image-to-video, ai-video-to-video, motion-capture, performance-transfer, creature-articulation]
+      subject_kind: [human, digital-human, cgi-animal, fictional-creature, anthropomorphic, mixed]
+      interaction_pattern: [single-performance, two-person-conversation, multi-person-conversation, human-animal, human-creature, multiple-animals-creatures, group-scene, physical-contact-object]
+      articulation_target: [human-mouth-lips, animal-muzzle, creature-jaw-mandibles, other]
+    applicable_modes:
+      - TEMPORARY_ASSET_USE
+      - PROJECT_CONSISTENCY
+      - GENERATE_FROM_SCRIPT
+      - VIDEO_QC
+      - REMAKE_OR_TRANSFORM
+    quality_gate: |-
+      §1/§3/§4/§5 Checks: style lock holds in every shot, cuts and ensemble
+      movements land on the musical beat, all six trailer beats in order
+      with the ending unrevealed, palettes change only at planned transitions.
+    approval_conditions: |-
+      A style change is a deliberate, recorded decision (§1) — user-directed;
+      no separate approval gate stated in skill.
+  - skill_id: skill-emotional-performance
+    skill: emotional-performance
+    activation_trigger: |-
+      MUST run for musical and intimate scenes: a live stage performance
+      with an arc, a crowd reacting in waves, a long two-person scene held on
+      the faces, age performed through movement/voice/face/memory, hands
+      playing the instrument heard, a song as the plot, or a culturally
+      specific world where objects carry history
+      (emotional-performance intro; §1-§7).
+    non_trigger: |-
+      Must NOT run for scenes with no musical or intimate-emotional content
+      — it adds only the emotional-performance layer on top of the
+      foundation (intro). Must NOT let the crowd react as one block (§2).
+      Must NOT talk over the scene's own emotional turn (§3).
+    required_inputs:
+      - style bible and shot list with a beat-by-beat emotional arc (§3)
+      - fixed character voices including age/state variants (voice-consistency §8)
+      - song and its beats recorded alongside the story's beats (§6)
+      - hero prop/object state per shot (§7)
+      - instrument identity (§5)
+      - production profile dimensions for the shots it covers: visual_style, production_medium, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)
+    expected_outputs:
+      - stage arc, nervous start to groove to triumph, with lighting, body, and crowd rising (§1)
+      - distinct crowd individuals reacting in waves, with a mood arc per beat (§2)
+      - planned beat-by-beat intimate arc with real touch at the climax (§3)
+      - age-matched movement, voice, face, and memory (§4)
+      - instrument sync verified against the audio (§5)
+      - song-as-plot arc (§6)
+      - one-culture world with object state per shot (§7)
+    dependencies:
+      - production-systems
+      - humanized-production
+      - cinematic-power
+      - voice-consistency
+    precedence: 9
+    conflicts: []
+    routing_dimensions:
+      visual_style: [anime, stylized-3d, semi-realistic-3d, photorealistic-3d-cgi, photorealistic-digital-human, cartoon-2d, illustrated-2d, mixed]
+      production_medium: [2d-drawn-vector, 3d-cgi-rigged, ai-digital-human, ai-digital-creature, live-action-footage, hybrid-live-action-cgi]
+      source_media: [script-only, reference-video, captured-footage, generated-video, mixed]
+      motion_method: [rig-2d-keyframe, rig-3d-keyframe, motion-capture, performance-transfer, face-animation, body-animation, pose-gesture-transfer, lip-sync-phoneme-viseme]
+      subject_kind: [human, digital-human, anthropomorphic, mixed]
+      interaction_pattern: [single-performance, two-person-conversation, multi-person-conversation, group-scene, silent-reaction, physical-contact-object]
+      articulation_target: [human-mouth-lips]
+    applicable_modes:
+      - TEMPORARY_ASSET_USE
+      - PROJECT_CONSISTENCY
+      - GENERATE_FROM_SCRIPT
+      - VIDEO_QC
+      - REMAKE_OR_TRANSFORM
+    quality_gate: |-
+      §1-§7 Checks: visible stage arc, distinct crowd reacting in waves,
+      faces held close and still through a planned turn, age-matched
+      performance, instrument sync in every hand close-up, song turning
+      point equals scene turning point, one culture and fixed hero props.
+    approval_conditions: |-
+      not_stated_in_skill — no separate approval gate; user approves the
+      finished video before lock-in via the command-authority flow.
+
+  - skill_id: skill-live-action-vfx
+    skill: live-action-vfx
+    activation_trigger: |-
+      MUST run for live-action and VFX hybrid footage: real humans
+      performing with CG creatures, water/wetness continuity, real locations
+      extended with CG, stunts, or real animals (live-action-vfx intro; §1-§6).
+    non_trigger: |-
+      Must NOT run on a shot whose subject is a generated digital human
+      from a still photo (true conflict TC-2, same subject same shot) or
+      on an animated shot with no captured plate — real footage is the
+      input (realistic-person §6). Must NOT mix a real animal and a CG
+      creature in one animal (§6), and must NOT give a real animal
+      anthropomorphic speaking direction in the same shot (TC-1). Must NOT
+      fake an impact the body cannot survive (§5).
+    required_inputs:
+      - live plate / real footage
+      - shot list with beat-by-beat stunt choreography (§5)
+      - CG creature records with fixed scale against the actor (§2)
+      - wet-state record per shot (§3)
+      - real location and CG extension plan (§4)
+      - production profile dimensions for the shots it covers: visual_style, production_medium, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)
+    expected_outputs:
+      - physically possible human performance with visible effort (§1)
+      - CG creatures sharing the plate's light, shadow, reflections, eyelines, scale, and contact (§2)
+      - wet-state continuity per shot (§3)
+      - seamless set extension with no visible join (§4)
+      - choreographed stunts with invisible safety and readable characters (§5)
+      - real-animal performance cut from real behaviour (§6)
+    dependencies:
+      - production-systems
+      - humanized-production
+      - cinematic-power
+    precedence: 10
+    conflicts:
+      - realistic-person
+    conflict_scope: "TC-2 (same subject, same shot, source_media)"
+    routing_dimensions:
+      visual_style: [photorealistic-3d-cgi, photorealistic-digital-animal-creature, mixed, captured-live-action]
+      production_medium: [live-action-footage, hybrid-live-action-cgi]
+      source_media: [captured-footage, reference-video, mixed]
+      motion_method: [motion-capture, performance-transfer, ai-video-to-video, rotoscoping-compositing, creature-articulation, captured-motion]
+      subject_kind: [human, real-animal, cgi-animal, fictional-creature, anthropomorphic, mixed]
+      interaction_pattern: [single-performance, two-person-conversation, multi-person-conversation, human-animal, human-creature, multiple-animals-creatures, group-scene, physical-contact-object]
+      articulation_target: [human-mouth-lips, animal-muzzle, creature-jaw-mandibles, other]
+    applicable_modes:
+      - TEMPORARY_ASSET_USE
+      - PROJECT_CONSISTENCY
+      - GENERATE_FROM_SCRIPT
+      - VIDEO_QC
+      - REMAKE_OR_TRANSFORM
+    quality_gate: |-
+      §1-§6 Checks: physically possible performance, CG creatures sharing
+      the plate's light, shadow, scale, and eyelines, wet-state continuity,
+      invisible set-extension seams, choreographed stunts, real-animal
+      bodies preserved.
+    approval_conditions: |-
+      not_stated_in_skill — no separate approval gate; user approves the
+      finished video before lock-in via the command-authority flow.
+
+  - skill_id: skill-kids-family-animation
+    skill: kids-family-animation
+    activation_trigger: |-
+      MUST run for professional kids and family animation: short-form videos
+      for children and young audiences across the 14 animation methods, with
+      one locked visual style, the camera decision system, 3D/2D craft,
+      story templates, and animation QC (kids-family-animation intro; §2-§12).
+    non_trigger: |-
+      Must NOT run for a real person's photo turned into a realistic moving
+      person for the SAME subject in the SAME shot — that is a different
+      representation (true conflict TC-6; realistic-person, §2). A production
+      may still combine kids animation with a realistic-person shot for a
+      different subject or shot. Must NOT copy
+      a reference creator's characters, scripts, dialogue, music, logos, or
+      protected assets (§1). Must NOT guarantee virality or monetisation
+      (§1). Must NOT use frightening, crude, or age-inappropriate content (§1).
+    required_inputs:
+      - script — the user gives only the script (§15)
+      - chosen animation method, 1 of 14, plus locked visual style (§2)
+      - registered characters and voices
+      - camera decision answers, 8 questions (§5.6)
+      - story template, 1 of 10 (§7)
+      - reference library records where applicable (§13-§14)
+      - production profile dimensions for the shots it covers: visual_style, production_medium, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)
+    expected_outputs:
+      - storyboard and shot list with camera angles per §5
+      - animated video per the chosen method (§3-§4)
+      - shot-level sound plan (§9)
+      - short-form structure with a first-second hook (§10)
+      - animation QC result across six groups (§12)
+      - production summary (§15 step 15)
+    dependencies:
+      - command-authority
+      - character-consistency
+      - voice-consistency
+      - humanized-production
+      - cinematic-power
+    precedence: 11
+    conflicts: []
+    routing_dimensions:
+      visual_style: [flat-2d-vector, hand-drawn-2d, illustrated-2d, anime, cartoon-2d, stylized-3d, semi-realistic-3d, photorealistic-3d-cgi, mixed]
+      production_medium: [2d-drawn-vector, 3d-cgi-rigged, ai-digital-creature]
+      source_media: [script-only, reference-image, reference-video, captured-footage, generated-image, generated-video, mixed]
+      motion_method: [rig-2d-keyframe, rig-3d-keyframe, ai-image-to-video, ai-video-to-video, performance-transfer, face-animation, body-animation, pose-gesture-transfer, lip-sync-phoneme-viseme, creature-articulation]
+      subject_kind: [human, digital-human, cgi-animal, fictional-creature, anthropomorphic, mixed]
+      interaction_pattern: [single-performance, two-person-conversation, multi-person-conversation, human-animal, human-creature, multiple-animals-creatures, group-scene, silent-reaction, physical-contact-object]
+      articulation_target: [human-mouth-lips, bird-beak, animal-muzzle, creature-jaw-mandibles, other]
+    applicable_modes:
+      - TEMPORARY_ASSET_USE
+      - PROJECT_CONSISTENCY
+      - GENERATE_FROM_SCRIPT
+      - REFERENCE_REVIEW
+      - REFERENCE_LEARN_AND_UPDATE
+      - VIDEO_QC
+      - REMAKE_OR_TRANSFORM
+    quality_gate: |-
+      §12 QC checklist — character, camera, animation, visual, audio, and
+      story groups — before delivery; never claim a pass unless the actual
+      output was inspected.
+    approval_conditions: |-
+      User gives only the script (§15) — ask only the smallest necessary
+      clarification; Made for Kids applies to kids content (§1); Part 2 /
+      vote-prompt endings only when the next part genuinely exists or the
+      vote genuinely decides something (§17.3); no separate approval gate
+      stated in skill.
+
+  - skill_id: skill-explainer-animation
+    skill: explainer-animation
+    activation_trigger: |-
+      MUST run when the user asks for a teaching/explainer animation: one
+      idea told through 2D flat cartoon / stick-figure animation, vertical
+      short-form (explainer-animation intro; §1-§3).
+    non_trigger: |-
+      The flat-2D profile must NOT be applied to a shot whose visual_style
+      is anime / 3D CG / photorealistic or whose source is captured
+      live-action footage (true conflicts TC-3, TC-4, TC-5, TC-9, same
+      shot) — it is none of those (intro). Other shots in the same
+      production may use those styles. Must NOT mix the two character
+      designs, fuller figure versus stick figures (§1). Must NOT use anime
+      styling, a 3D look, or photorealism (§1, §7).
+    required_inputs:
+      - the one idea to teach
+      - script/story beats: one idea per scene, about 10 s per scene, 4-6 scenes (§3)
+      - metaphor per abstract idea (§2)
+      - production profile dimensions for the shots it covers: visual_style flat-2d-vector, production_medium 2d-drawn-vector, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)
+    expected_outputs:
+      - flat 2D vector video with thick black outlines, small palette, two character designs kept apart (§1)
+      - visual metaphors readable with the sound off (§2)
+      - slow push-ins/pans with few hard cuts (§4)
+      - expression-driven meaning (§5)
+      - QC result (§7)
+    dependencies: []
+    precedence: 12
+    conflicts:
+      - realistic-person
+    conflict_scope: "TC-4 (same subject, same shot, visual_style)"
+    routing_dimensions:
+      visual_style: [flat-2d-vector]
+      production_medium: [2d-drawn-vector]
+      source_media: [script-only, reference-image, generated-image, mixed]
+      motion_method: [rig-2d-keyframe, face-animation, body-animation, pose-gesture-transfer, lip-sync-phoneme-viseme]
+      subject_kind: [human, anthropomorphic, non-character]
+      interaction_pattern: [single-performance, two-person-conversation, silent-reaction]
+      articulation_target: [human-mouth-lips, other]
+    applicable_modes:
+      - TEMPORARY_ASSET_USE
+      - PROJECT_CONSISTENCY
+      - GENERATE_FROM_SCRIPT
+      - VIDEO_QC
+      - REMAKE_OR_TRANSFORM
+    quality_gate: |-
+      §7: style lock holds across every scene, metaphor stays readable with
+      the sound off, no anime styling, 3D look, or photorealism leaking in.
+    approval_conditions: |-
+      not_stated_in_skill — no separate approval gate; user approves the
+      finished video before lock-in via the command-authority flow.
+
+  - skill_id: skill-realistic-person
+    skill: realistic-person
+    activation_trigger: |-
+      MUST run when a real person's photo is to become a realistic video of
+      person moving and speaking naturally — the face never changes,
+      only movement and speech are added (realistic-person intro; §1-§5).
+      This IS animation (a generated digital human, not live-action footage
+      of a real shoot) — P0-006.
+    non_trigger: |-
+      Must NOT direct the same subject in the same shot with 2D/3D-animation
+      styling — use the cinematic-power style lock instead (§6) (true
+      conflict TC-7). Must NOT run on captured live-action footage of a real
+      shoot for the same subject in the same shot — use live-action-vfx
+      instead (§6) (TC-2). Must NOT animate a real person
+      without permission (§1). Must NOT beautify, reshape, slim, age, or
+      redesign the face (§2).
+    required_inputs:
+      - real person's photo: clear, well-lit, face to camera; several angles more reliable (§1)
+      - consent record for photo and voice (§1)
+      - the person's own language and approved voice (§4)
+      - script/dialogue
+      - production profile dimensions for the shots it covers: visual_style photorealistic-digital-human, production_medium ai-digital-human, source_media, motion_method, subject_kind digital-human, interaction_pattern (schemas/production-profile.json)
+    expected_outputs:
+      - realistic moving/speaking video of the person in the photo (intro)
+      - natural movement with weight (§3)
+      - speech in the person's own language with lip-sync matched to its sounds (§4)
+      - QC result across face, movement, lip-sync, and defects (§7)
+    dependencies:
+      - character-consistency
+      - voice-consistency
+      - language-authenticity
+      - humanized-production
+    precedence: 13
+    conflicts:
+      - explainer-animation
+      - live-action-vfx
+    conflict_scope: "TC-2 (same subject, same shot, source_media), TC-4 (same subject, same shot, visual_style)"
+    routing_dimensions:
+      visual_style: [photorealistic-digital-human]
+      production_medium: [ai-digital-human]
+      source_media: [reference-image, generated-image, generated-video, mixed]
+      motion_method: [ai-image-to-video, face-animation, body-animation, pose-gesture-transfer, lip-sync-phoneme-viseme, performance-transfer]
+      subject_kind: [digital-human]
+      interaction_pattern: [single-performance, two-person-conversation, multi-person-conversation, silent-reaction, physical-contact-object]
+      articulation_target: [human-mouth-lips]
+    applicable_modes:
+      - TEMPORARY_ASSET_USE
+      - PROJECT_CONSISTENCY
+      - GENERATE_FROM_SCRIPT
+      - VIDEO_QC
+      - REMAKE_OR_TRANSFORM
+    quality_gate: |-
+      §7: face versus the supplied photo, natural movement, per-line
+      lip-sync, no defects — all four checks before delivery.
+    approval_conditions: |-
+      Consent required: animate a real person only with that person's
+      permission, for the agreed use, with a consent record (§1); user
+      approves the finished video before lock-in.
+
+  - skill_id: skill-agency-advertising
+    skill: agency-advertising
+    activation_trigger: |-
+      MUST run when a registered AI-generated model is used as an agency
+      spokesperson across advertising campaigns for a business's services
+      (agency-advertising intro; §1-§7).
+    non_trigger: |-
+      Must NOT run for a real person's face — the spokesperson is synthetic
+      and must never resemble a real person (§5). The same subject cannot be
+      both a synthetic spokesperson and a real-person digital human (true
+      conflict TC-8). Must NOT run with assets
+      from another client — stop and ask if any asset belongs to another
+      client's workspace (§4). Must NOT publish any ad before client
+      approval (§7). Must NOT remove AI watermarks or provenance (§5).
+    required_inputs:
+      - registered model (character ID) created via the Character Generator, §12.2 (character-consistency)
+      - brand kit, brand-kit.yaml: logo, exact hex colours, tagline, fonts, voice tone profile (§1)
+      - client workspace ID (§4)
+      - campaign record: master ad, CTA, locked product shots/wording/prices/claims (§3, §6)
+      - platform and format: 9:16, 1:1, or 16:9 (§2)
+      - production profile dimensions for the shots it covers: visual_style, production_medium, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)
+    expected_outputs:
+      - ads composed for the platform format, with hook in the first 3 s, service shown, and CTA (§2)
+      - campaign cut-downs (6/15/30 s) and A/B variants with variant IDs (§3)
+      - disclosure set on the platform (§5)
+      - client approval record per version (§7)
+      - published approved version only (§7)
+    dependencies:
+      - character-consistency
+      - voice-consistency
+    precedence: 14
+    conflicts: []
+    routing_dimensions:
+      visual_style: [photorealistic-digital-human, stylized-3d, semi-realistic-3d, photorealistic-3d-cgi, cartoon-2d, illustrated-2d, mixed]
+      production_medium: [ai-digital-human, 3d-cgi-rigged, 2d-drawn-vector]
+      source_media: [script-only, reference-image, generated-image, generated-video, mixed]
+      motion_method: [ai-image-to-video, face-animation, body-animation, pose-gesture-transfer, lip-sync-phoneme-viseme, performance-transfer]
+      subject_kind: [digital-human, anthropomorphic]
+      interaction_pattern: [single-performance, two-person-conversation, silent-reaction]
+      articulation_target: [human-mouth-lips]
+    applicable_modes:
+      - PROJECT_CONSISTENCY
+      - REGISTER_CHARACTER
+      - GENERATE_FROM_SCRIPT
+      - VIDEO_QC
+    quality_gate: |-
+      §1-§7 Checks: brand-kit match, platform format with hook/CTA/safe
+      zones, variant tracking, client isolation, disclosure and likeness,
+      campaign lock, and client approval of the exact published version.
+    approval_conditions: |-
+      Client approval of the exact version before publish (§7) — approval
+      covers exactly one version; every revision is a new draft requiring
+      re-approval; the client must be told the spokesperson is AI-generated
+      before approving (§5).
+
+  - skill_id: skill-video-regeneration
+    skill: video-regeneration
+    activation_trigger: |-
+      MUST run when the user uploads a video and asks for it to be
+      regenerated: first analyse the reference in full, then create a NEW
+      original video preserving its core story, emotional impact, narrative
+      structure, and creative direction (video-regeneration intro; §1-§2).
+    non_trigger: |-
+      Must NOT reproduce the reference frame for frame or reproduce
+      copyrighted footage, songs, or exact recordings (§2, §7). Must NOT
+      invent visual details that cannot be verified from the reference (§1).
+      Must NOT treat a remake as skill learning by default (intro;
+      REMAKE_OR_TRANSFORM mode rule).
+    required_inputs:
+      - user's uploaded reference video
+      - regeneration request, including any explicitly requested changes (§2)
+      - registered characters and voices for the new video (intro)
+      - storyboard plan per §6
+      - production profile dimensions for the new video, including per-subject / per-shot overrides where the remake changes representation (schemas/production-profile.json)
+    expected_outputs:
+      - complete reference analysis covering every scene in order (§1)
+      - chronological storyboard with all eight items per shot (§6)
+      - NEW original video: same story and emotional journey, not a copy, in the reference's aspect ratio, pacing, and platform (§2, §9)
+      - §8 QC result, with defects corrected, regenerated, or reported
+    dependencies:
+      - character-consistency
+      - voice-consistency
+      - humanized-production
+      - production-systems
+    precedence: 15
+    conflicts: []
+    routing_dimensions:
+      visual_style: [flat-2d-vector, hand-drawn-2d, illustrated-2d, anime, cartoon-2d, stylized-3d, semi-realistic-3d, photorealistic-3d-cgi, photorealistic-digital-human, photorealistic-digital-animal-creature, mixed, captured-live-action]
+      production_medium: [2d-drawn-vector, 3d-cgi-rigged, ai-digital-human, ai-digital-creature, live-action-footage, hybrid-live-action-cgi]
+      source_media: [reference-video, captured-footage, generated-image, generated-video, mixed]
+      motion_method: [rig-2d-keyframe, rig-3d-keyframe, ai-image-to-video, ai-video-to-video, motion-capture, performance-transfer, face-animation, body-animation, pose-gesture-transfer, lip-sync-phoneme-viseme, creature-articulation, rotoscoping-compositing, captured-motion]
+      subject_kind: [human, digital-human, real-animal, cgi-animal, fictional-creature, anthropomorphic, mixed, non-character]
+      interaction_pattern: [single-performance, two-person-conversation, multi-person-conversation, human-animal, human-creature, multiple-animals-creatures, group-scene, silent-reaction, physical-contact-object]
+      articulation_target: [human-mouth-lips, bird-beak, animal-muzzle, creature-jaw-mandibles, other]
+    applicable_modes:
+      - TEMPORARY_ASSET_USE
+      - PROJECT_CONSISTENCY
+      - REFERENCE_REVIEW
+      - VIDEO_QC
+      - REMAKE_OR_TRANSFORM
+    quality_gate: |-
+      §8: mandatory final QC pass — identity, hands, object transfers,
+      backgrounds, lighting, audio sync, transitions, story order — no
+      defective shot silently accepted.
+    approval_conditions: |-
+      User approves before lock-in; any change the user explicitly requests
+      wins (§2); defects must be corrected, regenerated, or reported, never
+      silently accepted (§8).

@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://consistencyframe.blogspot.com/schemas/v2.3/sound-asset.json",
+  "title": "SoundAsset",
+  "description": "A recurring sound asset (theme, motif, sonic logo, ambience, Foley/SFX, transition). Never merged into a character or voice record. A copyrighted recording is not reusable merely because it was uploaded or heard in a reference.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "2.3"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "theme_music",
+        "music_motif",
+        "sonic_logo",
+        "ambience_bed",
+        "foley_or_sfx",
+        "transition_sound",
+        "score_cue"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "file": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*\\.\\./)[A-Za-z0-9._/\\-]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "media_type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "licence": {
+      "type": "string",
+      "minLength": 1
+    },
+    "allowed_use": {
+      "type": "string"
+    },
+    "allowed_projects": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
+      }
+    },
+    "duration_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "loudness_profile_id": {
+      "type": "string"
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "consent": {
+      "type": "object",
+      "properties": {
+        "granted": {
+          "type": "boolean"
+        },
+        "granted_by": {
+          "type": "string"
+        },
+        "granted_at": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "user",
+            "rights_holder",
+            "licence",
+            "unknown"
+          ]
+        }
+      },
+      "required": [
+        "granted",
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "created_by": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "licence": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "approved",
+        "deprecated"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "kind",
+    "title",
+    "licence",
+    "consent",
+    "version",
+    "status"
+  ],
+  "additionalProperties": false
+}

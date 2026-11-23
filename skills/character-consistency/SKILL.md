@@ -1,11 +1,15 @@
 ---
 name: character-consistency
-description: Keeps every registered character visually identical across all videos and episodes. Covers the character registry and registration rules, identity resolution from script names, the fixed prompt block and seed per character, 100% reference fidelity with character recall, fixed identity structure with scene-variable clothing, multi-character scenes with no overlap, and private per-character data separation.
+description: Keeps every registered character visually identical across all videos and episodes. Covers the character registry and registration rules, identity resolution from script names, the fixed prompt block and seed per character, measured reference fidelity with character recall, fixed identity structure with scene-variable clothing, multi-character scenes with no overlap, and private per-character data separation.
 ---
 
 # Character Consistency
 
 This skill makes one promise and keeps it: a registered character must look like the same person in every video, every episode, every scene, and every camera angle. Clothing, lighting, location, activity, and expression may change. The face, body, height, and defining physical features must not.
+
+This identity model is style-agnostic: it applies across visual_style `flat-2d-vector`, `hand-drawn-2d`, `illustrated-2d`, `anime`, `cartoon-2d`, `stylized-3d`, `semi-realistic-3d`, `photorealistic-3d-cgi`, `photorealistic-digital-human`, `photorealistic-digital-animal-creature`, `mixed`, and `captured-live-action`; across production_medium `2d-drawn-vector`, `3d-cgi-rigged`, `ai-digital-human`, `ai-digital-creature`, `live-action-footage`, and `hybrid-live-action-cgi`; and across motion_method `rig-2d-keyframe`, `rig-3d-keyframe`, `ai-image-to-video`, `ai-video-to-video`, `motion-capture`, `performance-transfer`, `face-animation`, `body-animation`, `pose-gesture-transfer`, `lip-sync-phoneme-viseme`, `creature-articulation`, `rotoscoping-compositing`, and `captured-motion` — from script-only, reference-image, reference-video, captured-footage, generated-image, generated-video, and mixed sources alike. Visual style, production_medium, motion_method, subject_kind, and interaction_pattern are separate dimensions, never one single `animation_type`. A style change must NOT silently change character identity: if the visual_style changes deliberately, the identity is re-anchored to the approved reference and the change is recorded — the character must still be recognizably the same character.
+
+Per-character / per-shot representation: a character's representation method can vary per shot — the same character may be rendered by different motion methods or in different shots with different reference assets — while identity stays stable. What is fixed is the identity (the defining structure and characteristics in §5); how it is rendered in a given shot follows the shot's production profile.
 
 ## 1. Character Registry
 
@@ -13,7 +17,7 @@ Every permanently registered character lives in its own folder under the charact
 
 Each character folder contains:
 
-- `character.yaml` — the character record, with at least: name, unique ID, age, gender, a written description of the look (face shape, facial proportions, eye shape and colour, nose and lip structure, jawline and cheek structure, skin appearance, hair characteristics, body structure and proportions, distinctive physical features), and a voice profile (voice ID, language, tone, apparent age — see the `voice-consistency` skill).
+- `character.yaml` — the character record, with at least: name, unique ID, character_type (`Human`, `Digital Human`, `Animal`, `CGI Animal`, `Fictional Creature`, `Anthropomorphic Character`, or `Other`), subject_kind (`human`, `digital-human`, `real-animal`, `cgi-animal`, `fictional-creature`, `anthropomorphic`, `mixed`, or `non-character`), age, gender, a written description of the look, and a voice profile (voice ID, language, tone, apparent age — see the `voice-consistency` skill). The description must not assume every character is a human face: humans are described by facial structure, body proportions, and distinctive attributes (face shape, facial proportions, eye shape and colour, nose and lip structure, jawline and cheek structure, skin appearance, hair characteristics, body structure and proportions, distinctive physical features); animals and creatures are described by species-specific anatomy, silhouette, markings, colour, scale, and defining characteristics. Reference assets likewise vary by subject: a human's reference is face/body views; an animal's or creature's reference is its anatomy, silhouette, markings, and scale views.
 - `seed` — one fixed generation seed for the character, recorded in `character.yaml` and used in every generation of that character.
 - Reference images — 3–4 images as a minimum: front view, three-quarter view, full body, and an expressions sheet. More angles make the stored character more reliable; a single front photo is the weakest reference set. Keep the original reference image as the primary identity reference and never replace it with a newly generated interpretation.
 - Voice reference audio — a clean reference recording of the character's voice (see the `voice-consistency` skill).
@@ -49,13 +53,13 @@ When a name appears in a script, resolve it to that character's full record: uni
 
 For every generation involving a registered character, inject that character's fixed prompt block and fixed seed. The prompt block is the same in every generation; only the scene-specific text (location, action, camera, emotion, clothing for the scene) changes around it. Record the model and version used, the prompt, the seed, the reference image, the voice profile, and the date for every shot, so any shot is reproducible and any drift can be traced to what changed.
 
-## 5. 100% Reference Fidelity — Face and Height Matter Most
+## 5. Measured Reference Fidelity — Face and Height Matter Most
 
-Build the character 100% from the reference image(s) provided. The face and the height are the most important identity features and must match the reference as closely as the platform allows.
+Build the character from the reference image(s) provided. The face and the height are the most important identity features and must match the reference as closely as the platform allows — the target is the closest achievable match, verified shot by shot against the approved reference with a human-review gate; no absolute percentage is guaranteed.
 
 - One reference photo is enough to register a character; several photos (for example five, from different angles) make the stored structure more reliable. In either case, the stored character is defined by the reference image(s) given.
 - The stored structure — face, height, proportions, and all preserved features — is fixed. It must stay consistent in every later video, and the user must be able to verify it.
-- Preserve in every scene: face shape, facial proportions, eyes and eye placement, nose and mouth structure, jawline and cheek structure, skin appearance and natural characteristics, hair identity and distinctive features, body structure, height proportions, and overall physical build.
+- Preserve in every scene: face shape, facial proportions, eyes and eye placement, nose and mouth structure, jawline and cheek structure, skin appearance and natural characteristics, hair identity and distinctive features, body structure, height proportions, and overall physical build — for humans. For animals and creatures, preserve instead: species-specific anatomy, silhouette, markings, colour, scale, and defining characteristics (the same rule, applied to that subject's body, not to a human face).
 - The character must remain visually recognizable even when the location, lighting, camera angle, activity, clothing, environment, or facial expression changes. Do not generate a different-looking person simply because the scene or clothing has changed. Do not unnecessarily redesign the face, body, or defining physical features. Character identity takes priority over stylistic variation.
 
 ## 6. Character Recall — Show the Stored Character on Request
@@ -85,7 +89,7 @@ Several characters may appear together in one scene — for example three, four,
 
 Natural physical contact is allowed: one character may put a hand on another's shoulder, hold another's hand, or touch another's hair. Contact is on the surface; bodies stay separate and solid.
 
-But one character or object must NEVER go inside another character or object: no overlapping, no merged bodies, no merged faces, no hand passing through a body, no head inside another head. During handshakes, conversations, walking together, hugging, dancing, or other interactions, maintain accurate physical positioning, realistic distances, appropriate personal space, and anatomically believable contact. Never allow one character to unintentionally transform into another. Check every multi-character shot for overlap before delivery. Animals and creatures in a scene are registered like characters and perform like them — see the `cinematic-power` skill. Real animals on set follow the `live-action-vfx` skill. Intimate scenes and emotional touch — a long scene held on two faces, touch as the emotional climax — follow the `emotional-performance` skill.
+But one character or object must NEVER go inside another character or object: no overlapping, no merged bodies, no merged faces, no hand passing through a body, no head inside another head. During handshakes, conversations, walking together, hugging, dancing, or other interactions, maintain accurate physical positioning, realistic distances, appropriate personal space, and anatomically believable contact. Never allow one character to unintentionally transform into another. Check every multi-character shot for overlap before delivery. Animals and creatures in a scene are registered like characters and perform like them — see the `cinematic-power` skill. Real animals on set follow the `live-action-vfx` skill. Intimate scenes and emotional touch — a long scene held on two faces, touch as the emotional climax — follow the `emotional-performance` skill. Interaction patterns (`single-performance`, `two-person-conversation`, `multi-person-conversation`, `human-animal`, `human-creature`, `multiple-animals-creatures`, `group-scene`, `silent-reaction`, `physical-contact-object`) are recorded per scene; the pattern describes the interaction, not the characters' identities.
 
 ## 9. Private Character Data Separation
 
@@ -103,7 +107,7 @@ Measure face similarity between the reference image and each generated frame or 
 
 Every generation of a registered character reuses the same approved reference: the same reference images, the same turnaround + detail sheet (`model-sheet.jpg`), the same fixed prompt block, and the same seed. The identity is never rebuilt from a fresh interpretation, and a new render is never treated as the reference.
 
-The structure must stay 100% identical across scenes and episodes — face, eyes, nose, mouth, hands, feet, proportions, height. If a render drifts from the sheet, regenerate against the sheet; do not accept the drift and do not quietly update the stored identity to match it. Re-anchor at every scene change: re-inject the reference, the sheet, and the prompt block before generating the next scene.
+The structure must stay unchanged against the approved reference across scenes and episodes — face, eyes, nose, mouth, hands, feet, proportions, height (for humans); species-specific anatomy, silhouette, markings, colour, and scale (for animals and creatures). A deliberate change of visual_style does not change this: the identity is re-anchored to the approved reference in the new style and the change is recorded, never silently applied. If a render drifts from the sheet, regenerate against the sheet; do not accept the drift and do not quietly update the stored identity to match it. Re-anchor at every scene change: re-inject the reference, the sheet, and the prompt block before generating the next scene.
 
 ## 12. Character Generator — Two Ways to Create a Character
 
@@ -155,7 +159,7 @@ When a face drifts, fix it with this loop — it is the method that works. Use i
 
 1. **Definitive reference.** One user-approved image per character is the anchor. EVERY generation re-uses it as an identity reference — never generate a character without it.
 2. **Front-facing for face-critical shots.** For shots where the face matters, the face is toward the camera, looking directly at it. A fully visible face anchors identity; profile and three-quarter angles drift the face more, so use them only when the script needs them.
-3. **Explicit no-change instruction in every prompt.** Every prompt states it: face and structure 100% identical; do not change the face.
+3. **Explicit no-change instruction in every prompt.** Every prompt states it: face and structure unchanged against the approved reference; do not change the face.
 4. **Fresh generation, never edit, when the face drifts.** Never continue from a drifted image — never edit, inpaint, or "fix" the drifted render. Regenerate from the approved reference.
 5. **Verify before delivering.** Compare the new face against the definitive reference before delivering; if it drifted, repeat the loop.
 
@@ -181,7 +185,7 @@ This complements the front-facing anchor rule (Section 14): the front view ancho
 
 Not every expression is in the supplied references — the system handles that gap automatically.
 
-1. **Generate the missing ones.** If the user does not supply all expressions, generate the missing ones yourself — from the character's definitive reference, keeping face and structure 100% identical, changing only the expression. Verify each generated expression against the definitive reference before saving it (Sections 14 and 15).
+1. **Generate the missing ones.** If the user does not supply all expressions, generate the missing ones yourself — from the character's definitive reference, keeping face and structure unchanged against the approved reference, changing only the expression. Verify each generated expression against the definitive reference before saving it (Sections 14 and 15).
 2. **Save each one into the expression library.** Each generated expression is saved into that character's expression library in the character's folder: `characters/<character-id>/expressions/<expression-name>.jpg` — using the canonical expression names (neutral, smile, laugh, excited, curious, surprised, worried, determined, sad, tearful, angry, thinking). The library lives with the character's data, in the private overlay — never in the public repository.
 3. **Reuse, never regenerate twice.** Next time the same expression is needed, REUSE the saved one — never regenerate it. Check the library first; generate only what is missing.
 4. **The library grows on demand.** The library grows one expression at a time, as scripts need them. A new expression is generated, verified, and saved the first time a script asks for it; after that it is part of the character's stored set.

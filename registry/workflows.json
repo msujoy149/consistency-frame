@@ -1,0 +1,262 @@
+{
+  "count": 13,
+  "records": [
+    {
+      "approval_gate": "none \u2014 no action is taken",
+      "mode": "UPLOAD_ONLY",
+      "mutation_policy": "no_mutation",
+      "outputs": [
+        "intake receipt"
+      ],
+      "recovery": "none",
+      "required_inputs": [
+        "uploaded file"
+      ],
+      "skills_invoked": [],
+      "status": "SCHEMA_DEFINED",
+      "tests": [
+        "CF-P0-ASSET-001",
+        "CF-P0-ASSET-002"
+      ],
+      "trigger": "A file is uploaded without a task command.",
+      "workflow_id": "wf-upload-only"
+    },
+    {
+      "approval_gate": "none \u2014 no permanent record",
+      "mode": "TEMPORARY_ASSET_USE",
+      "mutation_policy": "temporary_only",
+      "outputs": [
+        "job output"
+      ],
+      "recovery": "discard temporary copies per retention",
+      "required_inputs": [
+        "uploaded media",
+        "task"
+      ],
+      "skills_invoked": [],
+      "status": "SCHEMA_DEFINED",
+      "tests": [
+        "CF-P0-ASSET-001",
+        "CF-P0-ASSET-002"
+      ],
+      "trigger": "Use supplied media for the current job only.",
+      "workflow_id": "wf-temporary-asset-use"
+    },
+    {
+      "approval_gate": "project must exist; missing records asked, not invented",
+      "mode": "PROJECT_CONSISTENCY",
+      "mutation_policy": "project_scoped",
+      "outputs": [
+        "job output",
+        "episode state"
+      ],
+      "recovery": "reload project records",
+      "required_inputs": [
+        "project_id",
+        "task"
+      ],
+      "skills_invoked": [],
+      "status": "SCHEMA_DEFINED",
+      "tests": [],
+      "trigger": "Maintain consistency across a named project/series.",
+      "workflow_id": "wf-project-consistency"
+    },
+    {
+      "approval_gate": "explicit authorisation + name + id + reference (all required)",
+      "mode": "REGISTER_CHARACTER",
+      "mutation_policy": "permanent_registration",
+      "outputs": [
+        "character record"
+      ],
+      "recovery": "reject, do not register",
+      "required_inputs": [
+        "name",
+        "unique id",
+        "approved reference(s)",
+        "explicit authorisation"
+      ],
+      "skills_invoked": [],
+      "status": "SCHEMA_DEFINED",
+      "tests": [
+        "CF-P0-ASSET-001",
+        "CF-P0-ASSET-002"
+      ],
+      "trigger": "Permanently register a character identity.",
+      "workflow_id": "wf-register-character"
+    },
+    {
+      "approval_gate": "explicit authorisation + rights/consent",
+      "mode": "REGISTER_VOICE_PROFILE",
+      "mutation_policy": "permanent_registration",
+      "outputs": [
+        "voice_profile record"
+      ],
+      "recovery": "reject, do not register",
+      "required_inputs": [
+        "character_id",
+        "reference audio",
+        "explicit authorisation",
+        "consent"
+      ],
+      "skills_invoked": [],
+      "status": "SCHEMA_DEFINED",
+      "tests": [
+        "CF-P0-ASSET-001",
+        "CF-P0-ASSET-002"
+      ],
+      "trigger": "Permanently register a voice profile.",
+      "workflow_id": "wf-register-voice-profile"
+    },
+    {
+      "approval_gate": "explicit instruction + licence/provenance",
+      "mode": "REGISTER_SOUND_ASSET",
+      "mutation_policy": "permanent_registration",
+      "outputs": [
+        "sound_asset record"
+      ],
+      "recovery": "reject, do not register",
+      "required_inputs": [
+        "sound kind",
+        "source",
+        "licence",
+        "explicit instruction"
+      ],
+      "skills_invoked": [],
+      "status": "SCHEMA_DEFINED",
+      "tests": [
+        "CF-P0-ASSET-001",
+        "CF-P0-ASSET-002"
+      ],
+      "trigger": "Permanently register a recurring sound asset.",
+      "workflow_id": "wf-register-sound-asset"
+    },
+    {
+      "approval_gate": "dialogue VERBATIM by default",
+      "mode": "GENERATE_FROM_SCRIPT",
+      "mutation_policy": "plan_only_in_p0",
+      "outputs": [
+        "shot/performance/audio/timeline plan"
+      ],
+      "recovery": "re-plan from script",
+      "required_inputs": [
+        "script",
+        "project_id (if recurring)"
+      ],
+      "skills_invoked": [],
+      "status": "SCHEMA_DEFINED",
+      "tests": [],
+      "trigger": "Convert a script/brief into a production plan.",
+      "workflow_id": "wf-generate-from-script"
+    },
+    {
+      "approval_gate": "adapter must be conformance-tested",
+      "mode": "EDIT_EXISTING_MEDIA",
+      "mutation_policy": "verified_adapters_only",
+      "outputs": [
+        "edited output",
+        "timeline manifest"
+      ],
+      "recovery": "report unsupported operation",
+      "required_inputs": [
+        "media",
+        "edit brief"
+      ],
+      "skills_invoked": [],
+      "status": "SCHEMA_DEFINED",
+      "tests": [],
+      "trigger": "Edit supplied footage/assets.",
+      "workflow_id": "wf-edit-existing-media"
+    },
+    {
+      "approval_gate": "none \u2014 report only",
+      "mode": "REFERENCE_REVIEW",
+      "mutation_policy": "no_mutation",
+      "outputs": [
+        "timecoded reference report"
+      ],
+      "recovery": "none",
+      "required_inputs": [
+        "reference media"
+      ],
+      "skills_invoked": [],
+      "status": "SCHEMA_DEFINED",
+      "tests": [],
+      "trigger": "Analyse a reference and report findings.",
+      "workflow_id": "wf-reference-review"
+    },
+    {
+      "approval_gate": "explicit instruction required; patch reviewed before merge",
+      "mode": "REFERENCE_LEARN_AND_UPDATE",
+      "mutation_policy": "reviewable_patch_only",
+      "outputs": [
+        "learning candidate patch"
+      ],
+      "recovery": "candidate stays CANDIDATE until validated",
+      "required_inputs": [
+        "reference media",
+        "explicit user instruction"
+      ],
+      "skills_invoked": [],
+      "status": "SCHEMA_DEFINED",
+      "tests": [],
+      "trigger": "Analyse a reference and propose reusable learnings.",
+      "workflow_id": "wf-reference-learn-and-update"
+    },
+    {
+      "approval_gate": "regenerate only if repair is authorised",
+      "mode": "VIDEO_QC",
+      "mutation_policy": "no_regeneration",
+      "outputs": [
+        "QC report"
+      ],
+      "recovery": "report defects",
+      "required_inputs": [
+        "output media",
+        "brief"
+      ],
+      "skills_invoked": [],
+      "status": "SCHEMA_DEFINED",
+      "tests": [],
+      "trigger": "Inspect an existing output and report defects.",
+      "workflow_id": "wf-video-qc"
+    },
+    {
+      "approval_gate": "rights/provenance check required",
+      "mode": "REMAKE_OR_TRANSFORM",
+      "mutation_policy": "rights_gated",
+      "outputs": [
+        "new transformed work"
+      ],
+      "recovery": "stop on rights failure",
+      "required_inputs": [
+        "reference media",
+        "explicit request",
+        "rights check"
+      ],
+      "skills_invoked": [],
+      "status": "SCHEMA_DEFINED",
+      "tests": [],
+      "trigger": "Transform/remake a reference as expressly requested.",
+      "workflow_id": "wf-remake-or-transform"
+    },
+    {
+      "approval_gate": "must not change production rules",
+      "mode": "REPORT_UPDATE_ONLY",
+      "mutation_policy": "reports_only",
+      "outputs": [
+        "regenerated report"
+      ],
+      "recovery": "regenerate from records",
+      "required_inputs": [
+        "registry/schema records"
+      ],
+      "skills_invoked": [],
+      "status": "SCHEMA_DEFINED",
+      "tests": [],
+      "trigger": "Regenerate reports from canonical records.",
+      "workflow_id": "wf-report-update-only"
+    }
+  ],
+  "registry": "workflows",
+  "version": "2.3"
+}

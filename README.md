@@ -9,6 +9,22 @@ AI-made. Install the repository in any AI platform and the skills come
 with it: you introduce your characters and your series once, and
 afterwards you only give scripts and images.
 
+Consistency Frame is **animation-first and style-agnostic**: it directs
+consistent, expressive, physically believable animated videos across
+2D, 3D, stylized, semi-realistic, and photorealistic styles — for
+humans, digital humans, animals, creatures, multi-character
+interactions, image-to-video, video-to-video, and hybrid
+live-action/VFX work. Visual style, production medium, source-media
+type, and motion-generation method are independent dimensions, chosen
+per production (see
+[`docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md`](docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md),
+the authoritative reference for the animation scope). It is not a
+cartoon-only toolkit, not a standalone video-generation server, API
+backend, or cloud database, and not a VoiceStudio/OpenMontage
+replacement — it is the Brain that directs the work, and the
+companions and providers execute it. Production methods whose runtime
+does not exist yet are marked as P1 work, not claimed as working.
+
 - **Website:** https://consistencyframe.blogspot.com
 - **Version:** 2.0 (first release)
 - **Licence:** Apache-2.0 (see [Licence](#licence))
@@ -25,7 +41,7 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 120 numbered entries (109 distinct systems, each named and checkable)
+and 120 numbered entries (109 distinct systems, each named and checkable). The machine-readable inventory is in `registry/` — 15 skills and 165 features derived from the skill files by `scripts/generate-registries.py`; that count uses a different unit (one feature per skill section) and is not the same as the historical 109/120 claim (see `registry/features.json`, `legacy_counts`)
 covering identity, voice, performance, camera direction,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
@@ -41,12 +57,26 @@ bash setup.sh
 
 > Run it with `bash` — a fresh clone from GitHub does not carry the executable bit, so `./setup.sh` fails with "Permission denied".
 
-`setup.sh` fetches and installs the bundled components (VoiceStudio for
-voice, OpenMontage for long-form video) automatically — no separate
-install is needed — and copies the skills into `.agents/skills/`, so any
-platform that reads skills from that directory picks them up
-automatically. It also walks you through downloading the voice model
-(see [Voice](#voice)).
+`bash setup.sh` is a **core-only install by default**: it synchronizes
+the skills into `.agents/skills/` (non-destructively) and nothing else,
+so any platform that reads skills from that directory picks them up
+automatically. The bundled components are **not** installed by default.
+
+To also install the components, opt in explicitly:
+
+```bash
+bash setup.sh --with-components
+```
+
+That fetches VoiceStudio (voice) and OpenMontage (long-form video),
+pinned to tested commits, and runs their own setup procedures. It needs
+network access and about 5 GB of free disk space, plus bun, uv, Node.js
+and `make` for the component setups (see
+[`docs/06-installation.md`](docs/06-installation.md)).
+
+The voice model (OmniVoice) is **not** downloaded by `setup.sh` — it is
+installed separately, on request, from Hugging Face (see
+[Voice](#voice) and `docs/06-installation.md`).
 
 Per-platform install details are in
 [`docs/06-installation.md`](docs/06-installation.md). In short:
@@ -58,7 +88,7 @@ Per-platform install details are in
 | ChatGPT | Upload the `skills/` folder via the Skills tab |
 | Gemini CLI | Extension: `gemini-extension.json` |
 | Antigravity | Skills in `.agents/skills/`, rules in `AGENTS.md` / `GEMINI.md` |
-| Muse (Meta) | Clone into the workspace and run `bash setup.sh` |
+| Muse (Meta) | Knowledge pack: clone into the workspace and read the skills from there (no native custom-skill install is documented by Meta); `bash setup.sh` only syncs local `.agents/skills/` copies |
 | Any other tool | `npx skills add msujoy149/consistency-frame` or `gh skill install msujoy149/consistency-frame` |
 
 ## Local install — Mac, Windows, Linux
@@ -139,16 +169,20 @@ bash setup.sh
 Notes: the `Git.Git` winget package is not maintained by the Git for
 Windows project and may lag the latest official release — the installer
 from git-scm.com is the alternative. If `make --version` reports nothing
-in Git Bash, the OpenMontage step in `setup.sh` will say so; use WSL for
-that step. Close and reopen the terminal after installing bun/uv so
+in Git Bash, the OpenMontage step (which runs only with
+`bash setup.sh --with-components`) will say so; use WSL for that step.
+Close and reopen the terminal after installing bun/uv so
 their PATH changes take effect.
 
 ## Quick start
 
 1. **Install** (above) and run `bash setup.sh`.
-2. **Register a character.** Give the installed assistant a name, a
+2. **Register a character (optional).** Give the installed assistant a name, a
    unique ID, 3–4 reference photos, and a voice reference. See
-   [Character registration](#character-registration).
+   [Character registration](#character-registration). Registration is
+   optional: you can also use a character temporarily for one video
+   without registering it, or register it later — skipping
+   registration never prevents creating a video.
 3. **Start a series.** Give the series a name. The assistant records it
    in the project register and reads it back before every episode.
 4. **Give a script.** Scene, characters, dialogue per character, camera,
@@ -182,8 +216,9 @@ system in full.
   a voice reference audio. A name in a script resolves to that
   character's ID, reference image, voice, and prompt block — each
   character resolved separately, so faces never merge.
-- **100% reference fidelity.** The character is built 100% from the
-  reference image(s). Face and height matter most. One photo is enough;
+- **Measured reference fidelity.** The character is built from the
+  reference image(s), aiming for the closest achievable match to the
+  reference, verified shot by shot against the approved reference. Face and height matter most. One photo is enough;
   several are more reliable.
 - **Character recall.** Ask any time and the system shows the character
   exactly as stored, so you can check face, height, and structure.
@@ -195,7 +230,7 @@ system in full.
 - **Identity anchoring.** Every generation reuses the same approved
   reference — the same reference images, the same sheet, the same fixed
   prompt block, and the same seed. The identity is never rebuilt from a
-  fresh interpretation; the structure stays 100% identical across
+  fresh interpretation; the structure stays unchanged against the approved reference across
   scenes and episodes.
 - **Expression library.** Expressions the user did not supply are
   generated from the definitive reference (face and structure
@@ -291,7 +326,7 @@ filmed, not generated:
   pipeline, thumbnail/poster generator, character turnarounds, wardrobe
   registry, seam continuity, drift measurement, LoRA training, ageing
   variants, provenance log, cost tracking, backup/versioning,
-  multi-series namespaces, child safety, audio mastering (−14 LUFS),
+  multi-series namespaces, child safety, audio mastering (delivery profiles),
   localisation/dubbing, distribution package ("Made for Kids" is set
   only when the content is for children or the user asks for it),
   rights and consent, audience feedback loop.
@@ -422,13 +457,13 @@ Full rules: [`docs/14-language-authenticity.md`](docs/14-language-authenticity.m
 - **From a photo to a real moving person.** The user supplies a real person's photo — clear, well-lit, face to camera — and the video shows that person moving and speaking naturally, like a normal real person. The photo is used exactly as given; the face, structure, hands, and feet never change — only movement and speech are added.
 - **Natural movement, never posed.** Walks, gestures, head turns, blinks, posture shifts — the way a real person moves, never stiff or cartoonish.
 - **Natural speech in the person's own language.** The person speaks following that language's native pattern, with lip-sync matched to the language's sounds. A talking person with a still mouth is a defect, never a delivery.
-- **Realism, not animation.** Real skin, hair, and cloth behaviour, natural light, no plastic skin, no cartoon look. Realism target 100%, 99.9% as the floor. This is not 2D/3D animation and not live-action footage of a real shoot — it is a realistic video generated from a still photo.
+- **Photorealistic digital-human animation.** Real skin, hair, and cloth behaviour, natural light, no plastic skin, no cartoon look. Realism target: the closest achievable match to the reference, verified shot by shot against the approved reference with a human-review gate; no absolute percentage is guaranteed. This is a generated digital human — a realistic video generated from a still photo — not live-action footage of a real shoot, and not a still with a voiceover: the person moves, speaks, and performs.
 
 Full rules: [`docs/15-realistic-person.md`](docs/15-realistic-person.md).
 
 ### 2D explainer animation — 1 system
 
-- **One idea, told in simple pictures.** A short video that teaches one idea through simple scenes and visual metaphors — flat 2D cartoon / stick-figure explainer, vertical short-form. It is not anime, not 3D CG, not live-action, not a music video, not a trailer.
+- **One idea, told in simple pictures.** A short video that teaches one idea through simple scenes and visual metaphors — flat 2D cartoon / stick-figure explainer, vertical short-form. It is not anime, not 3D CG, not live-action, not a music video, not a trailer. This flat 2D explainer is one optional profile of the system, not the product's animation model: the same character registry, voice profiles, performance direction, and QC apply across all styles (see the animation-scope reference).
 - **Style lock.** Flat 2D vector, thick black outlines, flat colour fills, warm neutral backgrounds, a small palette. Two character designs, kept apart: a fuller cartoon figure for the real person, simple stick figures for abstract ideas.
 - **Metaphor system.** Every abstract idea becomes a character or a place — internal conflict is two figures arguing inside the brain, an obstacle is a mountain with a face, the brain itself is a friendly thinking companion. A viewer who mutes the video still gets the idea.
 - **Structure and camera.** One idea per scene, ~10 s per scene, 4–6 scenes for a short video. Slow continuous push-ins inside scenes, slow pans between ideas; scenes flow by camera movement, not by hard cuts.
@@ -470,6 +505,9 @@ Registering a character takes all three of these, in one go:
    registration and asks you first.
 3. **Explicit authorisation** — e.g. "Register this character
    permanently." Uploading an image alone does not register a character.
+   A permanent registration also records structured ownership
+   (`owner_id` + `workspace_id`, private by default — see the
+   registration rules in `docs/07-character-registry.md`).
 
 ### Two ways to create a character
 
@@ -492,18 +530,22 @@ separate private overlay (see
 ## Voice
 
 Voice work runs through VoiceStudio, bundled as a component
-(`components/voicestudio`, cloned by `setup.sh`), with the OmniVoice model for zero-shot voice
+(`components/voicestudio`, installed only with the opt-in
+`bash setup.sh --with-components`), with the OmniVoice model for zero-shot voice
 cloning across 600+ languages.
 
 - The OmniVoice model weights (~3.2 GB) are **not** bundled in this
-  repo. `setup.sh` walks you through downloading them from the original
-  Hugging Face source (`k2-fsa/OmniVoice`) at install time — you run the
-  download step yourself.
+  repo, and `setup.sh` never downloads them. Install the model
+  separately, on request, from the original Hugging Face source
+  (`k2-fsa/OmniVoice`) — after a successful `--with-components`
+  install, `setup.sh` prints the download steps; you run them yourself
+  (see `docs/06-installation.md`).
 - The OmniVoice model is licensed **CC-BY-NC (noncommercial)**. Do not
   use that model for commercial work; use a commercial voice provider
   instead. The notice is kept intact wherever the model is used.
 - Long-form video runs through OpenMontage, bundled as a component
-  (`components/openmontage`, cloned by `setup.sh`), which stitches short clips into long
+  (`components/openmontage`, installed only with the opt-in
+  `bash setup.sh --with-components`), which stitches short clips into long
   episodes.
 
 ## Project and series register
@@ -561,10 +603,10 @@ submitting, keep licence and attribution. See
 This project's own work — the consistency system, skills, prompts, and
 instructions — is licensed under the **Apache License 2.0** (see
 `LICENSE`). Bundled components keep their own licences: VoiceStudio and
-OpenMontage are **AGPL-3.0** (included as bundled components, cloned by
-`setup.sh`, licences intact),
-and the OmniVoice model is **CC-BY-NC (noncommercial)** (downloaded at
-install, weights not bundled). Nothing is reverse-engineered or
+OpenMontage are **AGPL-3.0** (included as bundled components, cloned
+only by the opt-in `bash setup.sh --with-components`, licences intact),
+and the OmniVoice model is **CC-BY-NC (noncommercial)** (downloaded
+separately, never by `setup.sh`; weights not bundled). Nothing is reverse-engineered or
 re-licensed; attribution is stated plainly wherever someone else's work
 is used.
 

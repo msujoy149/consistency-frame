@@ -1,0 +1,594 @@
+# Consistency Frame — Workflow Graph (v2.4, P0)
+# Execution graph over the 15 skills. Routing rule: SEQUENTIAL when a stage
+# depends on an earlier stage's output; PARALLEL only when safe (no dependency
+# between the skills in the group). Every edge goes from a lower precedence to
+# a higher precedence, so the graph is acyclic; topological order is the
+# precedence order (1-15). command-authority (precedence 1) is the router: it
+# selects and orders skills for every task (command-authority §2) and is
+# therefore the source of the router edges below. resource-management
+# (precedence 2) is cross-cutting: consulted at every phase boundary, not a
+# pipeline stage, so it has no dependency edges — see cross_cutting.
+# Composable routing (P0-006, canonical doc §10): video-type skills are NOT
+# mutually exclusive alternatives. A production has ONE primary pathway, one
+# or more visual-style profiles, subject-specific capabilities, and compatible
+# layers that combine freely. Precedence is tie-breaking only, never
+# exclusion. Only TRUE conflicts apply — two rules that cannot both hold for
+# the SAME subject in the SAME shot (see true_conflicts). The old "at most
+# ONE runs per video" exclusion was wrong: real productions mix styles,
+# subjects, and media per shot (e.g. a stylized 3D short with a musical
+# performance and a CG creature; a live-action plate with a generated
+# creature and a title card), and the exclusion made those combinations
+# indescribable. Per-character / per-shot representation is in
+# `representation` below (production-profile per_subject_overrides /
+# per_shot_overrides).
+# video-regeneration BRACKETS the workflow: its §1 reference analysis runs
+# FIRST and its §8 QC runs LAST (see sequential_chains -> video-regeneration).
+# Validated by tests/test_routing.py and scripts/validate-repo.py (check 8).
+# Routing rule: SEQUENTIAL when a stage depends on an earlier stage's output;
+# PARALLEL only when safe (no dependency between the skills in the group).
+# Every edge goes from a lower precedence to a higher precedence, so the graph
+# is acyclic; topological order is the precedence order (1-15).
+# command-authority (precedence 1) is the router: it selects and orders skills
+# for every task (command-authority §2) and is therefore the source of the
+# router edges below. resource-management (precedence 2) is cross-cutting: it
+# is consulted at every phase boundary, not a pipeline stage, so it has no
+# dependency edges — see cross_cutting.
+# Composable routing (P0-006, canonical doc §10): video-type skills are NOT
+# mutually exclusive alternatives. A production has ONE primary pathway, one
+# or more visual-style profiles, subject-specific capabilities, and compatible
+# layers that combine freely. Precedence is tie-breaking only, never
+# exclusion. Only TRUE conflicts apply — two rules that cannot both hold for
+# the SAME subject in the SAME shot (see true_conflicts). The old "at most
+# ONE runs per video" exclusion was wrong: real productions mix styles,
+# subjects, and media per shot (e.g. a stylized 3D short with a musical
+# performance and a CG creature; a live-action plate with a generated
+# creature and a title card), and the exclusion made those combinations
+# indescribable. Per-character / per-shot representation is in
+# `representation` below (production-profile per_subject_overrides /
+# per_shot_overrides).
+# DRAFT — do not copy into the repo without coordinator review.
+version: "2.4"
+router: command-authority
+cross_cutting:
+  - skill: resource-management
+    note: |-
+      Consulted at every phase boundary (resource-management §1-§3): voice
+      plugin only for voice work, video plugin only for video assembly,
+      working memory only for the current phase. Never a pipeline stage;
+      never used to cut quality or skip QC (§8).
+routing_model:
+  # Composable routing (P0-006; canonical doc §10). The five layers below
+  # replace the withdrawn "one video-type skill per video" exclusion.
+  primary_pathway:
+    description: |-
+      One primary pathway per production, chosen from the production's
+      dominant medium and purpose (e.g. kids-family-animation /
+      cinematic-power for a stylized 3D short; realistic-person for a
+      photorealistic digital-human video; live-action-vfx for a
+      live-action-plus-creature video). The primary pathway supplies the
+      production's main rules; it does not own the production exclusively.
+    source: schemas/production-profile.json
+  style_profiles:
+    description: |-
+      One or more visual-style profiles layer onto the primary pathway
+      (e.g. the flat-2D explainer profile, an anime profile). A profile
+      contributes its style lock, palette, and craft rules; it never
+      vetoes an unrelated layer. A profile's style lock binds the shots
+      it covers, per subject per shot — see true_conflicts TC-3/TC-4/TC-5.
+    values: VISUAL_STYLE vocabulary (see SKILL_ROUTING_MATRIX.yaml header)
+  subject_capabilities:
+    description: |-
+      Subject capabilities layer per subject: animal and creature
+      performance, real-animal handling, age performance, instrument
+      performance, and similar capabilities apply to the subjects they
+      describe, in the shots those subjects appear in. Articulation
+      follows the subject's own anatomy — see true_conflicts TC-1/TC-10.
+  compatible_layers:
+    description: |-
+      Layers that do not conflict combine freely: voice-consistency,
+      humanized-production, language-authenticity, production-systems,
+      emotional-performance, and resource-management combine with any
+      primary pathway. A production routinely runs many layers at once.
+  true_conflicts_only:
+    description: |-
+      A conflict exists only when two rules genuinely cannot both hold
+      for the same subject in the same shot. The absence of a stated
+      conflict is not a conflict. A conflict is resolved by choosing
+      per shot (or per subject), recording the choice, and never by
+      silently dropping a rule. See true_conflicts below.
+  precedence_tie_breaking:
+    description: |-
+      Where two layers both speak to the same decision, the routing
+      matrix's precedence order decides which one speaks first; the
+      other still applies where it does not contradict. Command
+      authority remains the router (precedence 1): it routes, it does
+      not generate.
+representation:
+  # Per-character / per-shot representation: a scene mixing subjects or
+  # media carries different representations per character and per shot.
+  # Canonical records: schemas/production-profile.json
+  # (per_subject_overrides, per_shot_overrides), schemas/character.json
+  # (subject_kind, articulation_target), schemas/shot-plan.json,
+  # schemas/performance-plan.json (per-line articulation targets).
+  per_character:
+    - character_id
+    - subject_kind
+    - visual_style
+    - production_medium
+    - source_media
+    - motion_method
+    - articulation_target
+    - interaction_pattern
+  per_shot:
+    - shot_id
+    - subjects: per-subject representation (character_id plus the fields above)
+    - visual_style per subject
+    - source_media per element (captured vs generated, recorded honestly)
+    - motion_method per subject
+    - articulation_target per speaking subject
+    - interaction_pattern
+  rule: |-
+    Two subjects in one shot may carry different representations (e.g. a
+    photorealistic digital human talking with a stylized 3D creature);
+    two shots in one production may carry different representations (e.g.
+    a flat-2D explainer scene followed by a live-action plate). A single
+    subject in a single shot carries exactly one value per dimension.
+nodes:
+  - id: command-authority
+    skill: command-authority
+    stage: route-and-orchestrate
+    precedence: 1
+  - id: resource-management
+    skill: resource-management
+    stage: resource-discipline-throughout
+    precedence: 2
+  - id: character-consistency
+    skill: character-consistency
+    stage: lock-character-identity
+    precedence: 3
+  - id: voice-consistency
+    skill: voice-consistency
+    stage: lock-character-voice
+    precedence: 4
+  - id: production-systems
+    skill: production-systems
+    stage: plan-production
+    precedence: 5
+  - id: language-authenticity
+    skill: language-authenticity
+    stage: localise-language-and-lip-sync
+    precedence: 6
+  - id: humanized-production
+    skill: humanized-production
+    stage: humanize-performance-and-finish
+    precedence: 7
+  - id: cinematic-power
+    skill: cinematic-power
+    stage: apply-cinematic-power-layer
+    precedence: 8
+  - id: emotional-performance
+    skill: emotional-performance
+    stage: direct-emotional-performance
+    precedence: 9
+  - id: live-action-vfx
+    skill: live-action-vfx
+    stage: direct-live-action-vfx
+    precedence: 10
+  - id: kids-family-animation
+    skill: kids-family-animation
+    stage: produce-kids-family-animation
+    precedence: 11
+  - id: explainer-animation
+    skill: explainer-animation
+    stage: produce-explainer-animation
+    precedence: 12
+  - id: realistic-person
+    skill: realistic-person
+    stage: produce-realistic-person-video
+    precedence: 13
+  - id: agency-advertising
+    skill: agency-advertising
+    stage: produce-advertising-campaign
+    precedence: 14
+  - id: video-regeneration
+    skill: video-regeneration
+    stage: analyse-and-regenerate
+    precedence: 15
+edges:
+  # Router edges: command-authority selects and orders each skill
+  # (command-authority §2: skill commands take priority when they exist).
+  - from: command-authority
+    to: resource-management
+    reason: Router consults resource discipline at every phase (command-authority §2; resource-management §1).
+  - from: command-authority
+    to: character-consistency
+    reason: Router selects the character skill first for any video with a registered character (command-authority §2 step 2-3).
+  - from: command-authority
+    to: voice-consistency
+    reason: Router selects the voice skill for any video with speaking characters (command-authority §2 step 3).
+  - from: command-authority
+    to: production-systems
+    reason: Router selects the production layer for every series/episode production (command-authority §2 step 3).
+  - from: command-authority
+    to: language-authenticity
+    reason: Router selects the language skill when dialogue spans languages (command-authority §2 step 3).
+  - from: command-authority
+    to: humanized-production
+    reason: Router selects the humanization layer, which applies to every project (command-authority §2 step 3; humanized-production intro).
+  - from: command-authority
+    to: cinematic-power
+    reason: Router selects the cinematic-power layer for trailer/music-video quality (command-authority §2 step 3).
+  - from: command-authority
+    to: emotional-performance
+    reason: Router selects the emotional-performance layer for musical/intimate scenes (command-authority §2 step 3).
+  - from: command-authority
+    to: live-action-vfx
+    reason: Router selects the live-action/VFX layer for live-action hybrid footage (command-authority §2 step 3).
+  - from: command-authority
+    to: kids-family-animation
+    reason: Router selects this skill for kids/family animation, which also explicitly builds on command-authority (command-authority §2; kids-family-animation intro; registry/skills.json).
+  - from: command-authority
+    to: explainer-animation
+    reason: Router selects the explainer skill for teaching/explainer animation (command-authority §2 step 3).
+  - from: command-authority
+    to: realistic-person
+    reason: Router selects the realistic-person skill for photo-to-person video (command-authority §2 step 3).
+  - from: command-authority
+    to: agency-advertising
+    reason: Router selects the advertising layer for agency campaigns (command-authority §2 step 3).
+  - from: command-authority
+    to: video-regeneration
+    reason: Router selects the regeneration workflow when the user uploads a video to regenerate (command-authority §2 step 3).
+  # Dependency edges: prerequisite -> dependent.
+  - from: character-consistency
+    to: voice-consistency
+    reason: A voice profile is fixed per registered character (voice-consistency §1); cloning needs the character name plus ID (voice-consistency §13).
+  - from: character-consistency
+    to: agency-advertising
+    reason: The model is a registered character, created through the Character Generator (agency-advertising intro; character-consistency §12.2).
+  - from: character-consistency
+    to: kids-family-animation
+    reason: Builds on character-consistency (registry/skills.json; kids-family-animation intro).
+  - from: character-consistency
+    to: video-regeneration
+    reason: Characters in the regenerated video are registered characters (video-regeneration intro; registry/skills.json).
+  - from: character-consistency
+    to: realistic-person
+    reason: The photo is used exactly as given, per the Character Generator user-supplied picture rule (realistic-person §1; character-consistency §12.1).
+  - from: voice-consistency
+    to: language-authenticity
+    reason: The same character voice profile speaks each language (language-authenticity §5; voice-consistency §9).
+  - from: voice-consistency
+    to: agency-advertising
+    reason: The ad voice tone is performance direction only; the model's base voice stays fixed per voice-consistency (agency-advertising §1).
+  - from: voice-consistency
+    to: kids-family-animation
+    reason: Builds on voice-consistency (registry/skills.json; kids-family-animation intro; §8).
+  - from: voice-consistency
+    to: video-regeneration
+    reason: Voices in the regenerated video follow voice-consistency (video-regeneration intro; registry/skills.json).
+  - from: voice-consistency
+    to: realistic-person
+    reason: The voice belongs to that person via a supplied/cloned voice (realistic-person §4; voice-consistency §13).
+  - from: voice-consistency
+    to: emotional-performance
+    reason: One voice per character, fixed across episodes (emotional-performance intro; registry/skills.json).
+  - from: voice-consistency
+    to: humanized-production
+    reason: Defers-to — the full dialogue, non-verbal voice, drift, and mix rules live in voice-consistency (humanized-production §30.2, §30.6, §30.12, §30.32).
+  - from: production-systems
+    to: language-authenticity
+    reason: Captions and dubbing packs per language (language-authenticity §7; production-systems B15, D2).
+  - from: production-systems
+    to: humanized-production
+    reason: Defers-to — the episode QC checklist and script-driven colour grading live in production-systems (humanized-production §30.11, §30.15; production-systems A11, C7).
+  - from: production-systems
+    to: cinematic-power
+    reason: Builds on production-systems — style bible, camera language, shot list, angles (registry/skills.json; cinematic-power intro).
+  - from: production-systems
+    to: emotional-performance
+    reason: Builds on production-systems — style bible, camera language, shot list, angles (registry/skills.json; emotional-performance intro).
+  - from: production-systems
+    to: live-action-vfx
+    reason: Builds on production-systems — camera language, shot list, angles (registry/skills.json; live-action-vfx intro).
+  - from: production-systems
+    to: video-regeneration
+    reason: Builds on production-systems (registry/skills.json; video-regeneration intro).
+  - from: humanized-production
+    to: cinematic-power
+    reason: Builds on humanized-production — performance, micro-motion, sound, editing (registry/skills.json; cinematic-power intro).
+  - from: humanized-production
+    to: emotional-performance
+    reason: Builds on humanized-production — performance, micro-motion, sound, editing (registry/skills.json; emotional-performance intro).
+  - from: humanized-production
+    to: live-action-vfx
+    reason: Builds on humanized-production — performance, physics, editing (registry/skills.json; live-action-vfx intro).
+  - from: humanized-production
+    to: kids-family-animation
+    reason: Builds on humanized-production (registry/skills.json; kids-family-animation intro).
+  - from: humanized-production
+    to: video-regeneration
+    reason: Builds on humanized-production (registry/skills.json; video-regeneration intro).
+  - from: humanized-production
+    to: realistic-person
+    reason: Backgrounds are detailed, deep, and alive per humanized-production (realistic-person §5; humanized-production §30.36).
+  - from: cinematic-power
+    to: emotional-performance
+    reason: Builds on cinematic-power — style lock, music-beat editing, scale and colour scripting (registry/skills.json; emotional-performance intro).
+  - from: cinematic-power
+    to: live-action-vfx
+    reason: Builds on cinematic-power — style lock, creature performance, trailer structure, scale and colour scripting (registry/skills.json; live-action-vfx intro).
+  - from: cinematic-power
+    to: kids-family-animation
+    reason: Builds on cinematic-power (registry/skills.json; kids-family-animation intro).
+  - from: language-authenticity
+    to: realistic-person
+    reason: Lip-sync follows the sounds of the language being spoken (realistic-person §4; language-authenticity §6).
+parallel_groups:
+  - name: foundation-planning
+    skills:
+      - character-consistency
+      - production-systems
+    reason: |-
+      No dependency between them (production-systems lists no dependencies):
+      character identity can be locked while the style bible, shot list, and
+      story bible are planned; both read the script and the registry.
+  - name: language-and-humanization-prep
+    skills:
+      - language-authenticity
+      - humanized-production
+    reason: |-
+      No dependency between them: both depend on voice-consistency and
+      production-systems, which are already complete, and neither consumes
+      the other's output.
+  - name: performance-layers-different-scenes
+    skills:
+      - emotional-performance
+      - live-action-vfx
+    reason: |-
+      No dependency between them: both depend on production-systems,
+      humanized-production, and cinematic-power. They may run in parallel
+      only for DIFFERENT scenes of one video (a musical/intimate scene vs a
+      live-action/VFX scene), never on the same shot.
+  - name: composable-pathways-different-shots
+    skills:
+      - kids-family-animation
+      - explainer-animation
+      - realistic-person
+      - agency-advertising
+    reason: |-
+      No dependency between them, and no true conflict between them at
+      production level: the former video-type skills may run in parallel
+      only for DIFFERENT shots (or different subjects) of one video — a
+      flat-2D explainer scene, an animated scene, a digital-human shot,
+      and an ad cut-down in one production. True conflicts TC-2..TC-9
+      still apply to the SAME subject in the SAME shot.
+conditional_parallel_groups:
+  # Parallel ONLY under the stated condition. These groups are kept apart
+  # from parallel_groups because the two skills ARE dependent in the general
+  # case (edge character-consistency -> voice-consistency); the condition
+  # below is the only case where the parallel read is safe.
+  - name: existing-character-prep
+    skills:
+      - character-consistency
+      - voice-consistency
+    condition: |-
+      ONLY when the character is ALREADY registered: resolving the stored
+      visual record and loading the stored voice profile are independent
+      reads. For a NEW character this group does NOT apply — the voice
+      profile is fixed per registered character (voice-consistency §1), so
+      character registration runs first (edge character-consistency ->
+      voice-consistency).
+    reason: Independent registry reads for an already-registered character.
+true_conflicts:
+  # TRUE conflicts only: each rule names the two operations that cannot
+  # coexist, the scope in which they collide (same subject, same shot),
+  # and the resolution. These replace the withdrawn exclusive_groups
+  # ("video-type-layers": at most ONE runs per video). Nothing here is a
+  # global exclusion: the same two skills may both run in one production
+  # on different subjects or different shots. The routing matrix's
+  # `conflicts` lists only the blocking pairs the resolver enforces
+  # (explainer-animation / realistic-person, TC-4, and live-action-vfx /
+  # realistic-person, TC-2). The other rules here are scoped: the pair CAN
+  # combine in one production across different subjects or shots (e.g.
+  # TC-7: cinematic-power + realistic-person in scenario s4; TC-1:
+  # cinematic-power + live-action-vfx in scenario s5).
+  - id: TC-1
+    skills: [live-action-vfx, cinematic-power]
+    scope: same animal/creature subject, same shot
+    rule: |-
+      Real-animal non-speaking performance cut from real behaviour
+      (live-action-vfx §6) vs anthropomorphic speaking-animal/creature
+      direction (cinematic-power §2). A real animal must not be directed
+      to speak with human lips, and a real animal and a CG creature must
+      not be mixed into one animal (live-action-vfx §6).
+    resolution: choose per subject per shot — real behaviour OR anthropomorphic direction — and record the choice.
+  - id: TC-2
+    skills: [live-action-vfx, realistic-person]
+    scope: same subject, same shot
+    rule: |-
+      Captured live-action footage of a real shoot (live-action-vfx: real
+      footage is the input) vs a generated digital human from a still
+      photo (realistic-person §6: neither animation nor live-action
+      footage). A generated element is never passed off as captured, and
+      captured footage is never described as generated (source honesty).
+    resolution: choose per subject per shot — captured footage OR generated digital human — and record the choice; record source_media honestly per element.
+  - id: TC-3
+    skills: [explainer-animation, cinematic-power]
+    scope: same shot, visual_style dimension
+    rule: |-
+      Flat-2D-vector style lock (explainer-animation §1, §7) vs anime /
+      stylized-3D / photorealistic styling (cinematic-power §1 style-lock
+      choices). One shot cannot hold both style locks.
+    resolution: choose the style per shot and record it; other cinematic-power layers (music-beat, title cards) may still apply to other shots.
+  - id: TC-4
+    skills: [explainer-animation, realistic-person]
+    scope: same subject, same shot, visual_style dimension
+    rule: |-
+      Flat-2D-vector explainer profile vs photorealistic-digital-human
+      (realistic-person intro). One subject in one shot cannot be both a
+      flat 2D vector figure and a photorealistic digital human.
+    resolution: choose the representation per subject per shot and record it.
+  - id: TC-5
+    skills: [explainer-animation, kids-family-animation]
+    scope: same shot, visual_style dimension
+    rule: |-
+      Flat-2D explainer profile (explainer-animation §1: no anime
+      styling, no 3D look, no photorealism; the two character designs
+      kept apart) vs an anime / 3D / photorealistic kids-family style in
+      the same shot. A flat-2D kids-family scene does NOT conflict — the
+      conflict is only the style values in the same shot.
+    resolution: choose the style per shot and record it.
+  - id: TC-6
+    skills: [kids-family-animation, realistic-person]
+    scope: same subject, same shot, visual_style dimension
+    rule: |-
+      Animated character (kids-family-animation §2) vs photorealistic
+      digital human from a real person's photo (realistic-person §1).
+      One subject in one shot cannot be both.
+    resolution: choose the representation per subject per shot and record it.
+  - id: TC-7
+    skills: [cinematic-power, realistic-person]
+    scope: same subject, same shot, visual_style dimension
+    rule: |-
+      2D/3D-animation styling (cinematic-power §1: 2D anime, 3D stylized
+      CG) vs photorealistic digital human (realistic-person §6: not
+      2D/3D animation). One subject in one shot cannot be both.
+    resolution: choose the representation per subject per shot and record it.
+  - id: TC-8
+    skills: [agency-advertising, realistic-person]
+    scope: same subject
+    rule: |-
+      Synthetic spokesperson who must never resemble a real person
+      (agency-advertising §5) vs a photorealistic digital human built
+      from a real person's photo (realistic-person §1). One subject
+      cannot be both synthetic and a real person's likeness.
+    resolution: choose per subject — synthetic spokesperson OR real-person digital human — and record the choice; consent rules for the real-person path still apply.
+  - id: TC-9
+    skills: [explainer-animation, live-action-vfx]
+    scope: same shot
+    rule: |-
+      Flat-2D-vector explainer profile vs captured live-action footage
+      in the same shot (explainer-animation intro: none of anime, 3D CG,
+      live-action, music video, or trailer; live-action-vfx: real
+      footage is the input). One shot cannot be both flat 2D vector and
+      captured live-action footage.
+    resolution: choose the medium per shot and record it.
+  - id: TC-10
+    skills: [character-consistency, voice-consistency, language-authenticity]
+    scope: same subject, same shot (per dialogue line)
+    rule: |-
+      Articulation target must match the subject's own anatomy:
+      human-mouth-lips only for human/digital-human subjects, bird-beak
+      for birds, animal-muzzle for animals, creature-jaw-mandibles for
+      creatures. Human lip-sync on a bird (or beak articulation on a
+      human) is invalid. This is a dimension rule, not a skill-vs-skill
+      exclusion — the three skills constrain it jointly, so it is not
+      mirrored in any single skill's `conflicts` list.
+    resolution: set articulation_target per subject from its anatomy (schemas/character.json, schemas/performance-plan.json); reject a line whose articulation target contradicts its subject.
+sequential_chains:
+  - name: registration
+    skills:
+      - command-authority
+      - character-consistency
+      - voice-consistency
+    note: REGISTER_CHARACTER then REGISTER_VOICE_PROFILE; voice profile is fixed per registered character (voice-consistency §1).
+  - name: scripted-series-episode
+    skills:
+      - command-authority
+      - character-consistency
+      - voice-consistency
+      - production-systems
+      - language-authenticity
+      - humanized-production
+      - cinematic-power
+    note: Core pipeline for a scripted episode; append the primary pathway and the layers the script requires — several may combine (e.g. kids-family-animation + emotional-performance + cinematic-power). True conflicts (TC-1..TC-10) are resolved per subject per shot, never by dropping a layer globally. Final QC is production-systems A11 plus each applied skill's own checks.
+  - name: emotional-musical-scene
+    skills:
+      - command-authority
+      - character-consistency
+      - voice-consistency
+      - production-systems
+      - humanized-production
+      - cinematic-power
+      - emotional-performance
+    note: Follows the registry builds-on chain for emotional-performance.
+  - name: live-action-vfx-scene
+    skills:
+      - command-authority
+      - character-consistency
+      - voice-consistency
+      - production-systems
+      - humanized-production
+      - cinematic-power
+      - live-action-vfx
+    note: Follows the registry builds-on chain for live-action-vfx.
+  - name: kids-family-animation
+    skills:
+      - command-authority
+      - character-consistency
+      - voice-consistency
+      - production-systems
+      - humanized-production
+      - cinematic-power
+      - kids-family-animation
+    note: Follows the registry builds-on chain for kids-family-animation; the user gives only the script (kids-family-animation §15).
+  - name: explainer-animation
+    skills:
+      - command-authority
+      - production-systems
+      - explainer-animation
+    note: Explainer-animation states no builds-on dependency; production-systems supplies the planning layer (shot list, format) and command-authority routes. Voice/language apply via command-authority routing if the explainer has dialogue — not stated in the skill (see NOTES.md).
+  - name: realistic-person-video
+    skills:
+      - command-authority
+      - character-consistency
+      - voice-consistency
+      - language-authenticity
+      - humanized-production
+      - realistic-person
+    note: Follows realistic-person §1/§4/§5 references; consent record required before generation (§1).
+  - name: advertising-campaign
+    skills:
+      - command-authority
+      - character-consistency
+      - voice-consistency
+      - production-systems
+      - agency-advertising
+    note: Model registered first (character-consistency §12.2), brand kit locked, then campaign; client approval of the exact version precedes publish (agency-advertising §7).
+  - name: digital-human-dialogue-with-animal
+    skills:
+      - command-authority
+      - character-consistency
+      - voice-consistency
+      - production-systems
+      - language-authenticity
+      - humanized-production
+      - cinematic-power
+      - realistic-person
+    note: "One scene, two representations: the human is directed by realistic-person (photorealistic-digital-human, human-mouth-lips) while the animal is directed per shot by cinematic-power (creature-articulation). Different subjects, so TC-1/TC-2 do not apply; each subject's articulation follows its own anatomy (TC-10)."
+  - name: live-action-plate-with-creature-and-titles
+    skills:
+      - command-authority
+      - character-consistency
+      - voice-consistency
+      - production-systems
+      - humanized-production
+      - cinematic-power
+      - live-action-vfx
+    note: Captured plate plus CG creature (live-action-vfx) with scale/colour and title cards (cinematic-power). Source_media is recorded honestly per element — generated creature never passed off as captured.
+  - name: video-regeneration
+    skills:
+      - command-authority
+      - character-consistency
+      - voice-consistency
+      - production-systems
+      - humanized-production
+      - video-regeneration
+    note: |-
+      video-regeneration BRACKETS the workflow rather than sitting only at
+      the end: its §1 complete reference analysis runs FIRST (before any
+      generation), the foundation skills then supply identity/voice/planning/
+      humanization, and its §8 mandatory QC runs LAST. Working order,
+      always: analyse, plan, generate, inspect and correct (video-regeneration
+      intro; §9).

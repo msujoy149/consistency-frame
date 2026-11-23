@@ -1,0 +1,141 @@
+# Consistency Frame — Agent Compatibility Matrix (v2.4, P0)
+# One canonical Brain source; thin adapters per host.
+#
+# HONESTY RULE: only Muse is verified, via the knowledge-pack path used
+# in this account. Every other agent is untested unless real evidence
+# exists on disk. "Untested" never means "unsupported" and never means
+# "supported" — it means no conformance test has been run.
+# Do NOT claim universal native Skill support.
+#
+# Statuses:
+#   VERIFIED     — exercised in this account (see evidence).
+#   NOT_TESTED   — no conformance test has been run here.
+# Native skill install values: SUPPORTED / UNSUPPORTED / NOT_TESTED.
+version: "2.4"
+generated: "2026-11-22"
+principle: One canonical Brain source (this repo). Each host gets a thin
+  adapter or a knowledge pack; the Brain's skills, schemas and contracts
+  do not fork per host.
+agents:
+  - agent_id: agent-muse
+    name: Muse
+    native_skill_install: UNSUPPORTED
+    native_skill_install_evidence: architecture/platform-capabilities.md ("Muse correction (P0, F3)"); registry/adapters.json adapter-muse
+    knowledge_pack_path: Clone the repo into the workspace and read skills/ from there; `bash setup.sh` syncs local .agents/skills/ copies and (opt-in) the bundled components. No native custom-SKILL.md install flow is documented by Meta.
+    verified: true
+    verification_status: VERIFIED
+    verification_evidence: Used daily in this account since 2026-11-12 (repo work, P0 v2.3 + v2.4 implementation, tests, blog). The knowledge-pack path is the path this account actually uses.
+    status: verified
+    notes: The Brain's home host. The repo is installed as a versioned knowledge pack, not as a native skill install.
+  - agent_id: agent-claude-code
+    name: Claude Code
+    native_skill_install: NOT_TESTED
+    native_skill_install_evidence: registry/adapters.json adapter-claude-code (integration NATIVE, plugin marketplace); architecture/platform-capabilities.md
+    knowledge_pack_path: NATIVE (plugin marketplace) per adapter record — not tested.
+    verified: false
+    verification_status: NOT_TESTED
+    verification_evidence: none in this account
+    status: untested
+    notes: Adapter record claims a native plugin-marketplace path; no conformance test has been run.
+  - agent_id: agent-codex
+    name: Codex
+    native_skill_install: NOT_TESTED
+    native_skill_install_evidence: registry/adapters.json adapter-codex (integration NATIVE, plugin manifest); architecture/platform-capabilities.md
+    knowledge_pack_path: NATIVE (plugin manifest) per adapter record — not tested.
+    verified: false
+    verification_status: NOT_TESTED
+    verification_evidence: none in this account
+    status: untested
+    notes: Adapter record claims a native plugin-manifest path; no conformance test has been run.
+  - agent_id: agent-claude
+    name: Claude
+    native_skill_install: NOT_TESTED
+    native_skill_install_evidence: none — no adapter record in registry/adapters.json for Claude (the app/API host, distinct from Claude Code)
+    knowledge_pack_path: Knowledge Pack (Brain Instructions + Skills + Project Context + Workflow Contracts) — the documented path for hosts without a native install; not tested.
+    verified: false
+    verification_status: NOT_TESTED
+    verification_evidence: none in this account
+    status: untested
+    notes: No adapter record exists yet. A knowledge pack is the intended path; it has not been tried.
+  - agent_id: agent-gemini-cli
+    name: Gemini CLI
+    native_skill_install: NOT_TESTED
+    native_skill_install_evidence: registry/adapters.json adapter-gemini-cli (integration NATIVE, extension); architecture/platform-capabilities.md
+    knowledge_pack_path: NATIVE (extension) per adapter record — not tested.
+    verified: false
+    verification_status: NOT_TESTED
+    verification_evidence: none in this account
+    status: untested
+    notes: Adapter record claims a native extension path; no conformance test has been run.
+  - agent_id: agent-antigravity
+    name: Antigravity
+    native_skill_install: NOT_TESTED
+    native_skill_install_evidence: registry/adapters.json adapter-antigravity (integration PACKAGED, .agents/skills/ + AGENTS.md/GEMINI.md); architecture/platform-capabilities.md
+    knowledge_pack_path: PACKAGED (.agents/skills/ + AGENTS.md/GEMINI.md) per adapter record — not tested.
+    verified: false
+    verification_status: NOT_TESTED
+    verification_evidence: none in this account
+    status: untested
+    notes: Packaged path claimed by the adapter record; no conformance test has been run.
+  - agent_id: agent-chatgpt
+    name: ChatGPT
+    native_skill_install: NOT_TESTED
+    native_skill_install_evidence: registry/adapters.json adapter-chatgpt (integration PACKAGED, upload skills/ via Skills tab); architecture/platform-capabilities.md
+    knowledge_pack_path: PACKAGED (upload skills/ via Skills tab) per adapter record — not tested.
+    verified: false
+    verification_status: NOT_TESTED
+    verification_evidence: none in this account (a 2026-11-22 collaboration workflow with ChatGPT was stopped by the user; no skill-install conformance test was run)
+    status: untested
+    notes: ChatGPT is not an agent host with a native skill runtime in the Brain's sense; the packaged upload path is claimed by the adapter record only. Decisions only — never browser/UI work — per the user's standing rule for ChatGPT collaboration.
+  - agent_id: agent-opencode
+    name: OpenCode
+    native_skill_install: NOT_TESTED
+    native_skill_install_evidence: registry/adapters.json adapter-opencode (integration NATIVE, .opencode/skills); architecture/platform-capabilities.md
+    knowledge_pack_path: NATIVE (.opencode/skills) per adapter record — not tested.
+    verified: false
+    verification_status: NOT_TESTED
+    verification_evidence: none in this account
+    status: untested
+    notes: Adapter record claims a native path; no conformance test has been run.
+  - agent_id: agent-cursor
+    name: Cursor
+    native_skill_install: NOT_TESTED
+    native_skill_install_evidence: none — no adapter record in registry/adapters.json for Cursor
+    knowledge_pack_path: Knowledge Pack (Brain Instructions + Skills + Project Context + Workflow Contracts) — the documented path for hosts without a native install; not tested.
+    verified: false
+    verification_status: NOT_TESTED
+    verification_evidence: none in this account
+    status: untested
+    notes: No adapter record exists yet. A knowledge pack is the intended path; it has not been tried.
+  - agent_id: agent-github-copilot
+    name: GitHub Copilot
+    native_skill_install: NOT_TESTED
+    native_skill_install_evidence: none — no adapter record in registry/adapters.json for GitHub Copilot
+    knowledge_pack_path: Knowledge Pack (Brain Instructions + Skills + Project Context + Workflow Contracts) — the documented path for hosts without a native install; not tested.
+    verified: false
+    verification_status: NOT_TESTED
+    verification_evidence: none in this account
+    status: untested
+    notes: No adapter record exists yet. A knowledge pack is the intended path; it has not been tried.
+non_hosts:
+  - name: OpenRouter
+    kind: model-routing layer
+    is_agent_host: false
+    notes: OpenRouter routes model calls; it is NOT an agent host and NOT a Brain host. Integrate via the actual Agent Runtime that hosts the Brain — never treat OpenRouter as a place where skills install or run.
+  - name: Google Colab
+    kind: notebook environment
+    is_agent_host: false
+    notes: Colab is a notebook environment, not an agent host. Using the Brain there needs an appropriate Notebook/Agent Runtime on top of Colab; no such runtime has been verified in this account.
+knowledge_pack:
+  definition: Brain Instructions + Skills + Project Context + Workflow Contracts, delivered as the repo itself (or a zip of it) for hosts without a native skill install.
+  verified_hosts:
+    - Muse
+  untested_hosts:
+    - Claude
+    - Cursor
+    - GitHub Copilot
+rules:
+  - Never claim universal native Skill support. Each host is verified separately.
+  - A host is "supported" only after a real conformance test passes; until then it is untested.
+  - The Brain source does not fork per host; adapters are thin.
+  - When a new host is verified, add its evidence here and in registry/adapters.json; never edit history to backdate a claim.

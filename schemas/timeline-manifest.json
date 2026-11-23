@@ -1,0 +1,443 @@
+{
+  "$id": "https://consistencyframe.blogspot.com/schemas/v2.5/timeline-manifest.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "An editor-neutral timeline manifest: media references + timing only. It is NOT a renderer and contains no rendered media. HIERARCHY (stable identifiers + explicit relationships): Project -> Timeline -> Scene -> Shot -> (Character / Dialogue Line / Voice Profile / Audio Asset) and Video Clip; Audio Track -> Audio Clip. VoiceStudio receives the stable dialogue/audio IDs (dialogue_line_id, audio_asset_id, voice_profile_id) and OpenMontage receives the stable shot/video IDs (shot_id, scene_id, media_asset_id, clip_id) from this ONE shared timeline \u2014 never two independent timelines. v2.5 ADDITIVE MIGRATION (CF-WO-P0-007 Correction A): new fields are optional; no existing required field was removed or retyped, so every valid v2.3 record remains valid. Cross-reference rules that the restricted JSON-Schema subset cannot express (a Shot ID must exist in its shot plan; a Voice Profile must belong to the clip's Character; a Dialogue Line must exist in its performance plan) are enforced semantically by validate_timeline_cross_references() in scripts/timeline_policy.py (CF-WO-P0-008 moved the validator out of the test file into production code; the test file imports it).",
+  "properties": {
+    "aspect_ratio": {
+      "description": "Timeline aspect ratio (v2.5). 'other' covers ratios outside this list; the exact ratio is then recorded in notes.",
+      "enum": [
+        "16:9",
+        "9:16",
+        "4:3",
+        "3:4",
+        "1:1",
+        "2.39:1",
+        "21:9",
+        "other"
+      ],
+      "type": "string"
+    },
+    "format": {
+      "enum": [
+        "otio_candidate",
+        "editor_neutral_v1"
+      ],
+      "type": "string"
+    },
+    "frame_rate": {
+      "description": "Timeline frame rate in frames per second, e.g. 24, 25, 30 (v2.5). Governs conversion when timebase is 'frames' or 'timecode'; in_seconds/out_seconds always stay in seconds.",
+      "exclusiveMinimum": 0,
+      "type": "number"
+    },
+    "hierarchy": {
+      "additionalProperties": false,
+      "description": "Explicit hierarchy map (v2.5): Project -> Timeline -> Scene -> Shot -> (Character / Dialogue Line / Voice Profile / Audio Asset) and Video Clip, plus Audio Track -> Audio Clip. Mirrors the clip-level bindings in one place so a reader (or a handoff to VoiceStudio/OpenMontage) sees the whole relationship tree without walking every track. All IDs here are the same stable IDs used on the clips.",
+      "properties": {
+        "project_id": {
+          "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+          "type": "string"
+        },
+        "scenes": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "scene_id": {
+                "type": "string"
+              },
+              "scene_plan_id": {
+                "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+                "type": "string"
+              },
+              "shots": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "audio_asset_ids": {
+                      "items": {
+                        "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "audio_clip_ids": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "character_ids": {
+                      "items": {
+                        "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "dialogue_line_ids": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "shot_id": {
+                      "type": "string"
+                    },
+                    "shot_plan_id": {
+                      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+                      "type": "string"
+                    },
+                    "video_clip_ids": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "voice_profile_ids": {
+                      "items": {
+                        "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "shot_id"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "scene_id"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "timeline_id": {
+          "description": "The timeline this hierarchy describes; normally the manifest's own id.",
+          "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "id": {
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "loudness_profile_id": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "performance_plan_id": {
+      "description": "Performance Plan this timeline is built from (v2.5). Stable link to schemas/performance-plan.json.",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "project_id": {
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "resolution": {
+      "additionalProperties": false,
+      "description": "Timeline frame resolution in pixels (v2.5).",
+      "properties": {
+        "height": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "width": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ],
+      "type": "object"
+    },
+    "scene_plan_id": {
+      "description": "Scene Plan this timeline is built from (v2.5). Stable link to schemas/scene-plan.json.",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "schema_version": {
+      "enum": [
+        "2.3",
+        "2.5"
+      ],
+      "type": "string"
+    },
+    "script_to_performance_id": {
+      "description": "Script-to-Performance record binding the plans above (v2.5). Stable link to schemas/script-to-performance.json.",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "sequence_id": {
+      "description": "Stable identity of this timeline sequence within the project (v2.5). Distinct from the manifest record id: one project may hold several sequences.",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "shot_plan_id": {
+      "description": "Shot Plan this timeline is built from (v2.5). Stable link to schemas/shot-plan.json.",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+      "type": "string"
+    },
+    "synchronization_groups": {
+      "description": "Synchronization groups (v2.5): each group associates several audio and video events WITHOUT renumbering their original clip IDs. A group lists the video clip IDs and audio clip IDs that play in sync, plus the dialogue lines and shots they realise.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "audio_clip_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": {
+            "type": "string"
+          },
+          "dialogue_line_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "shot_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "sync_group_id": {
+            "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+            "type": "string"
+          },
+          "video_clip_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sync_group_id"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "timebase": {
+      "description": "Timestamp convention for this timeline (v2.5). 'seconds' is the default: all timing fields are seconds. 'frames' and 'timecode' are editor/OTIO-style conventions; they still require frame_rate so seconds can be derived. The validator subset cannot make frame_rate conditionally required, so frame_rate stays optional with this description.",
+      "enum": [
+        "seconds",
+        "frames",
+        "timecode"
+      ],
+      "type": "string"
+    },
+    "tracks": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "clips": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "audio_asset_id": {
+                  "description": "Stable audio-asset ID for this clip's rendered audio (v2.5). Must resolve to the corresponding private/approved audio asset record \u2014 enforced by validate_timeline_cross_references() in scripts/timeline_policy.py.",
+                  "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+                  "type": "string"
+                },
+                "audio_type": {
+                  "description": "What kind of audio this clip carries (v2.5). dialogue/narration carry speech; music, ambience, sound-effect and foley carry no dialogue and need NO Character ID or Voice Profile ID; an intentional narration track needs no character voice binding.",
+                  "enum": [
+                    "dialogue",
+                    "narration",
+                    "sound-effect",
+                    "foley",
+                    "ambience",
+                    "music",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                "character_id": {
+                  "description": "Single speaking character for an audio clip (v2.5). A spoken line has one speaker; use character_ids on video clips for multi-character shots. Must resolve to a registered or approved-temporary character record.",
+                  "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+                  "type": "string"
+                },
+                "character_ids": {
+                  "description": "Characters visible/audible in this clip (v2.5). An array so a multi-character shot associates MORE than one Character ID. Each ID must resolve to a registered or approved-temporary character record.",
+                  "items": {
+                    "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "clip_id": {
+                  "type": "string"
+                },
+                "dialogue_line_id": {
+                  "description": "Dialogue line this clip carries or pictures (v2.5). Must exist in the referenced Performance Plan; a video clip's dialogue line must belong to one of the clip's characters. A music/ambience/SFX clip must NOT bind a dialogue line.",
+                  "type": "string"
+                },
+                "duration_seconds": {
+                  "description": "Clip duration in seconds (v2.5). Strictly positive; a zero-length clip is invalid.",
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                "edit_note": {
+                  "description": "Editing note for this clip, e.g. why a cut lands here (v2.5).",
+                  "type": "string"
+                },
+                "in_seconds": {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "language": {
+                  "description": "Spoken language of this audio clip, BCP-47 short form, e.g. 'bn', 'en', 'hi', 'en-US' (v2.5). Same pattern as voice-profile language.",
+                  "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+                  "type": "string"
+                },
+                "media": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "media_type": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "pattern": "^(?!/)(?!.*\\.\\./)[A-Za-z0-9._/\\-]+$",
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "pattern": "^[0-9a-f]{64}$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path"
+                  ],
+                  "type": "object"
+                },
+                "media_asset_id": {
+                  "description": "Stable media-asset ID for the clip's source media (v2.5). The media store resolves it; the timeline never embeds the media itself.",
+                  "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+                  "type": "string"
+                },
+                "out_seconds": {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "role": {
+                  "description": "Speaking/listening role of this clip's character in the scene (v2.5). 'narrator' is for narration tracks with no visible character.",
+                  "enum": [
+                    "speaker",
+                    "listener",
+                    "narrator"
+                  ],
+                  "type": "string"
+                },
+                "scene_id": {
+                  "description": "Scene this clip belongs to (v2.5). Must exist in the referenced Scene Plan when a scene registry is supplied.",
+                  "type": "string"
+                },
+                "shot_id": {
+                  "description": "Shot this clip belongs to (v2.5). Must exist in the referenced Shot Plan \u2014 enforced by validate_timeline_cross_references() in scripts/timeline_policy.py, not by this schema.",
+                  "type": "string"
+                },
+                "shot_ids": {
+                  "description": "Visual shots this audio clip is associated with (v2.5). An array so one audio asset/line may span several shots without renumbering any ID. Each ID must exist in the referenced Shot Plan.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "source_media": {
+                  "description": "Source-media kind for this clip (v2.5). Same vocabulary as the scene/shot-plan subject source_media.",
+                  "enum": [
+                    "script-only",
+                    "reference-image",
+                    "reference-video",
+                    "captured-footage",
+                    "generated-image",
+                    "generated-video",
+                    "mixed"
+                  ],
+                  "type": "string"
+                },
+                "timeline_end_seconds": {
+                  "description": "Where the clip ends on the timeline, in seconds (v2.5). Must not be before timeline_start_seconds.",
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "timeline_start_seconds": {
+                  "description": "Where the clip starts on the timeline, in seconds (v2.5). Distinct from in_seconds, which is the start point inside the source media.",
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "track_id": {
+                  "description": "Track this clip belongs to (v2.5). Must match the enclosing track's track_id.",
+                  "type": "string"
+                },
+                "transition_in": {
+                  "description": "Transition into this clip, e.g. 'cut', 'dissolve', 'fade-in', 'flash-frame' (v2.5). Free text so new transition styles need no schema change.",
+                  "type": "string"
+                },
+                "transition_out": {
+                  "description": "Transition out of this clip to the next, e.g. 'cut', 'dissolve', 'fade-out', 'flash-frame' (v2.5).",
+                  "type": "string"
+                },
+                "voice_profile_id": {
+                  "description": "Voice profile that speaks this clip (v2.5). Must resolve to a voice profile bound to this clip's character_id (or to the dialogue line's character) \u2014 an audio clip must never silently switch to another character's voice.",
+                  "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "clip_id",
+                "media"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "video",
+              "audio",
+              "title"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "description": "Human-readable track identity, e.g. 'V1 main', 'A1 dialogue' (v2.5). track_id stays the stable identifier.",
+            "type": "string"
+          },
+          "track_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "track_id",
+          "kind"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "format",
+    "tracks"
+  ],
+  "title": "TimelineManifest",
+  "type": "object"
+}
