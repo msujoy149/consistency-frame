@@ -57,12 +57,26 @@ bash setup.sh
 
 > Run it with `bash` — a fresh clone from GitHub does not carry the executable bit, so `./setup.sh` fails with "Permission denied".
 
-`setup.sh` fetches and installs the bundled components (VoiceStudio for
-voice, OpenMontage for long-form video) automatically — no separate
-install is needed — and copies the skills into `.agents/skills/`, so any
-platform that reads skills from that directory picks them up
-automatically. It also walks you through downloading the voice model
-(see [Voice](#voice)).
+`bash setup.sh` is a **core-only install by default**: it synchronizes
+the skills into `.agents/skills/` (non-destructively) and nothing else,
+so any platform that reads skills from that directory picks them up
+automatically. The bundled components are **not** installed by default.
+
+To also install the components, opt in explicitly:
+
+```bash
+bash setup.sh --with-components
+```
+
+That fetches VoiceStudio (voice) and OpenMontage (long-form video),
+pinned to tested commits, and runs their own setup procedures. It needs
+network access and about 5 GB of free disk space, plus bun, uv, Node.js
+and `make` for the component setups (see
+[`docs/06-installation.md`](docs/06-installation.md)).
+
+The voice model (OmniVoice) is **not** downloaded by `setup.sh` — it is
+installed separately, on request, from Hugging Face (see
+[Voice](#voice) and `docs/06-installation.md`).
 
 Per-platform install details are in
 [`docs/06-installation.md`](docs/06-installation.md). In short:
@@ -155,8 +169,9 @@ bash setup.sh
 Notes: the `Git.Git` winget package is not maintained by the Git for
 Windows project and may lag the latest official release — the installer
 from git-scm.com is the alternative. If `make --version` reports nothing
-in Git Bash, the OpenMontage step in `setup.sh` will say so; use WSL for
-that step. Close and reopen the terminal after installing bun/uv so
+in Git Bash, the OpenMontage step (which runs only with
+`bash setup.sh --with-components`) will say so; use WSL for that step.
+Close and reopen the terminal after installing bun/uv so
 their PATH changes take effect.
 
 ## Quick start
@@ -515,18 +530,22 @@ separate private overlay (see
 ## Voice
 
 Voice work runs through VoiceStudio, bundled as a component
-(`components/voicestudio`, cloned by `setup.sh`), with the OmniVoice model for zero-shot voice
+(`components/voicestudio`, installed only with the opt-in
+`bash setup.sh --with-components`), with the OmniVoice model for zero-shot voice
 cloning across 600+ languages.
 
 - The OmniVoice model weights (~3.2 GB) are **not** bundled in this
-  repo. `setup.sh` walks you through downloading them from the original
-  Hugging Face source (`k2-fsa/OmniVoice`) at install time — you run the
-  download step yourself.
+  repo, and `setup.sh` never downloads them. Install the model
+  separately, on request, from the original Hugging Face source
+  (`k2-fsa/OmniVoice`) — after a successful `--with-components`
+  install, `setup.sh` prints the download steps; you run them yourself
+  (see `docs/06-installation.md`).
 - The OmniVoice model is licensed **CC-BY-NC (noncommercial)**. Do not
   use that model for commercial work; use a commercial voice provider
   instead. The notice is kept intact wherever the model is used.
 - Long-form video runs through OpenMontage, bundled as a component
-  (`components/openmontage`, cloned by `setup.sh`), which stitches short clips into long
+  (`components/openmontage`, installed only with the opt-in
+  `bash setup.sh --with-components`), which stitches short clips into long
   episodes.
 
 ## Project and series register
@@ -584,10 +603,10 @@ submitting, keep licence and attribution. See
 This project's own work — the consistency system, skills, prompts, and
 instructions — is licensed under the **Apache License 2.0** (see
 `LICENSE`). Bundled components keep their own licences: VoiceStudio and
-OpenMontage are **AGPL-3.0** (included as bundled components, cloned by
-`setup.sh`, licences intact),
-and the OmniVoice model is **CC-BY-NC (noncommercial)** (downloaded at
-install, weights not bundled). Nothing is reverse-engineered or
+OpenMontage are **AGPL-3.0** (included as bundled components, cloned
+only by the opt-in `bash setup.sh --with-components`, licences intact),
+and the OmniVoice model is **CC-BY-NC (noncommercial)** (downloaded
+separately, never by `setup.sh`; weights not bundled). Nothing is reverse-engineered or
 re-licensed; attribution is stated plainly wherever someone else's work
 is used.
 
