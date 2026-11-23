@@ -12,6 +12,10 @@ Test IDs: CF-P1-001-PROF (profile lifecycle), CF-P1-001-SESS
 CF-P1-001-R1-FIRST (R1: atomic first-run identity across
 concurrent processes — one identity wins, nothing overwritten,
 no artefacts left).
+CF-P1-001-R2 (R2: cross-platform first-run — the race test uses
+the "spawn" start method on every platform, POSIX permission
+assertions run only where POSIX semantics apply, and profile
+creation works without os.fchmod).
 
 Run: python3 tests/test_local_session_runtime.py
 Exit 0 = PASS, 1 = FAIL.
@@ -26,6 +30,7 @@ import pickle
 import platform
 import shutil
 import stat
+import subprocess
 import sys
 import tempfile
 import time
@@ -33,6 +38,7 @@ import unittest.mock as mock
 from types import SimpleNamespace
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
+ROOT_ABS = os.path.abspath(ROOT)
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
 sys.path.insert(0, ROOT)
 import asset_policy  # noqa: E402
@@ -86,6 +92,12 @@ def _define_spoof_subclass(name):
 
 _FIRST_RUN_BARRIER = None
 
+# Cross-platform start method for the race test (R2): "spawn"
+# works on Windows, Linux and macOS; "fork" does not exist on
+# Windows. Pinned as a constant so a future regression to "fork"
+# fails loudly in R2-SPAWN-01 instead of silently.
+_RACE_CONTEXT_NAME = "spawn"
+
 
 def _init_first_run_worker(barrier):
     """Process-pool initializer: every worker shares the barrier
@@ -107,6 +119,39 @@ def _load_profile_worker(root):
     except Exception as exc:  # noqa: BLE001 — reported, not hidden
         return ("error", type(exc).__name__)
     return ("ok", profile.owner_id, profile.workspace_id)
+
+
+_CHILD_NO_FCHMOD = r"""
+import os
+import sys
+# Simulate Windows Python 3.10-3.12: os.fchmod does not exist.
+if hasattr(os, "fchmod"):
+    del os.fchmod
+sys.path.insert(0, sys.argv[1])
+sys.path.insert(0, os.path.join(sys.argv[1], "scripts"))
+from runtime import local_session
+profile = local_session.load_or_create_profile(sys.argv[2])
+reloaded = local_session.load_or_create_profile(sys.argv[2])
+assert profile.owner_id == reloaded.owner_id
+assert profile.workspace_id == reloaded.workspace_id
+"""
+
+
+def _run_without_fchmod(root):
+    """Run profile creation + reload in a child process with
+    os.fchmod hidden (the Windows Python 3.10-3.12 simulation).
+    Returns True only when the child exits 0 AND profile.json
+    exists under the root. Bounded by a 30-second timeout; a
+    timed-out child is killed and reported as failure, never
+    left hanging."""
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", _CHILD_NO_FCHMOD, ROOT_ABS, root],
+            capture_output=True, text=True, timeout=30)
+    except subprocess.TimeoutExpired:
+        return False
+    return (result.returncode == 0
+            and os.path.isfile(os.path.join(root, "profile.json")))
 
 
 def main():
@@ -303,13 +348,24 @@ def main():
             os.environ.clear()
             os.environ.update(old_env)
 
-        # POSIX permissions on created state.
-        mode_dir = stat.S_IMODE(os.stat(root_a).st_mode)
-        mode_file = stat.S_IMODE(
-            os.stat(profile_a.profile_path).st_mode)
-        check("CF-P1-001-PROF-19: data directory is 0700, profile is 0600",
-              mode_dir == 0o700 and mode_file == 0o600,
-              f"dir={oct(mode_dir)} file={oct(mode_file)}")
+        # POSIX permissions on created state — POSIX only (R2).
+        # On Windows the profile still lives under the per-user
+        # data directory and is written atomically, but POSIX
+        # mode bits do not apply there, so no mode-bit
+        # equivalence is asserted on non-POSIX platforms.
+        if os.name == "posix":
+            mode_dir = stat.S_IMODE(os.stat(root_a).st_mode)
+            mode_file = stat.S_IMODE(
+                os.stat(profile_a.profile_path).st_mode)
+            check("CF-P1-001-PROF-19: data directory is 0700, "
+                  "profile is 0600",
+                  mode_dir == 0o700 and mode_file == 0o600,
+                  f"dir={oct(mode_dir)} file={oct(mode_file)}")
+        else:
+            check("CF-P1-001-PROF-19: profile file exists under "
+                  "the data root (no POSIX mode bits on this "
+                  "platform)",
+                  os.path.isfile(profile_a.profile_path))
 
         # ----------------------------------------------------------
         # Session integrity (CF-P1-001-SESS)
@@ -623,7 +679,14 @@ def main():
         # Bounded: every wait/result carries a 30-second timeout;
         # no unbounded sleep race anywhere in this section.
         def _run_first_run_workers(root, workers=4):
-            context = mp.get_context("fork")
+            # Cross-platform start method (R2): "spawn" works on
+            # Windows, Linux and macOS; "fork" does not exist on
+            # Windows. The worker functions are module-level and
+            # picklable, and the barrier initializer runs in each
+            # spawned worker, so the race is real under spawn too.
+            # The test entry point is spawn-safe: importing this
+            # module never runs main() (guarded by __main__).
+            context = mp.get_context(_RACE_CONTEXT_NAME)
             barrier = context.Barrier(workers)
             with concurrent.futures.ProcessPoolExecutor(
                     max_workers=workers, mp_context=context,
@@ -693,6 +756,21 @@ def main():
               "by the losing processes",
               open(corrupt_race_path, "rb").read()
               == corrupt_race_before)
+
+        # ----------------------------------------------------------
+        # R2: cross-platform first-run (CF-P1-001-R2)
+        # ----------------------------------------------------------
+        # FIRST-01..07 above already ran under the spawn start
+        # method — this section pins that choice and the
+        # Windows-compatible publication path.
+        check("CF-P1-001-R2-SPAWN-01: race workers use the spawn "
+              "start method (Windows, Linux, macOS)",
+              _RACE_CONTEXT_NAME == "spawn"
+              and mp.get_context("spawn") is not None)
+        check("CF-P1-001-R2-NOFCHMOD-01: profile creation and "
+              "reload work without os.fchmod (Windows Python "
+              "3.10-3.12 simulation)",
+              _run_without_fchmod(new_root()))
     finally:
         for root in tmp_roots:
             shutil.rmtree(root, ignore_errors=True)
