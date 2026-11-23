@@ -447,6 +447,13 @@ regression suite is `tests/test_private_voice_security.py`
   export. The trusted context is a structural (type) boundary,
   not cryptographic proof of identity: the P1 app/session
   runtime must supply the actor identity at the boundary.
+  P0-010 adds that only the exact object issued by
+  `issue_trusted_authorization_context` is accepted — issuance
+  is verified against a process-local, identity-based registry
+  (`is_factory_issued_trusted_authorization_context`), never by
+  a bare type check; a directly constructed, copied or
+  deserialized object is rejected however genuine its fields
+  look, and serialization of a context is refused outright.
 - **Private sharing and export remain disabled by default.**
   No context, no export. No default sharing, no automatic
   provider transmission, and permission for local production use
