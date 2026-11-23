@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p0-safe-foundations",
-  "commit": "5a034a233887336918b3e593019a692f4281da29",
-  "github_branch_head": "212469b908d39d431cd767c4f2275bfa5d7642d1",
+  "commit": "ede564bcb187657104f9682839830213ac03fe43",
+  "github_branch_head": "232a714b29b8a2c09a79acbf4dbc82e1035d099b",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
@@ -122,8 +122,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "f645c62bcab090f36d6575f192d9b4a0e0d27ef3413afb34edc8efd6cbefaed3",
-      "bytes": 24388
+      "sha256": "7adb9afda66b6be0488eaa168f329568a9756fe2f9ebf3e349fffb1d4e262fcf",
+      "bytes": 24436
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -132,8 +132,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "332114cb886d8a09ddbcf659fee22710d2c83d31e40ba1c91c0f1592781690ad",
-      "bytes": 45200
+      "sha256": "e87b2d3987a0ae91ba3774eefc501ba04b7e204e7ee45cd55e3d71ae851c2457",
+      "bytes": 45346
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -201,14 +201,19 @@
       "bytes": 18769
     },
     {
+      "path": "docs/implementation/CF-WO-P0-015-corrections.md",
+      "sha256": "6443882e23275e8a223805b00b6d101dfe3ce40621c251e7fbc285940113c2c1",
+      "bytes": 16191
+    },
+    {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
       "sha256": "23bb2a5aa29fde3bbacbec7996625c52b25e9d67106c278da8bb35ed0f855099",
       "bytes": 27096
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "7faa1578fb9d01a712b79fa5f5a8bbaa0a74f3eb7ebcdd773652f65f8a0503c6",
-      "bytes": 18337
+      "sha256": "00967992b880054e9771ba3e88ccf6f9c14c58bb5c09198e5ab1b3b40e9baa7b",
+      "bytes": 18392
     },
     {
       "path": "registry/adapters.json",
@@ -977,5 +982,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-23T14:41:14Z"
+  "generated_at_utc": "2026-11-23T15:24:40Z"
 }
