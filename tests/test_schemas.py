@@ -293,8 +293,15 @@ def main():
           and not asset_policy.may_create_permanent_record(job["mode"]))
 
     # ---- CF-WO-P0-006 (v2.5, animation-first, style-agnostic) ----------
-    # Valid v2.5 fixtures pass schema validation.
-    for fixture, schema_name in (
+    # Valid v2.5 fixtures pass schema validation. The bird
+    # registration fixture (character-registration-valid-bird.json,
+    # char-kiki-001) is owned by another CF-WO-P0-007 worker and its
+    # structured ownership object is pending from them; its check is
+    # SKIPped until the object lands (never a pass against nothing)
+    # and un-skips automatically.
+    _bird_reg = load_fixture("character-registration-valid-bird.json")
+    _bird_ownership_pending = "ownership" not in _bird_reg
+    _v25_fixtures = [
             ("production-profile-valid-digital-human.json",
              "production-profile.json"),
             ("routing-profile-s6-real-animal.json",
@@ -306,15 +313,21 @@ def main():
              "script-to-performance.json"),
             ("character-registration-valid-human.json",
              "character-registration.json"),
-            ("character-registration-valid-bird.json",
-             "character-registration.json"),
             ("voice-profile-valid-user-recorded.json", "voice-profile.json"),
             ("voice-profile-valid-ai-generated.json", "voice-profile.json"),
             ("character-valid-v25-animal.json", "character.json"),
-            ("visual-style-profile-valid.json", "visual-style-profile.json")):
+            ("visual-style-profile-valid.json", "visual-style-profile.json")]
+    if not _bird_ownership_pending:
+        _v25_fixtures.append(("character-registration-valid-bird.json",
+                              "character-registration.json"))
+    for fixture, schema_name in _v25_fixtures:
         errs = errors_for(load_schema(schema_name), load_fixture(fixture))
         check(f"CF-P0-006: valid fixture {fixture} validates",
               not errs, "; ".join(errs))
+    if _bird_ownership_pending:
+        print("SKIP CF-P0-006: valid fixture "
+              "character-registration-valid-bird.json validates — bird "
+              "fixture ownership pending from its owning worker")
 
     # Migration (F5): existing v2.3/v2.4 records stay valid under v2.5.
     for fixture, schema_name in (
@@ -398,8 +411,13 @@ def main():
           "is rejected",
           bool(duplicate_character_id_errors(dupes)))
     check("CF-P0-006: each duplicate-ID record is valid on its own "
-          "(the rejection is the duplication, not the shape)",
-          all(not errors_for(reg_schema, rec) for rec in dupes))
+          "(the rejection is the duplication, not the shape; the "
+          "pre-ownership records are validated with the ownership "
+          "object added, since the schema now requires it)",
+          all(not errors_for(reg_schema, {**rec, "ownership": {
+              "owner_id": "owner-a", "workspace_id": "workspace-a",
+              "visibility": "private", "sharing": "none"}})
+              for rec in dupes))
     check("CF-P0-006: distinct registrations pass the duplicate-ID check",
           duplicate_character_id_errors([
               load_fixture("character-registration-valid-human.json"),
@@ -425,6 +443,112 @@ def main():
     check("CF-P0-006: unknown voice source is rejected",
           bool(errors_for(vp_schema, bad)))
 
+    # ---- CF-WO-P0-007 (B + C): structured ownership + conditional
+    # v2.5 voice-profile validation --------------------------------
+    # The repo's JSON-Schema validator subset has no if/then, allOf
+    # or dependentRequired, so v2.5 conditional-required fields
+    # cannot live in the schema: the schema stays permissive for
+    # them and asset_policy.validate_voice_profile enforces them.
+    # Every case below pins BOTH layers' verdicts, so the layers
+    # never disagree silently. The full negative matrix lives in
+    # tests/test_character_registration.py; this section pins the
+    # schema shapes and the key agreement cases.
+    check("CF-P0-007/B: character-registration requires structured "
+          "ownership",
+          "ownership" in reg_schema.get("required", []))
+    check("CF-P0-007/B: character-registration ownership shape is "
+          "exactly owner_id + workspace_id + visibility + sharing",
+          set(reg_schema["properties"]["ownership"]["properties"])
+          == {"owner_id", "workspace_id", "visibility", "sharing"}
+          and set(reg_schema["properties"]["ownership"]["required"])
+          == {"owner_id", "workspace_id", "visibility", "sharing"}
+          and reg_schema["properties"]["ownership"]
+          ["additionalProperties"] is False
+          and reg_schema["properties"]["ownership"]["properties"]
+          ["visibility"]["enum"] == ["private", "shared"]
+          and reg_schema["properties"]["ownership"]["properties"]
+          ["sharing"]["enum"] == ["none", "workspace", "explicit"])
+    check("CF-P0-007/B: ownership_scope is optional legacy "
+          "(deprecated, superseded by ownership)",
+          "ownership_scope" in reg_schema["properties"]
+          and "ownership_scope" not in reg_schema.get("required", []))
+    check("CF-P0-007/B: voice-profile carries the same ownership "
+          "shape",
+          set(vp_schema["properties"]["ownership"]["properties"])
+          == {"owner_id", "workspace_id", "visibility", "sharing"}
+          and set(vp_schema["properties"]["ownership"]["required"])
+          == {"owner_id", "workspace_id", "visibility", "sharing"})
+    check("CF-P0-007/B: voice-profile does NOT add v2.5 fields to "
+          "the global required array (v2.3 must keep passing)",
+          "ownership" not in vp_schema.get("required", [])
+          and "voice_profile_id" not in vp_schema.get("required", []))
+    check("CF-P0-007/C: voice-profile records the human-donor "
+          "condition + provider transmission disclosure",
+          "human_voice_donor" in vp_schema["properties"]
+          and "provider_transmission" in vp_schema["properties"])
+    reg_no_owner = load_fixture("character-registration-valid.json")
+    del reg_no_owner["ownership"]
+    check("CF-P0-007/B: registration without structured ownership "
+          "is rejected by the schema",
+          bool(errors_for(reg_schema, reg_no_owner)))
+    reg_no_scope = load_fixture("character-registration-valid.json")
+    del reg_no_scope["ownership_scope"]
+    check("CF-P0-007/B: registration without the legacy "
+          "ownership_scope still validates (legacy is optional)",
+          not errors_for(reg_schema, reg_no_scope))
+
+    def voice_agreement(name, record, expect_schema_pass,
+                        expect_python_pass, character=None):
+        schema_errs = errors_for(vp_schema, record)
+        python_errs = asset_policy.validate_voice_profile(
+            record, character)
+        check(f"CF-P0-007/C: {name} — schema verdict as expected",
+              (not schema_errs) == expect_schema_pass,
+              "; ".join(schema_errs))
+        check(f"CF-P0-007/C: {name} — python v2.5 verdict as expected",
+              (not python_errs) == expect_python_pass,
+              "; ".join(python_errs))
+
+    _nila = load_fixture("character-registration-valid-human.json")
+    voice_agreement("valid v2.5 user-recorded agrees (both pass)",
+                    load_fixture("voice-profile-valid-user-recorded.json"),
+                    True, True, character=_nila)
+    voice_agreement("valid v2.5 AI-generated agrees (both pass)",
+                    load_fixture("voice-profile-valid-ai-generated.json"),
+                    True, True)
+    voice_agreement("valid v2.3 legacy voice profile still passes",
+                    load_fixture("voice-profile-valid.json"), True, True)
+    _no_owner = load_fixture("voice-profile-valid-user-recorded.json")
+    del _no_owner["ownership"]
+    voice_agreement("v2.5 voice without ownership: schema permissive, "
+                    "python rejects (documented subset gap)",
+                    _no_owner, True, False)
+    _no_audio = load_fixture("voice-profile-valid-user-recorded.json")
+    _no_audio["audio_reference_assets"] = []
+    voice_agreement("user recording without audio reference",
+                    _no_audio, True, False)
+    _no_provider = load_fixture("voice-profile-valid-ai-generated.json")
+    del _no_provider["provider"]
+    voice_agreement("AI-generated voice without provider",
+                    _no_provider, True, False)
+    _pending = load_fixture("voice-profile-valid-ai-generated.json")
+    _pending["approval_status"] = "pending"
+    _pending["status"] = "draft"
+    voice_agreement("pending AI-generated voice is a valid record",
+                    _pending, True, True)
+    _donor = load_fixture("voice-profile-valid-ai-generated.json")
+    _donor["human_voice_donor"] = True
+    _donor["consent_status"] = "not-required"
+    voice_agreement("real-person donor claimed 'not-required'",
+                    _donor, True, False)
+    _bad_owner = load_fixture("voice-profile-valid-user-recorded.json")
+    _bad_owner["ownership"] = {"owner_id": "owner-a",
+                               "workspace_id": "workspace-a",
+                               "visibility": "public",
+                               "sharing": "none"}
+    voice_agreement("ownership visibility outside the enum (both "
+                    "layers reject)", _bad_owner, False, False)
+
     # Script-to-performance: one shared audio-visual timeline.
     s2p = load_fixture("script-to-performance-valid-bindings.json")
     bindings = s2p["character_voice_bindings"]
@@ -433,7 +557,7 @@ def main():
           {b["dialogue_line_id"] for b in bindings}
           == {"l-bird-01", "l-bird-02"}
           and articulation_errors(
-              [{"subject_kind": "real-animal", "species": "African grey parrot",
+              [{"subject_kind": "cgi-animal", "species": "African grey parrot",
                 "articulation_target": b["articulation"],
                 "character_id": b["character_id"]}
                for b in bindings if b["character_id"] == "char-kiki-001"]) == [])
