@@ -97,11 +97,34 @@ Fail-closed private voice security (CF-WO-P0-008):
   share_with_workspace. Permission to use a voice locally never
   implies permission to export it, and export never implies
   provider transmission.
+
+Fail-closed private voice security, hardening (CF-WO-P0-009,
+Tasks A + B):
+- `TrustedAuthorizationContext` is genuinely immutable after
+  issuance (a frozen flag enforced by `__setattr__` /
+  `__delattr__`, with `__copy__` / `__deepcopy__` /
+  `__setstate__` all returning frozen objects — `__slots__`
+  alone never made it immutable). Reassigning any field raises
+  AttributeError. Revocation lives OUTSIDE the context, in a
+  separate module-level revocation registry keyed by the
+  context's immutable `authorization_id`
+  (`revoke_trusted_authorization_context` /
+  `is_trusted_authorization_revoked`); revoking never mutates
+  the issued context. `validate_private_voice_export` rejects a
+  context whose id is in the registry.
+- `resolve_voice_for_production` requires a valid Character
+  Registry for a v2.5 voice profile: a missing (or non-dict)
+  registry, a missing Character, or mismatched Character/Voice
+  ownership all fail closed with the voice unresolved. Legacy
+  v2.3 records keep their historical contract — v2.5 never
+  silently falls back to it.
 """
 from __future__ import annotations
 
+import copy
 import os
 import re
+import uuid
 from datetime import datetime, timezone
 
 MODES = [
@@ -641,20 +664,25 @@ def resolve_voice_for_production(voice_registry, character_registry,
 
     A voice may be selected for production only when ALL hold:
     (1) the voice exists and its character_id is the requested
-    character (cross-character assignment rejected); (2) the
-    character exists and the voice ownership matches the
-    character ownership; (3) CF-WO-P0-008 (A): for a private v2.5
-    voice the REQUESTER identity is mandatory — both
-    requesting_owner_id and requesting_workspace_id must be
-    provided and authorized (authorize_action, action
-    "use_in_production"). A missing requester is never an
-    authorized internal request, there is no silent fallback to
-    the character's owner, and None is never an authorization
-    bypass; (4) the record passes the v2.5 conditional
-    validation; (5) when require_approved, approval_status and
-    status are both "approved" — a pending profile is a valid
-    record but never an approved production voice, and
-    sample-generation success is not user approval.
+    character (cross-character assignment rejected); (2) for a
+    v2.5 voice the Character Registry is REQUIRED — a missing
+    (or non-dict) registry, a missing Character, or mismatched
+    Character/Voice ownership all fail closed and the voice is
+    never resolved (CF-WO-P0-009 B; there is no legacy fallback
+    for v2.5). A non-2.5 (legacy) record keeps its historical
+    contract: the registry is consulted only when given, and the
+    Character existence / ownership checks run only then; (3)
+    CF-WO-P0-008 (A): for a private v2.5 voice the REQUESTER
+    identity is mandatory — both requesting_owner_id and
+    requesting_workspace_id must be provided and authorized
+    (authorize_action, action "use_in_production"). A missing
+    requester is never an authorized internal request, there is
+    no silent fallback to the character's owner, and None is
+    never an authorization bypass; (4) the record passes the
+    v2.5 conditional validation; (5) when require_approved,
+    approval_status and status are both "approved" — a pending
+    profile is a valid record but never an approved production
+    voice, and sample-generation success is not user approval.
 
     Legacy compatibility: a record that is NOT v2.5 keeps its
     historical contract (binding + validation + approval; the
@@ -678,8 +706,36 @@ def resolve_voice_for_production(voice_registry, character_registry,
                       f"to character {vp.get('character_id')!r}, not "
                       f"{character_id!r} — cross-character assignment "
                       "rejected"]
+    is_v25 = vp.get("schema_version") == "2.5"
     character = None
-    if character_registry is not None:
+    if is_v25:
+        # CF-WO-P0-009 (B): a v2.5 private voice is NEVER
+        # resolvable without its Character Registry. A missing
+        # registry previously skipped the Character existence and
+        # Character/Voice ownership checks entirely (character
+        # stayed None and validation ran against no character) —
+        # that silent skip is closed here: fail closed, voice
+        # unresolved, with an explicit reason.
+        if not isinstance(character_registry, dict):
+            return None, ["v2.5 private voice resolution requires a "
+                          "valid Character Registry — no Character "
+                          "Registry was provided, so the voice "
+                          "cannot be resolved (fail closed: a v2.5 "
+                          "private voice is never resolvable without "
+                          "its Character Registry)"]
+        character = character_registry.get(character_id)
+        if character is None:
+            return None, [f"unknown character_id {character_id!r}"]
+        if not isinstance(character, dict):
+            return None, [f"character record for {character_id!r} "
+                          "is not an object — v2.5 private voice "
+                          "resolution fails closed"]
+        if not ownerships_match(vp.get("ownership"),
+                                character.get("ownership")):
+            return None, ["voice profile ownership does not match the "
+                          "character ownership (owner/workspace must "
+                          "match)"]
+    elif character_registry is not None:
         character = character_registry.get(character_id)
         if character is None:
             return None, [f"unknown character_id {character_id!r}"]
@@ -745,53 +801,181 @@ class TrustedAuthorizationContext:
     """An authorization context issued by the local application
     authorization boundary (see issue_trusted_authorization_context).
 
-    Fields: actor_owner_id / actor_workspace_id (the actor the
-    boundary authenticated), granted_by (who granted the
-    authorization — must be the asset owner), scope (non-empty
-    description of the authorized export), action (one of
-    ACTION_SCOPES — export requires "export_private_asset"),
-    character_id / voice_profile_id (the exact asset this
-    authorization covers — an authorization for one character or
-    voice never covers another), provider_transmission_approved
-    (whether this authorization also permits sending the voice to
-    an external provider — a separate permission from export),
-    expires_at (ISO-8601 UTC string or None = no expiry), revoked
-    (whether the authorization has been revoked).
+    Fields: authorization_id (an immutable per-issuance identifier
+    minted by the factory — the revocation registry keys on it),
+    actor_owner_id / actor_workspace_id (the actor the boundary
+    authenticated), granted_by (who granted the authorization —
+    must be the asset owner), scope (non-empty description of the
+    authorized export), action (one of ACTION_SCOPES — export
+    requires "export_private_asset"), character_id /
+    voice_profile_id (the exact asset this authorization covers —
+    an authorization for one character or voice never covers
+    another), provider_transmission_approved (whether this
+    authorization also permits sending the voice to an external
+    provider — a separate permission from export), expires_at
+    (ISO-8601 UTC string or None = no expiry), revoked (the
+    issuance-time revocation flag — always False for a
+    factory-issued context; revocation after issuance NEVER
+    mutates this field, it is recorded in the separate
+    revocation registry, see revoke_trusted_authorization_context).
 
-    Instances are immutable after issuance (slots + no setters are
-    exposed; the factory freezes nothing else). Direct construction
-    raises TypeError: only the factory, holding the boundary
-    sentinel, may create one. A plain dict is never an instance of
-    this class, so no caller-created JSON can pass the isinstance
-    check in validate_private_voice_export.
+    Instances are genuinely immutable after issuance
+    (CF-WO-P0-009 A). `__slots__` alone did NOT make them so —
+    it only prevented adding NEW attributes, while every listed
+    field could still be reassigned (`ctx.revoked = True`
+    succeeded). Immutability is therefore enforced, not assumed:
+    `__init__` writes every field with `object.__setattr__` and
+    then sets the `_frozen` flag; `__setattr__` and
+    `__delattr__` raise AttributeError on a frozen instance for
+    ANY attribute (existing or new); the class has no `__dict__`
+    slot, so there is no `__dict__` escape; and `__copy__`,
+    `__deepcopy__` and `__setstate__` all produce frozen
+    objects, so copying a context cannot manufacture a mutable
+    one. There is no public `replace` / setter backdoor:
+    `dataclasses.replace` does not apply (this is not a
+    dataclass) and direct construction raises TypeError — only
+    the factory, holding the boundary sentinel, may create one.
+    A plain dict is never an instance of this class, so no
+    caller-created JSON can pass the isinstance check in
+    validate_private_voice_export.
     """
-    __slots__ = ("actor_owner_id", "actor_workspace_id", "granted_by",
-                 "scope", "action", "character_id", "voice_profile_id",
+    __slots__ = ("authorization_id", "actor_owner_id",
+                 "actor_workspace_id", "granted_by", "scope",
+                 "action", "character_id", "voice_profile_id",
                  "provider_transmission_approved", "expires_at",
-                 "revoked")
+                 "revoked", "_frozen")
 
     def __init__(self, *, _boundary, actor_owner_id,
                  actor_workspace_id, granted_by, scope, action,
                  character_id, voice_profile_id,
                  provider_transmission_approved=False, expires_at=None,
-                 revoked=False):
+                 revoked=False, authorization_id=None):
         if _boundary is not _AUTHORIZATION_BOUNDARY:
             raise TypeError(
                 "TrustedAuthorizationContext must be issued by "
                 "issue_trusted_authorization_context() — the local "
                 "application authorization boundary — never "
                 "constructed directly")
-        self.actor_owner_id = actor_owner_id
-        self.actor_workspace_id = actor_workspace_id
-        self.granted_by = granted_by
-        self.scope = scope
-        self.action = action
-        self.character_id = character_id
-        self.voice_profile_id = voice_profile_id
-        self.provider_transmission_approved = \
-            provider_transmission_approved
-        self.expires_at = expires_at
-        self.revoked = revoked
+        # Write through object.__setattr__: __setattr__ below
+        # refuses every write on a frozen instance, and the
+        # instance is frozen by the last write here.
+        object.__setattr__(
+            self, "authorization_id",
+            authorization_id if isinstance(authorization_id, str)
+            and authorization_id else uuid.uuid4().hex)
+        object.__setattr__(self, "actor_owner_id", actor_owner_id)
+        object.__setattr__(self, "actor_workspace_id",
+                           actor_workspace_id)
+        object.__setattr__(self, "granted_by", granted_by)
+        object.__setattr__(self, "scope", scope)
+        object.__setattr__(self, "action", action)
+        object.__setattr__(self, "character_id", character_id)
+        object.__setattr__(self, "voice_profile_id", voice_profile_id)
+        object.__setattr__(self, "provider_transmission_approved",
+                           provider_transmission_approved)
+        object.__setattr__(self, "expires_at", expires_at)
+        object.__setattr__(self, "revoked", revoked)
+        object.__setattr__(self, "_frozen", True)
+
+    def __setattr__(self, name, value):
+        if getattr(self, "_frozen", False):
+            raise AttributeError(
+                "TrustedAuthorizationContext is immutable after "
+                f"issuance — cannot reassign {name!r} (issue a new "
+                "context at the authorization boundary instead)")
+        object.__setattr__(self, name, value)
+
+    def __delattr__(self, name):
+        if getattr(self, "_frozen", False):
+            raise AttributeError(
+                "TrustedAuthorizationContext is immutable after "
+                f"issuance — cannot delete {name!r}")
+        object.__delattr__(self, name)
+
+    def _frozen_copy(self, deep=False, memo=None):
+        """A frozen copy with the same field values (internal
+        only — the copy path cannot manufacture a mutable
+        context: the copy is frozen before it is returned)."""
+        clone = object.__new__(type(self))
+        for slot in self.__slots__:
+            value = getattr(self, slot)
+            if deep:
+                value = copy.deepcopy(value, memo)
+            object.__setattr__(clone, slot, value)
+        object.__setattr__(clone, "_frozen", True)
+        return clone
+
+    def __copy__(self):
+        return self._frozen_copy()
+
+    def __deepcopy__(self, memo):
+        return self._frozen_copy(deep=True, memo=memo)
+
+    def __getstate__(self):
+        return (None, {slot: getattr(self, slot)
+                       for slot in self.__slots__})
+
+    def __setstate__(self, state):
+        _, slot_values = state
+        for name, value in slot_values.items():
+            object.__setattr__(self, name, value)
+        # Unpickling / uncopying must never yield a mutable
+        # context: freeze before the object escapes.
+        object.__setattr__(self, "_frozen", True)
+
+
+# --- Revocation registry (CF-WO-P0-009 A) ---------------------------
+# Revocation state is deliberately SEPARATE from the immutable
+# authorization data: revoking a context must never mutate the
+# issued context (not even its `revoked` field). The registry is
+# a module-level set of authorization_ids, keyed by the
+# immutable per-issuance id minted by the factory. It is
+# process-local, in-memory state for the P0 policy layer — the
+# P1 runtime (app UI / session) owns persistence of revocations
+# across restarts; until then a restart clears the registry and
+# contexts must be re-issued. Only the two functions below may
+# touch the set; there is no public path that removes an id.
+_REVOKED_AUTHORIZATION_IDS: set = set()
+
+
+def revoke_trusted_authorization_context(trusted_context):
+    """Revoke an issued context WITHOUT mutating it.
+
+    Records the context's immutable authorization_id in the
+    revocation registry; the context object itself is unchanged
+    (every field, including `revoked`, keeps its issued value).
+    Raises TypeError for anything that is not a
+    TrustedAuthorizationContext — a dict or forged object can
+    never revoke (or un-revoke) anything. Returns True.
+    """
+    if not isinstance(trusted_context, TrustedAuthorizationContext):
+        raise TypeError(
+            "only a TrustedAuthorizationContext issued by "
+            "issue_trusted_authorization_context() can be revoked")
+    _REVOKED_AUTHORIZATION_IDS.add(trusted_context.authorization_id)
+    return True
+
+
+def is_trusted_authorization_revoked(trusted_context) -> bool:
+    """True when the context's authorization_id is in the
+    revocation registry. Raises TypeError for anything that is
+    not a TrustedAuthorizationContext (fail closed — a forged
+    object is never reported as 'not revoked')."""
+    if not isinstance(trusted_context, TrustedAuthorizationContext):
+        raise TypeError(
+            "only a TrustedAuthorizationContext issued by "
+            "issue_trusted_authorization_context() can be checked "
+            "for revocation")
+    return trusted_context.authorization_id in _REVOKED_AUTHORIZATION_IDS
+
+
+def _is_authorization_revoked(trusted_context) -> bool:
+    """Registry check used by validate_private_voice_export:
+    False for anything without a registered id (including a
+    non-context, which the caller rejects separately)."""
+    authorization_id = getattr(trusted_context, "authorization_id",
+                               None)
+    return authorization_id in _REVOKED_AUTHORIZATION_IDS
 
 
 def issue_trusted_authorization_context(*, actor_owner_id,
@@ -841,7 +1025,8 @@ def issue_trusted_authorization_context(*, actor_owner_id,
         voice_profile_id=voice_profile_id,
         provider_transmission_approved=bool(
             provider_transmission_approved),
-        expires_at=expires_at)
+        expires_at=expires_at,
+        authorization_id=uuid.uuid4().hex)
 
 
 def validate_private_voice_export(voice, authorization=None,
@@ -888,7 +1073,13 @@ def validate_private_voice_export(voice, authorization=None,
                       "local application authorization boundary")
         return errors
     ctx = trusted_context
-    if ctx.revoked:
+    # Revocation is registry state, not a mutated field: the
+    # context itself is immutable, so a revoked context is
+    # recognised by its authorization_id being in the revocation
+    # registry (revoke_trusted_authorization_context). The
+    # issuance-time `revoked` field is kept as a defence-in-depth
+    # check alongside it.
+    if ctx.revoked or _is_authorization_revoked(ctx):
         errors.append("private voice export blocked: the authorization "
                       "has been revoked")
     if ctx.expires_at is not None and ctx.expires_at <= _utc_now_iso():
