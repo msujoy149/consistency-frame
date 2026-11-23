@@ -490,6 +490,9 @@ Registering a character takes all three of these, in one go:
    registration and asks you first.
 3. **Explicit authorisation** — e.g. "Register this character
    permanently." Uploading an image alone does not register a character.
+   A permanent registration also records structured ownership
+   (`owner_id` + `workspace_id`, private by default — see the
+   registration rules in `docs/07-character-registry.md`).
 
 ### Two ways to create a character
 
