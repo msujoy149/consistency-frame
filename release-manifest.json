@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p0-safe-foundations",
-  "commit": "056ab8a896778d7ba7fd3c198045ee41e9a20b8f",
-  "github_branch_head": "166a722d7359929b6f98cb7ea70844910933cd6c",
+  "commit": "9d27faa33111c302683ac1f32ebd25c7cf447e03",
+  "github_branch_head": "e7d0ffb6f8f77715d616e0239ba486d13f9a26f5",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
@@ -132,8 +132,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "458b97980e937a888e497d18909982e691371e8987e152a39fe7282ed141f6dd",
-      "bytes": 43238
+      "sha256": "d32e5793026a8106d80d554b4896b96e9fd7062fa909b1747964d5ca08828b89",
+      "bytes": 43468
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -177,8 +177,8 @@
     },
     {
       "path": "docs/implementation/CF-WO-P0-009-corrections.md",
-      "sha256": "a617ca1728f63ac9411a73c4a095e18aebc94d98a5b31d849d2acf9647378412",
-      "bytes": 27857
+      "sha256": "c53013ff1cc53f54328dd97b0e0436441df645a66e691a3aeb045716cf3b2d3c",
+      "bytes": 28259
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
@@ -187,7 +187,7 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "7dc929af78320909105e17523b6ee4845dfa07767e40a0d43634e32ad3002612",
+      "sha256": "2ea0b697af066682dbcd2c0bf4c10b71049356175fef48914dcae5e061278f18",
       "bytes": 17346
     },
     {
@@ -936,5 +936,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-23T08:30:12Z"
+  "generated_at_utc": "2026-11-23T09:14:46Z"
 }
