@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-23 15:28 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-23 16:52 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-001-trusted-session`
-**Head commit:** `c36bfaaee9cd9c67becef7205addfa4b5f3d221d`
-**GitHub branch head:** `8fc11feec232102c2a3dfaa90c3452d2186c472e` (remote head of `feat/cf-p1-001-trusted-session` at
+**Head commit:** `4cb14e980be3c8c7c31dfcc3549026f8f48c136e`
+**GitHub branch head:** `c348ff6373cce5fb554f4d9a95c057aa8f808601` (remote head of `feat/cf-p1-001-trusted-session` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -204,14 +204,19 @@ docs/implementation/CF-WO-P0-011-corrections.md
 docs/implementation/CF-WO-P0-012-corrections.md
 docs/implementation/CF-WO-P0-014-corrections.md
 docs/implementation/CF-WO-P0-015-corrections.md
+docs/implementation/CF-WO-P1-001-corrections.md
 docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
+docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md
 registry/adapters.json
 registry/features.json
 registry/skills.json
 registry/workflows.json
 release-manifest.json
+runtime/__init__.py
+runtime/authorization.py
+runtime/local_session.py
 schemas/README.md
 schemas/approval.json
 schemas/build-report.json
@@ -318,6 +323,7 @@ tests/test_installer_manifest_security.sh
 tests/test_installer_metadata_failure.sh
 tests/test_installer_security.sh
 tests/test_installer_status.sh
+tests/test_local_session_runtime.py
 tests/test_modes.py
 tests/test_performance_semantics.py
 tests/test_private_overlay.py
@@ -327,6 +333,7 @@ tests/test_registries.py
 tests/test_reports.py
 tests/test_routing.py
 tests/test_schemas.py
+tests/test_session_authorization.py
 tests/test_timeline_manifest.py
 ```
 
@@ -473,4 +480,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-23 15:28 UTC.
+- Report generated: 2026-11-23 16:52 UTC.
