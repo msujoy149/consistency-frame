@@ -686,13 +686,17 @@ def main():
     # CF-WO-P0-008 (A/D): the binding resolver delegates to the
     # production resolver, so private v2.5 resolution requires the
     # requester identity — both productions supply owner-a /
-    # workspace-a.
+    # workspace-a. CF-WO-P0-009 (B): v2.5 resolution also requires
+    # the Character Registry, so the registered characters are
+    # passed in — a v2.5 voice is never resolvable without it.
     voice_a, err_a = resolve_voice_for_character(
         voice_registry, proj_a["character_id"],
+        character_registry=registry,
         requesting_owner_id="owner-a",
         requesting_workspace_id="workspace-a")
     voice_b, err_b = resolve_voice_for_character(
         voice_registry, proj_b["character_id"],
+        character_registry=registry,
         requesting_owner_id="owner-a",
         requesting_workspace_id="workspace-a")
     check("AC-09: two productions referencing char-001 resolve the "
@@ -701,7 +705,8 @@ def main():
           and voice_a["voice_profile_id"] == "voice-mina-001"
           and voice_b["voice_profile_id"] == "voice-mina-001")
     _, err_none = resolve_voice_for_character(
-        voice_registry, proj_a["character_id"])
+        voice_registry, proj_a["character_id"],
+        character_registry=registry)
     check("AC-09: the same resolution without any requester identity "
           "is rejected (fail closed, P0-008 A)",
           bool(err_none), "; ".join(err_none))
