@@ -1013,6 +1013,11 @@ Honesty rules:
   timeline validation (`scripts/timeline_policy.py`,
   `strict=True`) enforces the same ownership rules on every
   referenced character, voice, and dialogue-bound audio asset.
+  P0-010 adds factory-issuance integrity: only the exact object
+  issued by `issue_trusted_authorization_context` is accepted
+  (verified against a process-local, identity-based issuance
+  registry, never by a bare type check), and serialization of a
+  context is refused outright.
   See `docs/implementation/CF-WO-P0-008-corrections.md`.
 - **No cross-character inheritance.** A voice never transfers from
   one character to another. Two characters never share a voice
