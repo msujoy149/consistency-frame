@@ -329,6 +329,37 @@ step-by-step order for every video, in §7).
   with the same local OS user privileges from manipulating files
   or code.
 
+## P0-010 Factory-issued authorization contexts (2026-11-23)
+
+- **Only the exact factory-issued object is trusted.**
+  `TrustedAuthorizationContext` (`scripts/asset_policy.py`) is
+  still genuinely immutable (P0-009), but immutability never
+  proved issuance: the constructor sentinel could be imported,
+  `__setstate__` could initialize a `__new__` object, and
+  pickle/copy produced further objects that all passed the old
+  `isinstance` check with zero factory calls. The trust anchor
+  is now a process-local, identity-based issuance registry
+  (`_ISSUED_AUTHORIZATION_CONTEXTS`, a `weakref.WeakSet`):
+  registration happens only inside
+  `issue_trusted_authorization_context()`, as its last step, and
+  the single check `is_factory_issued_trusted_authorization_context()`
+  is what every authorization boundary uses — export,
+  provider-transmission approval, revocation, and revocation
+  checks. Equality and hashing are explicitly identity-based
+  (`__eq__` is `is`), so two contexts with identical fields are
+  distinct entries. Serialization is refused outright
+  (`__getstate__` / `__setstate__` / `__reduce__` /
+  `__reduce_ex__` raise `TypeError`); copies are frozen but
+  unregistered and have no authority. Full record:
+  `docs/implementation/CF-WO-P0-010-corrections.md`.
+- **This is a process-level integrity contract, not identity
+  proof.** It proves an object was issued by the factory in
+  this process; it does not prove the owner/workspace IDs
+  supplied to the factory belong to the real person operating
+  the application, and it does not stop malicious code running
+  with the same process privileges. Authenticated
+  application-session identity remains P1 work.
+
 ## Rules that always apply
 
 - A character's identity (face, eyes, nose, mouth, hands, feet) is
