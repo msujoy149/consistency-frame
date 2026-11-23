@@ -843,24 +843,52 @@ as in P1-001/R1):
   server, API, database, cloud identity, graphical UI, or
   companion changes.
 
-### 13.7 Native Windows CI results — PENDING (parent to fill)
+### 13.7 Native Windows CI results — FILLED from live PR run #223
 
-The native Windows run happens after push, when the PR run
-starts the `windows-compat` job. **Do not treat Windows
-support as tested until this section is filled from the live
-run.** Fields for the parent:
+The native Windows run is PR run #223 (run ID 45253011530,
+event pull_request, head f970d5177797e667debbb1591bf5ae0d9739231f,
+https://github.com/msujoy149/consistency-frame/actions/runs/45253011530),
+overall conclusion Success, total duration 1m 5s. All three jobs
+succeeded; no push run exists for this branch (expected — the
+workflow triggers on push only for main and
+feat/cf-p0-safe-foundations). The PASS lines below were verified
+from the downloaded raw log archives (grepped locally), not only
+from the page view.
 
-- Windows job run ID / run number / URL: [PENDING].
-- Python 3.10 run: conclusion, duration, runtime-suite
-  result (67 checks), FIRST-01..07 PASS lines present:
-  [PENDING].
-- Python 3.12 run: conclusion, duration, runtime-suite
-  result (67 checks), FIRST-01..07 PASS lines present:
-  [PENDING].
-- Authorization suite (47 checks) and P0 security suite
-  (158 checks) on Windows: [PENDING].
-- Any test skipped for the platform: [PENDING — must be none
-  relevant].
+- Python 3.10 run: Success, 1m 2s. "Show versions" prints
+  Python 3.10.11, start method spawn, win32. Runtime suite:
+  PASS (0 failure(s)), 65 PASS lines, 0 FAIL lines. FIRST-01..07
+  all PASS (concurrent first runs return one shared identity,
+  5 rounds x 4 processes, and the rest of the FIRST group),
+  R2-SPAWN-01 PASS, R2-NOFCHMOD-01 PASS, FS-03 / FS-04 / FS-04b
+  (symlink) PASS. Authorization suite PASS (0 failure(s)),
+  47 PASS lines. P0 security suite PASS (0 failure(s)),
+  158 PASS lines.
+- Python 3.12 run: Success, 27s. "Show versions" prints
+  Python 3.12.10, start method spawn, win32. Runtime suite:
+  PASS (0 failure(s)), 65 PASS lines, 0 FAIL lines, with the
+  same FIRST-01..07, SPAWN-01, NOFCHMOD-01 and FS-03/FS-04/FS-04b
+  PASS lines. Authorization suite PASS (0 failure(s)), 47 PASS
+  lines. P0 security suite PASS (0 failure(s)), 158 PASS lines.
+- No test skipped for the platform: a search for "skip" across
+  all Windows step logs returns no matches.
+- Runtime-suite count correction: the Windows total is 65 PASS,
+  not 67. The two R2-CANON checks are Linux-only by design
+  (`os.name == "posix"` gate in the test); they prove the
+  canonical-path mechanism on Linux, and on Windows the same
+  realpath comparison is exercised by PROF-01b/12b and SESS-18
+  themselves. CANON-01/02 PASS in the Linux p0-validate log of
+  this same run.
+- Linux p0-validate in the same run: Success, 59s. Artifact
+  `p0-test-results`, 906 bytes, artifact ID 14855723149,
+  digest sha256:62d226b4156b62e748af4d68f4f793045addc54042e9017c33ab98f2ea10c2cf;
+  the `last-run.json` inside is byte-identical to the committed
+  file (SHA ddd94ee1502d77d22105ab6a6a5cc3a752bbdfe3e5c4d65eec7ff1c8b4e559c5).
+
+Windows support is now verified by the native run above: the
+race test runs for real under spawn on Windows, profile
+creation works without `os.fchmod`, and no relevant test is
+skipped for the platform.
 
 ### 13.8 Files changed (R2)
 
@@ -917,7 +945,8 @@ run.** Fields for the parent:
   revocation; macOS untested on real hardware (resolution
   function only, patched platform probe); Windows permission
   limits (ACL inheritance, no POSIX mode-bit equivalence);
-  native Windows CI results pending the live PR run (§13.7).
+  native Windows CI results are now recorded in §13.7 (PR run
+  #223, all three jobs Success).
 
 ### 13.11 R2 follow-up (2026-11-23) — PR run #216 failed on Windows; test-side fix
 
@@ -1035,7 +1064,6 @@ counting). Run outputs:
 `evidence/r2/p1-001-r2f-suite-run2.txt`. Evidence note:
 `evidence/r2/p1-001-r2-windows-ci-216-failure-note.txt`.
 
-**§13.7 stays PENDING the re-run.** Windows support is not
-claimed as tested until the re-run of the `windows-compat`
-job fills it — the #216 failure is recorded here precisely
-so that no earlier claim is left standing.
+**§13.7 is now filled from the re-run (#223).** Windows support
+is verified by that run; the #216 failure is recorded here
+precisely so that no earlier claim is left standing.
