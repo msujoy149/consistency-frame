@@ -668,3 +668,246 @@ behaviour it pins (ProfileError, no profile) is unchanged.
   tested only on Linux (the concurrency tests run on this Linux
   VM; the link primitive is documented as POSIX + Windows
   NTFS).
+
+## 13. R2 addendum (2026-11-23) — CF-WO-P1-001-R2
+
+Independent review of R1 found a Windows compatibility issue in
+the same profile-publication path and two platform assumptions in
+its regression tests. R2 fixes those without changing the runtime
+architecture, weakening security, or modifying P0 policy.
+
+### 13.1 Findings
+
+- **R2-A — `os.fchmod` does not exist on Windows.**
+  `runtime/local_session.py::_publish_profile_atomic()` called
+  `os.fchmod(fd, 0o600)` unconditionally. Windows Python
+  3.10–3.12 does not expose `os.fchmod`, so first-run profile
+  initialization fails with `AttributeError` on Windows.
+- **R2-B — the race test is POSIX-only.** The R1 race test
+  hardcoded `multiprocessing.get_context("fork")` (there is no
+  fork start method on Windows), and the profile-permission
+  check asserted POSIX `0700`/`0600` mode bits unconditionally.
+- **R2-C — no native Windows verification.** The CI workflow
+  ran only the Linux full suite; nothing exercised the runtime
+  on a real Windows machine.
+
+### 13.2 Reproduced before the fix
+
+- **R2-A** (`evidence/r2/p1-001-r2-repro-fchmod-before.txt`,
+  exit 1): a child process that deletes `os.fchmod` from the
+  `os` module before importing the runtime — the Windows
+  Python 3.10–3.12 simulation — fails in
+  `load_or_create_profile()` with `AttributeError: module 'os'
+  has no attribute 'fchmod'` at the unconditional call
+  (`runtime/local_session.py`, pre-fix line 358).
+- **R2-B** (`evidence/r2/p1-001-r2-repro-fork-before.txt`):
+  the pre-fix test file hardcodes `get_context("fork")`
+  (line 626) and asserts POSIX mode bits unconditionally
+  (`CF-P1-001-PROF-19`, line 310). "fork" is not a start
+  method on Windows, so the race test cannot run there at all.
+
+### 13.3 Fix R2-A — capability-checked fchmod
+
+`_publish_profile_atomic()` now tightens the temporary file
+with a narrow capability check — `if hasattr(os, "fchmod"):
+os.fchmod(fd, 0o600)` — instead of an unconditional call.
+On Windows the call is skipped and the file inherits the user
+data directory's Windows security/ACL behaviour. This is a
+check-then-use on the single capability, not a broad
+`try/except AttributeError` around unrelated code: a missing
+`fchmod` is the only tolerated absence, and any other failure
+still raises. POSIX behaviour is unchanged (0700 directory,
+0600 temp/profile file). The R1 `os.link()` create-if-absent
+publication, symlink refusal, corrupt-profile fail-closed
+behaviour, exclusive temp-file creation, cleanup and atomic
+visibility are all untouched. `scripts/atomic_write.py` is not
+modified. The docstrings of `_publish_profile_atomic()` and
+`load_or_create_profile()` now state the platform distinction
+explicitly, and the trust-boundary doc records it (see §13.7).
+
+### 13.4 Fix R2-B — spawn race test, POSIX-gated assertions
+
+- The race test uses `multiprocessing.get_context("spawn")`
+  on every platform, pinned as the module constant
+  `_RACE_CONTEXT_NAME = "spawn"` in
+  `tests/test_local_session_runtime.py`. Worker functions
+  (`_load_profile_worker`, `_init_first_run_worker`) are
+  module-level and picklable, the barrier initializer runs in
+  each spawned worker, and the test entry point is spawn-safe
+  (importing the module never runs `main()` — guarded by
+  `__main__`). Bounded waits/timeouts are preserved (30 s on
+  every barrier wait and future result; no unbounded sleeps,
+  no hanging children); child exit codes are checked via the
+  futures, and every child process and temporary artefact is
+  cleaned up by the pool context manager and the `finally`
+  block, including on failure.
+- `CF-P1-001-PROF-19` now asserts `0700`/`0600` only when
+  `os.name == "posix"`; on other platforms it asserts the
+  profile file exists under the data root, with no POSIX
+  mode-bit equivalence claimed.
+- The race test is not weakened: it still runs 5 rounds x 4
+  independent processes against the same initially absent
+  data root, plus the existing-valid and corrupt-profile
+  collisions — now under spawn, which is the only start
+  method on Windows.
+
+### 13.5 Fix R2-C — native Windows CI job
+
+New job `windows-compat` in `.github/workflows/p0-ci.yml`
+(the existing Linux job `p0-validate` is untouched in
+behaviour; workflow triggers are unchanged —
+`pull_request` plus `push` on `[main,
+feat/cf-p0-safe-foundations]`; the P1 branch is deliberately
+NOT added to the push list, so the PR run is the CI evidence,
+as in P1-001/R1):
+
+- Job id: `windows-compat`. `runs-on: windows-latest`.
+  Matrix: Python `3.10` and `3.12`.
+- Steps: Check out (`actions/checkout`, same pinned SHA as
+  the Linux job, v4.2.2); Set up Python
+  (`actions/setup-python` pinned by full commit SHA
+  `a26af69be951a213d495a4c3e4e4022e16d87065` — v5.6.0,
+  the `v5` tag — verified with `git ls-remote` against the
+  upstream repo, since the unauthenticated GitHub REST API
+  was rate-limited); Show versions (`python --version`,
+  start method, platform); Run runtime regression suites
+  (`python tests/test_local_session_runtime.py`,
+  `python tests/test_session_authorization.py`,
+  `python tests/test_private_voice_security.py`).
+- The steps run under `shell: bash` (Git Bash on the Windows
+  runner) so a non-zero exit from any suite fails the step
+  immediately, the same as on Linux.
+- The race test (FIRST-01..07) runs for real in this job
+  under spawn; its PASS lines must appear in the log — no
+  test is skipped for the platform. The Windows job produces
+  no `last-run.json` artefact (the three suites do not write
+  one); its evidence is the job log.
+- No PyYAML install on Windows: the three suites need only
+  the stdlib plus the repo's own modules.
+
+### 13.6 Tests executed — exact counts
+
+- `tests/test_local_session_runtime.py` — exit 0, **65 PASS /
+  0 FAIL** (was 63; +2 new CF-P1-001-R2 checks). FIRST-01..07
+  all pass under spawn; R2-SPAWN-01 pins the spawn start
+  method; R2-NOFCHMOD-01 runs profile creation + reload in a
+  child process with `os.fchmod` hidden (30 s timeout,
+  killed and reported on timeout).
+- `tests/test_session_authorization.py` — exit 0, **47 PASS /
+  0 FAIL** (unchanged; R1 ENUM-01..08 still pass — copied,
+  deep-copied, forged, expired, closed and wrong sessions
+  cannot enumerate genuine contexts; the genuine active
+  session still enumerates its own; no invalid session
+  recovers a context usable for private export or provider
+  transmission).
+- `tests/test_private_voice_security.py` — exit 0, **158 PASS /
+  0 FAIL** (unmodified).
+- After (fixed code):
+  `evidence/r2/p1-001-r2-repro-fchmod-after.txt` (exit 0 —
+  profile created and reloaded without `os.fchmod`).
+- Full suite `bash tests/run-tests.sh` — **twice**, exit 0
+  both times: **56 recorded entries / 43 distinct test IDs /
+  34 distinct commands, 56 PASS, 0 FAIL, 0 SKIP** (entry
+  counts unchanged from R1 — the 2 new checks live inside
+  the same test file). Per-file PASS lines, one run each,
+  14 Python files total **1,416** (was 1,414; +2 runtime);
+  `test_installer_status.sh` 61; `test_installer.sh` 40;
+  `test_installer_security.sh` 15;
+  `test_installer_manifest_security.sh` 24;
+  `test_installer_metadata_failure.sh` 13. Run outputs saved:
+  `evidence/r2/p1-001-r2-suite-run1.txt` and
+  `evidence/r2/p1-001-r2-suite-run2.txt`.
+- `tests/last-run.json` SHA-256
+  `ddd94ee1502d77d22105ab6a6a5cc3a752bbdfe3e5c4d65eec7ff1c8b4e559c5`
+  — identical to P1-001/R1, because the recorded entries
+  (IDs, commands, results) are unchanged; only the per-file
+  check count inside `test_local_session_runtime.py` grew.
+- `python3 scripts/validate-repo.py` — PASS.
+- `python3 scripts/generate-registries.py --check` — CHECK OK.
+- `python3 scripts/generate-report.py --check` — CHECK OK
+  (same `--github-head` as generation).
+- `git diff --check` — clean. `bash -n setup.sh` — exit 0.
+- `bash setup.sh --dry-run` — exit 0 (core-only).
+- `bash setup.sh --with-components` — NOT RUN (standing
+  limitation, untouched by this round).
+- P0 files untouched: `scripts/asset_policy.py`,
+  `scripts/atomic_write.py`, `scripts/timeline_policy.py` —
+  zero diff lines. No new dependencies (stdlib only). No
+  server, API, database, cloud identity, graphical UI, or
+  companion changes.
+
+### 13.7 Native Windows CI results — PENDING (parent to fill)
+
+The native Windows run happens after push, when the PR run
+starts the `windows-compat` job. **Do not treat Windows
+support as tested until this section is filled from the live
+run.** Fields for the parent:
+
+- Windows job run ID / run number / URL: [PENDING].
+- Python 3.10 run: conclusion, duration, runtime-suite
+  result (65 checks), FIRST-01..07 PASS lines present:
+  [PENDING].
+- Python 3.12 run: conclusion, duration, runtime-suite
+  result (65 checks), FIRST-01..07 PASS lines present:
+  [PENDING].
+- Authorization suite (47 checks) and P0 security suite
+  (158 checks) on Windows: [PENDING].
+- Any test skipped for the platform: [PENDING — must be none
+  relevant].
+
+### 13.8 Files changed (R2)
+
+- `runtime/local_session.py` — capability-checked `fchmod`
+  in `_publish_profile_atomic()` + platform-distinction
+  docstrings.
+- `tests/test_local_session_runtime.py` — spawn race test,
+  POSIX-gated PROF-19, new R2 group (2 checks).
+- `.github/workflows/p0-ci.yml` — new `windows-compat` job
+  (matrix Python 3.10/3.12); `p0-validate` untouched.
+- `docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md` —
+  platform distinction in §7, Windows permission limits,
+  platform coverage, test counts (65 checks).
+- `CHANGELOG.md` — `[Unreleased]` R2 bullet.
+- Provenance files (living report, BUILD_REPORT_P0.md,
+  build-report.json, CHECKSUMS.txt, release-manifest.json) —
+  regenerated after the final suite run.
+
+### 13.9 ADRs added by R2
+
+- **R2-1 — capability check, not a broad except.** The
+  missing-`fchmod` case is handled with `hasattr(os,
+  "fchmod")` at the single call site. A broad
+  `try/except AttributeError` would also swallow unrelated
+  failures inside the same block (a real bug hiding behind
+  the platform difference); the narrow check keeps every
+  other failure loud.
+- **R2-2 — spawn is the one start method for the race test.**
+  "fork" is POSIX-only; "spawn" exists on Windows, Linux and
+  macOS, and the test's workers were already module-level
+  and picklable, so spawn costs nothing and buys every
+  platform. The constant is pinned so a future edit back to
+  "fork" fails loudly in R2-SPAWN-01.
+- **R2-3 — setup-python pinned by SHA, verified without the
+  REST API.** The unauthenticated GitHub REST API was
+  rate-limited, so the `v5` tag's commit was resolved with
+  `git ls-remote` against the upstream repo
+  (`a26af69be951a213d495a4c3e4e4022e16d87065`, v5.6.0) — a
+  verifiable, reproducible pin, recorded here rather than
+  silently falling back to a floating tag.
+
+### 13.10 Limitations removed / still standing
+
+- REMOVED: profile initialization failing on Windows
+  (`os.fchmod` AttributeError) — fixed and verified by the
+  no-fchmod simulation (R2-NOFCHMOD-01); native Windows
+  verification is the `windows-compat` CI job (§13.7).
+- REMOVED: fork-only race test and unconditional POSIX
+  permission assertions — the race test now runs under spawn
+  on Linux (FIRST-01..07 pass) and the permission assertions
+  are POSIX-gated.
+- STILL STANDING: local OS-user boundary only; no graphical
+  UI; one workspace per installation; process-local
+  revocation; macOS untested on real hardware (resolution
+  function only, patched platform probe); Windows permission
+  limits (ACL inheritance, no POSIX mode-bit equivalence);
+  native Windows CI results pending the live PR run (§13.7).

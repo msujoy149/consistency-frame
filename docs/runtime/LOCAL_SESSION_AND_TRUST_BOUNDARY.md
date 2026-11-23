@@ -65,14 +65,18 @@ it to the P0 policy — which remains the single policy source.
    unmodified.
 7. **Local state is stored safely.** The profile is published
    atomically and exactly once: the candidate is written to an
-   unguessable temporary file in the same directory (mode 0600,
-   flushed + fsynced) and then published with `os.link()` — a
+   unguessable temporary file in the same directory (mode 0600
+   on POSIX, flushed + fsynced) and then published with `os.link()` — a
    single atomic create-if-absent operation that fails when the
    profile already exists, so a concurrent first run can never
    overwrite the winner's profile (R1; the P0
    `scripts/atomic_write.py` helper is not used for the profile
    because its `os.replace()` unconditionally overwrites the
-   target). The profile lives in a 0700 directory as a 0600
+   target). The 0600 tightening is capability-checked
+   (`hasattr(os, "fchmod")`): Windows Python 3.10–3.12 does not
+   expose `os.fchmod`, so the call is skipped there and the file
+   inherits the user data directory's Windows security/ACL
+   behaviour instead (R2). The profile lives in a 0700 directory as a 0600
    file on POSIX systems. Traversal, absolute paths and symlink
    escapes are rejected (`resolve_private_path`); a symlinked
    profile is refused rather than followed; a corrupt, invalid
@@ -130,16 +134,25 @@ this runtime as stronger than it is:
   enforced where the platform supports them. On Windows,
   `os.chmod` does not provide equivalent semantics, so the
   profile directory and file do not get the same restrictive
-  bits there; the profile is still stored under
-  `%LOCALAPPDATA%` (a per-user location) and is still written
-  atomically. Do not claim Windows file permissions equal the
-  POSIX ones.
+  bits there; Windows Python 3.10–3.12 also has no `os.fchmod`,
+  so the temporary/profile file is not chmodded at creation on
+  Windows — it inherits the `%LOCALAPPDATA%` directory's
+  Windows security/ACL behaviour instead (R2). The profile is
+  still stored under `%LOCALAPPDATA%` (a per-user location)
+  and is still written atomically. Do not claim Windows file
+  permissions equal the POSIX ones.
 - **Platform coverage.** The data-root resolution covers Linux
   (`XDG_DATA_HOME` else `~/.local/share`), macOS (`~/Library/
   Application Support`) and Windows (`%LOCALAPPDATA%`). The
-  tests run on Linux; the macOS/Windows branches are exercised
-  only through the resolution function with a patched platform
-  probe, not on real macOS/Windows machines.
+  tests run on Linux; the runtime suites additionally run
+  natively on Windows in CI (`windows-compat` job:
+  `windows-latest`, Python 3.10 and 3.12 — the recorded
+  results live in the corrections record). The macOS branches
+  are exercised only through the resolution function with a
+  patched platform probe, not on a real macOS machine; the
+  Windows data-root branch is likewise exercised through the
+  resolution function, while the Windows profile-publication
+  and race behaviour is exercised by the native Windows CI job.
 
 ## Data-root resolution
 
@@ -219,7 +232,10 @@ sessions that issued contexts.
 - `tests/test_local_session_runtime.py` — CF-P1-001-PROF (profile
   lifecycle), CF-P1-001-SESS (session integrity), CF-P1-001-FS
   (filesystem security), CF-P1-001-R1-FIRST (atomic first-run
-  identity across concurrent processes): 63 checks.
+  identity across concurrent processes), CF-P1-001-R2 (race test
+  under the "spawn" start method on every platform, POSIX-gated
+  permission assertions, profile creation without `os.fchmod`):
+  65 checks.
 - `tests/test_session_authorization.py` — CF-P1-001-AUTH
   (bridge), CF-P1-001-EXP (export issuance), CF-P1-001-P0 (P0
   behaviour unchanged), CF-P1-001-R1-ENUM (context enumeration
