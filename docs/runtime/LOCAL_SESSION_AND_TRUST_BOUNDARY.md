@@ -40,6 +40,11 @@ it to the P0 policy — which remains the single policy source.
    `__new__`-built objects, shallow/deep copies, and
    serialization/deserialization can never manufacture an
    accepted session. Sessions are never written to disk.
+   Enumerating a session's issued contexts
+   (`issued_contexts_for_session`) requires the same proof: only
+   an exact, ACTIVE issued session enumerates — a copied,
+   forged, `__new__`-built, expired or closed object gets a
+   fail-closed `ValueError` and never sees a context (R1).
 4. **Closed or expired means refused.** Closing a session is
    permanent and immediate: further authorization through it
    fails, and every still-live private-voice export context it
@@ -58,15 +63,24 @@ it to the P0 policy — which remains the single policy source.
    runtime delegates to them. The P0 private-voice security
    suite (`tests/test_private_voice_security.py`) still passes
    unmodified.
-7. **Local state is stored safely.** The profile is written
-   atomically (`scripts/atomic_write.py`), into a 0700
-   directory as a 0600 file on POSIX systems. Traversal,
-   absolute paths and symlink escapes are rejected
-   (`resolve_private_path`); a symlinked profile is refused
-   rather than followed; a corrupt, invalid or tampered profile
-   fails closed and is left byte-for-byte untouched — it is
-   never silently replaced. A failed write never destroys the
-   previous valid profile.
+7. **Local state is stored safely.** The profile is published
+   atomically and exactly once: the candidate is written to an
+   unguessable temporary file in the same directory (mode 0600,
+   flushed + fsynced) and then published with `os.link()` — a
+   single atomic create-if-absent operation that fails when the
+   profile already exists, so a concurrent first run can never
+   overwrite the winner's profile (R1; the P0
+   `scripts/atomic_write.py` helper is not used for the profile
+   because its `os.replace()` unconditionally overwrites the
+   target). The profile lives in a 0700 directory as a 0600
+   file on POSIX systems. Traversal, absolute paths and symlink
+   escapes are rejected (`resolve_private_path`); a symlinked
+   profile is refused rather than followed; a corrupt, invalid
+   or tampered profile fails closed and is left byte-for-byte
+   untouched — it is never silently replaced. A failed write
+   never destroys the previous valid profile, and no temporary
+   file or lock artefact remains after a successful
+   initialization.
 
 ## What the boundary does NOT guarantee
 
@@ -105,13 +119,13 @@ this runtime as stronger than it is:
   holds exactly one workspace, and `start_session()` refuses a
   workspace ID that does not match it. Multi-workspace
   installations are not modelled here.
-- **Concurrent first runs can race.** Two processes running
-  first-use initialization at the same instant can each generate
-  an identity; the second write wins and both IDs are valid
-  opaque IDs, but the first process's identity is lost. For a
-  single-user local application this is an accepted edge; it is
-  not silent corruption (no half-written file — writes are
-  atomic), and it is recorded here rather than hidden.
+- **Concurrent first runs agree on one identity.** First-run
+  initialization is an atomic create-if-absent publication
+  (`os.link()`): when two processes start at the same instant,
+  one publishes and the other loads the winner's profile — the
+  loser discards its candidate, nothing is overwritten, and no
+  process ever reads a partially written profile (R1; this
+  replaces the earlier accepted race, which is now closed).
 - **Windows permission limits.** POSIX 0700/0600 modes are
   enforced where the platform supports them. On Windows,
   `os.chmod` does not provide equivalent semantics, so the
@@ -160,8 +174,10 @@ fails closed with `ProfileError` and leaves the file untouched.
 ## Session lifecycle
 
 1. `load_or_create_profile(data_root=None)` — load and strictly
-   validate the profile, or create it on first use (atomic write,
-   re-read and validated before it is returned).
+   validate the profile, or create it on first use (atomic
+   create-if-absent publication, re-read and validated before
+   it is returned — whether this process published it or a
+   concurrent first run won).
 2. `start_session(profile, workspace_id, *, lifetime_seconds=43200)`
    — mint a fresh session bound to the profile's owner and the
    explicitly passed workspace (which must equal the profile's
@@ -202,10 +218,12 @@ sessions that issued contexts.
 
 - `tests/test_local_session_runtime.py` — CF-P1-001-PROF (profile
   lifecycle), CF-P1-001-SESS (session integrity), CF-P1-001-FS
-  (filesystem security): 56 checks.
+  (filesystem security), CF-P1-001-R1-FIRST (atomic first-run
+  identity across concurrent processes): 63 checks.
 - `tests/test_session_authorization.py` — CF-P1-001-AUTH
   (bridge), CF-P1-001-EXP (export issuance), CF-P1-001-P0 (P0
-  behaviour unchanged): 39 checks.
+  behaviour unchanged), CF-P1-001-R1-ENUM (context enumeration
+  requires exact active issuance): 47 checks.
 
 Both are registered in `tests/run-tests.sh` as `CF-P1-001-SESSION`
 and `CF-P1-001-AUTHZ`. Full record:

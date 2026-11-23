@@ -88,14 +88,23 @@ def _track_context(session_id: str, context) -> None:
 
 def issued_contexts_for_session(session) -> list:
     """Return the still-live contexts issued by ``session``.
-    Raises ValueError for anything that is not a session issued by
-    ``start_session()``. Revoked contexts are still listed until
-    the session closes (revocation is recorded in the P0
-    revocation registry, not by removing the tracking entry)."""
-    if type(session) is not local_session.LocalSession:
+    The session must be an exact, ACTIVE session issued by
+    ``start_session()`` (checked by
+    :func:`local_session.is_active_session` — exact type plus
+    the ``id()``-keyed issuance registry, never the session ID
+    string on its own): a missing, forged, copied, deep-copied,
+    ``__new__``-built, expired or closed session has no contexts
+    to enumerate, however faithfully it names the session ID.
+    Raises ValueError for anything that is not an active session
+    issued by ``start_session()`` — the same fail-closed error
+    the rest of this module uses. Revoked contexts are still
+    listed until the session closes (revocation is recorded in
+    the P0 revocation registry, not by removing the tracking
+    entry)."""
+    if not local_session.is_active_session(session):
         raise ValueError(
-            "only a LocalSession issued by start_session() has "
-            "tracked contexts")
+            "only an active LocalSession issued by start_session() "
+            "has tracked contexts")
     refs = _SESSION_CONTEXTS.get(session.session_id, [])
     live = []
     for ref in list(refs):
