@@ -31,9 +31,23 @@ user / workspace.
 
 Run: python3 tests/test_private_voice_security.py
 Exit 0 = PASS, 1 = FAIL. Test IDs: CF-P0-008-SEC.
+
+CF-WO-P0-009 added groups (h) (genuine immutability, separate
+revocation) and (i) (v2.5 resolution fails closed without a
+Character Registry), IDs CF-P0-009-SEC. CF-WO-P0-010 adds group
+(j) (factory-issuance integrity), IDs CF-P0-010-SEC: only the
+exact object issued by issue_trusted_authorization_context is
+trusted — direct construction (even with the imported private
+sentinel), __new__ / __setstate__, pickle and copy can never
+manufacture an accepted context. Reproduction:
+~/workspace/consistency-frame-p0-delivery/p0-010-repro.py
+(before: all forged paths authorized with factory_calls=0;
+after: all forged paths rejected, genuine factory context
+still authorizes).
 """
 import copy
 import dataclasses
+import gc
 import importlib.util
 import json
 import os
@@ -865,11 +879,17 @@ def main():
     check("CF-P0-009-SEC(h5b): vars() on an issued context raises "
           "TypeError",
           vars_raised)
+    # CF-WO-P0-010: pickle of a trusted context is now REFUSED
+    # outright (see group (j): __reduce_ex__ raises TypeError),
+    # so the pickle round-trip no longer belongs in this frozen-
+    # clone check. Copy/deepcopy still return frozen clones —
+    # but unregistered ones with no authority (also pinned in
+    # group (j)). The security property tested here is that a
+    # copy cannot manufacture a MUTABLE context.
     copied = copy.copy(fresh)
     deep_copied = copy.deepcopy(fresh)
-    unpickled = pickle.loads(pickle.dumps(fresh))
-    for label, clone in (("copy", copied), ("deepcopy", deep_copied),
-                         ("pickle round-trip", unpickled)):
+    for label, clone in (("copy", copied),
+                         ("deepcopy", deep_copied)):
         try:
             clone.scope = "forged scope"
             clone_raised = False
@@ -1040,6 +1060,365 @@ def main():
           "for v2.5 still resolves for v2.3 (version-aware, never "
           "a silent v2.5 fallback)",
           voice is not None and not errs, "; ".join(errs))
+
+    # ------------------------------------------------------------------
+    # (j) CF-WO-P0-010 — factory-issuance integrity: only the
+    # exact object issued by issue_trusted_authorization_context
+    # is trusted. Type, field values, the private sentinel,
+    # immutability, __new__, __setstate__, pickle and copy are
+    # all NOT proof of issuance. Reproduction:
+    # ~/workspace/consistency-frame-p0-delivery/p0-010-repro.py
+    # (before: all five forged paths authorized with
+    # factory_calls=0; after: all five rejected, genuine
+    # factory context still authorizes).
+    # ------------------------------------------------------------------
+    issued = asset_policy.is_factory_issued_trusted_authorization_context
+    genuine = export_ctx()
+    check("CF-P0-010-SEC(j1): a context created by the factory is "
+          "recognized as factory-issued",
+          issued(genuine) is True)
+    twin_a = export_ctx()
+    twin_b = export_ctx()
+    check("CF-P0-010-SEC(j2): two contexts issued with identical "
+          "field values are independently recognized as "
+          "factory-issued, are distinct objects, compare unequal "
+          "and hash differently (identity, not value, equality)",
+          issued(twin_a) is True and issued(twin_b) is True
+          and twin_a is not twin_b and twin_a != twin_b
+          and hash(twin_a) != hash(twin_b)
+          and twin_a.authorization_id != twin_b.authorization_id)
+    before_n = len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+    reg_a = export_ctx()
+    reg_b = export_ctx()
+    after_n = len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+    check("CF-P0-010-SEC(j3): the issuance registry holds one "
+          "entry per issued object (two fresh issuances grow it "
+          "by exactly two — identical fields are not merged)",
+          after_n == before_n + 2
+          and reg_a in asset_policy._ISSUED_AUTHORIZATION_CONTEXTS
+          and reg_b in asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+    check("CF-P0-010-SEC(j4): a genuine factory-issued context "
+          "still authorizes its intended export",
+          not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=genuine))
+    check("CF-P0-010-SEC(j5): legitimate provider-transmission "
+          "authorization still works (factory context with "
+          "provider_transmission_approved=True, to_provider=True)",
+          not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=export_ctx(
+                  provider_transmission_approved=True),
+              to_provider=True))
+    n_before = len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+
+    def _issue_temporary():
+        return export_ctx()
+    _issue_temporary()
+    gc.collect()
+    check("CF-P0-010-SEC(j6): the issuance registry does not leak "
+          "— a context whose only reference is dropped is "
+          "garbage-collected out of the registry",
+          len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS) == n_before)
+    # (B) Direct constructor bypass.
+    forged_sentinel = asset_policy.TrustedAuthorizationContext(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    check("CF-P0-010-SEC(j7): direct construction using the "
+          "imported private sentinel creates an object but NOT a "
+          "factory-issued context",
+          isinstance(forged_sentinel,
+                     asset_policy.TrustedAuthorizationContext)
+          and issued(forged_sentinel) is False)
+    export_errs = asset_policy.validate_private_voice_export(
+        nila_voice, trusted_context=forged_sentinel)
+    check("CF-P0-010-SEC(j8): the sentinel-constructed instance "
+          "is rejected by export authorization with a clear "
+          "not-issued error",
+          bool(export_errs)
+          and "not issued by" in "; ".join(export_errs),
+          "; ".join(export_errs))
+    try:
+        asset_policy.revoke_trusted_authorization_context(
+            forged_sentinel)
+        revoke_forged_raised = False
+    except TypeError:
+        revoke_forged_raised = True
+    try:
+        asset_policy.is_trusted_authorization_revoked(
+            forged_sentinel)
+        check_forged_raised = False
+    except TypeError:
+        check_forged_raised = True
+    check("CF-P0-010-SEC(j9): the sentinel-constructed instance "
+          "cannot revoke anything and its revocation state "
+          "cannot be read (both raise TypeError)",
+          revoke_forged_raised and check_forged_raised)
+    n_before_sentinel = len(
+        asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+    asset_policy.TrustedAuthorizationContext(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    check("CF-P0-010-SEC(j10): importing or accessing the private "
+          "sentinel and constructing with it registers nothing "
+          "(registry size unchanged)",
+          len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+          == n_before_sentinel)
+    check("CF-P0-010-SEC(j11): the sentinel-constructed instance "
+          "is rejected by every other relevant consumer too "
+          "(provider-transmission export rejects; revocation "
+          "functions raise)",
+          bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=forged_sentinel,
+              to_provider=True))
+          and revoke_forged_raised and check_forged_raised)
+    # (C) __new__() and __setstate__() bypass.
+    new_only = object.__new__(
+        asset_policy.TrustedAuthorizationContext)
+    check("CF-P0-010-SEC(j12): an object from __new__() alone is "
+          "not factory-issued and is rejected by export "
+          "authorization",
+          issued(new_only) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=new_only)))
+    genuine_state = (None, {slot: getattr(genuine, slot)
+                            for slot in genuine._DATA_SLOTS})
+    try:
+        new_only.__setstate__(genuine_state)
+        setstate_raised = False
+    except TypeError:
+        setstate_raised = True
+    check("CF-P0-010-SEC(j13): calling __setstate__() manually "
+          "with genuine-looking identity and approval fields "
+          "raises TypeError and registers nothing",
+          setstate_raised and issued(new_only) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=new_only)))
+    try:
+        genuine.__setstate__(genuine_state)
+        setstate_genuine_raised = False
+    except TypeError:
+        setstate_genuine_raised = True
+    check("CF-P0-010-SEC(j14): __setstate__() on a genuine issued "
+          "context raises TypeError AND the genuine context "
+          "stays issued and still authorizes export afterwards",
+          setstate_genuine_raised and issued(genuine) is True
+          and not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=genuine))
+    populated = object.__new__(
+        asset_policy.TrustedAuthorizationContext)
+    for _name, _value in dict(
+            actor_owner_id="owner-a",
+            actor_workspace_id="workspace-a", granted_by="owner-a",
+            scope="export voice-nila-001",
+            action="export_private_asset",
+            character_id="char-nila-001",
+            voice_profile_id="voice-nila-001",
+            provider_transmission_approved=False, expires_at=None,
+            authorization_id="forged-populated-id",
+            revoked=False).items():
+        object.__setattr__(populated, _name, _value)
+    object.__setattr__(populated, "_frozen", True)
+    check("CF-P0-010-SEC(j15): a __new__() instance whose slots "
+          "were populated directly (frozen, genuine-looking "
+          "fields) remains untrusted and is rejected by export",
+          populated.scope == "export voice-nila-001"
+          and populated.revoked is False
+          and issued(populated) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=populated)))
+    setstate_bad = True
+    for _bad_state in (None, ("only-one",), {}, (None, None),
+                       (None, {"scope": "forged"})):
+        try:
+            new_only.__setstate__(_bad_state)
+            setstate_bad = False
+        except TypeError:
+            pass
+    check("CF-P0-010-SEC(j16): invalid state restoration fails "
+          "safely — every malformed __setstate__() call raises "
+          "TypeError (never a partial or trusted object)",
+          setstate_bad and issued(new_only) is False)
+    # (D) Pickle and copy bypass.
+    try:
+        pickle.dumps(genuine)
+        pickle_genuine_raised = False
+    except TypeError:
+        pickle_genuine_raised = True
+    try:
+        pickle.dumps(forged_sentinel)
+        pickle_forged_raised = False
+    except TypeError:
+        pickle_forged_raised = True
+    check("CF-P0-010-SEC(j17): pickling a valid trusted context "
+          "is refused (TypeError — serialization is rejected, "
+          "not transferred)",
+          pickle_genuine_raised)
+    check("CF-P0-010-SEC(j18): pickling a forged context is "
+          "refused too (TypeError)",
+          pickle_forged_raised)
+    try:
+        genuine.__getstate__()
+        getstate_raised = False
+    except TypeError:
+        getstate_raised = True
+    try:
+        genuine.__reduce_ex__(4)
+        reduce_raised = False
+    except TypeError:
+        reduce_raised = True
+    check("CF-P0-010-SEC(j19): no serialization path exists — "
+          "__getstate__ and __reduce_ex__ raise TypeError, the "
+          "genuine context still authorizes, and nothing new "
+          "was registered by the failed attempts",
+          getstate_raised and reduce_raised
+          and issued(genuine) is True
+          and not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=genuine))
+    copied_genuine = copy.copy(genuine)
+    check("CF-P0-010-SEC(j20): copy.copy() of a genuine context "
+          "returns a frozen value-identical clone that is NOT "
+          "factory-issued and is rejected by export",
+          copied_genuine is not genuine
+          and copied_genuine.scope == genuine.scope
+          and copied_genuine.authorization_id
+          == genuine.authorization_id
+          and issued(copied_genuine) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=copied_genuine)))
+    deep_genuine = copy.deepcopy(genuine)
+    check("CF-P0-010-SEC(j21): copy.deepcopy() of a genuine "
+          "context likewise returns an unregistered clone that "
+          "export rejects",
+          deep_genuine is not genuine
+          and deep_genuine.authorization_id
+          == genuine.authorization_id
+          and issued(deep_genuine) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=deep_genuine)))
+    to_revoke = export_ctx()
+    copy_before_revoke = copy.copy(to_revoke)
+    asset_policy.revoke_trusted_authorization_context(to_revoke)
+    check("CF-P0-010-SEC(j22): copying cannot reset revocation "
+          "— the copy shares the revoked authorization_id, the "
+          "revoked original is rejected, the copy is rejected, "
+          "and the copy cannot be un-revoked or re-authorized",
+          asset_policy.is_trusted_authorization_revoked(to_revoke)
+          is True
+          and copy_before_revoke.authorization_id
+          == to_revoke.authorization_id
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=to_revoke))
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=copy_before_revoke)))
+    try:
+        forged_sentinel.revoked = False
+        forged_revoked_raised = False
+    except AttributeError:
+        forged_revoked_raised = True
+    check("CF-P0-010-SEC(j23): a forged context cannot be made "
+          "valid by setting its revoked attribute (frozen — "
+          "reassignment raises) and export still rejects it",
+          forged_revoked_raised
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=forged_sentinel)))
+    # (E) Immutability / identity semantics, strengthened.
+    check("CF-P0-010-SEC(j24): identity equality is pinned — a "
+          "forged object with field values identical to a "
+          "genuine context does NOT equal it and is not found "
+          "in the registry by equality",
+          forged_sentinel != genuine
+          and forged_sentinel not in
+          asset_policy._ISSUED_AUTHORIZATION_CONTEXTS
+          and hash(forged_sentinel) != hash(genuine))
+    _orig = export_ctx()
+    _orig_copy = copy.copy(_orig)
+    asset_policy.revoke_trusted_authorization_context(_orig)
+    check("CF-P0-010-SEC(j25): revocation never mutates any "
+          "object — revoking the original leaves the copy's "
+          "fields (including revoked=False) untouched, while "
+          "the original is reported revoked",
+          _orig.revoked is False
+          and _orig_copy.revoked is False
+          and _orig_copy.authorization_id
+          == _orig.authorization_id
+          and asset_policy.is_trusted_authorization_revoked(_orig)
+          is True)
+    # (F) Consumer coverage matrix.
+    _matrix = []
+    for _label, _ctx, _want_ok in (
+            ("genuine", genuine, True),
+            ("forged-sentinel", forged_sentinel, False),
+            ("__new__-only", new_only, False),
+            ("populated-__new__", populated, False),
+            ("copy-of-genuine", copied_genuine, False),
+            ("deepcopy-of-genuine", deep_genuine, False),
+            ("revoked-genuine", to_revoke, False)):
+        _errs = asset_policy.validate_private_voice_export(
+            nila_voice, trusted_context=_ctx)
+        _matrix.append((not _errs) == _want_ok)
+    check("CF-P0-010-SEC(j26): consumer matrix — export accepts "
+          "only the genuine factory-issued context and rejects "
+          "forged / __new__ / populated / copy / deepcopy / "
+          "revoked contexts",
+          all(_matrix), f"matrix={_matrix}")
+    _revoke_matrix = []
+    _revoke_genuine = export_ctx()
+    for _label, _ctx, _want_raise in (
+            ("genuine", _revoke_genuine, False),
+            ("forged-sentinel", forged_sentinel, True),
+            ("copy-of-genuine", copied_genuine, True),
+            ("populated-__new__", populated, True)):
+        try:
+            asset_policy.revoke_trusted_authorization_context(_ctx)
+            _revoke_matrix.append(not _want_raise)
+        except TypeError:
+            _revoke_matrix.append(_want_raise)
+    check("CF-P0-010-SEC(j27): revocation matrix — revoke "
+          "accepts only a factory-issued context and raises "
+          "TypeError for forged / copy / populated contexts",
+          all(_revoke_matrix), f"matrix={_revoke_matrix}")
+    _check_matrix = []
+    for _label, _ctx, _want_raise in (
+            ("genuine-unrevoked", reg_b, False),
+            ("forged-sentinel", forged_sentinel, True),
+            ("copy-of-genuine", copied_genuine, True),
+            ("__new__-only", new_only, True)):
+        try:
+            _rev = asset_policy.is_trusted_authorization_revoked(
+                _ctx)
+            _check_matrix.append(
+                (not _want_raise) and _rev is False)
+        except TypeError:
+            _check_matrix.append(_want_raise)
+    check("CF-P0-010-SEC(j28): revocation-check matrix — "
+          "is_trusted_authorization_revoked answers only for a "
+          "factory-issued context (False when unrevoked) and "
+          "raises TypeError for forged / copy / __new__ "
+          "contexts",
+          all(_check_matrix), f"matrix={_check_matrix}")
+    # (G) Regression protection pins (full coverage lives in
+    # groups (a)–(i) and the rest of the suite).
+    _v, _e = asset_policy.resolve_voice_for_production(
+        v25_voice_registry, None, "char-nila-001",
+        "voice-nila-001", "owner-a", "workspace-a")
+    _tl_errs = validate_timeline_cross_references(
+        dialogue_timeline(), owned_registry())
+    check("CF-P0-010-SEC(j29): regression pins still hold — v2.5 "
+          "resolution without a Character Registry fails closed "
+          "and the strict timeline default still rejects a "
+          "no-requester private dialogue timeline",
+          _v is None and bool(_e)
+          and "Character Registry" in "; ".join(_e)
+          and bool(_tl_errs)
+          and "requesting owner identity" in "; ".join(_tl_errs),
+          "; ".join(_e) + " | " + "; ".join(_tl_errs))
 
     print(f"test_private_voice_security: "
           f"{'PASS' if not failures else 'FAIL'} "
