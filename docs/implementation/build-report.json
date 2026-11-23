@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "bc169255cbe388976de3baee5357c141aa03379f",
-  "github_branch_head": "0a123219a41a24630d9581e0e3133d70a4bfaf5d",
+  "head_commit": "d8a5cf96c483b46c6dd3eab6751d935db29ef6dd",
+  "github_branch_head": "49aa01d70a0b4236e70e287e74b4a2f4f7c6af98",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -45,6 +45,7 @@
     "docs/implementation/CF-WO-P0-006-corrections.md",
     "docs/implementation/CF-WO-P0-007-corrections.md",
     "docs/implementation/CF-WO-P0-008-corrections.md",
+    "docs/implementation/CF-WO-P0-009-corrections.md",
     "docs/implementation/CHECKSUMS.txt",
     "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
     "docs/implementation/build-report.json",
