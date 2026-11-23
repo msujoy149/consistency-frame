@@ -44,40 +44,43 @@ OUT_JSON = os.path.join(ROOT, "docs", "implementation", "build-report.json")
 OUT_MANIFEST = os.path.join(ROOT, "release-manifest.json")
 OUT_CHECKSUMS = os.path.join(ROOT, "docs", "implementation", "CHECKSUMS.txt")
 
-# Remote CI evidence (P0-006 Part A): verified by the parent on 2026-11-22.
-# Latest verified CI ran on the P0-005 final PR head 24d2e62 — 2/2
-# checks (push run #47 + PR run #48). The p0-test-results artifact
-# (743 bytes, digest
-# sha256:379baeedcb76ebc63d34a1c898f8477038c0d5afdff17894ba5eae7c59669b54)
-# holds 45 recorded test-run entries, 33 distinct test IDs, 26
+# Remote CI evidence (P0-007): verified by the parent on 2026-11-22.
+# Latest verified CI ran on the P0-006 final PR head 33dc78b8 — 2/2
+# checks (push run #83 + PR run #84). The p0-test-results artifact
+# (784 bytes, ID 14770342860, digest
+# sha256:017c91538a628aeda58eaada9b0563f0bab43f62e4abf42a200d6011be73cb44)
+# holds 47 recorded test-run entries, 35 distinct test IDs, 28
 # distinct command strings, all PASS, every command exit 0; its
-# last-run.json is byte-for-byte identical to the P0-005 ZIP's
+# last-run.json is byte-for-byte identical to the P0-006 ZIP's
 # tests/last-run.json (same SHA-256
-# 253bbb2950e84c9fe3ea6218c768d404a231aeae23a60bd31a98196df6cad22b).
+# c923875cff6cfe5afb0676d63b2235b2a73915a8dd24b7d3f50ca2ccfa7ce51d).
 # This record is evidence for the head it names, not a claim about a
 # later head: the corrections in this package are pushed after it,
 # and their CI run is checked by the parent after the push
 # (two-head rule, §12).
-CI_HEAD = "24d2e6274f1fe2ee42b86c20ecf083e0d4b3c4d4"
+CI_HEAD = "33dc78b88bba9cc83ecfc35c7b28a3ef3de7f90b"
 CI_PUSH_RUN_URL = ("https://github.com/msujoy149/consistency-frame/actions/"
-                   "runs/45059388184")
+                   "runs/45063530337")
 CI_PR_RUN_URL = ("https://github.com/msujoy149/consistency-frame/actions/"
-                 "runs/45059393245")
+                 "runs/45063535304")
 CI_RUN_URL = CI_PUSH_RUN_URL
-CI_ARTIFACT = ("p0-test-results (743 bytes, digest "
-               "sha256:379baeedcb76ebc63d34a1c898f8477038c0d5afdff17894ba5eae7c59669b54)")
-# Historical CI record (P0-004): the P0-004 final PR head 8879123 —
-# 2/2 checks (push run #37 + PR run #38). The p0-test-results
-# artifact (ID 14766603267) holds 43 recorded test-run entries, 31
-# distinct test IDs, 24 distinct command strings, all PASS; its
-# last-run.json is byte-for-byte identical to the P0-004 ZIP's
-# tests/last-run.json. Retained as history, not as current evidence.
-CI_HIST2_HEAD = "88791231caa03e8fb75a3499beeb21d1dd64a906"
+CI_ARTIFACT = ("p0-test-results (784 bytes, ID 14770342860, digest "
+               "sha256:017c91538a628aeda58eaada9b0563f0bab43f62e4abf42a200d6011be73cb44)")
+# Historical CI record (P0-005): the P0-005 final PR head 24d2e62 —
+# 2/2 checks (push run #47 + PR run #48). The p0-test-results
+# artifact (743 bytes, digest
+# sha256:379baeedcb76ebc63d34a1c898f8477038c0d5afdff17894ba5eae7c59669b54)
+# holds 45 recorded test-run entries, 33 distinct test IDs, 26
+# distinct command strings, all PASS; its last-run.json is
+# byte-for-byte identical to the P0-005 ZIP's tests/last-run.json.
+# Retained as history, not as current evidence.
+CI_HIST2_HEAD = "24d2e6274f1fe2ee42b86c20ecf083e0d4b3c4d4"
 CI_HIST2_PUSH_RUN_URL = ("https://github.com/msujoy149/consistency-frame/actions/"
-                         "runs/45055643056")
+                         "runs/45059388184")
 CI_HIST2_PR_RUN_URL = ("https://github.com/msujoy149/consistency-frame/actions/"
-                       "runs/45055649820")
-CI_HIST2_ARTIFACT = "p0-test-results (artifact ID 14766603267)"
+                       "runs/45059393245")
+CI_HIST2_ARTIFACT = ("p0-test-results (743 bytes, digest "
+                     "sha256:379baeedcb76ebc63d34a1c898f8477038c0d5afdff17894ba5eae7c59669b54)")
 # Historical CI record (P0-002 §7): the first head whose CI was
 # verified by the parent. Retained as history, not as current evidence.
 CI_HIST_HEAD = "fcf311ef79c5f10a4248f026a5f667109c584831"
@@ -194,11 +197,11 @@ def main() -> int:
             "run_url": CI_RUN_URL,
             "pull_request": CI_PR_URL,
             "note": ("Remote CI PASSED on the GitHub branch head named "
-                     "here (push run #47 + PR run #48, 2/2 checks; "
-                     "p0-test-results artifact (743 bytes, digest "
-                     "sha256:379baeedcb76ebc63d34a1c898f8477038c0d5afdff17894ba5eae7c59669b54): "
-                     "45 recorded test-run entries, 33 distinct test IDs, "
-                     "26 distinct command strings, all PASS). The corrections in this "
+                     "here (push run #83 + PR run #84, 2/2 checks; "
+                     "p0-test-results artifact (784 bytes, ID 14770342860, digest "
+                     "sha256:017c91538a628aeda58eaada9b0563f0bab43f62e4abf42a200d6011be73cb44): "
+                     "47 recorded test-run entries, 35 distinct test IDs, "
+                     "28 distinct command strings, all PASS). The corrections in this "
                      "package are pushed after that run; their CI run is "
                      "checked by the parent after the push — this record is "
                      "evidence for the head it names, not a claim about a "
@@ -389,19 +392,19 @@ NOT RUN (honestly, not claimed as passed):
 Remote CI evidence (latest verified — it ran and passed):
 
 - Remote GitHub Actions CI PASSED on GitHub branch head `{CI_HEAD}`:
-  2/2 checks — push run #47 {CI_PUSH_RUN_URL} and PR run #48
+  2/2 checks — push run #83 {CI_PUSH_RUN_URL} and PR run #84
   {CI_PR_RUN_URL} (draft PR {CI_PR_URL}). Test evidence from the
-  `{CI_ARTIFACT}` artifact: 45 recorded test-run entries, 33 distinct
-  test IDs, 26 distinct command strings, all PASS, every listed
+  `{CI_ARTIFACT}` artifact: 47 recorded test-run entries, 35 distinct
+  test IDs, 28 distinct command strings, all PASS, every listed
   command exit 0; the artifact's `last-run.json` is byte-for-byte
-  identical to the P0-005 ZIP's `tests/last-run.json` (same SHA-256
-  `253bbb2950e84c9fe3ea6218c768d404a231aeae23a60bd31a98196df6cad22b`).
-- Historical record (P0-004): remote CI PASSED on GitHub branch head
-  `{CI_HIST2_HEAD}` — 2/2 checks, push run #37 {CI_HIST2_PUSH_RUN_URL}
-  and PR run #38 {CI_HIST2_PR_RUN_URL}. Test evidence from the
-  `{CI_HIST2_ARTIFACT}` artifact: 43 recorded test-run entries, 31
-  distinct test IDs, 24 distinct command strings, all PASS; its
-  `last-run.json` byte-for-byte identical to the P0-004 ZIP's.
+  identical to the P0-006 ZIP's `tests/last-run.json` (same SHA-256
+  `c923875cff6cfe5afb0676d63b2235b2a73915a8dd24b7d3f50ca2ccfa7ce51d`).
+- Historical record (P0-005): remote CI PASSED on GitHub branch head
+  `{CI_HIST2_HEAD}` — 2/2 checks, push run #47 {CI_HIST2_PUSH_RUN_URL}
+  and PR run #48 {CI_HIST2_PR_RUN_URL}. Test evidence from the
+  `{CI_HIST2_ARTIFACT}` artifact: 45 recorded test-run entries, 33
+  distinct test IDs, 26 distinct command strings, all PASS; its
+  `last-run.json` byte-for-byte identical to the P0-005 ZIP's.
 - Historical record (P0-002): remote CI PASSED on GitHub branch head
   `{CI_HIST_HEAD}` — 2/2 checks, run {CI_HIST_RUN_URL}. Each record
   is evidence for the head it names, not for later heads.
@@ -415,7 +418,7 @@ Remote CI evidence (latest verified — it ran and passed):
   records as the code it describes; see §12)
 - Draft PR: {CI_PR_URL}
 - Push status: branch pushed; draft PR open; remote CI PASSED on
-  `{CI_HEAD}` (2/2 checks, push run #47 {CI_PUSH_RUN_URL}, PR run #48
+  `{CI_HEAD}` (2/2 checks, push run #83 {CI_PUSH_RUN_URL}, PR run #84
   {CI_PR_RUN_URL}). The regenerated manifest and reports in this
   package are committed afterwards as a docs-only commit, which
   advances the branch head by one; the delivery message states that
@@ -471,7 +474,7 @@ Remote CI evidence (latest verified — it ran and passed):
 
 **P0 result: {status}** (all critical installer/data/security gates pass
 locally; remote CI PASSED on GitHub branch head `{CI_HEAD}` — 2/2
-checks, push run #47 {CI_PUSH_RUN_URL}, PR run #48 {CI_PR_RUN_URL}.
+checks, push run #83 {CI_PUSH_RUN_URL}, PR run #84 {CI_PR_RUN_URL}.
 The corrections in this package are pushed after that head; their CI
 run is a separate event, checked by the parent after the push — this
 record is evidence for the head it names, not a claim about a later
@@ -558,13 +561,13 @@ independent review of this branch.
   from the final head after this report is committed, so its hash
   lives in the delivery message only.
 - CI evidence for this package: remote CI PASSED on GitHub branch head
-  `{CI_HEAD}` — 2/2 checks, push run #47 {CI_PUSH_RUN_URL}, PR run
-  #48 {CI_PR_RUN_URL} (draft PR {CI_PR_URL}). The `{CI_ARTIFACT}`
-  artifact holds 45 recorded test-run entries, 33 distinct test IDs,
-  26 distinct command strings, all PASS (each listed command returned
+  `{CI_HEAD}` — 2/2 checks, push run #83 {CI_PUSH_RUN_URL}, PR run
+  #84 {CI_PR_RUN_URL} (draft PR {CI_PR_URL}). The `{CI_ARTIFACT}`
+  artifact holds 47 recorded test-run entries, 35 distinct test IDs,
+  28 distinct command strings, all PASS (each listed command returned
   exit 0); the artifact's `last-run.json` is byte-for-byte identical
-  to the P0-005 ZIP's `tests/last-run.json` (same SHA-256
-  `253bbb2950e84c9fe3ea6218c768d404a231aeae23a60bd31a98196df6cad22b`).
+  to the P0-006 ZIP's `tests/last-run.json` (same SHA-256
+  `c923875cff6cfe5afb0676d63b2235b2a73915a8dd24b7d3f50ca2ccfa7ce51d`).
   That record is evidence for the head it names. The corrections in
   this package are pushed after that head; their CI run is a separate
   event, checked by the parent after the push — it is NOT claimed
@@ -643,6 +646,20 @@ independent review of this branch.
   historical record. See `docs/implementation/CF-WO-P0-005-corrections.md`
   §8 for the final P0-005 heads. The animation-scope work of
   CF-WO-P0-006 follows in separate commits.
+- Regenerated under CF-WO-P0-007 (final autonomous completion)
+  with `--github-head {github_head}`: the CI evidence constants now
+  record the verified final P0-006 head `33dc78b8` (push run #83 +
+  PR run #84, 2/2 checks; artifact `p0-test-results`, 784 bytes, ID
+  14770342860, digest
+  sha256:017c91538a628aeda58eaada9b0563f0bab43f62e4abf42a200d6011be73cb44;
+  47 recorded test-run entries, 35 distinct test IDs, 28 distinct
+  command strings, all PASS; the artifact's `last-run.json`
+  byte-for-byte identical to the P0-006 ZIP's `tests/last-run.json`).
+  The #47/#48 evidence on `24d2e62` is retained as the P0-005
+  historical record. This package completes the P0-006 architecture
+  (timeline contract v2.5, structured ownership, conditional voice
+  validation, animal classification, companion licensing). See
+  `docs/implementation/CF-WO-P0-007-corrections.md`.
 """
 
     # The manifest's hashes for the two files this script writes must be
