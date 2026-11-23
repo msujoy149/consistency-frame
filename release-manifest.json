@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p0-safe-foundations",
-  "commit": "9d27faa33111c302683ac1f32ebd25c7cf447e03",
-  "github_branch_head": "e7d0ffb6f8f77715d616e0239ba486d13f9a26f5",
+  "commit": "612473ca8c8934b02932b3e4013718da25efa4dd",
+  "github_branch_head": "5e3e3c38b91d6529bfe11ac7e1156a46f29ae203",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
@@ -17,13 +17,13 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "909657886030824137ecf79ec7c016d9c2bc517bd7cac710bd4cc25daf6fe9ba",
-      "bytes": 21021
+      "sha256": "d80e4f3040eb0ccfc2bfcf1360207fbb31bb50de331f3cc3a5efa6fdf48ab266",
+      "bytes": 22713
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "493dde84904c754114a5ab16615edccf2bc24f5867888e873e1f5c17f45c6983",
-      "bytes": 55446
+      "sha256": "f5bc15a0457e5ed2057649312724cc71a6c28d21c64cb669a9cd16b27dcae5cb",
+      "bytes": 58632
     },
     {
       "path": "README.md",
@@ -82,8 +82,8 @@
     },
     {
       "path": "docs/07-character-registry.md",
-      "sha256": "17b912b818e486454854638ba8ec05ffb9efc0f485db1e6da08574a6b38d1794",
-      "bytes": 21839
+      "sha256": "ac7324558b3b4481dc76688c35c6d5d504752e1ae158fdb01061a44a061699f9",
+      "bytes": 22258
     },
     {
       "path": "docs/08-agency-advertising.md",
@@ -112,8 +112,8 @@
     },
     {
       "path": "docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md",
-      "sha256": "523e229d746cdd96b5ba836eb1ea56b70e9a4b366f78f7ed7faec170257b68de",
-      "bytes": 71926
+      "sha256": "b2d6d558e2090415e59848ca2be76b8f74b2e9bb8bbc305630a5640b1f759399",
+      "bytes": 72208
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.3-p0.md",
@@ -122,8 +122,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "6faffa1012659d703d52f017a4f88afb7f2746707315117d9735d14c0a105973",
-      "bytes": 23770
+      "sha256": "310c56232efdd94f74b5d9d0eb84fa3fc31ff4ee81bedfafede938018291f8e0",
+      "bytes": 23818
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -132,8 +132,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "d32e5793026a8106d80d554b4896b96e9fd7062fa909b1747964d5ca08828b89",
-      "bytes": 43468
+      "sha256": "6072befc69855b455cd0ed0e958bbad85a9b8b854f0fbaea634c028504216411",
+      "bytes": 43862
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -181,14 +181,19 @@
       "bytes": 28259
     },
     {
+      "path": "docs/implementation/CF-WO-P0-010-corrections.md",
+      "sha256": "da9414a37f53811aa152c206b582908fb3375898c90fc66b31d1931f6ae7a791",
+      "bytes": 24763
+    },
+    {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
       "sha256": "23bb2a5aa29fde3bbacbec7996625c52b25e9d67106c278da8bb35ed0f855099",
       "bytes": 27096
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "2ea0b697af066682dbcd2c0bf4c10b71049356175fef48914dcae5e061278f18",
-      "bytes": 17346
+      "sha256": "d81c8fbe7bc88ea3248c2a467e238d718c314c721c8f9b24bc088150d4f6d4a8",
+      "bytes": 17401
     },
     {
       "path": "registry/adapters.json",
@@ -347,8 +352,8 @@
     },
     {
       "path": "scripts/asset_policy.py",
-      "sha256": "1178d8b312560c31670b70d74f3f430ed9b753ab918e9ba3ae73d3408df6e7d9",
-      "bytes": 58708
+      "sha256": "728862da48b5dbf4f34455542de135bb89040cececae0c661aac477ecf373ab0",
+      "bytes": 67491
     },
     {
       "path": "scripts/atomic_write.py",
@@ -752,8 +757,8 @@
     },
     {
       "path": "tests/test_private_voice_security.py",
-      "sha256": "7dafa98e0ee29501a5da93b9d7250dc76090720c9d13599a1276dc6e0c5b13e4",
-      "bytes": 51398
+      "sha256": "65b74a48d35dcded5d134e4884518ea75794e5c1ae6f21c909ff0ab594d3e322",
+      "bytes": 69595
     },
     {
       "path": "tests/test_production_direction.py",
@@ -936,5 +941,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-23T09:14:46Z"
+  "generated_at_utc": "2026-11-23T09:43:36Z"
 }
