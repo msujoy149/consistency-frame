@@ -306,6 +306,9 @@ voice (if any), and articulation target.
 - `real-animal` — a real animal in captured footage. It does what it
   does; performance is made in the edit, and CG touch-up is used
   only where the animal cannot perform, preserving its real body.
+  A real animal is never automatically given fictional dialogue or
+  a speaking voice — a speaking animal is a `cgi-animal` (or
+  `anthropomorphic`) subject, not captured footage.
 - `cgi-animal` — a generated animal, rigged or AI-generated, whose
   movement follows the animal's real body and anatomy.
 - `fictional-creature` — a generated creature with no real-world
@@ -568,12 +571,12 @@ redefines a v2.4 field, and a v2.4 record stays valid under v2.5
 | Production profile | `schemas/production-profile.json` — **new in P0-006** | One record per production: `visual_style` (VISUAL_STYLE), `production_medium` (PRODUCTION_MEDIUM), `source_media` (SOURCE_MEDIA), `motion_method` (MOTION_METHOD array), `subject_kind` per subject, `interaction_pattern` per scene, and the primary pathway + layers chosen under §10. This is the record that makes a production describable, routable, and checkable. |
 | Character | `schemas/character.json` — **existing (v2.4), extended in P0-006** | Character identity: name + unique ID (required), `subject_kind`, species / anatomy where relevant, style, reference-asset IDs, voice-profile ID, consent / rights record, and history. Structure is the fixed anchor; clothing and props are variable per scene. Media binaries stay in the private overlay; only relative pointers + hashes are stored. |
 | Character registration | `schemas/character-registration.json` — **new in P0-006** | The registration act itself: the data-model fields of §C3 (name, unique ID, type/species/style, references, voice profiles, consent, history), the registration mode (permanent vs temporary, §C2), who authorised it and when, and the ID-generation / uniqueness-validation result. Registration is an explicit act; this record is its evidence. |
-| Voice profile | `schemas/voice-profile.json` — **existing (v2.4), extended in P0-006** | Voice Profile data (§C5): tone, apparent age, language(s), fixed tags, fixed seed, reference-audio pointer, provider, provider limitations recorded, and the owner/workspace scope. Separate from character identity and from sound assets. Requires explicit authorisation + rights/consent. |
+| Voice profile | `schemas/voice-profile.json` — **existing (v2.4), extended in P0-006, conditional v2.5 rules in P0-007** | Voice Profile data (§C5): tone, apparent age, language(s), fixed tags, fixed seed, reference-audio pointer, provider, provider limitations recorded, and the structured owner/workspace binding. Separate from character identity and from sound assets. Requires explicit authorisation + rights/consent. v2.5 conditional validation (user-recorded vs AI-generated, approval states, consent rules) is enforced by the Python validators — see §C5. |
 | Scene plan | `schemas/scene-plan.json` — **existing (v2.4)** | Scenes, beats, dramatic intent, primary/secondary emotion, intensity (0–10), transitions. |
 | Shot plan | `schemas/shot-plan.json` — **existing (v2.4)** | Shots: framing, camera angle/movement, lighting, duration (strictly positive), beat link — extended in P0-006 with the per-shot cinematography fields of §C10 (lens, height, focus / depth of field, transition) where the schema part adds them additively. |
 | Performance plan | `schemas/performance-plan.json` — **existing (v2.4)** | Per dialogue line: facial + micro-expressions, eye movement/gaze, posture, gesture, breathing, physical behaviour, voice (emotion, pitch, pace, pauses), speaker identity, lip-sync required — extended in P0-006 with subject-specific articulation targets (§C8) and speaking/listening state. |
 | Script-to-performance | `schemas/script-to-performance.json` — **existing (v2.4)** | The combined contract binding Scene + Shot + Performance Plans with audio (music/ambience/SFX) and editing (rhythm + reaction holds) plans. Dialogue is VERBATIM unless a rewrite was explicitly requested. |
-| Timeline manifest | `schemas/timeline-manifest.json` — **existing (v2.4)** | The one shared audio-visual timeline (§C11): media references + timing only, with stable dialogue and shot IDs that VoiceStudio and OpenMontage handoffs use. It is NOT a renderer and contains no rendered media. |
+| Timeline manifest | `schemas/timeline-manifest.json` — **existing (v2.4), extended in P0-007 to v2.5** | The one shared audio-visual timeline (§C11): video-clip + shot bindings, audio-clip + dialogue bindings, synchronization groups, and real cross-reference validation (shot / dialogue / character / voice / audio IDs must resolve to the records they name). It is NOT a renderer and contains no rendered media. |
 | Episode / project state | `schemas/episode-state.json`, `schemas/project.json` — **existing (v2.4)** | Series, episode list, characters in use, and continuity notes (events, outfits, injuries, objects, end states) written after each episode and read before the next. |
 | Visual style profile | `schemas/visual-style-profile.json` — **existing (v2.4)** | A locked visual style for a project/series. Identity stays fixed; style is project-scoped. |
 
@@ -866,6 +869,7 @@ voice profile).
 | Reference assets | Yes | Reference-asset IDs (images, model sheet, expression library) — see §C4. At least one approved reference is required for a permanent registration. |
 | Voice profile(s) | Where the subject speaks | Voice Profile ID(s) (§C5). A character may have more than one voice profile (for example, per language or per age variant); each is a separate record, and the binding in each production names which one is used (§C7). |
 | Consent / rights | Yes | Who authorised the registration, for what use, and when — including likeness and voice permission where a real person, a real animal's owner, or a rights-holder is involved (§12). |
+| Ownership | Yes (permanent) | Structured ownership (`schemas/character-registration.json` `ownership`): `owner_id` + `workspace_id` — stable, opaque, randomly generated local identifiers, never a real name, email, or account detail — plus `visibility` (`private` by default) and `sharing` (`none` by default; shared access needs an explicit future sharing permission). A character never becomes public merely because an image was uploaded. |
 | History | System-kept | When the character was registered, what changed since (outfit changes, new expressions, new voice variants), and which productions used it. |
 
 Registration also records the mode (permanent vs temporary, §C2)
@@ -945,6 +949,30 @@ limitations recorded, and owner/workspace scope. The profile is
 separate from the character identity record and from sound assets;
 it is linked by ID, never embedded.
 
+Conditional validation (v2.5, P0-007): the JSON Schema alone cannot
+express conditional requirements (the repo validator supports only a
+restricted subset), so the v2.5 rules are enforced by the Python
+validators in `scripts/asset_policy.py` and the tests, and the schema
+and the validators must agree on every record. A v2.5 profile must
+carry `voice_profile_id`, `character_id`, `source`, the structured
+`ownership` binding, appropriate voice asset references, an approval
+state, and a consent state. The rules differ by source: a
+user-recorded voice needs at least one approved audio reference
+asset and explicitly granted consent, and its owner/workspace must
+match its character's; an AI-generated voice needs provider
+identification (and model identification when available) and an
+approval state, must never become approved automatically before the
+required user review, and records `human_voice_donor` (true when a
+real person's voice was used — then explicit permission and consent
+are required; false when no human donor was involved — then
+`consent_status` `not-required` is legitimate and must never be used
+to bypass an actual permission requirement). Approval states are
+distinct: a generated or recorded sample is not an approval; only an
+approved, correctly owned profile may be selected for production
+when approval is required. `consent_status` governs consent and must
+agree with the `consent` record; `approval_status` must agree with
+`status`. A v2.3 profile remains valid under the legacy contract.
+
 Honesty rules:
 
 - **No claim of perfect cross-provider reproduction.** A voice
@@ -967,7 +995,14 @@ Honesty rules:
 
 - **Owner / workspace scoped.** A voice profile belongs to one
   owner and one workspace. It is usable only in that owner's
-  productions, in that workspace.
+  productions, in that workspace. Ownership is a structured record
+  (`ownership`: `owner_id`, `workspace_id`, `visibility`,
+  `sharing`), not a free-text scope string. Resolving a voice
+  profile requires BOTH conditions to match: (1) the Character ID
+  + Voice Profile binding, and (2) the character's ownership and
+  the voice profile's ownership. Same Character ID with a different
+  owner or workspace is REJECTED — a voice is never resolvable
+  merely because its Character ID matches.
 - **No cross-character inheritance.** A voice never transfers from
   one character to another. Two characters never share a voice
   profile unless the user explicitly registers the same voice for
@@ -1146,8 +1181,10 @@ height, movement, focus / depth of field, lighting, and transition.
 ## C11. One shared audio-visual timeline
 
 All sound and picture share one timeline, carried by the timeline
-manifest (`schemas/timeline-manifest.json` — media references +
-timing only; it is NOT a renderer and contains no rendered media).
+manifest (`schemas/timeline-manifest.json` — v2.5 since P0-007:
+video-clip + shot bindings, audio-clip + dialogue bindings,
+synchronization groups, and cross-reference validation; it is NOT a
+renderer and contains no rendered media).
 The timeline is the handoff contract between the Brain and the
 companions:
 
