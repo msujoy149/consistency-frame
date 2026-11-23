@@ -787,12 +787,14 @@ as in P1-001/R1):
 
 ### 13.6 Tests executed — exact counts
 
-- `tests/test_local_session_runtime.py` — exit 0, **65 PASS /
-  0 FAIL** (was 63; +2 new CF-P1-001-R2 checks). FIRST-01..07
-  all pass under spawn; R2-SPAWN-01 pins the spawn start
-  method; R2-NOFCHMOD-01 runs profile creation + reload in a
-  child process with `os.fchmod` hidden (30 s timeout,
-  killed and reported on timeout).
+- `tests/test_local_session_runtime.py` — exit 0, **67 PASS /
+  0 FAIL** (was 63; +2 new CF-P1-001-R2 checks, +2
+  CF-P1-001-R2-CANON checks added in the §13.11 follow-up).
+  FIRST-01..07 all pass under spawn; R2-SPAWN-01 pins the spawn
+  start method; R2-NOFCHMOD-01 runs profile creation + reload in
+  a child process with `os.fchmod` hidden (30 s timeout, killed
+  and reported on timeout); R2-CANON-01/02 prove the canonical-path
+  mechanism on Linux (symlinked parent).
 - `tests/test_session_authorization.py` — exit 0, **47 PASS /
   0 FAIL** (unchanged; R1 ENUM-01..08 still pass — copied,
   deep-copied, forged, expired, closed and wrong sessions
@@ -810,13 +812,18 @@ as in P1-001/R1):
   34 distinct commands, 56 PASS, 0 FAIL, 0 SKIP** (entry
   counts unchanged from R1 — the 2 new checks live inside
   the same test file). Per-file PASS lines, one run each,
-  14 Python files total **1,416** (was 1,414; +2 runtime);
+  14 Python files total **1,418** (was 1,414; +2 runtime from
+  the original R2 checks and +2 from the §13.11 CANON checks;
+  verified by direct counting, not arithmetic).
   `test_installer_status.sh` 61; `test_installer.sh` 40;
   `test_installer_security.sh` 15;
   `test_installer_manifest_security.sh` 24;
   `test_installer_metadata_failure.sh` 13. Run outputs saved:
   `evidence/r2/p1-001-r2-suite-run1.txt` and
-  `evidence/r2/p1-001-r2-suite-run2.txt`.
+  `evidence/r2/p1-001-r2-suite-run2.txt` (original R2 runs),
+  plus `evidence/r2/p1-001-r2f-suite-run1.txt` and
+  `evidence/r2/p1-001-r2f-suite-run2.txt` (follow-up runs
+  after the §13.11 fix — both exit 0).
 - `tests/last-run.json` SHA-256
   `ddd94ee1502d77d22105ab6a6a5cc3a752bbdfe3e5c4d65eec7ff1c8b4e559c5`
   — identical to P1-001/R1, because the recorded entries
@@ -845,10 +852,10 @@ run.** Fields for the parent:
 
 - Windows job run ID / run number / URL: [PENDING].
 - Python 3.10 run: conclusion, duration, runtime-suite
-  result (65 checks), FIRST-01..07 PASS lines present:
+  result (67 checks), FIRST-01..07 PASS lines present:
   [PENDING].
 - Python 3.12 run: conclusion, duration, runtime-suite
-  result (65 checks), FIRST-01..07 PASS lines present:
+  result (67 checks), FIRST-01..07 PASS lines present:
   [PENDING].
 - Authorization suite (47 checks) and P0 security suite
   (158 checks) on Windows: [PENDING].
@@ -911,3 +918,124 @@ run.** Fields for the parent:
   function only, patched platform probe); Windows permission
   limits (ACL inheritance, no POSIX mode-bit equivalence);
   native Windows CI results pending the live PR run (§13.7).
+
+### 13.11 R2 follow-up (2026-11-23) — PR run #216 failed on Windows; test-side fix
+
+The first PR run of the R2 head failed on Windows. This
+section records that failure honestly, its root causes, and
+the fix. Production behaviour is unchanged by this follow-up.
+
+**PR run #216** (run ID 45242077218), head
+`ac7d5b08d6279577f86e520db2b5431efcae02f0` (the R2 head):
+
+- Linux job `p0-validate`: **SUCCESS** (51s).
+- `windows-compat` Python 3.12: **FAILURE** —
+  `tests/test_local_session_runtime.py` FAIL (6 failure(s)).
+- `windows-compat` Python 3.10: **CANCELLED** by matrix
+  fail-fast — never ran any test.
+- Linux artifact `p0-test-results` verified byte-identical
+  (digest
+  `sha256:3b842d0cc28015343022742bfe8f2641320f386aabaff837d236aa65456faa8a`).
+- No push run exists (expected — push triggers unchanged).
+
+**The 6 failing checks (first log read — trusted).** The
+names were verified against
+`tests/test_local_session_runtime.py` at head `ac7d5b08` by
+grep (lines 178, 297, 307, 312, 328, 508):
+
+1. `CF-P1-001-PROF-01b`: profile file lives under the data root
+2. `CF-P1-001-PROF-12b`: profile lands under the override
+3. `CF-P1-001-PROF-13`: XDG_DATA_HOME is respected
+4. `CF-P1-001-PROF-14`: default is ~/.local/share
+5. `CF-P1-001-PROF-16`: macOS uses Application Support
+6. `CF-P1-001-SESS-18`: sessions are never persisted to disk
+
+**A second browser read of the same failed job log was
+discarded as unreliable.** It returned 6 FAIL names that DO
+NOT EXIST in `tests/test_local_session_runtime.py` at this
+head (e.g. "local profile file is read-only for the owner",
+"relaunch returns the same session"). The first read stands;
+the second read's names are used nowhere.
+
+**Root causes (parent-established, by experiment on Linux)
+— all six are TEST-side defects, not production defects:**
+
+1. PROF-01b, PROF-12b, SESS-18 compared path STRINGS.
+   Production `_profile_path()` canonicalizes via
+   `asset_policy.resolve_private_path` (realpath). On
+   Windows the temp dir is spelled with an 8.3 short-name
+   component (RUNNER~1) that realpath expands to the long
+   form, so the strings differ while the files are
+   identical. Linux proof: with a root spelled through a
+   symlinked parent component, `profile_path` is the
+   realpath'd form, the naive join differs, and realpath
+   comparison is True. Production canonicalization is a
+   security feature and stays.
+2. PROF-13, PROF-14 asserted the Linux resolution branches
+   without mocking the platform. On Windows
+   `resolve_data_root()` takes the Windows (LOCALAPPDATA)
+   branch first and never reads XDG — by design (docs: Linux
+   respects XDG, Windows uses LOCALAPPDATA).
+3. PROF-16 mocked `platform.system` to "Darwin" but set
+   only HOME. `ntpath.expanduser('~')` IGNORES HOME
+   entirely — it consults only USERPROFILE (HOME-only
+   returns `'~'`; USERPROFILE set returns it). Verified by
+   experiment with the `ntpath` module. On Windows, the
+   Darwin branch therefore resolved against the runner's
+   real USERPROFILE-based home, not the test's HOME-based
+   one.
+
+**Fix (test-side only, in
+`tests/test_local_session_runtime.py`):**
+
+1. PROF-01b, PROF-12b, SESS-18 compare canonical paths —
+   `os.path.realpath(...)` on both sides.
+2. PROF-13, PROF-14 mock `platform.system` to return
+   "Linux" (the same pattern PROF-16/17 already use).
+   USERPROFILE is set to the temp home as well: with only
+   the platform mock, PROF-14 would still fail on Windows,
+   because `ntpath.expanduser` ignores HOME (verified by
+   experiment with `ntpath`: HOME-only returns `'~'`;
+   USERPROFILE wins even when HOME is also set). Harmless on
+   POSIX — `posixpath.expanduser` ignores USERPROFILE. (This
+   USERPROFILE addition for PROF-13/14 is the coordinator's
+   own finding, extending the parent's stated fix.)
+3. PROF-16 sets BOTH HOME and USERPROFILE to the temp home
+   when mocking Darwin (same `ntpath` reason as above).
+4. New Linux-only regression checks CF-P1-001-R2-CANON-01/02:
+   a root spelled through a symlinked parent component —
+   `profile_path` equals the realpath'd join, and the
+   SESS-18-style file listing matches after realpath. No
+   existing check weakened.
+
+**Workflow fixes (`.github/workflows/p0-ci.yml`,
+`windows-compat` only; `p0-validate` untouched; triggers
+unchanged — the P1 branch is still NOT in the push list):**
+
+- `fail-fast: false` in the matrix strategy — the default
+  fail-fast cancelled the 3.10 job when 3.12 failed, so 3.10
+  never ran any test. Each version's result now stands on its
+  own.
+- The single "Run runtime regression suites" step is split
+  into three separate steps (one per suite), so a failure in
+  one suite cannot hide the other two.
+- Matrix `["3.10", "3.12"]` unchanged; shell `bash` unchanged.
+
+**Verification after the fix (Linux):**
+`tests/test_local_session_runtime.py` 67 PASS / 0 FAIL;
+`tests/test_session_authorization.py` 47 PASS / 0 FAIL;
+`tests/test_private_voice_security.py` 158 PASS / 0 FAIL
+(unmodified); full suite twice, exit 0 both: 56 entries /
+43 IDs / 34 commands, 56 PASS, 0 FAIL, 0 SKIP;
+`tests/last-run.json` SHA
+`ddd94ee1502d77d22105ab6a6a5cc3a752bbdfe3e5c4d65eec7ff1c8b4e559c5`
+unchanged; per-file total 1,418 (verified by direct
+counting). Run outputs:
+`evidence/r2/p1-001-r2f-suite-run1.txt` and
+`evidence/r2/p1-001-r2f-suite-run2.txt`. Evidence note:
+`evidence/r2/p1-001-r2-windows-ci-216-failure-note.txt`.
+
+**§13.7 stays PENDING the re-run.** Windows support is not
+claimed as tested until the re-run of the `windows-compat`
+job fills it — the #216 failure is recorded here precisely
+so that no earlier claim is left standing.

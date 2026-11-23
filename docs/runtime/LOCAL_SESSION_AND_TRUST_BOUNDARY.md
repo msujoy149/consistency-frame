@@ -234,8 +234,9 @@ sessions that issued contexts.
   (filesystem security), CF-P1-001-R1-FIRST (atomic first-run
   identity across concurrent processes), CF-P1-001-R2 (race test
   under the "spawn" start method on every platform, POSIX-gated
-  permission assertions, profile creation without `os.fchmod`):
-  65 checks.
+  permission assertions, profile creation without `os.fchmod`,
+  canonical-path (realpath) comparisons, Linux-branch data-root
+  checks under a mocked platform): 67 checks.
 - `tests/test_session_authorization.py` — CF-P1-001-AUTH
   (bridge), CF-P1-001-EXP (export issuance), CF-P1-001-P0 (P0
   behaviour unchanged), CF-P1-001-R1-ENUM (context enumeration
