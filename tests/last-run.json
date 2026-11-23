@@ -266,6 +266,18 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-001-SESSION",
+      "command": "python3 tests/test_local_session_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-001-AUTHZ",
+      "command": "python3 tests/test_session_authorization.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "CF-P0-ATOMIC-001",
       "command": "python3 tests/test_atomic_write.py",
       "exit_code": 0,

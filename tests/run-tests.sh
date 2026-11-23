@@ -91,6 +91,8 @@ run_one "CF-P0-SEC-METADATA-07" bash tests/test_installer_metadata_failure.sh fa
 run_one "CF-P0-014-INST" bash tests/test_installer_status.sh
 run_one "CF-P0-014-PIN" bash tests/test_installer_status.sh
 run_one "CF-P0-015-WT" bash tests/test_installer_status.sh
+run_one "CF-P1-001-SESSION" python3 tests/test_local_session_runtime.py
+run_one "CF-P1-001-AUTHZ" python3 tests/test_session_authorization.py
 run_one "CF-P0-ATOMIC-001" python3 tests/test_atomic_write.py
 
 # Whitespace / diff hygiene.
