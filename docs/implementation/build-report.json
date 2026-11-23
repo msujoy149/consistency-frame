@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "aeae3333773c3aa765bdd79bb9d709032ac71353",
-  "github_branch_head": "2e4b8b517735e2503cd937c95c9f509d7ffa00db",
+  "head_commit": "72e1c4af77324904ed0baec45aaef9041cfe8032",
+  "github_branch_head": "33dc78b88bba9cc83ecfc35c7b28a3ef3de7f90b",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -43,6 +43,7 @@
     "docs/implementation/CF-WO-P0-004-corrections.md",
     "docs/implementation/CF-WO-P0-005-corrections.md",
     "docs/implementation/CF-WO-P0-006-corrections.md",
+    "docs/implementation/CF-WO-P0-007-corrections.md",
     "docs/implementation/CHECKSUMS.txt",
     "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
     "docs/implementation/build-report.json",
@@ -139,6 +140,8 @@
     "tests/fixtures/shot-plan-valid.json",
     "tests/fixtures/sound-asset-valid.json",
     "tests/fixtures/temporary-asset-use.json",
+    "tests/fixtures/timeline-valid-v23.json",
+    "tests/fixtures/timeline-valid-v25-multicharacter.json",
     "tests/fixtures/visual-style-profile-valid.json",
     "tests/fixtures/voice-profile-ai-generated.json",
     "tests/fixtures/voice-profile-user-recording.json",
@@ -160,16 +163,17 @@
     "tests/test_registries.py",
     "tests/test_reports.py",
     "tests/test_routing.py",
-    "tests/test_schemas.py"
+    "tests/test_schemas.py",
+    "tests/test_timeline_manifest.py"
   ],
   "ci": {
-    "head": "24d2e6274f1fe2ee42b86c20ecf083e0d4b3c4d4",
+    "head": "33dc78b88bba9cc83ecfc35c7b28a3ef3de7f90b",
     "result": "PASS",
     "checks_passed": 2,
     "checks_total": 2,
-    "run_url": "https://github.com/msujoy149/consistency-frame/actions/runs/45059388184",
+    "run_url": "https://github.com/msujoy149/consistency-frame/actions/runs/45063530337",
     "pull_request": "https://github.com/msujoy149/consistency-frame/pull/1",
-    "note": "Remote CI PASSED on the GitHub branch head named here (push run #47 + PR run #48, 2/2 checks; p0-test-results artifact (743 bytes, digest sha256:379baeedcb76ebc63d34a1c898f8477038c0d5afdff17894ba5eae7c59669b54): 45 recorded test-run entries, 33 distinct test IDs, 26 distinct command strings, all PASS). The corrections in this package are pushed after that run; their CI run is checked by the parent after the push \u2014 this record is evidence for the head it names, not a claim about a later head."
+    "note": "Remote CI PASSED on the GitHub branch head named here (push run #83 + PR run #84, 2/2 checks; p0-test-results artifact (784 bytes, ID 14770342860, digest sha256:017c91538a628aeda58eaada9b0563f0bab43f62e4abf42a200d6011be73cb44): 47 recorded test-run entries, 35 distinct test IDs, 28 distinct command strings, all PASS). The corrections in this package are pushed after that run; their CI run is checked by the parent after the push \u2014 this record is evidence for the head it names, not a claim about a later head."
   },
   "tests": [
     {
@@ -203,6 +207,13 @@
     {
       "id": "CF-P0-006-AC-REG",
       "command": "python3 tests/test_character_registration.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-007-AC-TIMELINE",
+      "command": "python3 tests/test_timeline_manifest.py",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"

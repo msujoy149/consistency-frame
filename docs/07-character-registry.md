@@ -67,6 +67,19 @@ may be used temporarily for a current video task without becoming a
 permanent character. Permanent registration and temporary image use must
 always remain separate.
 
+The canonical permanent-registration record is
+`schemas/character-registration.json` (v2.5). It carries a structured
+`ownership` record — `owner_id` + `workspace_id` (stable, opaque,
+randomly generated local identifiers, never a real name, email, or
+account detail), `visibility` (`private` by default), and `sharing`
+(`none` by default; shared access needs an explicit future sharing
+permission). A character never becomes public merely because an image
+was uploaded, and a voice profile is resolvable only when BOTH its
+Character ID binding and its ownership match the character's
+(see `docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md`
+§C3, §C5, §C6). The older free-text `ownership_scope` is kept only as
+a deprecated legacy field.
+
 ### Name on the image
 
 A character name visibly written ON the image is NOT mandatory. If the
