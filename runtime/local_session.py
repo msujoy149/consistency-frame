@@ -334,20 +334,27 @@ def _publish_profile_atomic(path: str, payload: dict) -> bool:
     Atomic create-if-absent publication. The payload is written
     to an unguessable temporary file in the same directory
     (exclusive creation via ``tempfile.mkstemp`` — O_CREAT |
-    O_EXCL — mode 0600, flushed + fsynced), then published with
-    ``os.link()``: a single atomic filesystem operation that
-    FAILS with FileExistsError when ``path`` already exists, so
-    it can never overwrite another process's profile. Returns
-    True when this call published the profile; False when
-    another process published first (the temporary file is
-    removed either way, so no artefact remains). Any other
-    failure raises OSError, with the temporary file removed and
-    ``path`` untouched. A crash before the link leaves only a
-    temporary file — never a partially written profile at the
-    final path — and the next load reads whatever is actually at
-    ``path`` (a valid profile, or a fail-closed corrupt one),
-    never a half-written one. The P0 ``scripts/atomic_write.py``
-    helper is deliberately NOT used here: its ``os.replace()``
+    O_EXCL — mode 0600 on POSIX, flushed + fsynced), then
+    published with ``os.link()``: a single atomic filesystem
+    operation that FAILS with FileExistsError when ``path``
+    already exists, so it can never overwrite another process's
+    profile. On Windows the temporary file is not chmodded:
+    Windows Python 3.10-3.12 does not expose ``os.fchmod``, so
+    the call is capability-checked (``hasattr(os, "fchmod")``)
+    and skipped there — the file instead inherits the user data
+    directory's Windows security/ACL behaviour. No POSIX
+    0600 semantics are claimed on Windows (see the
+    trust-boundary doc). Returns True when this call published
+    the profile; False when another process published first
+    (the temporary file is removed either way, so no artefact
+    remains). Any other failure raises OSError, with the
+    temporary file removed and ``path`` untouched. A crash
+    before the link leaves only a temporary file — never a
+    partially written profile at the final path — and the next
+    load reads whatever is actually at ``path`` (a valid
+    profile, or a fail-closed corrupt one), never a half-written
+    one. The P0 ``scripts/atomic_write.py`` helper is
+    deliberately NOT used here: its ``os.replace()``
     unconditionally overwrites the target, which is exactly the
     race being closed; the helper itself is unchanged.
     """
@@ -355,7 +362,15 @@ def _publish_profile_atomic(path: str, payload: dict) -> bool:
     fd, tmp = tempfile.mkstemp(dir=parent, prefix=".profile-",
                                suffix=".tmp")
     try:
-        os.fchmod(fd, 0o600)
+        # POSIX only, capability-checked: tighten the temporary
+        # file to 0600. Windows Python 3.10-3.12 has no
+        # os.fchmod — the check (not a broad AttributeError
+        # swallow) skips the call there, and the file inherits
+        # the user data directory's Windows ACL instead. A
+        # missing fchmod is the only tolerated absence; any
+        # other failure still raises.
+        if hasattr(os, "fchmod"):
+            os.fchmod(fd, 0o600)
         try:
             f = os.fdopen(fd, "wb")
         except BaseException:
@@ -384,12 +399,14 @@ def load_or_create_profile(data_root=None) -> InstallationProfile:
     first use.
 
     First use: fresh opaque IDs are generated and published with
-    an atomic create-if-absent operation (mode 0600) into a 0700
-    directory; the profile on disk is re-read and validated
-    before it is returned — whether this process published it or
-    another concurrent first run won (the winner's profile is
-    loaded, the loser's candidate is discarded, nothing is
-    overwritten). Later use: the existing profile is read and
+    an atomic create-if-absent operation into a private
+    directory (0700 directory and 0600 file on POSIX; on
+    Windows the file inherits the user data directory's ACL —
+    see :func:`_publish_profile_atomic`); the profile on disk
+    is re-read and validated before it is returned — whether
+    this process published it or another concurrent first run
+    won (the winner's profile is loaded, the loser's candidate
+    is discarded, nothing is overwritten). Later use: the existing profile is read and
     strictly validated — a corrupt, invalid or tampered profile
     raises ProfileError and is left untouched on disk. No
     repository-local fallback exists at any point in this
