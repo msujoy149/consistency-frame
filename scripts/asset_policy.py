@@ -118,6 +118,29 @@ Tasks A + B):
   ownership all fail closed with the voice unresolved. Legacy
   v2.3 records keep their historical contract — v2.5 never
   silently falls back to it.
+
+Factory-issued authorization contexts (CF-WO-P0-010):
+- P0-009 made the context immutable, but immutability alone
+  never proved issuance: the constructor sentinel could be
+  imported, `__setstate__` could initialize a `__new__` object,
+  and pickle/copy produced further objects that all passed the
+  `isinstance` check in `validate_private_voice_export` — with
+  zero factory calls. The consumer now verifies ISSUANCE, not
+  type: a process-local, identity-based issuance registry
+  (`_ISSUED_AUTHORIZATION_CONTEXTS`, a `weakref.WeakSet`) holds
+  the exact objects the factory issued, and
+  `is_factory_issued_trusted_authorization_context` is the single
+  check every authorization boundary uses. A directly constructed,
+  `__new__`/`__setstate__`-built, copied or deserialized object
+  is never in the registry and is always rejected, however
+  genuine its fields look. Serialization of a context is
+  rejected outright (`__reduce__` / `__reduce_ex__` /
+  `__getstate__` / `__setstate__` all raise TypeError); copying
+  returns a frozen but UNREGISTERED clone with no authority.
+  This is a process-level integrity contract, NOT cryptographic
+  proof of identity and NOT protection against malicious code
+  running in the same process — authenticated application-session
+  identity remains P1.
 """
 from __future__ import annotations
 
@@ -125,6 +148,7 @@ import copy
 import os
 import re
 import uuid
+import weakref
 from datetime import datetime, timezone
 
 MODES = [
@@ -788,7 +812,23 @@ def resolve_voice_for_production(voice_registry, character_registry,
 # validator bypass — the validator still checks the issued context
 # against the asset owner, workspace, character and voice, so a
 # context issued for another asset authorizes nothing here.
+#
+# CF-WO-P0-010 — the sentinel alone is NOT the trust anchor. The
+# sentinel is a module-level object and can be imported, so direct
+# construction with it, `__new__` + `__setstate__`, pickle and copy
+# all used to produce objects that passed the old `isinstance`
+# check with zero factory calls. The trust anchor is the
+# process-local issuance registry below: only the exact objects
+# the factory registered are accepted, and every authorization
+# boundary verifies issuance with
+# `is_factory_issued_trusted_authorization_context` — never a bare
+# `isinstance`. The registry is identity-based (a WeakSet over
+# objects with identity equality/hash), so two contexts with
+# identical fields are distinct entries, and an entry vanishes
+# when its object is garbage-collected (no leak).
 _AUTHORIZATION_BOUNDARY = object()
+
+_ISSUED_AUTHORIZATION_CONTEXTS: "weakref.WeakSet" = weakref.WeakSet()
 
 
 def _utc_now_iso() -> str:
@@ -828,22 +868,59 @@ class TrustedAuthorizationContext:
     then sets the `_frozen` flag; `__setattr__` and
     `__delattr__` raise AttributeError on a frozen instance for
     ANY attribute (existing or new); the class has no `__dict__`
-    slot, so there is no `__dict__` escape; and `__copy__`,
-    `__deepcopy__` and `__setstate__` all produce frozen
-    objects, so copying a context cannot manufacture a mutable
-    one. There is no public `replace` / setter backdoor:
-    `dataclasses.replace` does not apply (this is not a
-    dataclass) and direct construction raises TypeError — only
-    the factory, holding the boundary sentinel, may create one.
-    A plain dict is never an instance of this class, so no
-    caller-created JSON can pass the isinstance check in
-    validate_private_voice_export.
+    slot, so there is no `__dict__` escape; and `__copy__` /
+    `__deepcopy__` produce frozen objects, so copying a context
+    cannot manufacture a mutable one. There is no public
+    `replace` / setter backdoor: `dataclasses.replace` does not
+    apply (this is not a dataclass) and direct construction
+    raises TypeError — only the factory, holding the boundary
+    sentinel, may create one. A plain dict is never an instance
+    of this class, so no caller-created JSON can pass the
+    isinstance check in validate_private_voice_export.
+
+    Immutability is NOT issuance (CF-WO-P0-010). An immutable
+    object is still untrusted unless the factory registered this
+    exact instance: equality and hashing are IDENTITY-based
+    (`__eq__` is `is`, `__hash__` is `object.__hash__`), so the
+    issuance registry (`_ISSUED_AUTHORIZATION_CONTEXTS`) tracks
+    exact objects, never field values. Serialization is refused
+    outright — `__reduce__`, `__reduce_ex__`, `__getstate__`
+    and `__setstate__` all raise TypeError — so no serialized
+    representation can ever restore a trusted context, and no
+    serialized representation can transfer authority to another
+    object or process. `__copy__` / `__deepcopy__` return a
+    frozen clone with the same field values (including the same
+    `authorization_id`, so copying can never reset revocation
+    state) that is deliberately NOT registered: the clone looks
+    like the original but has no authority and is rejected by
+    every authorization consumer.
     """
     __slots__ = ("authorization_id", "actor_owner_id",
                  "actor_workspace_id", "granted_by", "scope",
                  "action", "character_id", "voice_profile_id",
                  "provider_transmission_approved", "expires_at",
-                 "revoked", "_frozen")
+                 "revoked", "_frozen", "__weakref__")
+
+    # Data slots only (excludes "__weakref__", which is a
+    # weak-reference slot, not a field, and cannot be assigned).
+    _DATA_SLOTS = ("authorization_id", "actor_owner_id",
+                   "actor_workspace_id", "granted_by", "scope",
+                   "action", "character_id", "voice_profile_id",
+                   "provider_transmission_approved", "expires_at",
+                   "revoked", "_frozen")
+
+    def __eq__(self, other):
+        # Identity equality ONLY: two contexts with identical
+        # fields are still distinct objects. A value-equality
+        # implementation would let a forged object compare equal
+        # to a genuine one and could confuse the issuance
+        # registry (a WeakSet) into treating them as the same.
+        return self is other
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    __hash__ = object.__hash__
 
     def __init__(self, *, _boundary, actor_owner_id,
                  actor_workspace_id, granted_by, scope, action,
@@ -895,13 +972,25 @@ class TrustedAuthorizationContext:
     def _frozen_copy(self, deep=False, memo=None):
         """A frozen copy with the same field values (internal
         only — the copy path cannot manufacture a mutable
-        context: the copy is frozen before it is returned)."""
+        context: the copy is frozen before it is returned).
+
+        CF-WO-P0-010: the copy is deliberately NOT registered in
+        the issuance registry. It is a value-identical but
+        authority-less representation: it keeps the same
+        `authorization_id` (so a copy of a revoked context
+        still carries the revoked id and can never reset
+        revocation state), but no authorization consumer accepts
+        it, because only the exact factory-issued instance is
+        trusted. Copying is a safe, non-crashing operation; it
+        never creates an independently valid authorization."""
         clone = object.__new__(type(self))
-        for slot in self.__slots__:
+        for slot in self._DATA_SLOTS:
             value = getattr(self, slot)
             if deep:
                 value = copy.deepcopy(value, memo)
             object.__setattr__(clone, slot, value)
+        # Freeze explicitly: the clone is frozen even if the
+        # source was somehow unfrozen when copied.
         object.__setattr__(clone, "_frozen", True)
         return clone
 
@@ -912,16 +1001,45 @@ class TrustedAuthorizationContext:
         return self._frozen_copy(deep=True, memo=memo)
 
     def __getstate__(self):
-        return (None, {slot: getattr(self, slot)
-                       for slot in self.__slots__})
+        # CF-WO-P0-010: a trusted authorization context has no
+        # serializable representation. Refusing state extraction
+        # is part of refusing serialization outright (see
+        # __reduce_ex__): no serialized form of an authorization
+        # may exist to be restored, replayed or transferred to
+        # another object or process.
+        raise TypeError(
+            "TrustedAuthorizationContext cannot be serialized — "
+            "an authorization context is process-local issuance "
+            "state, not transferable data (issue a new context at "
+            "the authorization boundary instead)")
 
     def __setstate__(self, state):
-        _, slot_values = state
-        for name, value in slot_values.items():
-            object.__setattr__(self, name, value)
-        # Unpickling / uncopying must never yield a mutable
-        # context: freeze before the object escapes.
-        object.__setattr__(self, "_frozen", True)
+        # CF-WO-P0-010: state restoration is refused outright.
+        # The P0-009 __setstate__ populated slots and froze the
+        # object, which let `object.__new__` + `__setstate__`
+        # manufacture a context that passed the old isinstance
+        # check with zero factory calls. A restored object is
+        # never trusted, and silently accepting state would hide
+        # that; failing loudly is the safe behaviour.
+        raise TypeError(
+            "TrustedAuthorizationContext cannot be restored from "
+            "serialized state — only "
+            "issue_trusted_authorization_context() may create a "
+            "trusted authorization context")
+
+    def __reduce__(self):
+        raise TypeError(
+            "TrustedAuthorizationContext cannot be pickled — an "
+            "authorization context is process-local issuance "
+            "state, not transferable data (issue a new context at "
+            "the authorization boundary instead)")
+
+    def __reduce_ex__(self, protocol):
+        raise TypeError(
+            "TrustedAuthorizationContext cannot be pickled — an "
+            "authorization context is process-local issuance "
+            "state, not transferable data (issue a new context at "
+            "the authorization boundary instead)")
 
 
 # --- Revocation registry (CF-WO-P0-009 A) ---------------------------
@@ -938,17 +1056,43 @@ class TrustedAuthorizationContext:
 _REVOKED_AUTHORIZATION_IDS: set = set()
 
 
+def is_factory_issued_trusted_authorization_context(context) -> bool:
+    """True ONLY for the exact object issued by
+    issue_trusted_authorization_context().
+
+    This is the single issuance check every authorization
+    boundary must use (CF-WO-P0-010). It is identity-based,
+    not type- or field-based: `isinstance` alone is NOT proof
+    (a directly constructed, `__new__`-built, copied or
+    deserialized object is an instance of the class too), a
+    matching field structure is NOT proof, a valid-looking
+    owner/workspace is NOT proof, a matching private sentinel
+    is NOT proof, and a frozen object is NOT proof. Only
+    membership of this exact object in the process-local
+    issuance registry counts. A forged object is never
+    reported as issued, and a non-context is never reported
+    as issued.
+    """
+    if not isinstance(context, TrustedAuthorizationContext):
+        return False
+    return context in _ISSUED_AUTHORIZATION_CONTEXTS
+
+
 def revoke_trusted_authorization_context(trusted_context):
     """Revoke an issued context WITHOUT mutating it.
 
     Records the context's immutable authorization_id in the
     revocation registry; the context object itself is unchanged
     (every field, including `revoked`, keeps its issued value).
-    Raises TypeError for anything that is not a
-    TrustedAuthorizationContext — a dict or forged object can
-    never revoke (or un-revoke) anything. Returns True.
+    Raises TypeError for anything that is not a factory-issued
+    TrustedAuthorizationContext — a dict, a forged object, or
+    a copy/deserialized object can never revoke (or un-revoke)
+    anything. (CF-WO-P0-010: issuance is verified here so a
+    forged object carrying a stolen authorization_id cannot
+    revoke a genuine context.) Returns True.
     """
-    if not isinstance(trusted_context, TrustedAuthorizationContext):
+    if not is_factory_issued_trusted_authorization_context(
+            trusted_context):
         raise TypeError(
             "only a TrustedAuthorizationContext issued by "
             "issue_trusted_authorization_context() can be revoked")
@@ -959,9 +1103,11 @@ def revoke_trusted_authorization_context(trusted_context):
 def is_trusted_authorization_revoked(trusted_context) -> bool:
     """True when the context's authorization_id is in the
     revocation registry. Raises TypeError for anything that is
-    not a TrustedAuthorizationContext (fail closed — a forged
-    object is never reported as 'not revoked')."""
-    if not isinstance(trusted_context, TrustedAuthorizationContext):
+    not a factory-issued TrustedAuthorizationContext (fail
+    closed — a forged object is never reported as 'not
+    revoked')."""
+    if not is_factory_issued_trusted_authorization_context(
+            trusted_context):
         raise TypeError(
             "only a TrustedAuthorizationContext issued by "
             "issue_trusted_authorization_context() can be checked "
@@ -972,7 +1118,10 @@ def is_trusted_authorization_revoked(trusted_context) -> bool:
 def _is_authorization_revoked(trusted_context) -> bool:
     """Registry check used by validate_private_voice_export:
     False for anything without a registered id (including a
-    non-context, which the caller rejects separately)."""
+    non-context, which the caller rejects separately). Only
+    ever called on a factory-issued context (the caller
+    verifies issuance first); this helper itself confers no
+    authority."""
     authorization_id = getattr(trusted_context, "authorization_id",
                                None)
     return authorization_id in _REVOKED_AUTHORIZATION_IDS
@@ -1017,7 +1166,7 @@ def issue_trusted_authorization_context(*, actor_owner_id,
             or not expires_at.endswith("Z")):
         raise ValueError("expires_at must be an ISO-8601 UTC string "
                          "('YYYY-MM-DDTHH:MM:SSZ') or None")
-    return TrustedAuthorizationContext(
+    context = TrustedAuthorizationContext(
         _boundary=_AUTHORIZATION_BOUNDARY,
         actor_owner_id=actor_owner_id,
         actor_workspace_id=actor_workspace_id, granted_by=granted_by,
@@ -1027,6 +1176,15 @@ def issue_trusted_authorization_context(*, actor_owner_id,
             provider_transmission_approved),
         expires_at=expires_at,
         authorization_id=uuid.uuid4().hex)
+    # CF-WO-P0-010: registration is the LAST step, after the
+    # constructor has returned successfully and every field has
+    # been validated. A failed construction therefore never
+    # leaves a partially issued or trusted object in the
+    # registry — only this exact object, built by this factory
+    # call, is registered, and only it will ever be accepted by
+    # the authorization consumers.
+    _ISSUED_AUTHORIZATION_CONTEXTS.add(context)
+    return context
 
 
 def validate_private_voice_export(voice, authorization=None,
@@ -1035,9 +1193,15 @@ def validate_private_voice_export(voice, authorization=None,
     """A private voice export is allowed only under a trusted,
     owner-bound authorization. Returns rejection reasons; [] = allowed.
 
-    `trusted_context` must be a TrustedAuthorizationContext issued by
+    `trusted_context` must be the EXACT object issued by
     issue_trusted_authorization_context (the local application
-    authorization boundary). The `authorization` dict — when given —
+    authorization boundary) — issuance is verified against the
+    process-local registry by
+    is_factory_issued_trusted_authorization_context, not by a
+    bare isinstance check (CF-WO-P0-010): a directly constructed,
+    `__new__`-built, copied or deserialized object is rejected
+    even when its type and fields look genuine. The
+    `authorization` dict — when given —
     is an UNTRUSTED request record only: its granted_by / scope /
     explicit_authorisation fields NEVER confer authority and are
     ignored for the decision. A dict claiming granted_by == the
@@ -1067,10 +1231,18 @@ def validate_private_voice_export(voice, authorization=None,
                       "explicit_authorisation) is an untrusted request, "
                       "never authority")
         return errors
-    if not isinstance(trusted_context, TrustedAuthorizationContext):
+    if not is_factory_issued_trusted_authorization_context(
+            trusted_context):
         errors.append("private voice export blocked: authorization "
-                      "context is not a trusted context issued by the "
-                      "local application authorization boundary")
+                      "context was not issued by "
+                      "issue_trusted_authorization_context() — only "
+                      "the exact context object issued by the local "
+                      "application authorization boundary is "
+                      "accepted; a directly constructed, copied, "
+                      "deserialized or otherwise forged context "
+                      "never authorizes an export (type, field "
+                      "values and immutability alone prove "
+                      "nothing)")
         return errors
     ctx = trusted_context
     # Revocation is registry state, not a mutated field: the
