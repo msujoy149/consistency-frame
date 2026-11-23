@@ -14,8 +14,10 @@ concurrent processes — one identity wins, nothing overwritten,
 no artefacts left).
 CF-P1-001-R2 (R2: cross-platform first-run — the race test uses
 the "spawn" start method on every platform, POSIX permission
-assertions run only where POSIX semantics apply, and profile
-creation works without os.fchmod).
+assertions run only where POSIX semantics apply, profile
+creation works without os.fchmod, path comparisons use realpath
+on both sides, and the Linux-branch data-root checks mock the
+platform so they test the Linux branches on every platform).
 
 Run: python3 tests/test_local_session_runtime.py
 Exit 0 = PASS, 1 = FAIL.
@@ -175,9 +177,18 @@ def main():
               and profile_a.owner_id != profile_a.workspace_id,
               f"owner={profile_a.owner_id!r} "
               f"workspace={profile_a.workspace_id!r}")
+        # Canonical-path comparison (R2 follow-up): production
+        # _profile_path() canonicalizes via resolve_private_path
+        # (realpath), so a root spelled through a symlinked or
+        # short-name component differs as a string from the naive
+        # join while naming the same file (Windows 8.3 short
+        # names in the runner temp dir). Compare realpath on
+        # both sides; the canonicalization is a security feature
+        # and stays.
         check("CF-P1-001-PROF-01b: profile file lives under the data root",
-              profile_a.profile_path == os.path.join(
-                  root_a, "profile.json"))
+              os.path.realpath(profile_a.profile_path)
+              == os.path.realpath(
+                  os.path.join(root_a, "profile.json")))
 
         profile_a2 = load_or_create_profile(root_a)
         check("CF-P1-001-PROF-02: restart preserves the same IDs",
@@ -295,23 +306,39 @@ def main():
         check("CF-P1-001-PROF-12: explicit data-root override is used",
               resolved == os.path.abspath(root_override))
         check("CF-P1-001-PROF-12b: profile lands under the override",
-              load_or_create_profile(
-                  root_override).profile_path == os.path.join(
-                      os.path.abspath(root_override), "profile.json"))
+              os.path.realpath(load_or_create_profile(
+                  root_override).profile_path) == os.path.realpath(
+                      os.path.join(os.path.abspath(root_override),
+                                   "profile.json")))
 
         home_tmp = new_root()
         old_env = dict(os.environ)
         try:
             os.environ["XDG_DATA_HOME"] = os.path.join(home_tmp, "xdg")
             os.environ.pop("HOME", None)
-            check("CF-P1-001-PROF-13: XDG_DATA_HOME is respected",
-                  resolve_data_root() == os.path.join(
-                      home_tmp, "xdg", "consistency-frame"))
-            os.environ.pop("XDG_DATA_HOME", None)
-            os.environ["HOME"] = home_tmp
-            check("CF-P1-001-PROF-14: default is ~/.local/share",
-                  resolve_data_root() == os.path.join(
-                      home_tmp, ".local", "share", "consistency-frame"))
+            # Linux-branch checks (R2 follow-up): resolve_data_root()
+            # reads platform.system() at call time and takes the
+            # Windows (LOCALAPPDATA) branch first on Windows, never
+            # reading XDG there — by design. Mock the platform so
+            # these two checks test the Linux branches on every
+            # platform, the same pattern PROF-16/17 already use.
+            # USERPROFILE is set too: on Windows, ntpath.expanduser
+            # ("~") ignores HOME entirely and consults only
+            # USERPROFILE (verified by experiment), so without it
+            # PROF-14 would resolve against the runner's real home
+            # instead of the temp home. Harmless on POSIX —
+            # posixpath.expanduser ignores USERPROFILE.
+            os.environ["USERPROFILE"] = home_tmp
+            with mock.patch.object(platform, "system",
+                                   return_value="Linux"):
+                check("CF-P1-001-PROF-13: XDG_DATA_HOME is respected",
+                      resolve_data_root() == os.path.join(
+                          home_tmp, "xdg", "consistency-frame"))
+                os.environ.pop("XDG_DATA_HOME", None)
+                os.environ["HOME"] = home_tmp
+                check("CF-P1-001-PROF-14: default is ~/.local/share",
+                      resolve_data_root() == os.path.join(
+                          home_tmp, ".local", "share", "consistency-frame"))
             check("CF-P1-001-PROF-15: no repository-local fallback",
                   not resolve_data_root().startswith(
                       os.path.abspath(ROOT) + os.sep))
@@ -323,6 +350,13 @@ def main():
         # code under test reads it at call time).
         try:
             os.environ["HOME"] = home_tmp
+            # Darwin branch (R2 follow-up): on Windows,
+            # ntpath.expanduser("~") ignores HOME entirely and
+            # consults only USERPROFILE, so the mocked-Darwin
+            # resolution must see the same temp home through
+            # both variables. Harmless on POSIX — posixpath
+            # .expanduser ignores USERPROFILE.
+            os.environ["USERPROFILE"] = home_tmp
             with mock.patch.object(platform, "system",
                                    return_value="Darwin"):
                 check("CF-P1-001-PROF-16: macOS uses Application Support",
@@ -505,9 +539,14 @@ def main():
             with open(path, "rb") as f:
                 if session_a2.session_id.encode() in f.read():
                     session_leaked = True
+        # Canonical-path comparison (R2 follow-up): same realpath
+        # reason as PROF-01b — the file listing is spelled
+        # through the test's root while profile_path is the
+        # canonical form.
         check("CF-P1-001-SESS-18: sessions are never persisted to disk",
               not session_leaked
-              and data_root_files == [profile_a.profile_path])
+              and [os.path.realpath(p) for p in data_root_files]
+              == [os.path.realpath(profile_a.profile_path)])
 
         try:
             session_a2.owner_id = "owner-evil"
@@ -771,6 +810,36 @@ def main():
               "reload work without os.fchmod (Windows Python "
               "3.10-3.12 simulation)",
               _run_without_fchmod(new_root()))
+        # Canonical-path regression (R2 follow-up, Linux only):
+        # production canonicalizes the profile path, so a root
+        # spelled through a symlinked parent must still resolve
+        # to the same file, and a file listing must match after
+        # realpath on both sides. This is the mechanism that
+        # failed as string comparisons on Windows (8.3 short
+        # names in the runner temp dir).
+        if os.name == "posix":
+            link_parent = new_root()
+            real_parent = os.path.join(link_parent, "real")
+            os.makedirs(real_parent)
+            alias = os.path.join(link_parent, "alias")
+            os.symlink(real_parent, alias)
+            aliased_root = os.path.join(alias, "data")
+            os.makedirs(aliased_root)
+            aliased_profile = load_or_create_profile(aliased_root)
+            check("CF-P1-001-R2-CANON-01: profile path is the "
+                  "canonical (realpath) form when the root is "
+                  "spelled through a symlinked parent",
+                  os.path.realpath(aliased_profile.profile_path)
+                  == os.path.realpath(
+                      os.path.join(aliased_root, "profile.json")))
+            aliased_files = []
+            for dirpath, _dirnames, filenames in os.walk(aliased_root):
+                for fn in filenames:
+                    aliased_files.append(os.path.join(dirpath, fn))
+            check("CF-P1-001-R2-CANON-02: a file listing matches "
+                  "the profile path after realpath on both sides",
+                  [os.path.realpath(p) for p in aliased_files]
+                  == [os.path.realpath(aliased_profile.profile_path)])
     finally:
         for root in tmp_roots:
             shutil.rmtree(root, ignore_errors=True)

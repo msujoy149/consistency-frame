@@ -2,13 +2,13 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-001-trusted-session",
-  "commit": "aad378d7ba0f533a6a8bf7e899bf725b0f0f09dc",
-  "github_branch_head": "5179493b905449bce3be6e5982584020f993d7dc",
+  "commit": "c1c52dabceb7191bfec8791f6660d5e9965e321d",
+  "github_branch_head": "ac7d5b08d6279577f86e520db2b5431efcae02f0",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
-      "sha256": "cd1f3a4b5224118a76d71fd49bc3bfcf0ec84dd39bea71247cf5a1f481f846f2",
-      "bytes": 3583
+      "sha256": "1cc3c3a4731c0f312f27a0f3dd39f22974f4389395cdc9f4fb43f546268d3ee7",
+      "bytes": 4148
     },
     {
       "path": ".gitignore",
@@ -22,8 +22,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "16ecef1bf17409ce9a3da4ba6ee3dbdc20b205ccaa299c7c204445688b107af0",
-      "bytes": 74570
+      "sha256": "c9c0fd2438d49e7dfc0c0b94b65ff8b8b1da196357c6f6d941deda92770dcd18",
+      "bytes": 75774
     },
     {
       "path": "README.md",
@@ -122,7 +122,7 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "38394f62dd78a2bae4f5179d7d33bed0dec35ffb618cfed5e9ece82d5fe24add",
+      "sha256": "e453b569371e077bf63e27a0467f03e1af60dde68b32f22d54220cc30e090082",
       "bytes": 24863
     },
     {
@@ -132,8 +132,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "78c99b773f371dfadf8d910951e1ce6d92a789b77f65f74ca9aa3f17dc0baba4",
-      "bytes": 46452
+      "sha256": "cf90a0cf94fffea4a6a8dd3283ef09765042e23c2fa254b6f5c9654e10031ab9",
+      "bytes": 46696
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -207,8 +207,8 @@
     },
     {
       "path": "docs/implementation/CF-WO-P1-001-corrections.md",
-      "sha256": "01357ff8039f988acfa1561691f4d40de1fe86eb31d5bd717527cd0f4ed11448",
-      "bytes": 45105
+      "sha256": "e8cc5a282122dee7d2f0d7b80be5b2c4c231c9accb2a521f550b454cf96d6cba",
+      "bytes": 51161
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
@@ -217,13 +217,13 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "c892e685596112d33ebf6b42e6911935772284f217c3b7e9bccbb8085c96ea2a",
+      "sha256": "c3ccbc2debc4d921fa3ade4404b024fd57095d4e356a21ab6bfdc889e81e71eb",
       "bytes": 19073
     },
     {
       "path": "docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md",
-      "sha256": "f1cac545e41bb1f00ab37638bba57f0bdfc524e95c3acd1a0a21db5217669c86",
-      "bytes": 12543
+      "sha256": "7f2fcba16597397229417b77011e30a897205e13d0667aa5c52fe5e11d06e895",
+      "bytes": 12639
     },
     {
       "path": "registry/adapters.json",
@@ -792,8 +792,8 @@
     },
     {
       "path": "tests/test_local_session_runtime.py",
-      "sha256": "da96c698c9a6fc92a361e28897fdec976513f829f6b39607d6a6796fc52082be",
-      "bytes": 32549
+      "sha256": "8c0206e1411c6291016362a4247a7a8f4013d2a081db95b2c1fa3384a6d7d49d",
+      "bytes": 36604
     },
     {
       "path": "tests/test_modes.py",
@@ -1025,5 +1025,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-23T18:33:06Z"
+  "generated_at_utc": "2026-11-23T19:14:23Z"
 }
