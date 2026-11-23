@@ -39,6 +39,12 @@
     },
     {
       "id": "P0-SHELL",
+      "command": "bash -n tests/test_installer_status.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "P0-SHELL",
       "command": "bash -n tests/run-tests.sh",
       "exit_code": 0,
       "result": "PASS"
@@ -238,6 +244,18 @@
     {
       "id": "CF-P0-SEC-METADATA-07",
       "command": "bash tests/test_installer_metadata_failure.sh failed-no-backup",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-014-INST",
+      "command": "bash tests/test_installer_status.sh",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-014-PIN",
+      "command": "bash tests/test_installer_status.sh",
       "exit_code": 0,
       "result": "PASS"
     },

@@ -73,16 +73,35 @@ echo "-- Syncing skills into .agents/skills/ (non-destructive) --"
 SYNC_ARGS=()
 [ "$DRY_RUN" = 1 ] && SYNC_ARGS+=(--dry-run)
 [ "$PRUNE" = 1 ] && SYNC_ARGS+=(--prune)
-if bash scripts/sync-skills.sh "${SYNC_ARGS[@]}"; then
-  STATUS_SKILLS="SUCCESS"
-else
-  sync_code=$?
-  echo "ERROR: skill sync failed (exit $sync_code). No unmanaged skill was deleted; see scripts/sync-skills.sh output above." >&2
-  STATUS_SKILLS="FAILED"
-  echo ""
-  echo "== Setup FAILED: skills=$STATUS_SKILLS voicestudio=$STATUS_VOICESTUDIO openmontage=$STATUS_OPENMONTAGE =="
-  exit 1
-fi
+# Capture the exit code explicitly (no `set -e` here): sync-skills.sh
+# reports 0 = SUCCESS, 2 = PARTIAL, 1 = FAILED, and the installer
+# must preserve that contract instead of collapsing every non-zero
+# return to FAILED. A PARTIAL or FAILED core sync never proceeds to
+# the optional components, and the final summary always prints the
+# real status — SUCCESS is never reported after a partial or failed
+# sync. sync-skills.sh writes its own diagnostics to stderr; they
+# pass through untouched.
+bash scripts/sync-skills.sh "${SYNC_ARGS[@]}"
+sync_code=$?
+case "$sync_code" in
+  0)
+    STATUS_SKILLS="SUCCESS"
+    ;;
+  2)
+    STATUS_SKILLS="PARTIAL"
+    echo "ERROR: skill sync PARTIAL (exit 2). Some skills were synced but a non-fatal step failed; see scripts/sync-skills.sh output above. No unmanaged skill was deleted. Component installation is skipped." >&2
+    echo ""
+    echo "== Setup PARTIAL: skills=$STATUS_SKILLS voicestudio=$STATUS_VOICESTUDIO openmontage=$STATUS_OPENMONTAGE =="
+    exit 2
+    ;;
+  *)
+    STATUS_SKILLS="FAILED"
+    echo "ERROR: skill sync failed (exit $sync_code). No unmanaged skill was deleted; see scripts/sync-skills.sh output above." >&2
+    echo ""
+    echo "== Setup FAILED: skills=$STATUS_SKILLS voicestudio=$STATUS_VOICESTUDIO openmontage=$STATUS_OPENMONTAGE =="
+    exit 1
+    ;;
+esac
 
 if [ "$WITH_COMPONENTS" = 0 ]; then
   echo ""
@@ -110,11 +129,94 @@ fi
 
 echo "-- Installing bundled components (VoiceStudio + OpenMontage) --"
 
+# --- Existing-component verification (P0-014) ---------------------------
+# A directory that already holds a component checkout is reused ONLY
+# after it proves it is the pinned release: a valid git working tree,
+# the expected official origin, HEAD at the exact pinned commit, and
+# a clean working tree. Anything else is rejected with a clear error —
+# the directory is never reset, force-checked-out, deleted, or
+# overwritten, and the user is told what to do instead. A directory
+# merely containing a `.git` entry proves nothing on its own.
+
+# canonical_github_repo: print the "owner/repo" for a recognised
+# GitHub remote URL, or fail. Accepted standard forms:
+#   https://github.com/<owner>/<repo>[.git][/]
+#   ssh://git@github.com/<owner>/<repo>[.git][/]
+#   git@github.com:<owner>/<repo>[.git]
+# Anything else (another host, http://, an extra path segment) fails.
+canonical_github_repo() {
+  local url="$1" rest=""
+  url="${url%/}"
+  url="${url%.git}"
+  case "$url" in
+    https://github.com/*) rest="${url#https://github.com/}" ;;
+    ssh://git@github.com/*) rest="${url#ssh://git@github.com/}" ;;
+    git@github.com:*) rest="${url#git@github.com:}" ;;
+    *) return 1 ;;
+  esac
+  [ -n "$rest" ] && printf '%s' "$rest"
+}
+
+# verify_component_checkout: $1=name $2=expected owner/repo $3=dir $4=pin
+# Exit 0 iff the directory is a valid, clean git working tree whose
+# origin is the expected official repository and whose HEAD is the
+# exact pinned commit. Prints a clear ERROR on every failure path and
+# never touches the directory.
+verify_component_checkout() {
+  local name="$1" expected_repo="$2" dir="$3" pin="$4"
+  local origin head status_out
+  if ! git -C "$dir" rev-parse --git-dir >/dev/null 2>&1; then
+    echo "ERROR: $dir is not a valid git repository (no usable git metadata). Remove it yourself or move it aside, then run bash setup.sh --with-components again to re-clone $name." >&2
+    return 1
+  fi
+  if [ "$(git -C "$dir" rev-parse --is-inside-work-tree 2>/dev/null)" != "true" ]; then
+    echo "ERROR: $dir is not a git working tree. Remove it yourself or move it aside, then run bash setup.sh --with-components again to re-clone $name." >&2
+    return 1
+  fi
+  origin="$(git -C "$dir" config --get remote.origin.url 2>/dev/null || true)"
+  if [ -z "$origin" ]; then
+    echo "ERROR: $dir has no remote 'origin'. Remove it yourself or move it aside, then run bash setup.sh --with-components again to re-clone $name." >&2
+    return 1
+  fi
+  if [ "$(canonical_github_repo "$origin" 2>/dev/null || true)" != "$expected_repo" ]; then
+    echo "ERROR: $dir has unexpected origin '$origin' (expected the official $name repository, $expected_repo). Refusing to reuse it. Remove it yourself or fix its origin, then run bash setup.sh --with-components again." >&2
+    return 1
+  fi
+  if ! head="$(git -C "$dir" rev-parse HEAD 2>/dev/null)"; then
+    echo "ERROR: $dir has no commit checked out (cannot read HEAD). Remove it yourself or move it aside, then run bash setup.sh --with-components again to re-clone $name." >&2
+    return 1
+  fi
+  if [ "$head" != "$pin" ]; then
+    echo "ERROR: $dir is at commit $head, not the pinned $name commit $pin. Refusing to reuse it. Remove it yourself (or check out the pinned commit yourself), then run bash setup.sh --with-components again." >&2
+    return 1
+  fi
+  if ! status_out="$(git -C "$dir" status --porcelain 2>/dev/null)"; then
+    echo "ERROR: cannot inspect the working tree of $dir (git status failed). Refusing to reuse it. Check the directory yourself, then run bash setup.sh --with-components again." >&2
+    return 1
+  fi
+  if [ -n "$status_out" ]; then
+    echo "ERROR: $dir has uncommitted or untracked changes; refusing to reuse a modified $name checkout. Your files were left untouched. Commit or stash your changes, or move the directory aside, then run bash setup.sh --with-components again." >&2
+    return 1
+  fi
+  return 0
+}
+
 clone_component() {
   local name="$1" url="$2" dir="$3" pin="$4"
-  if [ -d "$dir/.git" ]; then
-    echo "-- $name already present --"
-    return 0
+  local expected_repo
+  expected_repo="$(canonical_github_repo "$url" || true)"
+  if [ -z "$expected_repo" ]; then
+    echo "ERROR: internal error: unexpected component URL for $name: $url" >&2
+    return 1
+  fi
+  if [ -d "$dir/.git" ] || [ -f "$dir/.git" ]; then
+    # An existing checkout is reused only after verification — a
+    # directory merely containing a .git entry proves nothing.
+    if verify_component_checkout "$name" "$expected_repo" "$dir" "$pin"; then
+      echo "-- $name already present (verified: pinned to ${pin:0:7}, clean) --"
+      return 0
+    fi
+    return 1
   fi
   if [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
     echo "ERROR: $dir exists but is not a git checkout. Remove it yourself and run bash setup.sh --with-components again to re-clone $name." >&2
@@ -132,13 +234,21 @@ clone_component() {
   # FULL 40-character SHA: a short SHA is read as a ref name and fails
   # with "couldn't find remote ref".
   if (cd "$dir" && git fetch --depth 1 origin "$pin" && git checkout "$pin"); then
-    echo "-- $name ready (pinned to ${pin:0:7}) --"
-    return 0
+    # Fresh clone: verify it the same way an existing checkout is
+    # verified before reporting success.
+    if verify_component_checkout "$name" "$expected_repo" "$dir" "$pin"; then
+      echo "-- $name ready (pinned to ${pin:0:7}) --"
+      return 0
+    fi
   else
     echo "ERROR: could not check out pinned commit $pin for $name. Removing the incomplete clone; run bash setup.sh --with-components again to retry." >&2
-    rm -rf "$dir"
-    return 1
   fi
+  # Either the checkout or the post-clone verification failed. This
+  # directory was created by this run, so removing it is safe — it
+  # holds no user data. (An existing directory is never removed: the
+  # verification path above returns before any deletion.)
+  rm -rf "$dir"
+  return 1
 }
 
 # Pinned commits (verified to exist upstream, 2026-11-13).
