@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-22 20:37 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-23 06:32 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p0-safe-foundations`
-**Head commit:** `4b395a7bc0dc30451c140d985bda01d7e446e2ad`
-**GitHub branch head:** `f8e5db65a32e08e4e29c16b2ec55d575bcaa0947` (remote head of `feat/cf-p0-safe-foundations` at
+**Head commit:** `6224bbaf240a0a9a50fcd1f61c74544db10d6757`
+**GitHub branch head:** `6224bbaf240a0a9a50fcd1f61c74544db10d6757` (remote head of `feat/cf-p0-safe-foundations` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -238,6 +238,7 @@ scripts/generate-build-report.py
 scripts/generate-registries.py
 scripts/generate-report.py
 scripts/sync-skills.sh
+scripts/timeline_policy.py
 scripts/validate-repo.py
 setup.sh
 skills/agency-advertising/SKILL.md
@@ -351,6 +352,7 @@ tests/test_timeline_manifest.py
 - `CF-P0-006-AC-REG` — python3 tests/test_character_registration.py — **PASS** (exit 0)
 - `CF-P0-006-AC-DIR` — python3 tests/test_production_direction.py — **PASS** (exit 0)
 - `CF-P0-007-AC-TIMELINE` — python3 tests/test_timeline_manifest.py — **PASS** (exit 0)
+- `CF-P0-008-SEC` — python3 tests/test_private_voice_security.py — **PASS** (exit 0)
 - `CF-INT-014` — bash tests/test_installer.sh — **PASS** (exit 0)
 - `CF-INT-015` — bash tests/test_installer.sh — **PASS** (exit 0)
 - `CF-INT-015` — bash tests/test_installer_security.sh — **PASS** (exit 0)
@@ -455,4 +457,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-22 20:37 UTC.
+- Report generated: 2026-11-23 06:32 UTC.

@@ -361,3 +361,58 @@ is `docs/implementation/CF-WO-P0-007-corrections.md`.
   reports/manifest/checksums regenerated with the live GitHub head.
 - P0-007 does not start P1, does not merge, and does not change the
   PR Draft state; the parent handles delivery after verifying CI.
+
+## 11. P0-008 — Fail-closed private voice security (2026-11-22)
+
+Work order CF-WO-P0-008. A security / production-correctness round
+on the same branch; it hardens the P0-007 ownership contract
+rather than starting new work. The full record is
+`docs/implementation/CF-WO-P0-008-corrections.md`. Production
+Corrections A–E were implemented and committed locally
+(`f3e0c2b`, `6224bba`); Corrections F–G (tests + docs) are the
+uncommitted change set this section records.
+
+- **A — Mandatory requester identity.** The production voice
+  resolver requires requester owner + workspace identity for a
+  private v2.5 voice; a missing requester fails closed. Legacy
+  v2.3 records keep their historical contract.
+- **B — Owner-bound export.** A private voice export requires a
+  `TrustedAuthorizationContext` issued by
+  `issue_trusted_authorization_context` (the local application
+  authorization boundary). A caller-created dictionary — including
+  a forged `granted_by` — never authorizes anything. Provider
+  transmission is a separate permission from export; export is
+  owner-only even under `shared` + `workspace`.
+- **C — Production timeline validation.** The validator moved from
+  the test file into `scripts/timeline_policy.py`, with a strict
+  v2.5 mode that fails closed on missing registry data, missing
+  requester identity, missing ownership, unauthorized access, and
+  unapproved voices. Narration/music/ambience/SFX timelines stay
+  valid without a requester; v2.3 timelines still pass under the
+  structural contract.
+- **D — Duplicate test-only logic removed.** Tests import the
+  production functions (`check_voice_binding`, `resolve_for_user`,
+  `validate_timeline_cross_references`); a spy test proves the
+  character-registration resolver calls the production resolver.
+- **E — Centralized authorization.** One choke point,
+  `authorize_action`, with explicit action scopes
+  (`use_in_project`, `use_in_production`,
+  `export_private_asset`, `transmit_to_provider`,
+  `share_with_workspace`). Permission for one action never implies
+  permission for another.
+- **F — Security regression suite.**
+  `tests/test_private_voice_security.py` (`CF-P0-008-SEC`, 74
+  checks, all PASS locally), added to `tests/run-tests.sh`. It
+  reproduces all three pre-fix failures (resolver without
+  requester, forged/plain-dict export, timeline without
+  requester) and pins the fixed behaviour.
+- **G — Documentation reconciled** (schemas/README, docs/07, the
+  canonical animation-scope document, BUILD_REPORT_P0, this plan,
+  CHANGELOG, AGENTS.md, and the P0-008 corrections record).
+- P0-008 does not start P1, does not merge, and does not change the
+  PR Draft state. What stays P1: the registration UI, provider
+  execution, the app/session runtime that supplies the actor
+  identity at the trusted boundary (the trusted context is a
+  structural type boundary, not cryptographic proof of identity),
+  lip-sync/articulation generation, and the script-to-finished-
+  video runtime.

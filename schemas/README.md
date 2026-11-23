@@ -74,8 +74,10 @@ change tested.
   generated).
 - P0-007 (final completion) extends the v2.5 contracts: the timeline
   manifest is v2.5 with clip/shot/audio bindings, synchronization
-  groups, and cross-reference validation (`validate_timeline_cross_references`
-  in `tests/test_timeline_manifest.py`); character registration and
+  groups, and cross-reference validation (the production validator
+  `validate_timeline_cross_references` in
+  `scripts/timeline_policy.py`, imported by
+  `tests/test_timeline_manifest.py`); character registration and
   voice profiles carry a structured `ownership` record
   (`owner_id`, `workspace_id`, `visibility`, `sharing` — opaque
   local IDs, private by default) that replaces the old free-text
@@ -87,6 +89,31 @@ change tested.
   cannot express conditional requirements — the schema and the
   validators must agree on every record (see the P0-007
   corrections record).
+- P0-008 (fail-closed private voice security) hardens the P0-007
+  contracts without changing any schema: the production voice
+  resolver now REQUIRES requester owner + workspace identity for
+  a private v2.5 voice (a missing requester is never an
+  authorized internal request); a private voice export requires a
+  `TrustedAuthorizationContext` issued by
+  `issue_trusted_authorization_context` in
+  `scripts/asset_policy.py` — a caller-created authorization
+  dictionary (including a forged `granted_by`) never authorizes
+  anything, and provider transmission is a separate permission
+  from export; timeline validation has a strict v2.5 production
+  mode (`strict=True` in `scripts/timeline_policy.py`) that
+  fails closed on missing registry data, missing requester
+  identity, missing ownership, unauthorized access, and
+  unapproved voices, while narration/music/ambience/SFX timelines
+  stay valid without a requester; every production access
+  decision goes through the centralized `authorize_action`
+  (`use_in_project`, `use_in_production`,
+  `export_private_asset`, `transmit_to_provider`,
+  `share_with_workspace`). The trusted context is a structural
+  (type) boundary, not cryptographic proof of identity — the P1
+  app/session runtime must supply the actor identity at the
+  boundary. Regression suite: `tests/test_private_voice_security.py`
+  (`CF-P0-008-SEC`, 74 checks). See the P0-008 corrections
+  record.
 - The four v2.4 schemas are the Script-to-Performance Intelligence
   contracts: `scene-plan.json`, `shot-plan.json`,
   `performance-plan.json`, and the combined `script-to-performance.json`.

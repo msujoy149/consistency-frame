@@ -660,6 +660,35 @@ independent review of this branch.
   (timeline contract v2.5, structured ownership, conditional voice
   validation, animal classification, companion licensing). See
   `docs/implementation/CF-WO-P0-007-corrections.md`.
+- Regenerated under CF-WO-P0-008 (fail-closed private voice security)
+  with `--github-head {github_head}`: (A) the production voice
+  resolver requires requester owner + workspace identity for a
+  private v2.5 voice — missing either fails closed, no `None`
+  bypass; (B) a private voice export requires a
+  `TrustedAuthorizationContext` issued by the local application
+  authorization boundary — a caller-created dictionary (including
+  a forged `granted_by`) never authorizes anything, and provider
+  transmission is a separate permission; (C) timeline validation
+  lives in production (`scripts/timeline_policy.py`) with a strict
+  v2.5 mode that fails closed on missing registry data, missing
+  requester identity, missing ownership, unauthorized access, and
+  unapproved voices; (D) duplicate test-only authorization logic
+  removed (tests import the production functions); (E) all
+  production access decisions centralized in `authorize_action`
+  (`use_in_project`, `use_in_production`, `export_private_asset`,
+  `transmit_to_provider`, `share_with_workspace`); (F) new
+  regression suite `tests/test_private_voice_security.py`
+  (`CF-P0-008-SEC`, 74 checks, all PASS locally, exit 0); (G)
+  documentation reconciled. Test evidence for that package
+  (verified, not hand-counted): {n_test_entries} recorded
+  test-run entries, {n_test_ids} distinct test IDs,
+  {n_test_commands} distinct command strings, all PASS (each listed
+  command returned exit 0). The before/after reproduction is
+  recorded in `docs/implementation/CF-WO-P0-008-corrections.md`
+  §4.6. Still P1: the registration UI, provider execution, the
+  app/session runtime for the trusted boundary, lip-sync/articulation
+  generation, and the script-to-finished-video runtime. See
+  `docs/implementation/CF-WO-P0-008-corrections.md`.
 """
 
     # The manifest's hashes for the two files this script writes must be

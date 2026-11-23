@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "4b395a7bc0dc30451c140d985bda01d7e446e2ad",
-  "github_branch_head": "f8e5db65a32e08e4e29c16b2ec55d575bcaa0947",
+  "head_commit": "6224bbaf240a0a9a50fcd1f61c74544db10d6757",
+  "github_branch_head": "6224bbaf240a0a9a50fcd1f61c74544db10d6757",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -85,6 +85,7 @@
     "scripts/generate-registries.py",
     "scripts/generate-report.py",
     "scripts/sync-skills.sh",
+    "scripts/timeline_policy.py",
     "scripts/validate-repo.py",
     "setup.sh",
     "skills/agency-advertising/SKILL.md",
@@ -214,6 +215,13 @@
     {
       "id": "CF-P0-007-AC-TIMELINE",
       "command": "python3 tests/test_timeline_manifest.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-008-SEC",
+      "command": "python3 tests/test_private_voice_security.py",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"

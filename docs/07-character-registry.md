@@ -405,3 +405,49 @@ public repository.
 The public repository contains the system, the skills, and the
 documentation. The private overlay contains the characters. That
 separation is what makes the repository safe to publish.
+
+## Fail-Closed Private Voice Security (P0-008)
+
+The ownership record above is enforced, not merely described.
+The production rules live in `scripts/asset_policy.py` (resolver,
+export authorization, centralized `authorize_action`) and
+`scripts/timeline_policy.py` (strict timeline validation); the
+regression suite is `tests/test_private_voice_security.py`
+(`CF-P0-008-SEC`, 74 checks). Full record:
+`docs/implementation/CF-WO-P0-008-corrections.md`.
+
+- **Fail-closed resolver.** For a private v2.5 voice,
+  `resolve_voice_for_production` REQUIRES the requester identity
+  — both `requesting_owner_id` and `requesting_workspace_id`.
+  A missing requester is never an authorized internal request,
+  there is no silent fallback to the character's owner, and
+  `None` is never an authorization bypass. The voice must also
+  belong to the requested character, match the character's
+  ownership, pass the v2.5 validation, and be approved when
+  production approval is required. Wrong owner, wrong workspace,
+  cross-character assignment, and a voice owned by another owner
+  or workspace are all rejected. Legacy v2.3 records keep their
+  historical contract and gain v2.5 protection only by explicit
+  ownership assignment — ownership is never inferred from a
+  filename, name, or image.
+- **Owner-bound export.** A private voice export requires a
+  `TrustedAuthorizationContext` issued by
+  `issue_trusted_authorization_context` — the local application
+  authorization boundary. A caller-created dictionary claiming
+  `granted_by`, `scope`, and `explicit_authorisation` is an
+  untrusted request, never authority; a forged `granted_by` is
+  rejected. The context is checked against the voice on every
+  point: the trusted actor is the voice owner in the voice
+  workspace, the issuer is the voice owner, the action is an
+  explicit `export_private_asset`, the scope is non-empty, the
+  context covers exactly this character and voice, and it is not
+  expired or revoked. Export is owner-only even under `shared` +
+  `workspace`. Sending the voice to an external provider is a
+  separate permission (`provider_transmission_approved`) from
+  export. The trusted context is a structural (type) boundary,
+  not cryptographic proof of identity: the P1 app/session
+  runtime must supply the actor identity at the boundary.
+- **Private sharing and export remain disabled by default.**
+  No context, no export. No default sharing, no automatic
+  provider transmission, and permission for local production use
+  never implies permission to export.

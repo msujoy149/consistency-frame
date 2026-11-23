@@ -1002,7 +1002,18 @@ Honesty rules:
   + Voice Profile binding, and (2) the character's ownership and
   the voice profile's ownership. Same Character ID with a different
   owner or workspace is REJECTED — a voice is never resolvable
-  merely because its Character ID matches.
+  merely because its Character ID matches. P0-008 makes this
+  fail-closed: for a private v2.5 voice the production resolver
+  (`scripts/asset_policy.py` `resolve_voice_for_production`)
+  REQUIRES the requester owner + workspace identity, and a
+  private voice export requires a trusted, owner-bound
+  authorization context (`TrustedAuthorizationContext`) — a
+  caller-created dictionary never authorizes anything — with
+  provider transmission as a separate permission; strict v2.5
+  timeline validation (`scripts/timeline_policy.py`,
+  `strict=True`) enforces the same ownership rules on every
+  referenced character, voice, and dialogue-bound audio asset.
+  See `docs/implementation/CF-WO-P0-008-corrections.md`.
 - **No cross-character inheritance.** A voice never transfers from
   one character to another. Two characters never share a voice
   profile unless the user explicitly registers the same voice for

@@ -235,6 +235,59 @@ step-by-step order for every video, in §7).
   P1 runtime. No capability is marked exercised or
   production-verified without actual evidence.
 
+## P0-008 Fail-closed private voice security (2026-11-22)
+
+- **Requester identity is mandatory.** For a private v2.5 voice,
+  `resolve_voice_for_production` (`scripts/asset_policy.py`)
+  requires BOTH the requesting owner ID and the requesting
+  workspace ID — a missing requester is never an authorized
+  internal request, there is no silent fallback to the
+  character's owner, and `None` is never an authorization
+  bypass. Wrong owner, wrong workspace, cross-character
+  assignment, and a voice owned by another owner or workspace
+  are all rejected. Legacy v2.3 records keep their historical
+  contract.
+- **Export needs a trusted context.** A private voice export
+  requires a `TrustedAuthorizationContext` issued by
+  `issue_trusted_authorization_context` — the local application
+  authorization boundary. A caller-created dictionary (including
+  a forged `granted_by`) never authorizes anything. The context
+  is checked against the voice on every point (actor = owner in
+  the voice workspace, issuer = owner, explicit
+  `export_private_asset` action, non-empty scope, exact
+  character + voice binding, not expired, not revoked). Export
+  is owner-only even under `shared` + `workspace`, and provider
+  transmission is a separate permission from export. The trusted
+  context is a structural (type) boundary, not cryptographic
+  proof of identity — the P1 app/session runtime must supply the
+  actor identity at the boundary.
+- **Timeline validation is production code.** The validator moved
+  from `tests/test_timeline_manifest.py` into
+  `scripts/timeline_policy.py`, with a strict v2.5 mode
+  (`strict=True`) that fails closed on missing registry data,
+  missing requester identity, missing ownership, unauthorized
+  access, and unapproved voices. Narration, music, ambience, SFX
+  and foley timelines stay valid without a requester; valid v2.3
+  timelines still pass.
+- **One authorization choke point.** Every production access
+  decision goes through `authorize_action` in
+  `scripts/asset_policy.py`, with explicit action scopes
+  (`use_in_project`, `use_in_production`,
+  `export_private_asset`, `transmit_to_provider`,
+  `share_with_workspace`). Permission for one action never
+  implies permission for another, and the duplicate test-only
+  authorization logic is gone (tests import the production
+  functions).
+- **Security regression suite.**
+  `tests/test_private_voice_security.py` (`CF-P0-008-SEC`, 74
+  checks, all PASS locally) reproduces all three pre-fix
+  failures and pins the fixed behaviour. Full record:
+  `docs/implementation/CF-WO-P0-008-corrections.md`.
+- P0-008 is a policy / validation / tests / documentation round:
+  it does not build the first-run registration UI, provider
+  execution, the app/session runtime for the trusted boundary,
+  lip-sync/articulation generation, or any P1 runtime.
+
 ## Rules that always apply
 
 - A character's identity (face, eyes, nose, mouth, hands, feet) is

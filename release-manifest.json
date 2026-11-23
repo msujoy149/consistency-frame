@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p0-safe-foundations",
-  "commit": "4b395a7bc0dc30451c140d985bda01d7e446e2ad",
-  "github_branch_head": "f8e5db65a32e08e4e29c16b2ec55d575bcaa0947",
+  "commit": "6224bbaf240a0a9a50fcd1f61c74544db10d6757",
+  "github_branch_head": "6224bbaf240a0a9a50fcd1f61c74544db10d6757",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
@@ -17,13 +17,13 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "ed119089b9faa069077607bfc48d5091b645ce51a87c8a2f70f9eadffecbe977",
-      "bytes": 15816
+      "sha256": "31d6644f4bf101fb6afc898516d9aab0fe3c620c878575bca08484fa758a68fa",
+      "bytes": 18657
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "c1e8889681a5e028f3471cd95290169bb5c2e047ee97fc88251cb1a4b7ba4563",
-      "bytes": 49986
+      "sha256": "2373a7a6dd7b85e43b867560c40a4e72ff01d7133f11b4d92932b5d23bf7f855",
+      "bytes": 52449
     },
     {
       "path": "README.md",
@@ -82,8 +82,8 @@
     },
     {
       "path": "docs/07-character-registry.md",
-      "sha256": "0e16e6a593a9ac5c3c22b75ea635eae3f9457dc1b984c77cd221018430783974",
-      "bytes": 19297
+      "sha256": "17b912b818e486454854638ba8ec05ffb9efc0f485db1e6da08574a6b38d1794",
+      "bytes": 21839
     },
     {
       "path": "docs/08-agency-advertising.md",
@@ -112,8 +112,8 @@
     },
     {
       "path": "docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md",
-      "sha256": "c6b924918fa271488351e66eb5db7a2ec31ce8b8659490b6f7b086df8a5f1b93",
-      "bytes": 71249
+      "sha256": "523e229d746cdd96b5ba836eb1ea56b70e9a4b366f78f7ed7faec170257b68de",
+      "bytes": 71926
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.3-p0.md",
@@ -122,8 +122,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "c6bc9dd0c869a7af1c54bc7dfb04484aac0d55595e8f7ec26060077ad647527b",
-      "bytes": 23521
+      "sha256": "2d1e9be6de8239d5ba548243d80db73658113c80c148d00630df20ea9dd57c57",
+      "bytes": 23637
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -132,8 +132,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "d132a3e30d6c3d07aa3ecafa6057c2cf8ba40c9cd335b09a9229696263ae2526",
-      "bytes": 39550
+      "sha256": "abd6072070e52681347dc3fd3d73fda07e027b809530da4457a54a2707fc7fc6",
+      "bytes": 41842
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -172,13 +172,13 @@
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
-      "sha256": "7375d314845ff2245fa62b68241a65da8a7e8f73fbbfda968fb267c2cf2810de",
-      "bytes": 24088
+      "sha256": "23bb2a5aa29fde3bbacbec7996625c52b25e9d67106c278da8bb35ed0f855099",
+      "bytes": 27096
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "09c1d2698addc0f64b326ffc9e198f9fc0f8a11852eef222d5826c4405066b5b",
-      "bytes": 16965
+      "sha256": "16c4608b23d4564e44438c206159a9099d3d26e5e0f76a9ccb7cb2d30faf3cae",
+      "bytes": 17192
     },
     {
       "path": "registry/adapters.json",
@@ -202,8 +202,8 @@
     },
     {
       "path": "schemas/README.md",
-      "sha256": "f90ee235061cbf15d5269379992a4cfe86c0af74979e0077a3fdc560188146c2",
-      "bytes": 6751
+      "sha256": "a968cff7c83ba515b2f766f6901cdae036d357dc0aec6677f4d9a02994a7b477",
+      "bytes": 8252
     },
     {
       "path": "schemas/approval.json",
@@ -317,8 +317,8 @@
     },
     {
       "path": "schemas/timeline-manifest.json",
-      "sha256": "24b37e3985890ca3602ec0c22f43403846c60615d182e9da1b9f96efaa7a2f96",
-      "bytes": 18048
+      "sha256": "dc8ebeeff3719be14bc4c1d463d59b52dc9474dfbc30ff4bc887d4ef55895dcf",
+      "bytes": 18206
     },
     {
       "path": "schemas/visual-style-profile.json",
@@ -337,8 +337,8 @@
     },
     {
       "path": "scripts/asset_policy.py",
-      "sha256": "0dc83812d9b620b1747d6079d78d9ecf3a4cf23c9ccf8af57e9c18079c16f5cb",
-      "bytes": 30379
+      "sha256": "d5312028f191837cdb92a7a89079895ca95fa9f25ce7ac2fc4fc71530c3eb0a1",
+      "bytes": 49054
     },
     {
       "path": "scripts/atomic_write.py",
@@ -347,8 +347,8 @@
     },
     {
       "path": "scripts/generate-build-report.py",
-      "sha256": "4e5dfe54ba3bff098fa1840c9193a626b6dbd4cb3ea6165b389a966fff4b3dc4",
-      "bytes": 38618
+      "sha256": "c6140f2a0794d340535bf366ebe59f80282066d218594d84a64a99a551dba67f",
+      "bytes": 40427
     },
     {
       "path": "scripts/generate-registries.py",
@@ -364,6 +364,11 @@
       "path": "scripts/sync-skills.sh",
       "sha256": "cd9427766aeb07e4a282145b2416f0add5cd9f1eb6292d62a6dc053a3ac97400",
       "bytes": 39460
+    },
+    {
+      "path": "scripts/timeline_policy.py",
+      "sha256": "dbdc5af612b83df6357469198f48f09f5d396a91216789c4ccb678d75e5e95e6",
+      "bytes": 34646
     },
     {
       "path": "scripts/validate-repo.py",
@@ -657,13 +662,13 @@
     },
     {
       "path": "tests/fixtures/voice-profile-ai-generated.json",
-      "sha256": "b487674bcc5cf8eba62ee335d06d4d812dacc05f3d84d398a263e35e19171ac6",
-      "bytes": 726
+      "sha256": "50fd77e6320ba40cf12168cfaaac5a7e614b9057dbef8f51c7a15103275089e5",
+      "bytes": 830
     },
     {
       "path": "tests/fixtures/voice-profile-user-recording.json",
-      "sha256": "c4ae72d45ab3f7ae664e0db14d243f29c5d9b31c420cd32f68f409237b1f2254",
-      "bytes": 802
+      "sha256": "dcee038dae5a404f752aaee1738ed390781b1b8c3fb3272ee039b57a73dc2cd8",
+      "bytes": 906
     },
     {
       "path": "tests/fixtures/voice-profile-valid-ai-generated.json",
@@ -682,13 +687,13 @@
     },
     {
       "path": "tests/last-run.json",
-      "sha256": "03bcf746e8e0321a723cfa48e6ba40fef07257586b0b09faa6917283052b8309",
-      "bytes": 6988
+      "sha256": "cdb305693d7a29525181892ca1ff10d5ea65a4ddc607e4bd2658b08d832921e8",
+      "bytes": 7140
     },
     {
       "path": "tests/run-tests.sh",
-      "sha256": "3965eac083c312a8422d506045abdfb664253f793aa2accf7724f737ea161708",
-      "bytes": 5361
+      "sha256": "968d26820da6ca0210da307f24f89b36001b044ba767258d8a1608750d2090a6",
+      "bytes": 5430
     },
     {
       "path": "tests/test_atomic_write.py",
@@ -697,8 +702,8 @@
     },
     {
       "path": "tests/test_character_registration.py",
-      "sha256": "bed5c750854dbceb98e42c6154f3723c843d664694ed4ea57c684bc62c1fa5ad",
-      "bytes": 54677
+      "sha256": "0effbc3f0aebd329ebba993c2f35d027b51aac044d12a2544bc70120a70b002a",
+      "bytes": 53809
     },
     {
       "path": "tests/test_installer.sh",
@@ -732,13 +737,13 @@
     },
     {
       "path": "tests/test_private_overlay.py",
-      "sha256": "53d350b9495774a9b9fcb9a387cfcd96d2c1661f0bca13b3e77cf072e8e3afc7",
-      "bytes": 7671
+      "sha256": "4c6def31217b136e08374f8a68dd9ceb7cb7078086c78aacbe3b7d9bdb8ab8b4",
+      "bytes": 8129
     },
     {
       "path": "tests/test_production_direction.py",
-      "sha256": "41763384701943e3dcb0aed7ac44cc7ef87db0ebb07760ca10caba250304a8b7",
-      "bytes": 64013
+      "sha256": "a3103607f3a8233f8bf546b43d8ea3049d491cd6f59d7f7d7cd1a491aa513973",
+      "bytes": 63743
     },
     {
       "path": "tests/test_registries.py",
@@ -762,8 +767,8 @@
     },
     {
       "path": "tests/test_timeline_manifest.py",
-      "sha256": "b91bd1f636cc15a0901ffec55c04da0bbd93675054a7b3111e3e3215aa0ddc10",
-      "bytes": 42133
+      "sha256": "17a88fa249ce854257951b6fdf67fb615f217d277541aadaa008986a008bf278",
+      "bytes": 25668
     }
   ],
   "tests": [
@@ -789,6 +794,10 @@
     },
     {
       "id": "CF-P0-007-AC-TIMELINE",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-008-SEC",
       "result": "PASS"
     },
     {
@@ -912,5 +921,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-22T20:37:32Z"
+  "generated_at_utc": "2026-11-23T06:32:37Z"
 }
