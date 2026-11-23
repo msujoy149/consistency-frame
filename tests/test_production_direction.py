@@ -209,7 +209,8 @@ def articulation_fits_subject(kind, species, articulation):
     if kind in ("human", "digital-human"):
         expected = "human-mouth-lips"
     elif kind in ("real-animal", "cgi-animal"):
-        if (species or "").lower() in ("parrot", "bird"):
+        if any(b in (species or "").lower()
+               for b in ("parrot", "bird")):
             expected = "bird-beak"
         else:
             expected = "animal-muzzle"
@@ -315,7 +316,7 @@ def validate_performance_line(line, voice_registry):
     errs = []
     if not isinstance(line, dict):
         return ["performance line is not an object"]
-    for field in ("character_id", "dialogue_line_id", "voice_profile_id",
+    for field in ("character_id", "dialogue_line_id",
                   "reference_asset_ids", "speaking_state",
                   "articulation_target", "emotion", "delivery",
                   "lip_sync_required"):
@@ -336,11 +337,19 @@ def validate_performance_line(line, voice_registry):
             line.get("articulation_target"))
         if fit:
             errs.append(f"line {line.get('line_id')!r}: {fit}")
-    vp = voice_registry.get(line.get("voice_profile_id"))
-    if vp is None:
+    # Voice binding: a speaking line MUST carry a voice profile (it
+    # speaks); a listening/silent/reacting line may omit one — a
+    # genuine animal listener has no speaking voice at all — but a
+    # voice profile that IS present must resolve to this character.
+    if state == "speaking" and "voice_profile_id" not in line:
+        errs.append(f"line {line.get('line_id')!r}: a speaking line "
+                    "needs voice_profile_id")
+    vp = voice_registry.get(line.get("voice_profile_id")) \
+        if line.get("voice_profile_id") else None
+    if line.get("voice_profile_id") and vp is None:
         errs.append(f"unknown voice_profile_id "
                     f"{line.get('voice_profile_id')!r}")
-    elif vp.get("character_id") != line.get("character_id"):
+    elif vp is not None and vp.get("character_id") != line.get("character_id"):
         errs.append(f"voice_profile_id {line.get('voice_profile_id')!r} "
                     f"belongs to {vp.get('character_id')!r}, not "
                     f"{line.get('character_id')!r}")
@@ -914,5 +923,414 @@ def main():
     return 0 if not failures else 1
 
 
+
+# --- Correction D (CF-WO-P0-007): real-animal vs cgi-animal -----------
+# A genuine captured animal (real-animal) is never automatically an
+# anthropomorphic speaking character: no fictional dialogue, no
+# synthetic speaking voice. A generated/rendered animal character
+# (cgi-animal) may speak with its registered character-specific voice,
+# articulated through its own articulation_target (bird-beak, never
+# human-mouth-lips). Appended by Worker 3; existing functions above
+# are untouched.
+_GENERATED_ANIMAL_REPRESENTATIONS = {
+    "2d-drawn-vector", "3d-cgi-rigged", "ai-digital-creature"}
+_GENERATED_ANIMAL_MOTION = {
+    "creature-articulation", "rig-2d-keyframe", "rig-3d-keyframe"}
+
+
+def animal_dialogue_errors(line):
+    """Correction D rule for one performance-plan line.
+
+    - real-animal + speaking with dialogue text and/or a voice
+      profile is an error: that character must be cgi-animal (or
+      fictional-creature / anthropomorphic), not the genuine animal.
+    - real-animal carrying dialogue text at all is an error.
+    - real-animal listening/silent/reacting with no dialogue text is
+      fine: a genuine animal can be spoken to and react naturally.
+    - cgi-animal / fictional-creature / anthropomorphic lines are
+      unaffected by this rule. Returns a list of violations."""
+    errs = []
+    if not isinstance(line, dict):
+        return ["performance line is not an object"]
+    if line.get("subject_kind") != "real-animal":
+        return []
+    dialogue = line.get("dialogue") or {}
+    text = dialogue.get("text") if isinstance(dialogue, dict) else None
+    if line.get("speaking_state") == "speaking" and (
+            text or line.get("voice_profile_id")):
+        errs.append(
+            f"line {line.get('line_id')!r}: real-animal subject is "
+            "given fictional dialogue/a speaking voice; a speaking "
+            "animal character must be cgi-animal (or "
+            "fictional-creature / anthropomorphic), not a genuine "
+            "captured animal")
+    elif text:
+        errs.append(
+            f"line {line.get('line_id')!r}: real-animal subject "
+            "carries dialogue text; dialogue belongs to a generated "
+            "speaking character, not a genuine animal")
+    return errs
+
+
+def animal_subject_errors(subj):
+    """Correction D rule for one scene/shot/routing subject.
+
+    A generated/rendered animal (CGI rig, 2D vector, AI digital
+    creature, creature-articulation or rig keyframes, not live-action
+    footage) is cgi-animal, never real-animal; a genuine captured
+    animal is real-animal with live-action footage / captured motion.
+    Returns a list of violations."""
+    errs = []
+    if not isinstance(subj, dict):
+        return ["subject is not an object"]
+    kind = subj.get("subject_kind")
+    label = subj.get("character_id") or "subject"
+    if kind == "real-animal":
+        if subj.get("is_live_action_footage") is False:
+            errs.append(
+                f"{label}: real-animal but is_live_action_footage is "
+                "false — a genuine captured animal is live-action "
+                "footage, a generated animal is cgi-animal")
+        if subj.get("representation") in \
+                _GENERATED_ANIMAL_REPRESENTATIONS:
+            errs.append(
+                f"{label}: real-animal but representation "
+                f"{subj.get('representation')!r} is generated — a "
+                "generated animal is cgi-animal")
+        if subj.get("motion_method") in _GENERATED_ANIMAL_MOTION:
+            errs.append(
+                f"{label}: real-animal but motion_method "
+                f"{subj.get('motion_method')!r} is a generated rig — "
+                "a genuine animal uses captured-motion")
+    if kind == "cgi-animal" and subj.get("is_live_action_footage") is True:
+        errs.append(
+            f"{label}: cgi-animal but is_live_action_footage is true "
+            "— a generated animal is not live-action footage")
+    return errs
+
+
+def _correction_d_voice_registry():
+    return {
+        load_fixture("voice-profile-user-recording.json")
+        ["voice_profile_id"]:
+        load_fixture("voice-profile-user-recording.json"),
+        load_fixture("voice-profile-ai-generated.json")
+        ["voice_profile_id"]:
+        load_fixture("voice-profile-ai-generated.json")}
+
+
+def _kiki_lines_and_subjects():
+    """Every Kiki line/subject in the fixed fixtures, as
+    (fixture, entry) pairs."""
+    pairs = []
+    for name in ("performance-plan-bird.json",
+                 "performance-plan-valid-bird.json"):
+        for line in load_fixture(name)["lines"]:
+            if line["character_id"] in ("char-002", "char-kiki-001"):
+                pairs.append((name, line))
+    two = load_fixture("performance-plan-two-person.json")
+    for line in two["lines"]:
+        if line["character_id"] == "char-002":
+            pairs.append(("performance-plan-two-person.json", line))
+    for name, key in (("scene-plan-two-person.json", "scenes"),
+                      ("scene-plan-valid-human-bird.json", "scenes")):
+        for subj in load_fixture(name)[key][0]["subjects"]:
+            if subj["character_id"] in ("char-002", "char-kiki-001"):
+                pairs.append((name, subj))
+    for name in ("shot-plan-directed.json",
+                 "shot-plan-valid-human-bird.json"):
+        for shot in load_fixture(name)["shots"]:
+            for subj in shot["subjects"]:
+                if subj["character_id"] in ("char-002", "char-kiki-001"):
+                    pairs.append((name, subj))
+    return pairs
+
+
+def test_correction_d_1_genuine_captured_parrot_is_real_animal():
+    # The S6 red fox is the genuine captured-animal record: it stays
+    # real-animal and passes the classification rule.
+    s6 = load_fixture("routing-profile-s6-real-animal.json")
+    fox = s6["per_subject_overrides"][0]
+    check("CORRECTION-D (1): genuine captured animal (S6 red fox) "
+          "stays real-animal",
+          fox["subject_kind"] == "real-animal"
+          and fox["is_live_action_footage"] is True
+          and fox["representation"] == "live-action-footage"
+          and fox["source_media"] == "captured-footage"
+          and s6["subject_types"] == ["real-animal"]
+          and s6["motion_methods"] == ["captured-motion"])
+    check("CORRECTION-D (1): genuine captured-animal subject passes "
+          "the classification rule",
+          animal_subject_errors(fox) == [], "; ".join(
+              animal_subject_errors(fox)))
+    # A genuine captured parrot, modelled the same way (listening,
+    # no dialogue, no voice profile), also passes.
+    captured_parrot = {
+        "line_id": "l-fox-listen", "character_id": "char-fox-001",
+        "subject_kind": "real-animal", "species": "African grey parrot",
+        "speaking_state": "listening", "listener_state": "attentive",
+        "dialogue": {}, "non_verbal_events": [
+            {"duration_seconds": 1.0, "intensity": 3,
+             "type": "reaction"}]}
+    check("CORRECTION-D (1): a genuine captured parrot line "
+          "(listening, no dialogue, no voice) passes",
+          animal_dialogue_errors(captured_parrot) == [], "; ".join(
+              animal_dialogue_errors(captured_parrot)))
+
+
+def test_correction_d_2_generated_talking_parrot_is_cgi_animal():
+    char = load_fixture("character-valid-v25-animal.json")
+    check("CORRECTION-D (2): generated talking parrot (Kiki) is "
+          "cgi-animal, not real-animal",
+          char["subject_kind"] == "cgi-animal"
+          and char["id"] == "char-kiki-001"
+          and char["reference_media_provenance"]
+          ["is_live_action_footage"] is False
+          and "not footage of a real bird" in
+          char["reference_media_provenance"]["provenance_note"])
+    for name in ("performance-plan-bird.json",
+                 "performance-plan-valid-bird.json"):
+        line = load_fixture(name)["lines"][0]
+        check(f"CORRECTION-D (2): Kiki speaking line in {name} is "
+              "cgi-animal",
+              line["subject_kind"] == "cgi-animal"
+              and line["speaking_state"] == "speaking"
+              and animal_dialogue_errors(line) == [])
+    bad_subjects = [(n, e) for n, e in _kiki_lines_and_subjects()
+                    if animal_subject_errors(e)]
+    check("CORRECTION-D (2): every Kiki scene/shot subject is a "
+          "generated animal, never real-animal",
+          not bad_subjects, f"{bad_subjects}")
+    kiki_kinds = {e.get("subject_kind")
+                  for _, e in _kiki_lines_and_subjects()}
+    check("CORRECTION-D (2): no Kiki line/subject in the fixed "
+          "fixtures is still real-animal",
+          kiki_kinds == {"cgi-animal"}, f"kinds={kiki_kinds}")
+
+
+def test_correction_d_3_generated_parrot_uses_registered_voice():
+    registry = _correction_d_voice_registry()
+    line = load_fixture("performance-plan-bird.json")["lines"][0]
+    errs = validate_performance_line(line, registry)
+    check("CORRECTION-D (3): generated parrot speaking line "
+          "validates with its own registered voice",
+          not errs, "; ".join(errs))
+    check("CORRECTION-D (3): the parrot's voice is its registered "
+          "character-specific voice (voice-kiki-001 -> char-002)",
+          line["voice_profile_id"] == "voice-kiki-001"
+          and registry["voice-kiki-001"]["character_id"]
+          == line["character_id"] == "char-002")
+    char = load_fixture("character-valid-v25-animal.json")
+    check("CORRECTION-D (3): the character record binds the same "
+          "voice profile to Kiki",
+          char["voice_profile_id"] == "voice-kiki-001"
+          and "voice-kiki-001" in char["voice_profile_ids"])
+    reg = load_fixture("character-registration-valid-bird.json")
+    check("CORRECTION-D (3): the registration records Kiki as "
+          "character_type CGI Animal with the same voice profile",
+          reg["character_type"] == "CGI Animal"
+          and reg["default_voice_profile_id"] == "voice-kiki-001"
+          and reg["species"] == "African grey parrot")
+
+
+def test_correction_d_4_articulation_target_is_bird_beak():
+    # Integration (P0-007): articulation_fits_subject() now matches
+    # bird species by substring, so "African grey parrot" maps to
+    # bird-beak (previously only the exact strings "parrot"/"bird"
+    # matched and the full species name fell through to
+    # "animal-muzzle"). The check below pins the fixed behaviour.
+    check("CORRECTION-D (4): 'African grey parrot' maps to bird-beak "
+          "(species substring match)",
+          articulation_fits_subject("cgi-animal",
+                                     "African grey parrot",
+                                     "bird-beak") == ""
+          and articulation_fits_subject(
+              "cgi-animal", "African grey parrot",
+              "human-mouth-lips") != "")
+    for name, entry in _kiki_lines_and_subjects():
+        species = (entry.get("species") or "").lower()
+        is_bird = "parrot" in species or "bird" in species
+        check(f"CORRECTION-D (4): Kiki articulation is bird-beak "
+              f"in {name}",
+              entry.get("articulation_target") == "bird-beak"
+              and is_bird)
+    check("CORRECTION-D (4): bird-beak fits a cgi-animal parrot "
+          "(exact species string)",
+          articulation_fits_subject("cgi-animal", "parrot",
+                                     "bird-beak") == "")
+
+
+def test_correction_d_5_bird_may_not_use_human_mouth_lips():
+    bad = load_fixture(
+        "performance-plan-invalid-bird-human-lips.json")
+    line = bad["lines"][0]
+    check("CORRECTION-D (5): the invalid fixture keeps its "
+          "classification fix (cgi-animal) AND its fault "
+          "(human-mouth-lips)",
+          line["subject_kind"] == "cgi-animal"
+          and line["articulation_target"] == "human-mouth-lips")
+    fit_err = articulation_fits_subject(
+        line.get("subject_kind"), line.get("species"),
+        line.get("articulation_target"))
+    check("CORRECTION-D (5): a bird with human-mouth-lips FAILS "
+          "the articulation rule",
+          bool(fit_err) and "human-mouth-lips" in fit_err, fit_err)
+    errs = validate_performance_line(line,
+                                     _correction_d_voice_registry())
+    check("CORRECTION-D (5): the invalid bird fixture still FAILS "
+          "performance-line validation",
+          bool(errs), "; ".join(errs))
+
+
+def test_correction_d_6_real_animal_gets_no_fictional_dialogue():
+    for name in ("performance-plan-valid-bird.json",
+                 "performance-plan-bird.json"):
+        good = load_fixture(name)["lines"][0]
+        bad = copy.deepcopy(good)
+        bad["subject_kind"] = "real-animal"
+        errs = animal_dialogue_errors(bad)
+        check(f"CORRECTION-D (6): a real-animal line with dialogue "
+              f"+ voice profile FAILS validation ({name})",
+              bool(errs)
+              and bad["dialogue"]["text"]
+              and bad["voice_profile_id"] == "voice-kiki-001",
+              "; ".join(errs))
+    check("CORRECTION-D (6): the same line as cgi-animal passes "
+          "(the classification, not the dialogue, is the fault)",
+          animal_dialogue_errors(
+              load_fixture("performance-plan-bird.json")
+              ["lines"][0]) == [])
+
+
+def test_correction_d_7_human_speaking_to_genuine_animal():
+    registry = _correction_d_voice_registry()
+    two = load_fixture("performance-plan-two-person.json")
+    human_line = [l for l in two["lines"]
+                  if l["character_id"] == "char-001"
+                  and l["speaking_state"] == "speaking"][0]
+    check("CORRECTION-D (7): the human speaking line validates",
+          not validate_performance_line(human_line, registry),
+          "; ".join(validate_performance_line(human_line, registry)))
+    # A genuine animal being spoken to: listening, attentive, no
+    # dialogue text, no registered speaking voice.
+    genuine = copy.deepcopy(
+        [l for l in two["lines"]
+         if l["character_id"] == "char-002"
+         and l["speaking_state"] == "listening"][0])
+    genuine["subject_kind"] = "real-animal"
+    genuine.pop("voice_profile_id", None)
+    genuine["dialogue"] = {}
+    check("CORRECTION-D (7): a genuine animal listening line "
+          "(no dialogue, no voice) passes the classification rule",
+          animal_dialogue_errors(genuine) == [], "; ".join(
+              animal_dialogue_errors(genuine)))
+    # Integration (P0-007): the same line must also pass the full
+    # performance-line validation — a listener needs no voice profile,
+    # so the voice rule is speaking-only (see validate_performance_line).
+    check("CORRECTION-D (7): a genuine animal listening line "
+          "(no dialogue, no voice) passes full line validation",
+          not validate_performance_line(genuine, registry),
+          "; ".join(validate_performance_line(genuine, registry)))
+    # Integration (P0-007): a speaking line without a voice profile
+    # still FAILS — the voice rule was relaxed for listeners only.
+    no_voice_speaker = copy.deepcopy(human_line)
+    no_voice_speaker.pop("voice_profile_id", None)
+    check("CORRECTION-D (7): a speaking line without a voice profile "
+          "still FAILS validation",
+          bool(validate_performance_line(no_voice_speaker, registry)))
+    check("CORRECTION-D (7): exactly one speaker — the human "
+          "speaks, the genuine animal listens",
+          human_line["speaking_state"] == "speaking"
+          and genuine["speaking_state"] == "listening"
+          and genuine.get("listener_state") == "attentive")
+
+
+def test_correction_d_8_human_speaking_to_cgi_talking_bird():
+    registry = _correction_d_voice_registry()
+    two = load_fixture("performance-plan-two-person.json")
+    errs = []
+    for line in two["lines"]:
+        errs.extend(validate_performance_line(line, registry))
+        errs.extend(animal_dialogue_errors(line))
+    check("CORRECTION-D (8): human + CGI talking bird conversation "
+          "validates, both speaking lines with correct bindings",
+          not errs, "; ".join(errs))
+    by_line = {}
+    for line in two["lines"]:
+        by_line.setdefault(line["dialogue_line_id"], []).append(line)
+    speakers = {lid: [r["character_id"] for r in rows
+                      if r["speaking_state"] == "speaking"][0]
+                for lid, rows in by_line.items()}
+    check("CORRECTION-D (8): speakers alternate human -> CGI bird",
+          speakers == {"l-01": "char-001", "l-02": "char-002"},
+          f"speakers={speakers}")
+    kiki = [l for l in two["lines"] if l["character_id"] == "char-002"]
+    check("CORRECTION-D (8): both Kiki lines are cgi-animal with "
+          "bird-beak and Kiki's own voice",
+          all(l["subject_kind"] == "cgi-animal"
+              and l["articulation_target"] == "bird-beak"
+              and l["voice_profile_id"] == "voice-kiki-001"
+              for l in kiki))
+
+
+def test_correction_d_9_hybrid_routing():
+    # S4: generated human + CGI bird. NOTE on the work-order wording:
+    # the S4 human is digital-human (generated, ai-digital-human),
+    # NOT live-action footage — the genuine live-action-human +
+    # CGI-creature hybrid is S5, asserted below.
+    s4 = load_fixture("routing-profile-s4-human-bird.json")
+    subs = {s["character_id"]: s
+            for s in s4["per_subject_overrides"]}
+    check("CORRECTION-D (9): S4 per-subject overrides resolve to a "
+          "generated human + cgi-animal bird",
+          subs["char-nadia-001"]["subject_kind"] == "digital-human"
+          and subs["char-nadia-001"]["is_live_action_footage"] is False
+          and subs["char-nadia-001"]["articulation_target"]
+          == "human-mouth-lips"
+          and subs["char-kiki-001"]["subject_kind"] == "cgi-animal"
+          and subs["char-kiki-001"]["is_live_action_footage"] is False
+          and subs["char-kiki-001"]["articulation_target"] == "bird-beak"
+          and s4["subject_types"] == ["digital-human", "cgi-animal"])
+    check("CORRECTION-D (9): S4 subjects pass the classification "
+          "rule (no generated animal left as real-animal)",
+          all(not animal_subject_errors(s)
+              for s in s4["per_subject_overrides"]))
+    s5 = load_fixture("routing-profile-s5-live-action-creature.json")
+    subs5 = {s["character_id"]: s
+             for s in s5["per_subject_overrides"]}
+    check("CORRECTION-D (9): S5 is the true live-action-human + "
+          "CGI-creature hybrid (human is live-action footage, "
+          "creature is generated, never real-animal)",
+          subs5["char-actor-001"]["subject_kind"] == "human"
+          and subs5["char-actor-001"]["is_live_action_footage"] is True
+          and subs5["char-actor-001"]["representation"]
+          == "live-action-footage"
+          and subs5["char-ember-001"]["subject_kind"]
+          == "fictional-creature"
+          and subs5["char-ember-001"]["is_live_action_footage"] is False
+          and subs5["char-ember-001"]["representation"]
+          == "3d-cgi-rigged"
+          and s5["production_medium"] == "hybrid-live-action-cgi")
+
+
+def run_correction_d_animal_classification_tests():
+    """Run the nine Correction D acceptance cases. Returns 0/1."""
+    before = len(failures)
+    test_correction_d_1_genuine_captured_parrot_is_real_animal()
+    test_correction_d_2_generated_talking_parrot_is_cgi_animal()
+    test_correction_d_3_generated_parrot_uses_registered_voice()
+    test_correction_d_4_articulation_target_is_bird_beak()
+    test_correction_d_5_bird_may_not_use_human_mouth_lips()
+    test_correction_d_6_real_animal_gets_no_fictional_dialogue()
+    test_correction_d_7_human_speaking_to_genuine_animal()
+    test_correction_d_8_human_speaking_to_cgi_talking_bird()
+    test_correction_d_9_hybrid_routing()
+    n = len(failures) - before
+    print(f"test_production_direction (Correction D): "
+          f"{'PASS' if n == 0 else 'FAIL'} ({n} failure(s))")
+    return 0 if n == 0 else 1
+
 if __name__ == "__main__":
-    sys.exit(main())
+    rc_main = main()
+    rc_d = run_correction_d_animal_classification_tests()
+    sys.exit(rc_main or rc_d)
