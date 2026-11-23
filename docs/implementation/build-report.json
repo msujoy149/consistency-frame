@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "81c624fd3a52b072cf1460773f53eafff678e68b",
-  "github_branch_head": "7a92d217a0cd477197253f362c996b5a85498303",
+  "head_commit": "83b1be01723cd5f47aee067205a8a14455d33798",
+  "github_branch_head": "a9748880c4f6093e46644017045c0d0bd6fe25e7",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -324,6 +324,13 @@
     },
     {
       "id": "CF-P0-REPORT-004",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P0-REPORT-005",
       "command": "python3 tests/test_reports.py",
       "exit_code": 0,
       "result": "PASS",

@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-23 10:38 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-23 13:00 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p0-safe-foundations`
-**Head commit:** `81c624fd3a52b072cf1460773f53eafff678e68b`
-**GitHub branch head:** `7a92d217a0cd477197253f362c996b5a85498303` (remote head of `feat/cf-p0-safe-foundations` at
+**Head commit:** `0bd4dd4e81954b55bbc79a2ee7fd61dbfbfd7ab7`
+**GitHub branch head:** `0bd4dd4e81954b55bbc79a2ee7fd61dbfbfd7ab7` (remote head of `feat/cf-p0-safe-foundations` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -201,6 +201,7 @@ docs/implementation/CF-WO-P0-008-corrections.md
 docs/implementation/CF-WO-P0-009-corrections.md
 docs/implementation/CF-WO-P0-010-corrections.md
 docs/implementation/CF-WO-P0-011-corrections.md
+docs/implementation/CF-WO-P0-012-corrections.md
 docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
@@ -377,6 +378,7 @@ tests/test_timeline_manifest.py
 - `CF-P0-REPORT-002` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-003` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-004` — python3 tests/test_reports.py — **PASS** (exit 0)
+- `CF-P0-REPORT-005` — python3 tests/test_reports.py — **PASS** (exit 0)
 
 CI workflow: `.github/workflows/p0-ci.yml` (runs on pull requests and
 pushes to the feature branch). Remote CI PASSED on
@@ -462,4 +464,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-23 10:38 UTC.
+- Report generated: 2026-11-23 13:00 UTC.
