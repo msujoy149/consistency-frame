@@ -43,7 +43,18 @@ manufacture an accepted context. Reproduction:
 ~/workspace/consistency-frame-p0-delivery/p0-010-repro.py
 (before: all forged paths authorized with factory_calls=0;
 after: all forged paths rejected, genuine factory context
-still authorizes).
+still authorizes). CF-WO-P0-011 adds group (k), IDs
+CF-P0-011-SEC: exact concrete type plus identity-based
+verification — a forged subclass overriding __eq__/__hash__ to
+match a genuine context is rejected by the verifier itself
+(the P0-010 WeakSet membership test hashed the candidate and
+compared with ==, so the spoof compared equal and passed).
+Reproduction: ~/workspace/consistency-frame-p0-delivery/p0-011-repro.py
+(before: spoof issued True, export [] — and a hostile __eq__
+with the genuine hash was even invoked, raising RuntimeError;
+after: subclass definition raises TypeError, the verifier
+returns False without invoking __eq__/__hash__, export rejects,
+genuine context still authorizes).
 """
 import copy
 import dataclasses
@@ -54,6 +65,7 @@ import os
 import pickle
 import sys
 import tempfile
+import weakref
 from types import SimpleNamespace
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
@@ -178,6 +190,31 @@ def export_ctx(actor_owner="owner-a", actor_workspace="workspace-a",
         character_id=character_id, voice_profile_id=voice_profile_id,
         provider_transmission_approved=provider_transmission_approved,
         expires_at=expires_at)
+
+
+def _define_spoof_subclass(name, eq=None, hash_fn=None):
+    """Test-only fixture (CF-WO-P0-011): define a
+    TrustedAuthorizationContext subclass while the
+    __init_subclass__ prohibition is temporarily neutralized,
+    then restore it. This proves the VERIFIER rejects subclass
+    instances on its own — the prohibition alone is not the
+    defense. The subclass is built with type(); eq/hash_fn are
+    installed as overrides (None = inherit the base class's
+    identity versions)."""
+    original = asset_policy.TrustedAuthorizationContext.__init_subclass__
+    try:
+        asset_policy.TrustedAuthorizationContext.__init_subclass__ = (
+            classmethod(lambda cls, **kwargs: None))
+        namespace = {}
+        if eq is not None:
+            namespace["__eq__"] = eq
+        if hash_fn is not None:
+            namespace["__hash__"] = hash_fn
+        return type(name, (asset_policy.TrustedAuthorizationContext,),
+                    namespace)
+    finally:
+        asset_policy.TrustedAuthorizationContext.__init_subclass__ = (
+            original)
 
 
 def main():
@@ -1095,8 +1132,14 @@ def main():
           "entry per issued object (two fresh issuances grow it "
           "by exactly two — identical fields are not merged)",
           after_n == before_n + 2
-          and reg_a in asset_policy._ISSUED_AUTHORIZATION_CONTEXTS
-          and reg_b in asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+          and issued(reg_a) is True
+          and issued(reg_b) is True)
+    # NOTE (CF-WO-P0-011): the registry is now an id()-keyed
+    # dict of weak references, so membership is asserted through
+    # the verifier (issued(...)), not through `in` — `in` on the
+    # dict would test int keys, not objects. The property tested
+    # here (one entry per issued object, each independently
+    # recognized) is unchanged.
     check("CF-P0-010-SEC(j4): a genuine factory-issued context "
           "still authorizes its intended export",
           not asset_policy.validate_private_voice_export(
@@ -1331,12 +1374,19 @@ def main():
     # (E) Immutability / identity semantics, strengthened.
     check("CF-P0-010-SEC(j24): identity equality is pinned — a "
           "forged object with field values identical to a "
-          "genuine context does NOT equal it and is not found "
-          "in the registry by equality",
+          "genuine context does NOT equal it and no registered "
+          "reference points at it",
           forged_sentinel != genuine
-          and forged_sentinel not in
-          asset_policy._ISSUED_AUTHORIZATION_CONTEXTS
+          and not any(ref() is forged_sentinel
+                      for ref in asset_policy
+                      ._ISSUED_AUTHORIZATION_CONTEXTS.values())
           and hash(forged_sentinel) != hash(genuine))
+    # NOTE (CF-WO-P0-011): the registry is now an id()-keyed
+    # dict of weak references, so "not in the registry" is
+    # asserted by checking no stored reference's target `is`
+    # the forged object — `not in` on the dict would only test
+    # int keys and would prove nothing. The property tested
+    # here is unchanged.
     _orig = export_ctx()
     _orig_copy = copy.copy(_orig)
     asset_policy.revoke_trusted_authorization_context(_orig)
@@ -1419,6 +1469,356 @@ def main():
           and bool(_tl_errs)
           and "requesting owner identity" in "; ".join(_tl_errs),
           "; ".join(_e) + " | " + "; ".join(_tl_errs))
+
+    # ------------------------------------------------------------------
+    # (k) Exact concrete type + identity verification
+    # (CF-WO-P0-011). The P0-010 registry was a weakref.WeakSet:
+    # its membership test hashed the candidate and compared with
+    # ==, so a forged subclass overriding __eq__/__hash__ could
+    # compare equal to a genuine issued context and pass with
+    # zero factory calls (reproduced:
+    # ~/workspace/consistency-frame-p0-delivery/p0-011-repro.py).
+    # The verifier now requires the exact concrete type and
+    # compares a stored weak reference's target with `is` —
+    # never ==, never a hash — and subclassing is prohibited
+    # outright. The spoof subclasses below are built with the
+    # _define_spoof_subclass fixture, which temporarily
+    # neutralizes the prohibition so the VERIFIER itself is
+    # exercised (the prohibition alone is not the defense).
+    # ------------------------------------------------------------------
+    _k_genuine = export_ctx()
+    check("CF-P0-011-SEC(k1): an exact factory-issued context "
+          "is recognized and has the exact concrete type",
+          issued(_k_genuine) is True
+          and type(_k_genuine)
+          is asset_policy.TrustedAuthorizationContext)
+    try:
+        class _PlainSubclass(asset_policy.TrustedAuthorizationContext):
+            pass
+        _plain_blocked = False
+    except TypeError:
+        _plain_blocked = True
+    check("CF-P0-011-SEC(k2): subclass creation is prohibited "
+          "outright — defining a subclass raises TypeError",
+          _plain_blocked)
+    _AlwaysEqualSpoof = _define_spoof_subclass(
+        "AlwaysEqualSpoof",
+        lambda self, other: True,
+        lambda self: hash(_k_genuine))
+    _spoof = _AlwaysEqualSpoof(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    _reg_before_spoof = len(
+        asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+    _spoof_errs = asset_policy.validate_private_voice_export(
+        nila_voice, trusted_context=_spoof)
+    check("CF-P0-011-SEC(k3): an always-equal spoof subclass "
+          "(hash == genuine hash, __eq__ always True) is "
+          "rejected by the verifier and by export, while the "
+          "genuine context stays valid, the registry is "
+          "untouched and its revocation state is unchanged",
+          isinstance(_spoof, asset_policy.TrustedAuthorizationContext)
+          and type(_spoof)
+          is not asset_policy.TrustedAuthorizationContext
+          and _spoof == _k_genuine
+          and hash(_spoof) == hash(_k_genuine)
+          and issued(_spoof) is False
+          and bool(_spoof_errs)
+          and "not issued by" in "; ".join(_spoof_errs)
+          and issued(_k_genuine) is True
+          and not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_k_genuine)
+          and len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+          == _reg_before_spoof
+          and asset_policy.is_trusted_authorization_revoked(
+              _k_genuine) is False,
+          "; ".join(_spoof_errs))
+    _ConstantHashSpoof = _define_spoof_subclass(
+        "ConstantHashSpoof",
+        lambda self, other: True,
+        lambda self: 12345)
+    _const_spoof = _ConstantHashSpoof(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    check("CF-P0-011-SEC(k4): a constant-hash spoof subclass "
+          "(__eq__ always True, __hash__ == 12345) is rejected "
+          "by the verifier and by export",
+          issued(_const_spoof) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_const_spoof)))
+    _InconsistentSpoof = _define_spoof_subclass(
+        "InconsistentSpoof",
+        lambda self, other: other is _k_genuine,
+        lambda self: 999)
+    _inconsistent = _InconsistentSpoof(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    check("CF-P0-011-SEC(k5): an inconsistent eq/hash spoof "
+          "(equal only to the genuine object, unrelated hash) "
+          "is rejected by the verifier and by export",
+          _inconsistent == _k_genuine
+          and hash(_inconsistent) != hash(_k_genuine)
+          and issued(_inconsistent) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_inconsistent)))
+    _spoof_a = _AlwaysEqualSpoof(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    _spoof_b = _AlwaysEqualSpoof(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    check("CF-P0-011-SEC(k6): multiple spoof instances that "
+          "compare equal to one another are all rejected, and "
+          "the genuine context is unaffected",
+          _spoof_a == _spoof_b
+          and issued(_spoof_a) is False
+          and issued(_spoof_b) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_spoof_a))
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_spoof_b))
+          and issued(_k_genuine) is True)
+    _eq_calls = []
+
+    def _raising_eq(self, other):
+        _eq_calls.append(1)
+        raise RuntimeError("untrusted equality executed")
+
+    _RaisingSpoof = _define_spoof_subclass(
+        "RaisingEqSpoof", _raising_eq,
+        lambda self: hash(_k_genuine))
+    _raising = _RaisingSpoof(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    _raising_issued = None
+    _raising_exc = None
+    try:
+        _raising_issued = issued(_raising)
+    except Exception as _exc:  # noqa: BLE001 — must not happen
+        _raising_exc = _exc
+    check("CF-P0-011-SEC(k7): a hostile __eq__ that raises "
+          "(with the genuine hash, so a hash-based membership "
+          "test WOULD invoke it) is never invoked — the "
+          "verifier returns False with no exception and no "
+          "__eq__ call",
+          _raising_exc is None and _raising_issued is False
+          and _eq_calls == [])
+    _raising_errs = None
+    _raising_export_exc = None
+    try:
+        _raising_errs = asset_policy.validate_private_voice_export(
+            nila_voice, trusted_context=_raising)
+    except Exception as _exc:  # noqa: BLE001 — must not happen
+        _raising_export_exc = _exc
+    check("CF-P0-011-SEC(k8): the same hostile object is "
+          "rejected by the real export consumer with no "
+          "unhandled exception and still no __eq__ call",
+          _raising_export_exc is None
+          and bool(_raising_errs)
+          and _eq_calls == [],
+          str(_raising_export_exc))
+    _dup_a = export_ctx()
+    _dup_b = export_ctx()
+    asset_policy.revoke_trusted_authorization_context(_dup_a)
+    check("CF-P0-011-SEC(k9): two genuine contexts with "
+          "identical fields are distinct issued objects, and "
+          "revoking one does not revoke the other",
+          _dup_a is not _dup_b
+          and issued(_dup_a) is True and issued(_dup_b) is True
+          and asset_policy.is_trusted_authorization_revoked(
+              _dup_a) is True
+          and asset_policy.is_trusted_authorization_revoked(
+              _dup_b) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_dup_a))
+          and not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_dup_b))
+    _same_id = object.__new__(
+        asset_policy.TrustedAuthorizationContext)
+    for _name, _value in dict(
+            actor_owner_id="owner-a",
+            actor_workspace_id="workspace-a", granted_by="owner-a",
+            scope="export voice-nila-001",
+            action="export_private_asset",
+            character_id="char-nila-001",
+            voice_profile_id="voice-nila-001",
+            provider_transmission_approved=False, expires_at=None,
+            authorization_id=_k_genuine.authorization_id,
+            revoked=False).items():
+        object.__setattr__(_same_id, _name, _value)
+    object.__setattr__(_same_id, "_frozen", True)
+    check("CF-P0-011-SEC(k10): an unissued object with the same "
+          "field values AND the same authorization_id as a "
+          "genuine context is rejected — only the exact issued "
+          "instance is trusted",
+          _same_id.authorization_id
+          == _k_genuine.authorization_id
+          and issued(_same_id) is False
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_same_id))
+          and issued(_k_genuine) is True)
+    _gc_before = len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+
+    def _issue_temporary_k():
+        return export_ctx()
+    _issue_temporary_k()
+    gc.collect()
+    check("CF-P0-011-SEC(k11): garbage collection removes the "
+          "dead entry — a context whose only reference is "
+          "dropped leaves the registry at its previous size, "
+          "and a live issued context is unaffected",
+          len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+          == _gc_before
+          and issued(_k_genuine) is True
+          and not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_k_genuine))
+    _guard_live = export_ctx()
+    _guard_key = id(_guard_live)
+    _guard_len = len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+
+    class _Weakrefable:
+        pass
+
+    _tmp = _Weakrefable()
+    _dead_ref = weakref.ref(_tmp)
+    del _tmp
+    gc.collect()
+    asset_policy._drop_issued_context(_guard_key, _dead_ref)
+    check("CF-P0-011-SEC(k12): id-reuse guard — dropping a dead "
+          "reference under a live context's id never removes "
+          "that live context's registration",
+          _dead_ref() is None
+          and issued(_guard_live) is True
+          and len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+          == _guard_len)
+    _stale_forged = asset_policy.TrustedAuthorizationContext(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    _stale_obj = _Weakrefable()
+    _stale_ref = weakref.ref(_stale_obj)
+    del _stale_obj
+    gc.collect()
+    _stale_key = id(_stale_forged)
+    _len_before_prune = len(
+        asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+    asset_policy._ISSUED_AUTHORIZATION_CONTEXTS[_stale_key] = (
+        _stale_ref)
+    _prune_result = issued(_stale_forged)
+    check("CF-P0-011-SEC(k13): a stale dead entry met during "
+          "verification is pruned and the check fails closed — "
+          "the forged object is rejected and the dead entry "
+          "is gone",
+          _stale_ref() is None
+          and _prune_result is False
+          and _stale_key not in
+          asset_policy._ISSUED_AUTHORIZATION_CONTEXTS
+          and len(asset_policy._ISSUED_AUTHORIZATION_CONTEXTS)
+          == _len_before_prune)
+    _k_matrix = []
+    for _label, _ctx, _want_ok in (
+            ("genuine", _k_genuine, True),
+            ("always-equal-spoof", _spoof, False),
+            ("constant-hash-spoof", _const_spoof, False),
+            ("raising-eq-spoof", _raising, False),
+            ("forged-sentinel", forged_sentinel, False),
+            ("revoked-genuine", _dup_a, False)):
+        _errs = asset_policy.validate_private_voice_export(
+            nila_voice, trusted_context=_ctx)
+        _k_matrix.append((not _errs) == _want_ok)
+    _k_provider = not asset_policy.validate_private_voice_export(
+        nila_voice, trusted_context=export_ctx(
+            provider_transmission_approved=True),
+        to_provider=True)
+    _k_provider_spoof = bool(
+        asset_policy.validate_private_voice_export(
+            nila_voice, trusted_context=_spoof, to_provider=True))
+    check("CF-P0-011-SEC(k14): consumer matrix — export and "
+          "provider-transmission accept only the genuine "
+          "factory-issued context and reject every spoof, the "
+          "sentinel-forged object and the revoked context",
+          all(_k_matrix) and _k_provider and _k_provider_spoof,
+          f"matrix={_k_matrix}")
+    try:
+        asset_policy.revoke_trusted_authorization_context(_spoof)
+        _spoof_revoke_raised = False
+    except TypeError:
+        _spoof_revoke_raised = True
+    try:
+        asset_policy.is_trusted_authorization_revoked(_spoof)
+        _spoof_check_raised = False
+    except TypeError:
+        _spoof_check_raised = True
+    check("CF-P0-011-SEC(k15): a forged subclass cannot revoke "
+          "a genuine context or inspect its revocation state — "
+          "both raise TypeError, and the genuine context stays "
+          "unrevoked",
+          _spoof_revoke_raised and _spoof_check_raised
+          and asset_policy.is_trusted_authorization_revoked(
+              _k_genuine) is False)
+    _k_prior = asset_policy.TrustedAuthorizationContext(
+        _boundary=asset_policy._AUTHORIZATION_BOUNDARY,
+        actor_owner_id="owner-a", actor_workspace_id="workspace-a",
+        granted_by="owner-a", scope="export voice-nila-001",
+        action="export_private_asset",
+        character_id="char-nila-001",
+        voice_profile_id="voice-nila-001")
+    try:
+        pickle.dumps(_k_genuine)
+        _k_pickle_raised = False
+    except TypeError:
+        _k_pickle_raised = True
+    _k_copy = copy.copy(_k_genuine)
+    try:
+        _k_genuine.scope = "forged scope"
+        _k_immutable_raised = False
+    except AttributeError:
+        _k_immutable_raised = True
+    _k_revoke_ctx = export_ctx()
+    asset_policy.revoke_trusted_authorization_context(_k_revoke_ctx)
+    check("CF-P0-011-SEC(k16): prior P0-009/P0-010 protections "
+          "still hold — sentinel construction unregistered, "
+          "__new__ unregistered, pickle refused, copy "
+          "unregistered, fields immutable, revocation "
+          "effective, and the genuine context still authorizes",
+          issued(_k_prior) is False
+          and issued(new_only) is False
+          and _k_pickle_raised
+          and issued(_k_copy) is False
+          and _k_immutable_raised
+          and asset_policy.is_trusted_authorization_revoked(
+              _k_revoke_ctx) is True
+          and bool(asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_k_revoke_ctx))
+          and not asset_policy.validate_private_voice_export(
+              nila_voice, trusted_context=_k_genuine))
 
     print(f"test_private_voice_security: "
           f"{'PASS' if not failures else 'FAIL'} "
