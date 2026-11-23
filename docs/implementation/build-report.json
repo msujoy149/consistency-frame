@@ -6,9 +6,9 @@
   "repository_url": "https://github.com/msujoy149/consistency-frame",
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
-  "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "ede564bcb187657104f9682839830213ac03fe43",
-  "github_branch_head": "232a714b29b8a2c09a79acbf4dbc82e1035d099b",
+  "branch": "feat/cf-p1-001-trusted-session",
+  "head_commit": "c36bfaaee9cd9c67becef7205addfa4b5f3d221d",
+  "github_branch_head": "8fc11feec232102c2a3dfaa90c3452d2186c472e",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -434,6 +434,20 @@
     {
       "id": "CF-P0-SEC-METADATA-07",
       "command": "bash tests/test_installer_metadata_failure.sh failed-no-backup",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-001-AUTHZ",
+      "command": "python3 tests/test_session_authorization.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-001-SESSION",
+      "command": "python3 tests/test_local_session_runtime.py",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"
