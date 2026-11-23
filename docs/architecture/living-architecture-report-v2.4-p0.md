@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-22 19:46 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-22 20:34 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p0-safe-foundations`
-**Head commit:** `aeae3333773c3aa765bdd79bb9d709032ac71353`
-**GitHub branch head:** `2e4b8b517735e2503cd937c95c9f509d7ffa00db` (remote head of `feat/cf-p0-safe-foundations` at
+**Head commit:** `72e1c4af77324904ed0baec45aaef9041cfe8032`
+**GitHub branch head:** `33dc78b88bba9cc83ecfc35c7b28a3ef3de7f90b` (remote head of `feat/cf-p0-safe-foundations` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -196,6 +196,7 @@ docs/implementation/CF-WO-P0-003-corrections.md
 docs/implementation/CF-WO-P0-004-corrections.md
 docs/implementation/CF-WO-P0-005-corrections.md
 docs/implementation/CF-WO-P0-006-corrections.md
+docs/implementation/CF-WO-P0-007-corrections.md
 docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
@@ -292,6 +293,8 @@ tests/fixtures/shot-plan-valid-human-bird.json
 tests/fixtures/shot-plan-valid.json
 tests/fixtures/sound-asset-valid.json
 tests/fixtures/temporary-asset-use.json
+tests/fixtures/timeline-valid-v23.json
+tests/fixtures/timeline-valid-v25-multicharacter.json
 tests/fixtures/visual-style-profile-valid.json
 tests/fixtures/voice-profile-ai-generated.json
 tests/fixtures/voice-profile-user-recording.json
@@ -314,6 +317,7 @@ tests/test_registries.py
 tests/test_reports.py
 tests/test_routing.py
 tests/test_schemas.py
+tests/test_timeline_manifest.py
 ```
 
 ## Tests and CI evidence — status: PASS
@@ -346,6 +350,7 @@ tests/test_schemas.py
 - `P0-PRIVACY` — python3 tests/test_private_overlay.py — **PASS** (exit 0)
 - `CF-P0-006-AC-REG` — python3 tests/test_character_registration.py — **PASS** (exit 0)
 - `CF-P0-006-AC-DIR` — python3 tests/test_production_direction.py — **PASS** (exit 0)
+- `CF-P0-007-AC-TIMELINE` — python3 tests/test_timeline_manifest.py — **PASS** (exit 0)
 - `CF-INT-014` — bash tests/test_installer.sh — **PASS** (exit 0)
 - `CF-INT-015` — bash tests/test_installer.sh — **PASS** (exit 0)
 - `CF-INT-015` — bash tests/test_installer_security.sh — **PASS** (exit 0)
@@ -368,21 +373,21 @@ tests/test_schemas.py
 
 CI workflow: `.github/workflows/p0-ci.yml` (runs on pull requests and
 pushes to the feature branch). Remote CI PASSED on
+`33dc78b88bba9cc83ecfc35c7b28a3ef3de7f90b` — 2/2 checks, push run #83
+https://github.com/msujoy149/consistency-frame/actions/runs/45063530337
+and PR run #84
+https://github.com/msujoy149/consistency-frame/actions/runs/45063535304
+(draft PR https://github.com/msujoy149/consistency-frame/pull/1).
+The `p0-test-results` artifact (784 bytes, ID 14770342860, digest
+sha256:017c91538a628aeda58eaada9b0563f0bab43f62e4abf42a200d6011be73cb44)
+holds 47 recorded test-run entries, 35 distinct test IDs, 28 distinct
+command strings, all PASS; its `last-run.json` is byte-for-byte
+identical to the P0-006 ZIP's `tests/last-run.json`. Historical
+record (P0-005): remote CI PASSED on
 `24d2e6274f1fe2ee42b86c20ecf083e0d4b3c4d4` — 2/2 checks, push run #47
 https://github.com/msujoy149/consistency-frame/actions/runs/45059388184
 and PR run #48
-https://github.com/msujoy149/consistency-frame/actions/runs/45059393245
-(draft PR https://github.com/msujoy149/consistency-frame/pull/1).
-The `p0-test-results` artifact (743 bytes, digest
-sha256:379baeedcb76ebc63d34a1c898f8477038c0d5afdff17894ba5eae7c59669b54)
-holds 45 recorded test-run entries, 33 distinct test IDs, 26 distinct
-command strings, all PASS; its `last-run.json` is byte-for-byte
-identical to the P0-005 ZIP's `tests/last-run.json`. Historical
-record (P0-004): remote CI PASSED on
-`88791231caa03e8fb75a3499beeb21d1dd64a906` — 2/2 checks, push run #37
-https://github.com/msujoy149/consistency-frame/actions/runs/45055643056
-and PR run #38
-https://github.com/msujoy149/consistency-frame/actions/runs/45055649820.
+https://github.com/msujoy149/consistency-frame/actions/runs/45059393245.
 Historical record (P0-002): remote CI PASSED on
 `fcf311ef79c5f10a4248f026a5f667109c584831` — 2/2 checks, run
 https://github.com/msujoy149/consistency-frame/actions/runs/45046203236.
@@ -450,4 +455,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-22 19:46 UTC.
+- Report generated: 2026-11-22 20:34 UTC.

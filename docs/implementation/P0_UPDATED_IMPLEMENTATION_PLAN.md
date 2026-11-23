@@ -226,12 +226,12 @@ permissions — the old single gate conflated them.
   `tests/test_schemas.py` (the restricted schema subset cannot express
   conditional-required). `mutates_canonical_skills` stays `enum: [false]`.
 
-## 9. P0-006 — Animation-first, style-agnostic production architecture (in progress)
+## 9. P0-006 — Animation-first, style-agnostic production architecture (complete)
 
 Work order CF-WO-P0-006 + Mandatory Addendum C (received 2026-11-22).
 Part A (evidence correction) is done and committed (local head
-`2235438`); Parts B–L below are in progress on this branch, each
-owned by its part agent, and are integrated by the coordinator.
+`2235438`); Parts B–L are complete on this branch (local head
+`f7fd0d5`, 9 commits), integrated by the coordinator.
 The authoritative reference is the new canonical document
 `docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md`; the
 full corrections record is
@@ -318,3 +318,46 @@ full corrections record is
 - `docs/06-installation.md` is unchanged by the docs part: it does
   not describe the product as cartoon-only (it lists the explainer
   as one skill among 15), so no correction was needed there.
+
+## 10. P0-007 — Final autonomous completion (in progress)
+
+Work order CF-WO-P0-007 (received 2026-11-22). A contract +
+validation correction round on the same branch; it completes the
+P0-006 architecture rather than starting new work. The full record
+is `docs/implementation/CF-WO-P0-007-corrections.md`.
+
+- **A — Timeline contract.** `schemas/timeline-manifest.json`
+  upgraded to v2.5 (additive): project/timeline identity, video-clip
+  + shot bindings, audio-clip + dialogue bindings, synchronization
+  groups, and real cross-reference validation. Valid v2.3 timelines
+  still pass; invalid v2.5 relationships fail.
+- **B — Private character and voice ownership.** Structured
+  `ownership` (`owner_id`, `workspace_id`, `visibility`,
+  `sharing`) in character registration and voice profiles; the
+  production resolver requires BOTH the Character ID + Voice
+  Profile binding AND matching ownership.
+- **C — Conditional v2.5 voice validation.** JSON Schema and the
+  Python validators must agree; the v2.5 rules differ by source
+  (user-recorded vs AI-generated) and approval state, enforced by
+  `scripts/asset_policy.py` because the restricted schema subset
+  cannot express conditional requirements. v2.3 profiles remain
+  valid under the legacy contract.
+- **D — Real animal vs CGI animal.** Speaking-bird fixtures
+  corrected to `cgi-animal`; a genuine captured animal is never
+  automatically given fictional dialogue or a speaking voice.
+- **E — Companion licensing.** OmniVoice model weights are CC-BY-NC
+  (non-commercial): technically capable but NOT approved for
+  commercial production. No verified commercial voice provider
+  exists; the commercial voice adapter stays unsupported.
+- **F — Documentation reconciled** (README, AGENTS.md, docs/07,
+  docs/19, the canonical animation-scope document, the P0-006
+  corrections record, BUILD_REPORT_P0, this plan, schemas/README,
+  and the relevant skills/architecture files). The first-run
+  registration UI is NOT claimed to exist — P0-007 is principally
+  a contract + validation correction round.
+- **G/H — Tests, validation, regression, reports, manifest,
+  provenance** per the work order (§9–§10): the full suite must be
+  green, registries regenerated if canonical data changed, and
+  reports/manifest/checksums regenerated with the live GitHub head.
+- P0-007 does not start P1, does not merge, and does not change the
+  PR Draft state; the parent handles delivery after verifying CI.

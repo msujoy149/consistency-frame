@@ -32,6 +32,23 @@
 # (see docs/06-installation.md). Nothing in this registry implies the
 # companions are present after a core-only install.
 #
+# COMMERCIAL-USE RULE (Correction E, 2026-11-22): technical capability is
+# NOT commercial approval. A companion/model can be technically capable
+# (exercised in a recorded run) and still NOT approved for commercial
+# production. `commercial_use_approved: false` means "not cleared in this
+# registry" — either because the licence forbids commercial use
+# (`commercial_use_reason: noncommercial_licence`, e.g. CC-BY-NC weights)
+# or because no reviewed commercial clearance exists
+# (`commercial_use_reason: unverified` — a permissive-looking upstream
+# metadata label is not a clearance; see
+# components/voicestudio/backend/config/model_licenses.json, whose scope
+# note states "No commercial clearance is asserted by the initial
+# inventory"). Monetised/commercial YouTube production must use a voice
+# provider whose licence is verified to cover commercial use; no such
+# provider is verified in this registry, so the commercial voice adapter
+# is UNSUPPORTED until one is. Never mark a capability
+# `production_verified` without a production record (expect zero).
+#
 # Companion pins (must match setup.sh): VoiceStudio
 # 2f2f5a9b0e982c6147efc6baaeae62936f29b79b, OpenMontage
 # fecb9a1e3cc23ef84de30b272059457a427f16f8.
@@ -49,6 +66,41 @@ companions:
     version_evidence: components/voicestudio/CHANGELOG.md (## [0.5.8] — 2026-11-12); backend/core/version.py _FALLBACK_VERSION "0.5.8"
     licence: AGPL-3.0
     licence_evidence: components/voicestudio/LICENSE (GNU AFFERO GENERAL PUBLIC LICENSE v3)
+    licence_scope: "VoiceStudio application code ONLY (Electron app, FastAPI backend, CLI, build/packaging files). Commercial and internal business use of the application itself is permitted under AGPL-3.0 (see components/voicestudio/LICENSE-NOTICE.md). Model weights, tokenizers and other third-party assets keep their OWN terms; the application licence does not grant or summarise rights under those separate terms."
+    commercial_use_approved: false
+    commercial_use_reason: noncommercial_licence
+    commercial_use_note: "No voice model in this companion is cleared for commercial production. The default model (k2-fsa/OmniVoice) has CC-BY-NC weights — non-commercial only — so monetised/commercial YouTube production MUST NOT use it. No commercially usable voice provider has been verified in this registry; the commercial voice adapter is unsupported until one is. See `models` below."
+    models:
+      - model: k2-fsa/OmniVoice
+        role: Default TTS model weights — downloaded from Hugging Face at install, never bundled in the repo
+        model_version: pinned revision c5fdb5ccb189668d56333f77ba2629f4cd7535f4 (per components/voicestudio/backend/config/model_licenses.json; runtime pin in backend/services/hf_revisions.py)
+        code_licence: Apache-2.0
+        weights_licence: CC-BY-NC (CC version unspecified on the model card)
+        commercial_use_approved: false
+        commercial_use_reason: noncommercial_licence
+        commercial_use_evidence: "Model card licence section, https://huggingface.co/k2-fsa/OmniVoice — 'Our code is released under the Apache 2.0 License. The pre-trained model is licensed under the CC-BY-NC due to constraints from its training data (e.g., Emilia).' (fetched 2026-11-22). Corroborated locally: components/voicestudio/LICENSE-NOTICE.md ('The default k2-fsa/OmniVoice model card identifies its code as Apache-2.0 and pretrained weights as CC-BY-NC'); components/voicestudio/backend/config/model_licenses.json entry k2-fsa/OmniVoice (license 'CC-BY-NC (version unspecified); Higgs Audio 2; Meta Llama 3', commercial_use false, review_status noncommercial, commercial_inference restricted, commercial_outputs unknown)."
+      - model: Serveurperso/OmniVoice-GGUF
+        role: GGUF quantised variant of k2-fsa/OmniVoice, used by the omnivoice_gguf engine (pinned revision 361609388ae572a820d085185bbbe2a2aac4b30e; runtime omnivoice.cpp 040c8b344d8c670ce1475194751d119b5ef82c78, per components/voicestudio/backend/engines/omnivoice_gguf/quant_map.json)
+        model_version: pinned revision 361609388ae572a820d085185bbbe2a2aac4b30e (per quant_map.json _meta.source_commit_sha)
+        code_licence: Apache-2.0 (upstream OmniVoice code; GGUF runtime omnivoice.cpp is MIT)
+        weights_licence: CC-BY-NC-4.0
+        commercial_use_approved: false
+        commercial_use_reason: noncommercial_licence
+        commercial_use_evidence: "components/voicestudio/backend/config/model_licenses.json entry Serveurperso/OmniVoice-GGUF (license 'CC-BY-NC-4.0; Higgs Audio 2; Meta Llama 3', commercial_use false, review_status noncommercial, commercial_inference restricted); components/voicestudio/docs/model-credits.md ('its metadata names CC BY-NC 4.0'); components/voicestudio/docs/engines/omnivoice-gguf.md (GPU prompt 'says that the GGUF model is licensed for noncommercial use only'). Live Hugging Face page https://huggingface.co/Serveurperso/OmniVoice-GGUF could NOT be fetched on 2026-11-22 (HTTP 429 after 3 attempts) — the CC-BY-NC-4.0 record rests on the three local sources above, not on a live fetch."
+        licence_conflict_note: "CONFLICT, unresolved in favour of the restrictive record: components/voicestudio/backend/engines/omnivoice_gguf/README.md claims the GGUF weights are Apache-2.0 ('Same license as the upstream k2-fsa/OmniVoice it derives from'). That claim is contradicted by model_licenses.json, model-credits.md and docs/engines/omnivoice-gguf.md (all CC-BY-NC / noncommercial only), and the upstream VoiceStudio README now says only 'review the derivative model terms' for the GGUF engine. The Apache-2.0 claim for the GGUF weights is NOT adopted here; the noncommercial record governs until primary upstream evidence proves otherwise."
+      - model: bundled omnivoice Python package (Han Zhu)
+        role: Underlying TTS model code bundled with VoiceStudio
+        code_licence: Apache-2.0
+        weights_licence: not_applicable — code package only; weights are the k2-fsa/OmniVoice weights above
+        commercial_use_approved: false
+        commercial_use_reason: unverified
+        commercial_use_evidence: "components/voicestudio/LICENSE-NOTICE.md ('The bundled omnivoice/ Python package — the underlying TTS model by Han Zhu — is separately licensed under Apache License 2.0'). The Apache-2.0 code licence does not clear the CC-BY-NC weights the code loads."
+      - model: OmniVoice audio tokenizer (Higgs Audio 2 / Meta Llama 3)
+        role: Tokenizer component of the OmniVoice weights
+        weights_licence: "Separate Boson Higgs Audio 2 and Meta Llama community terms (see the model's audio_tokenizer/LICENSE)"
+        commercial_use_approved: false
+        commercial_use_reason: unverified
+        commercial_use_evidence: "components/voicestudio/LICENSE-NOTICE.md ('Its audio_tokenizer/LICENSE contains separate Boson Higgs Audio 2 and Meta Llama community terms'); components/voicestudio/backend/config/model_licenses.json (component_closure incomplete; commercial_outputs unknown; open question: 'Governing terms at installed revision and relevant required components'). No commercial clearance for the tokenizer chain exists in this registry."
     interfaces:
       - name: HTTP API (FastAPI)
         evidence: components/voicestudio/backend/main.py (routers in backend/api/routers/)
@@ -72,11 +124,17 @@ companions:
         evidence: components/voicestudio/backend/engines/omnivoice_gguf/, omnivoice_subprocess/; backend/api/routers/generation.py, tts_stream.py
         evidence_level: exercised_recorded_run
         run_reference: "2026-11-12/13 — OmniVoice model (3,267,470,260 B, CC-BY-NC, Hugging Face download, never bundled) generated Bengali, English and Hindi speech in the recorded runs; user verdict on Bengali output 'very beautiful, very natural', recorded in the project record (2026-11-12/13)."
+        commercial_use_approved: false
+        commercial_use_reason: noncommercial_licence
+        commercial_use_note: "TECHNICALLY CAPABLE (exercised in recorded runs) but NOT COMMERCIALLY APPROVED: the OmniVoice weights it runs on are CC-BY-NC (see companion `models`). Must NOT be used for monetised/commercial YouTube production. Non-commercial / test use only until a verified commercial voice provider exists."
         notes: OmniVoice model (3,267,470,260 B, CC-BY-NC, Hugging Face download, never bundled) generated Bengali, English and Hindi speech in the recorded 2026-11-12/13 runs; user verdict on Bengali output "very beautiful, very natural". Instruct tags are FIXED (gender + age + pitch); free-form instruct text is unsupported.
       - capability: Zero-shot voice cloning from reference audio
         evidence: components/voicestudio/backend/mcp_server.py (clone_voice); backend/api/routers/voice_convert.py, profiles.py
         evidence_level: exercised_recorded_run
         run_reference: "2026-11-13 — sound test: three unnamed test voices (9-year-old girl, 30-year-old man, 70-year-old woman) cloned and used across Bengali/English/Hindi; user verdict 'Good', recorded in the project record (2026-11-13)."
+        commercial_use_approved: false
+        commercial_use_reason: noncommercial_licence
+        commercial_use_note: "Technically capable (exercised in the recorded sound test) but NOT commercially approved: cloning runs on the CC-BY-NC OmniVoice weights. Same restriction as TTS above."
         notes: Three unnamed test voices (9-year-old girl, 30-year-old man, 70-year-old woman) cloned and used across Bengali/English/Hindi in the 2026-11-13 sound test; user verdict "Good". Cloning needs rights/consent for a real person's voice (see schemas/voice-profile.json).
       - capability: Voice design from a text description
         evidence: components/voicestudio/backend/mcp_server.py (describe_voice, design_voice); backend/api/routers/describe_voice.py, archetypes.py, personalities.py
@@ -105,6 +163,9 @@ companions:
       - capability: Additional TTS engines (CosyVoice, IndexTTS, DotsTTS, MossTTS, PocketTTS, Supertonic, VoxCPM, Confucius4, MingTTS, Audiocpp)
         evidence: components/voicestudio/backend/engines/ (cosyvoice_gguf, cosyvoice_subprocess, indextts, dots_tts, moss_tts_nano_subprocess, moss_tts_v15, pockettts, supertonic3, voxcpm2_subprocess, confucius4, ming_tts, audiocpp)
         evidence_level: present_locally
+        commercial_use_approved: false
+        commercial_use_reason: unverified
+        commercial_use_note: "NOT commercially approved: none of these engines has a reviewed commercial clearance in this registry. components/voicestudio/backend/config/model_licenses.json lists every model with commercial_use false and review_status unreviewed (metadata labels only, e.g. apache-2.0 / mit / cc-by-4.0) except the noncommercial ones (k2-fsa/OmniVoice, Serveurperso/OmniVoice-GGUF, facebook/nllb-200-distilled-600M, mlx-community/Llama-OuteTTS-1.0-1B-4bit, csukuangfj2/sherpa-onnx-pocket-tts-int8-2026-01-26); its scope note states 'No commercial clearance is asserted by the initial inventory'. A permissive-looking metadata label is NOT permission — each engine's weights, tokenizer and component chain must be reviewed per model before any commercial use. No commercially usable alternative was verified in this task."
         notes: Engine directories present. Only OmniVoice was exercised in recorded runs; the other engines are NOT run-verified here.
       - capability: Speech in 646 languages
         evidence: 'components/voicestudio/README.md headline ("Clone, design, dub, dictate, transcribe and narrate in 646 languages")'
@@ -122,6 +183,9 @@ companions:
       - VoiceStudio is not a video generator and not a video editor.
       - No language count beyond Bengali/English/Hindi is verified here.
       - No cloud or hosted VoiceStudio service is used by the Brain.
+      - VoiceStudio/OmniVoice is NOT approved for commercial production: the bundled OmniVoice weights are CC-BY-NC (non-commercial only). Monetised/commercial YouTube production must NOT use OmniVoice-generated voices. Technical capability (recorded runs) is not commercial approval.
+      - No commercially usable voice provider is verified in this registry. The commercial voice adapter is unsupported until a provider with a verified commercial licence is recorded here.
+      - No capability in this registry is production_verified: no production run exists in this account.
     rules:
       - The Brain directs VoiceStudio by instruction (script, voice profile ID, language, fixed tags + seed); it never edits VoiceStudio's internal code.
       - Voice reference audio lives in the private overlay; only a relative pointer + optional SHA-256 goes in a schema record.
@@ -137,6 +201,10 @@ companions:
     version: not_stated_in_local_copy
     licence: AGPL-3.0
     licence_evidence: components/openmontage/LICENSE (GNU AFFERO GENERAL PUBLIC LICENSE v3); README badge "license-AGPLv3"
+    licence_scope: "OpenMontage application code only (AGPL-3.0; commercial use of the application itself is permitted under AGPL terms — see components/openmontage/LICENSE). OpenMontage bundles no voice/video model weights, so it carries no model-weight noncommercial restriction of its own. Paid third-party provider routes are separate commercial services with their own terms, accounts and keys (see the paid-routes capability below)."
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    commercial_use_note: "The application code itself is AGPL-3.0, but no production path through OpenMontage is commercially approved in this registry: no paid provider route has been exercised or had its commercial terms verified here, and no rendered video from OpenMontage was produced in this account. A paid call needs the user's explicit approval and keys, and its provider's own terms must be checked at production time."
     interfaces:
       - name: Agent contract (AGENT_GUIDE.md / PROJECT_CONTEXT.md)
         evidence: components/openmontage/AGENT_GUIDE.md, PROJECT_CONTEXT.md
@@ -182,6 +250,9 @@ companions:
       - capability: Paid third-party provider routes (image/video/TTS/music generation via fal, Kling, Veo, Sora, OpenAI, Gemini, ElevenLabs, Lyria, LTX and others)
         evidence: components/openmontage/docs/PROVIDERS.md (provider guide, incl. "No live paid O3 generation was validated")
         evidence_level: present_locally
+        commercial_use_approved: false
+        commercial_use_reason: unverified
+        commercial_use_note: "NOT commercially approved in this registry: no live paid call was made, and no provider's commercial terms were verified here. Each route is a separate paid commercial service — its own account, keys, pricing and terms apply, and the user's explicit approval is required per call. A named provider in this list is not a verified commercial provider; do not present any of them as approved until its terms are checked and recorded."
         notes: Documented in the companion's provider guide only. Every route needs its own API key and is a paid call. No live paid call was made in this account. The Brain must never claim these as free, local, or tested. A paid call needs the user's explicit approval and keys.
       - capability: Free stock media routes (Pexels, Pixabay) and free-tier TTS (Google TTS, Piper local TTS)
         evidence: 'components/openmontage/docs/PROVIDERS.md ("Quick Start: What Should I Set Up?")'
@@ -196,6 +267,7 @@ companions:
       - OpenMontage is not a voice engine and not a character registry.
       - No paid provider route is verified, free, or local.
       - No rendered video from OpenMontage was produced in this account.
+      - No paid provider route is commercially approved in this registry: each provider's commercial terms are unverified here and must be checked before any commercial production use.
     rules:
       - The Brain directs OpenMontage by instruction (pipeline + script + plan contracts); it never edits OpenMontage's internal code.
       - All production goes through a pipeline (Rule Zero); the Brain does not improvise outside the pipeline system.
