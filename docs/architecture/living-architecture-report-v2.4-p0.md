@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-24 06:33 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-24 07:09 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-001-trusted-session`
-**Head commit:** `412ce0632c85991dd88a2726f5e88ab3e9efd35d`
-**GitHub branch head:** `1d11b1b8481341c7147d61f622d2ca826f08a6d0` (remote head of `feat/cf-p1-001-trusted-session` at
+**Head commit:** `dd7cacbf6f712c8e194e9906a628683d0c46a3dd`
+**GitHub branch head:** `2671559a2932096981e961c3b660d78924e3359f` (remote head of `feat/cf-p1-001-trusted-session` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -480,4 +480,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-24 06:33 UTC.
+- Report generated: 2026-11-24 07:09 UTC.
