@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-001-trusted-session",
-  "commit": "dd7cacbf6f712c8e194e9906a628683d0c46a3dd",
-  "github_branch_head": "2671559a2932096981e961c3b660d78924e3359f",
+  "commit": "15ebfc7c7ea9978c3248abbccb4dc18a6079dadd",
+  "github_branch_head": "d7e1c9be715c4fff7695e2e567fa333be03cb69a",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
@@ -122,7 +122,7 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "96fa42906e6033b4a443a8fdb9ea294a09af352154d7793f9a83e96e26643ff8",
+      "sha256": "4ab9a64be16436438efd45a2a5f66a5948f91f2a4b94e1e6a8f6795a025cdcef",
       "bytes": 24863
     },
     {
@@ -132,8 +132,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "81b9e5b9df94f6dabd6219a007404a7435d26a9e27c5a48db857026f41d9cda8",
-      "bytes": 47777
+      "sha256": "a72abef76867fa1c628b1271ec6d63804252596d5021643259e4983bba0cefdc",
+      "bytes": 47879
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -207,8 +207,8 @@
     },
     {
       "path": "docs/implementation/CF-WO-P1-001-corrections.md",
-      "sha256": "527bd97a2b9417c35893560fd1092e4f3d171b5b7c7b7c98df6f41488da25817",
-      "bytes": 76302
+      "sha256": "05ea7da3ff6b6fd1fe43c4a8a92ed9a724c2eb5d249b3e6ddbe7bbffb63b3705",
+      "bytes": 83861
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
@@ -217,7 +217,7 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "6fd5f83e28acdf05909704b4d412a00f15c24a47bef2fcdb533b2f215fc5947f",
+      "sha256": "bcb2599a4dd4c8f5de6b5b3fdda932e6cd4bfa9e9b598fd3f649e17711344c52",
       "bytes": 19073
     },
     {
@@ -1025,5 +1025,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-24T07:09:33Z"
+  "generated_at_utc": "2026-11-24T07:11:40Z"
 }
