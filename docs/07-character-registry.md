@@ -465,3 +465,36 @@ regression suite is `tests/test_private_voice_security.py`
   No context, no export. No default sharing, no automatic
   provider transmission, and permission for local production use
   never implies permission to export.
+
+## Local application session (P1-001)
+
+The P0-008 note above — "the P1 app/session runtime must supply
+the actor identity at the boundary" — is now built:
+`runtime/` (see `docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md`).
+
+- **First run** generates a stable, opaque `owner_id` and
+  `workspace_id` and stores them in `profile.json` under the
+  platform user data root (Linux `XDG_DATA_HOME` else
+  `~/.local/share`, macOS `~/Library/Application Support`,
+  Windows `%LOCALAPPDATA%`) — never in the repository. A
+  corrupt profile fails closed and is never silently replaced.
+- **Sessions are process-bound:** `start_session()` mints a
+  fresh session ID per application run, bound to the profile's
+  owner and workspace. Only the exact issued object is ever
+  accepted (`is_active_session` — exact type plus an
+  `id()`-keyed weak-reference registry checked with `is`, the
+  P0-011 pattern); forged, copied, subclassed or deserialized
+  sessions are rejected, and sessions are never written to disk.
+- **Authorization takes identity only from the session:**
+  `runtime/authorization.py::authorize` delegates every decision
+  to the P0 `authorize_action`; there is no caller-provided
+  identity parameter. Private voice export is issued only
+  through the P0 factory, after explicit owner approval, bound
+  to the exact Character/Voice IDs with a short finite expiry;
+  provider transmission needs its own distinct approval; closing
+  a session revokes the contexts it issued.
+- **This is a local OS-user boundary only:** it does not prove
+  who operates the application, and it does not protect against
+  another process already controlling the same OS account. No
+  server, cloud identity, password, or credential vault exists
+  here. Full record: `docs/implementation/CF-WO-P1-001-corrections.md`.

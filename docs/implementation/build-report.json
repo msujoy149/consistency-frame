@@ -6,9 +6,9 @@
   "repository_url": "https://github.com/msujoy149/consistency-frame",
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
-  "branch": "feat/cf-p0-safe-foundations",
-  "head_commit": "ede564bcb187657104f9682839830213ac03fe43",
-  "github_branch_head": "232a714b29b8a2c09a79acbf4dbc82e1035d099b",
+  "branch": "feat/cf-p1-001-trusted-session",
+  "head_commit": "bfd9f35c7b47da0432dad22877f23e6fed6afef6",
+  "github_branch_head": "01c59f6b0ecd48f3dc9555f3f5bbcf60174d17bc",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -51,14 +51,19 @@
     "docs/implementation/CF-WO-P0-012-corrections.md",
     "docs/implementation/CF-WO-P0-014-corrections.md",
     "docs/implementation/CF-WO-P0-015-corrections.md",
+    "docs/implementation/CF-WO-P1-001-corrections.md",
     "docs/implementation/CHECKSUMS.txt",
     "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
     "docs/implementation/build-report.json",
+    "docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md",
     "registry/adapters.json",
     "registry/features.json",
     "registry/skills.json",
     "registry/workflows.json",
     "release-manifest.json",
+    "runtime/__init__.py",
+    "runtime/authorization.py",
+    "runtime/local_session.py",
     "schemas/README.md",
     "schemas/approval.json",
     "schemas/build-report.json",
@@ -165,6 +170,7 @@
     "tests/test_installer_metadata_failure.sh",
     "tests/test_installer_security.sh",
     "tests/test_installer_status.sh",
+    "tests/test_local_session_runtime.py",
     "tests/test_modes.py",
     "tests/test_performance_semantics.py",
     "tests/test_private_overlay.py",
@@ -174,6 +180,7 @@
     "tests/test_reports.py",
     "tests/test_routing.py",
     "tests/test_schemas.py",
+    "tests/test_session_authorization.py",
     "tests/test_timeline_manifest.py"
   ],
   "ci": {
@@ -434,6 +441,20 @@
     {
       "id": "CF-P0-SEC-METADATA-07",
       "command": "bash tests/test_installer_metadata_failure.sh failed-no-backup",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-001-AUTHZ",
+      "command": "python3 tests/test_session_authorization.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-001-SESSION",
+      "command": "python3 tests/test_local_session_runtime.py",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"

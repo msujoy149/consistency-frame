@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-23 15:24 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-24 07:34 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -22,9 +22,9 @@ video production/editing). See
 
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
-**Feature branch:** `feat/cf-p0-safe-foundations`
-**Head commit:** `ede564bcb187657104f9682839830213ac03fe43`
-**GitHub branch head:** `232a714b29b8a2c09a79acbf4dbc82e1035d099b` (remote head of `feat/cf-p0-safe-foundations` at
+**Feature branch:** `feat/cf-p1-001-trusted-session`
+**Head commit:** `bfd9f35c7b47da0432dad22877f23e6fed6afef6`
+**GitHub branch head:** `01c59f6b0ecd48f3dc9555f3f5bbcf60174d17bc` (remote head of `feat/cf-p1-001-trusted-session` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -204,14 +204,19 @@ docs/implementation/CF-WO-P0-011-corrections.md
 docs/implementation/CF-WO-P0-012-corrections.md
 docs/implementation/CF-WO-P0-014-corrections.md
 docs/implementation/CF-WO-P0-015-corrections.md
+docs/implementation/CF-WO-P1-001-corrections.md
 docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
+docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md
 registry/adapters.json
 registry/features.json
 registry/skills.json
 registry/workflows.json
 release-manifest.json
+runtime/__init__.py
+runtime/authorization.py
+runtime/local_session.py
 schemas/README.md
 schemas/approval.json
 schemas/build-report.json
@@ -318,6 +323,7 @@ tests/test_installer_manifest_security.sh
 tests/test_installer_metadata_failure.sh
 tests/test_installer_security.sh
 tests/test_installer_status.sh
+tests/test_local_session_runtime.py
 tests/test_modes.py
 tests/test_performance_semantics.py
 tests/test_private_overlay.py
@@ -327,6 +333,7 @@ tests/test_registries.py
 tests/test_reports.py
 tests/test_routing.py
 tests/test_schemas.py
+tests/test_session_authorization.py
 tests/test_timeline_manifest.py
 ```
 
@@ -376,6 +383,8 @@ tests/test_timeline_manifest.py
 - `CF-P0-014-INST` — bash tests/test_installer_status.sh — **PASS** (exit 0)
 - `CF-P0-014-PIN` — bash tests/test_installer_status.sh — **PASS** (exit 0)
 - `CF-P0-015-WT` — bash tests/test_installer_status.sh — **PASS** (exit 0)
+- `CF-P1-001-SESSION` — python3 tests/test_local_session_runtime.py — **PASS** (exit 0)
+- `CF-P1-001-AUTHZ` — python3 tests/test_session_authorization.py — **PASS** (exit 0)
 - `CF-P0-ATOMIC-001` — python3 tests/test_atomic_write.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-report.py — **PASS** (exit 0)
@@ -471,4 +480,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-23 15:24 UTC.
+- Report generated: 2026-11-24 07:34 UTC.

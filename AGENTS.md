@@ -408,6 +408,43 @@ step-by-step order for every video, in §7).
   `authorization_id`. Full record:
   `docs/implementation/CF-WO-P0-011-corrections.md`.
 
+## P1-001 Trusted local application session (2026-11-23)
+
+- **The P0 policy finally has an actor.** `runtime/` is the
+  first P1 runtime component: first-run installation identity
+  (stable opaque owner/workspace IDs in `profile.json` under the
+  platform user data root — never in the repo; a corrupt profile
+  fails closed and is never silently replaced), process-bound
+  `LocalSession` objects (fresh ID per run; only the exact issued
+  object is accepted, verified by exact type plus an `id()`-keyed
+  weak-reference registry checked with `is`, the P0-011 pattern),
+  and an authorization bridge that takes identity ONLY from a
+  verified session and delegates every decision to the P0
+  `authorize_action` — there is no caller-provided identity
+  parameter. Full record:
+  `docs/implementation/CF-WO-P1-001-corrections.md`, and the
+  trust boundary in
+  `docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md`.
+- **Private voice export is issued, never asserted.** Export
+  authorization goes through the P0 factory only, after explicit
+  owner approval (a narrow callback — no graphical UI exists),
+  bound to the exact Character/Voice IDs with a short finite
+  expiry (5 minutes by default, at most 1 hour). Provider
+  transmission is a separate permission with its own distinct
+  approval. Closing a session revokes the contexts it issued.
+- **The boundary is local-OS-user only.** It does not prove who
+  operates the application and does not protect against another
+  process already controlling the same OS account. No server,
+  cloud identity, password, or credential vault exists here, and
+  none is to be built as part of this runtime. P0 authorization
+  behaviour is unchanged (`tests/test_private_voice_security.py`
+  passes unmodified); the runtime adds a caller, not a second
+  policy.
+- P1-001 does not build a graphical UI, character registration
+  UI, voice/video generation, provider calls, the skill routing
+  engine, script-to-performance generation, or the
+  script-to-finished-video pipeline.
+
 ## Rules that always apply
 
 - A character's identity (face, eyes, nose, mouth, hands, feet) is
