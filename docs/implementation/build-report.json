@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p1-001-trusted-session",
-  "head_commit": "53db5f7df397ed871a84fea7bffb17f8c0c5805a",
-  "github_branch_head": "213759c69d06f471c5b69c687b93fffa9747ee89",
+  "head_commit": "1dcd00182581c9f0fe27406ead0bc9655af2724f",
+  "github_branch_head": "2f66bd21001c8d0d0dce7b571539555bf658c475",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",

@@ -843,7 +843,17 @@ as in P1-001/R1):
   server, API, database, cloud identity, graphical UI, or
   companion changes.
 
-### 13.7 Native Windows CI results — FILLED from live PR run #223
+### 13.7 Native Windows CI results — FILLED from live PR run #223 (HISTORICAL)
+
+**F1 correction (2026-11-23, §13.12):** this section records PR run
+#223 faithfully — it ran against head
+`f970d5177797e667debbb1591bf5ae0d9739231f`, NOT the current PR HEAD
+`2f66bd21001c8d0d0dce7b571539555bf658c475`. Run #223 is therefore
+HISTORICAL evidence (the recovery run after the #216 failure), not
+the exact-current-HEAD verification. The exact-current-HEAD
+verification is PR run #225, recorded in §13.12. Nothing in this
+section is rewritten: the #223 facts below stand as the record of
+that run, and this note corrects only how the run is labelled.
 
 The native Windows run is PR run #223 (run ID 45253011530,
 event pull_request, head f970d5177797e667debbb1591bf5ae0d9739231f,
@@ -888,7 +898,10 @@ from the page view.
 Windows support is now verified by the native run above: the
 race test runs for real under spawn on Windows, profile
 creation works without `os.fchmod`, and no relevant test is
-skipped for the platform.
+skipped for the platform. (At the time this section was filled,
+run #223 was the latest successful run. The exact-current-HEAD
+verification is run #225 — see §13.12 — which re-verified the
+same results against the current PR HEAD `2f66bd21`.)
 
 ### 13.8 Files changed (R2)
 
@@ -945,8 +958,9 @@ skipped for the platform.
   revocation; macOS untested on real hardware (resolution
   function only, patched platform probe); Windows permission
   limits (ACL inheritance, no POSIX mode-bit equivalence);
-  native Windows CI results are now recorded in §13.7 (PR run
-  #223, all three jobs Success).
+  native Windows CI results are now recorded in §13.12 (PR run
+  #225, the exact-current-HEAD run, all three jobs Success;
+  §13.7 keeps the earlier run #223 as historical evidence).
 
 ### 13.11 R2 follow-up (2026-11-23) — PR run #216 failed on Windows; test-side fix
 
@@ -1067,3 +1081,129 @@ counting). Run outputs:
 **§13.7 is now filled from the re-run (#223).** Windows support
 is verified by that run; the #216 failure is recorded here
 precisely so that no earlier claim is left standing.
+
+**F1 correction (2026-11-23, §13.12):** run #223 ran against head
+`f970d517`, not the current PR HEAD `2f66bd21`. It is kept as the
+historical recovery run; the exact-current-HEAD verification is
+run #225 (§13.12).
+
+### 13.12 R2-F1 (2026-11-23) — final CI evidence & provenance reconciliation
+
+Documentation/evidence correction only. No runtime code,
+authorization code, test, P0 policy file, or companion internal
+changed in this round.
+
+**The correction.** The R2 report and this record treated PR run
+#223 as the final verification for the current PR HEAD
+`2f66bd21001c8d0d0dce7b571539555bf658c475`. That is inaccurate:
+run #223 (run ID 45253011530) ran against head
+`f970d5177797e667debbb1591bf5ae0d9739231f` (the follow-up docs
+push head), not the current PR HEAD. Run #223 is therefore
+relabeled HISTORICAL evidence — the recovery run after the #216
+failure — and is NOT described anywhere as the
+exact-current-HEAD run. Its facts (recorded in §13.7) stand
+unchanged; only the label is corrected, with an explicit note
+added in §13.7, §13.10 and §13.11 rather than a silent rewrite.
+
+**PR run #225 — the exact-current-HEAD verification.** Run
+#225 (run ID 45257996093, event pull_request, head
+`2f66bd21001c8d0d0dce7b571539555bf658c475` — the exact current
+PR HEAD,
+https://github.com/msujoy149/consistency-frame/actions/runs/45257996093),
+overall conclusion Success, total duration 1m 8s, started
+2026-11-23 12:18 PM PST. All three jobs succeeded; no push run
+exists for this head (expected — the workflow triggers on push
+only for main and feat/cf-p0-safe-foundations). The PASS lines
+below were verified from the downloaded raw log archives
+(grepped locally), not only from the page view.
+
+- Python 3.10 run: Success, 1m 4s. "Show versions" prints
+  Python 3.10.11, start method spawn, win32. Runtime suite:
+  PASS (0 failure(s)), 65 PASS lines, 0 FAIL lines. FIRST-01..07
+  all PASS, R2-SPAWN-01 PASS, R2-NOFCHMOD-01 PASS, FS-03 / FS-04
+  / FS-04b (symlink) PASS. Authorization suite PASS (0
+  failure(s)), 47 PASS lines. P0 security suite PASS (0
+  failure(s)), 158 PASS lines.
+- Python 3.12 run: Success, 22s. "Show versions" prints
+  Python 3.12.10, start method spawn, win32. Runtime suite:
+  PASS (0 failure(s)), 65 PASS lines, 0 FAIL lines, with the
+  same FIRST-01..07, SPAWN-01, NOFCHMOD-01 and FS-03/FS-04/FS-04b
+  PASS lines. Authorization suite PASS (0 failure(s)), 47 PASS
+  lines. P0 security suite PASS (0 failure(s)), 158 PASS lines.
+- No test skipped for the platform: a search for "skip" across
+  all Windows step logs returns no matches.
+- Runtime-suite count correction (as in §13.7): the Windows
+  total is 65 PASS, not 67. The two R2-CANON checks are
+  Linux-only by design (`os.name == "posix"` gate in the test);
+  they PASS in the Linux p0-validate log of this same run and are
+  correctly absent on Windows.
+- Linux p0-validate in the same run: Success, 53s. Artifact
+  `p0-test-results`, 906 bytes, artifact ID 14859467946,
+  digest sha256:588ff296e74c409d0bae87e9bb960c3de7ffce9196cf30a973280458830673ae;
+  the `last-run.json` inside is byte-identical to the committed
+  file (SHA ddd94ee1502d77d22105ab6a6a5cc3a752bbdfe3e5c4d65eec7ff1c8b4e559c5).
+
+Windows support is verified by the native run above against the
+exact current PR HEAD: the race test runs for real under spawn on
+Windows, profile creation works without `os.fchmod`, and no
+relevant test is skipped for the platform.
+
+**Evidence staged for delivery.** Run #225 Linux artifact
+(`ci-evidence-p1-001-r2-f1/p0-test-results-run225.zip`, digest
+sha256:588ff296e74c409d0bae87e9bb960c3de7ffce9196cf30a973280458830673ae)
+and the native Windows per-job logs
+(`evidence/r2-f1/windows-compat-3.10-run225.log`,
+SHA-256 8e61bb0e799df8701ce8bb3c4cc2419b9c5ee17b3444044c44eb1d7e12b5e20e;
+`evidence/r2-f1/windows-compat-3.12-run225.log`,
+SHA-256 d45a67547bb84aba0d0e965853deb95f581e82c2bd3e6d5fb8b8da0beb0a0c78;
+each 273 "PASS " lines = 270 checks + 3 suite summaries, 0 "skip"
+matches). The F1 README
+(`ci-evidence-p1-001-r2-f1/README.txt`) lists run #223
+(historical) and run #225 with exact run IDs, head SHAs, job
+results, artifact IDs and digests. No artifact from run #223 is
+presented as belonging to run #225, and vice versa. The final
+post-F1-push PR run does not exist yet and is not invented here;
+it will be added after the push.
+
+**Provenance explanation (the `213759c6` snapshot).** The
+pre-F1 manifest recorded
+`github_branch_head=213759c69d06f471c5b69c687b93fffa9747ee89`
+— that value is the SOURCE SNAPSHOT used for the final
+provenance generation of the R2 round, NOT the current PR HEAD.
+The comparison from that snapshot to the current HEAD
+`2f66bd21` shows exactly ONE commit (`1dcd001`, "P1-001-R2
+docs: provenance at GitHub head 213759c6"), which affects only
+generated report files (the living report, BUILD_REPORT_P0.md,
+build-report.json, CHECKSUMS.txt, release-manifest.json) and
+changes no code, test, workflow, or policy file. `213759c6` is
+therefore never described as the current PR HEAD.
+
+The same snapshot-explanation pattern applies to the new
+manifest generated in this F1 round: its
+`github_branch_head` is the current GitHub head `2f66bd21`
+(the exact current PR HEAD at F1 generation time); the
+subsequent docs commit after the F1 push will be
+provenance/reporting only, and the parent re-regenerates
+provenance after that push. The 169-file hash verification
+result and the detached checksum verification result are kept
+(see §13.6 and the F1 provenance record below).
+
+**F1 provenance (generated with `--github-head 2f66bd21`,
+current GitHub head; full suite run once first, then
+`generate-report.py`, then `generate-build-report.py` last):
+full suite 56 entries / 43 IDs / 34 commands, 56 PASS, 0 FAIL,
+0 SKIP; `tests/last-run.json` SHA
+`ddd94ee1502d77d22105ab6a6a5cc3a752bbdfe3e5c4d65eec7ff1c8b4e559c5`
+unchanged. Manifest: 169 files, generated from the live tree,
+`github_branch_head=2f66bd21`, manifest commit `1dcd001` (the
+local head at generation time — the parent re-regenerates after
+the F1 push). Manifest SHA-256
+`95c4124d833fe22b57998d768b491eff14b9a8dc6bfab0cb11ab125ae230650d`
+(32,169 bytes); build-report SHA-256
+`b47ba98612da3dfce4a23ea1ace5ba94c0cf182f3303bacc72ac1280f5558901`
+(19,073 bytes); BUILD_REPORT_P0.md SHA-256
+`1c141aa80ba11f828d1e5a3fbcde5c2ed510b1d68b84872953448a2980caa541`
+(47,114 bytes); CHECKSUMS.txt 3/3 OK (detached SHA-256 + byte
+counts verified against the three generated files). The
+corrections document's own SHA-256 is recorded in the delivery
+report, not here (a file cannot record its own hash).**
