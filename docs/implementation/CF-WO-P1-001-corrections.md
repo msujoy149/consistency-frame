@@ -1161,9 +1161,22 @@ matches). The F1 README
 (`ci-evidence-p1-001-r2-f1/README.txt`) lists run #223
 (historical) and run #225 with exact run IDs, head SHAs, job
 results, artifact IDs and digests. No artifact from run #223 is
-presented as belonging to run #225, and vice versa. The final
-post-F1-push PR run does not exist yet and is not invented here;
-it will be added after the push.
+presented as belonging to run #225, and vice versa.
+
+**F2 correction (2026-11-23, see §13.13):** two things in this
+section are corrected, not silently rewritten. (1) The sentence
+"The final post-F1-push PR run does not exist yet and is not
+invented here; it will be added after the push." is SUPERSEDED
+— that run is PR run #227 (run ID 45338056975, head
+`b757ca27`), recorded in §13.13; run #225 verified the PR HEAD
+at the time (`2f66bd21`), not the final HEAD. (2) The two
+evidence paths in this paragraph are combined-ZIP paths, not
+delivery-folder staging paths: the run #225 artifact is
+`ci-evidence/p0-test-results-run225.zip` (not
+`ci-evidence-p1-001-r2-f1/p0-test-results-run225.zip`) and the
+F1 README is `ci-evidence/README.txt` (not
+`ci-evidence-p1-001-r2-f1/README.txt`). The historical #223
+artifact path is likewise `ci-evidence/p0-test-results.zip`.
 
 **Provenance explanation (the `213759c6` snapshot).** The
 pre-F1 manifest recorded
@@ -1225,3 +1238,117 @@ record above (snapshot `2f66bd21`, manifest SHA `95c4124d…`)
 stands as the record of the generation that was pushed; it is
 superseded, not rewritten, by the post-push regeneration
 recorded in the delivery report.
+
+### 13.13 R2-F1 final verification — PR run #227 and final provenance
+
+Documentation/evidence correction only (CF-WO-P1-001-F2). No
+runtime code, authorization code, test, workflow, or P0 policy
+file changed in this round.
+
+**Run history (final).** Run #223 is the HISTORICAL recovery
+run (run ID 45253011530, head
+`f970d5177797e667debbb1591bf5ae0d9739231f`, overall Success) —
+the run after the #216 failure; it never verified the current
+PR HEAD. Run #225 is the successful verification of the
+pre-F1 head `2f66bd21001c8d0d0dce7b571539555bf658c475` (run ID
+45257996093, overall Success, 1m 8s); its facts are preserved
+here as historical evidence (§13.12) and are not rewritten.
+
+**PR run #227 — the exact final current-HEAD run.** Run #227
+(run ID 45338056975, event pull_request, head
+`b757ca2704a508c142b1c6f87a40f74a9410f9f8` — the exact final
+current PR HEAD,
+https://github.com/msujoy149/consistency-frame/actions/runs/45338056975),
+overall conclusion Success, total duration 1m 13s, started
+2026-11-23 10:06 PM PST. All three jobs succeeded; no push run
+exists for this head (expected — the workflow triggers on push
+only for main and feat/cf-p0-safe-foundations). The PASS lines
+below were verified from the downloaded raw log archives
+(grepped locally), not only from the page view.
+
+- Python 3.10 run: Success, 1m 11s. "Show versions" prints
+  Python 3.10.11, start method spawn, win32. Runtime suite:
+  PASS (0 failure(s)), 65 PASS lines, 0 FAIL lines. FIRST-01..07
+  all PASS, R2-SPAWN-01 PASS, R2-NOFCHMOD-01 PASS, FS-03 / FS-04
+  / FS-04b (symlink) PASS. Authorization suite PASS (0
+  failure(s)), 47 PASS lines. P0 security suite PASS (0
+  failure(s)), 158 PASS lines.
+- Python 3.12 run: Success, 26s. "Show versions" prints
+  Python 3.12.10, start method spawn, win32. Runtime suite:
+  PASS (0 failure(s)), 65 PASS lines, 0 FAIL lines, with the
+  same FIRST-01..07, SPAWN-01, NOFCHMOD-01 and FS-03/FS-04/FS-04b
+  PASS lines. Authorization suite PASS (0 failure(s)), 47 PASS
+  lines. P0 security suite PASS (0 failure(s)), 158 PASS lines.
+- No relevant test skipped for the platform: a search for
+  "skip" across all Windows step logs returns no matches.
+- Runtime-suite count correction (as in §13.7): the Windows
+  total is 65 PASS, not 67. The two R2-CANON checks are
+  Linux-only by design (`os.name == "posix"` gate in the test);
+  they PASS in the Linux p0-validate log of this same run and are
+  correctly absent on Windows.
+- Linux p0-validate in the same run: Success, 55s. Artifact
+  `p0-test-results`, 906 bytes, artifact ID 14895595372,
+  digest sha256:70d0044c0adc4dbd61e18cbd8da60bcbc42762a26d5a431072613f0787b04e1e;
+  the `last-run.json` inside is byte-identical to the committed
+  file (SHA ddd94ee1502d77d22105ab6a6a5cc3a752bbdfe3e5c4d65eec7ff1c8b4e559c5).
+
+**Supersession.** This section explicitly supersedes §13.12's
+statement that no post-F1-push run existed ("The final
+post-F1-push PR run does not exist yet and is not invented
+here; it will be added after the push."). That run is PR run
+#227 above. Run #227 is the final verification; runs #223 and
+#225 remain historical evidence for the heads they ran
+against.
+
+**Evidence paths (combined ZIP).** The run #227 Linux
+artifact is `ci-evidence/p0-test-results-run227.zip` (digest
+sha256:70d0044c0adc4dbd61e18cbd8da60bcbc42762a26d5a431072613f0787b04e1e).
+The native Windows per-job logs are
+`evidence/r2-f1/windows-compat-3.10-run227.log`,
+SHA-256 ace494d62da14fa31509717c948e802ec8041ad67bccd2d469f2ebd446de06d8,
+and `evidence/r2-f1/windows-compat-3.12-run227.log`,
+SHA-256 e01f5573f856f07aa6c68d3507e39859fe7a24559a46cfe5bab6a16cd9327fad
+(each 273 "PASS " lines = 270 checks + 3 suite summaries, 0
+"skip" matches). Path corrections from §13.12 (combined-ZIP
+paths, not delivery-folder staging paths):
+`ci-evidence-p1-001-r2-f1/p0-test-results-run225.zip` →
+`ci-evidence/p0-test-results-run225.zip`, and
+`ci-evidence-p1-001-r2-f1/README.txt` →
+`ci-evidence/README.txt`; the historical #223 artifact is
+`ci-evidence/p0-test-results.zip`.
+
+**Provenance clarification.** The manifest's
+`github_branch_head=b2d4e524ce837bae8ad7fc3c1b245e1f6e485a25`
+is the provenance SOURCE SNAPSHOT (the F1 content push head),
+NOT the final PR HEAD. The comparison from that source
+snapshot to the final HEAD
+`b757ca2704a508c142b1c6f87a40f74a9410f9f8` contains exactly ONE
+commit (`d261eba`, "P1-001-R2-F1 docs: provenance at GitHub
+head b2d4e524"), a documentation/provenance commit affecting
+only generated report files — no runtime, test, workflow, or
+policy change. The 169-file hash verification result and the
+detached checksum verification result are kept (see §13.6 and
+the F2 provenance record below).
+
+**F2 provenance (generated with `--github-head b757ca27`,
+current GitHub head; full suite run once first, then
+`generate-report.py`, then `generate-build-report.py` last):
+full suite 56 entries / 43 IDs / 34 commands, 56 PASS, 0 FAIL,
+0 SKIP; `tests/last-run.json` SHA
+`ddd94ee1502d77d22105ab6a6a5cc3a752bbdfe3e5c4d65eec7ff1c8b4e559c5`
+unchanged. Manifest: 169 files, generated from the live tree,
+`github_branch_head=b757ca27`, manifest commit `d261eba` (the
+local head at generation time — the parent re-regenerates after
+the F2 push). The manifest SHA-256 and the CHECKSUMS.txt
+SHA-256 are recorded in the delivery report, not here: the
+manifest hashes this document, so recording the manifest's own
+hash inside it would break the hash chain (the same reason
+this document's own SHA-256 is recorded in the delivery
+report). The generation's manifest (32,169 bytes) was verified
+entry-by-entry against the live tree: 169 files, 0 mismatches.
+Build-report SHA-256
+`b6a335f20c7fd94c1448217329d8f0ddf65509833f795d07ce1c3b7a46a06a25`
+(19,073 bytes); BUILD_REPORT_P0.md SHA-256
+`0c37dd4ad27a2ec7e2a44734c67c21a1f0505139321f9d9759e34c47395dafce`
+(47,358 bytes); CHECKSUMS.txt 3/3 OK (detached SHA-256 + byte
+counts verified against the three generated files).**
