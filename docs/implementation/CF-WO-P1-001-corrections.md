@@ -1352,3 +1352,20 @@ Build-report SHA-256
 `0c37dd4ad27a2ec7e2a44734c67c21a1f0505139321f9d9759e34c47395dafce`
 (47,358 bytes); CHECKSUMS.txt 3/3 OK (detached SHA-256 + byte
 counts verified against the three generated files).**
+
+**Post-push addendum (F2 content push head
+`fb40987851898a782692f5a666562cf8de0e151d`): the F2 content
+above is now on GitHub. Provenance is regenerated with
+`--github-head fb409878…` (`generate-report.py` first,
+`generate-build-report.py` last; no suite re-run — no code or
+test changed in this round, and the suite does not need to run
+again for a docs-only regeneration). The new manifest's
+`github_branch_head` is therefore `fb409878` (the F2 content
+push head) and its manifest commit is `ad75be4` (the local head
+at regeneration time); the docs commit carrying this
+regeneration is provenance/reporting only, exactly as the
+snapshot pattern above describes. The pre-push F2 provenance
+record above (snapshot `b757ca27`, build-report SHA
+`b6a335f2…`) stands as the record of the generation that was
+pushed; it is superseded, not rewritten, by the post-push
+regeneration recorded in the delivery report.**
