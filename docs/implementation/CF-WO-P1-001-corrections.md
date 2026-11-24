@@ -1207,3 +1207,21 @@ the F1 push). Manifest SHA-256
 counts verified against the three generated files). The
 corrections document's own SHA-256 is recorded in the delivery
 report, not here (a file cannot record its own hash).**
+
+**Post-push regeneration (parent, 2026-11-23).** The F1 content
+commit `8b728e7` was pushed to the branch (GitHub head
+`b2d4e524ce837bae8ad7fc3c1b245e1f6e485a25`, verified by reading
+the branch head back). Provenance was then regenerated with
+`--github-head b2d4e524` (`generate-report.py` first,
+`generate-build-report.py` last; no suite re-run — no code or
+test changed in this round, and the suite does not need to run
+again for a docs-only regeneration). The new manifest's
+`github_branch_head` is therefore `b2d4e524` (the F1 content
+push head) and its manifest commit is `8b728e7` (the local head
+at regeneration time); the docs commit carrying this
+regeneration is provenance/reporting only, exactly as the
+snapshot pattern above describes. The pre-push F1 provenance
+record above (snapshot `2f66bd21`, manifest SHA `95c4124d…`)
+stands as the record of the generation that was pushed; it is
+superseded, not rewritten, by the post-push regeneration
+recorded in the delivery report.
