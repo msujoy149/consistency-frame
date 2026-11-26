@@ -517,6 +517,18 @@ step-by-step order for every video, in §7).
   group CF-P1-002-R1-R2-NULL in `tests/test_skill_router.py`
   (22 cases × 4 checks + a summary check that fails if any
   declared case is dropped). Record: corrections doc §14.
+- **Explicit nulls, complete parity (R1-R3, 2026-11-26, same
+  branch and PR #3).** A schema-wide probe of all 67 unique
+  optional property paths found 16 further explicit-null
+  mismatches R1-R2 had not covered — request subject/shot tables
+  (4) and profile per-subject (7) / per-shot (5) overrides —
+  which `resolve_skills()` also accepted; all 16 are now rejected
+  by both validators with a field-naming error. Regression group
+  CF-P1-002-R1-R3-NULL67 in `tests/test_skill_router.py`
+  (67 paths × 5 checks + a coverage assertion that compares the
+  declared matrix against the optional paths discovered from the
+  schema, so a new optional schema property without a test fails
+  the suite). Record: corrections doc §15.
 
 ## Rules that always apply
 

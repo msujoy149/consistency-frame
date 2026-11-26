@@ -191,6 +191,33 @@ still the existing "is required in {mode} mode" error — the two
 cases are distinct. Boolean approval evidence is unchanged: only
 the actual boolean `True` counts.
 
+**Explicit nulls, complete parity (R1-R3).** A schema-wide probe
+of all 67 unique optional property paths in
+`schemas/skill-routing-request.json` found 16 further cases that
+R1-R2 had not covered, all in the nested tables: the request
+subject table (`subject_kind`, `articulation_target`) and shot
+table (`visual_style`, `source_media`), the profile per-subject
+overrides (`motion_methods`, `articulation_target`,
+`is_live_action_footage`, `rendering_style`, `representation`,
+`source_media`, `subject_kind`) and the per-shot overrides
+(`camera_movement`, `depth_of_field`, `source_media`,
+`subjects`, `visual_style`). The causes were `is not None`
+guards that silently skipped a null, an `or []` default that
+swallowed a null `motion_methods`, and one missing check
+(per-subject `is_live_action_footage`, which now has the same
+boolean check the per-shot overrides already had). All 16 are now
+rejected by both `validate_routing_request()` and
+`resolve_skills()` (which raises on any validation error, so
+invalid requests fail closed through both entry points), with an
+error naming the field. The regression group
+CF-P1-002-R1-R3-NULL67 tests every one of the 67 optional paths
+exactly once (base valid; null rejected by schema, runtime and
+`resolve_skills()`; error names the field; omission valid again),
+and a coverage assertion compares the declared matrix against the
+optional paths discovered from the schema itself, so adding an
+optional schema property without a nullability test fails the
+suite. Required properties are never counted as optional paths.
+
 ## Resolution
 
 `resolve_skills(request, catalog)` returns the selected skills, the

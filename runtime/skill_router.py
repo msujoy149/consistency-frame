@@ -927,13 +927,23 @@ def validate_routing_request(request, catalog: dict) -> list:
             if not isinstance(sub, dict):
                 continue
             kind = sub.get("subject_kind")
-            if kind is not None and (
+            if "subject_kind" in sub and kind is None:
+                # R1-R3: explicit null, not omission — the schema types
+                # subject_kind as a string enum.
+                errors.append(f"subjects[{i}].subject_kind must be a "
+                              "string, got None")
+            elif kind is not None and (
                     not isinstance(kind, str)
                     or kind not in _vocab(catalog, "subject_kind")):
                 errors.append(f"subjects[{i}].subject_kind {kind!r} is not "
                               "in the fixed vocabulary")
             art = sub.get("articulation_target")
-            if art is not None and (
+            if "articulation_target" in sub and art is None:
+                # R1-R3: explicit null, not omission — the schema types
+                # articulation_target as a string enum.
+                errors.append(f"subjects[{i}].articulation_target must be "
+                              "a string, got None")
+            elif art is not None and (
                     not isinstance(art, str)
                     or art not in _vocab(catalog, "articulation_target")):
                 errors.append(f"subjects[{i}].articulation_target {art!r} is "
@@ -952,13 +962,23 @@ def validate_routing_request(request, catalog: dict) -> list:
             if not isinstance(shot, dict):
                 continue
             style = shot.get("visual_style")
-            if style is not None and (
+            if "visual_style" in shot and style is None:
+                # R1-R3: explicit null, not omission — the schema types
+                # visual_style as a string enum.
+                errors.append(f"shots[{i}].visual_style must be a string, "
+                              "got None")
+            elif style is not None and (
                     not isinstance(style, str)
                     or style not in _vocab(catalog, "visual_style")):
                 errors.append(f"shots[{i}].visual_style {style!r} is not in "
                               "the fixed vocabulary")
             media = shot.get("source_media")
-            if media is not None and (
+            if "source_media" in shot and media is None:
+                # R1-R3: explicit null, not omission — the schema types
+                # source_media as a string enum.
+                errors.append(f"shots[{i}].source_media must be a string, "
+                              "got None")
+            elif media is not None and (
                     not isinstance(media, str)
                     or media not in _vocab(catalog, "source_media")):
                 errors.append(f"shots[{i}].source_media {media!r} is not in "
@@ -1293,6 +1313,12 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
             if "species" in sub and not isinstance(sub["species"], str):
                 errors.append(f"per_subject_overrides[{i}].species must be "
                               "a string")
+            if "is_live_action_footage" in sub \
+                    and not isinstance(sub["is_live_action_footage"], bool):
+                # R1-R3: a present null is not an omitted flag — the
+                # schema types is_live_action_footage as a boolean.
+                errors.append(f"per_subject_overrides[{i}].is_live_action_footage "
+                              "must be a boolean")
             for key, vocab_key in (
                     ("subject_kind", "subject_kind"),
                     ("representation", "production_medium"),
@@ -1300,12 +1326,26 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
                     ("rendering_style", "visual_style"),
                     ("articulation_target", "articulation_target")):
                 value = sub.get(key)
-                if value is not None and (
+                if key in sub and value is None:
+                    # R1-R3: explicit null, not omission — the schema
+                    # types every one of these as a string enum.
+                    errors.append(f"per_subject_overrides[{i}].{key} must "
+                                  "be a string, got None")
+                elif value is not None and (
                         not isinstance(value, str)
                         or value not in _vocab(catalog, vocab_key)):
                     errors.append(f"per_subject_overrides[{i}].{key} "
                                   f"{value!r} is not in the fixed vocabulary")
-            motions = sub.get("motion_methods") or []
+            motions = sub.get("motion_methods")
+            if motions is None:
+                if "motion_methods" in sub:
+                    # R1-R3: explicit null, not omission — the schema
+                    # types motion_methods as an array. (The old
+                    # `or []` default silently treated a null — and
+                    # any other falsy non-list — as omitted.)
+                    errors.append(f"per_subject_overrides[{i}].motion_methods "
+                                  "must be a list, got None")
+                motions = []
             if not isinstance(motions, list):
                 errors.append(f"per_subject_overrides[{i}].motion_methods "
                               "is not a list")
@@ -1338,26 +1378,46 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
             if not isinstance(shot.get("shot_id"), str) or not shot.get("shot_id"):
                 errors.append(f"per_shot_overrides[{i}] has no shot_id")
             style = shot.get("visual_style")
-            if style is not None and (
+            if "visual_style" in shot and style is None:
+                # R1-R3: explicit null, not omission — the schema types
+                # visual_style as a string enum.
+                errors.append(f"per_shot_overrides[{i}].visual_style must "
+                              "be a string, got None")
+            elif style is not None and (
                     not isinstance(style, str)
                     or style not in _vocab(catalog, "visual_style")):
                 errors.append(f"per_shot_overrides[{i}].visual_style "
                               f"{style!r} is not in the fixed vocabulary")
             media = shot.get("source_media")
-            if media is not None and (
+            if "source_media" in shot and media is None:
+                # R1-R3: explicit null, not omission — the schema types
+                # source_media as a string enum.
+                errors.append(f"per_shot_overrides[{i}].source_media must "
+                              "be a string, got None")
+            elif media is not None and (
                     not isinstance(media, str)
                     or media not in _vocab(catalog, "source_media")):
                 errors.append(f"per_shot_overrides[{i}].source_media "
                               f"{media!r} is not in the fixed vocabulary")
             movement = shot.get("camera_movement")
-            if movement is not None and movement not in (
+            if "camera_movement" in shot and movement is None:
+                # R1-R3: explicit null, not omission — the schema types
+                # camera_movement as a string enum.
+                errors.append(f"per_shot_overrides[{i}].camera_movement "
+                              "must be a string, got None")
+            elif movement is not None and movement not in (
                     "static", "pan", "tilt", "tracking", "dolly-in",
                     "dolly-out", "push-in", "pull-back", "follow",
                     "handheld"):
                 errors.append(f"per_shot_overrides[{i}].camera_movement "
                               f"{movement!r} is not a v2.5 camera movement")
             depth = shot.get("depth_of_field")
-            if depth is not None \
+            if "depth_of_field" in shot and depth is None:
+                # R1-R3: explicit null, not omission — the schema types
+                # depth_of_field as a string enum.
+                errors.append(f"per_shot_overrides[{i}].depth_of_field "
+                              "must be a string, got None")
+            elif depth is not None \
                     and depth not in ("shallow", "deep", "rack-focus"):
                 errors.append(f"per_shot_overrides[{i}].depth_of_field "
                               f"{depth!r} is not a v2.5 depth of field")
@@ -1371,7 +1431,12 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
                     errors.append(f"per_shot_overrides[{i}].{key} must be a "
                                   "string")
             subjects = shot.get("subjects")
-            if subjects is not None and (
+            if "subjects" in shot and subjects is None:
+                # R1-R3: explicit null, not omission — the schema types
+                # subjects as an array of ids.
+                errors.append(f"per_shot_overrides[{i}].subjects must be a "
+                              "list of ids, got None")
+            elif subjects is not None and (
                     not isinstance(subjects, list)
                     or any(not isinstance(x, str) for x in subjects)):
                 errors.append(f"per_shot_overrides[{i}].subjects must be a "

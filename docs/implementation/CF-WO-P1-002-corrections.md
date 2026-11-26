@@ -982,3 +982,213 @@ still pass unchanged.
   external work (R1 §12 boundary, unchanged).
 - Script-to-performance runtime remains P1-003 territory; no
   executor or scheduler for plans was added.
+
+## 15. CF-WO-P1-002-R1-R3 — Complete optional-field nullability parity (2026-11-26)
+
+### 15.1 The gap — 16 additional cases, all reproduced pre-fix
+
+R1-R2 fixed the original 22 explicit-null mismatches. A schema-wide
+probe then walked all 67 unique optional property paths of
+`schemas/skill-routing-request.json` (every property not in its
+parent's `required` list, including nested objects and array-item
+objects; no optional property type includes `null`) and found 16
+further cases where the JSON Schema rejects an explicit `null` but
+`validate_routing_request()` accepted it — and `resolve_skills()`
+accepted the invalid request too. All 16 were reproduced pre-fix
+with a probe that built a valid schema-conforming request per case,
+set the optional property to explicit `None`, and asked both
+validators plus `resolve_skills()`: the restricted schema validator
+rejected all 16, the production runtime accepted all 16, and
+`resolve_skills()` resolved all 16. Re-run after the fix: all three
+reject all 16.
+
+The 16 cases (all `is not None` guards that silently skipped a
+null, plus two `or []` defaults and one missing check):
+
+- Request subject table (2): `subjects[i].subject_kind`,
+  `subjects[i].articulation_target` — the vocabulary guard
+  `if kind is not None and ...` skipped `None`.
+- Request shot table (2): `shots[i].visual_style`,
+  `shots[i].source_media` — same guard shape.
+- Profile per-subject overrides (7):
+  `production_profile.per_subject_overrides[i].motion_methods`
+  (`sub.get("motion_methods") or []` silently treated `None` — and
+  any other falsy non-list — as omitted),
+  `.articulation_target`, `.rendering_style`, `.representation`,
+  `.source_media`, `.subject_kind` (the shared vocabulary loop's
+  `is not None` guard), and `.is_live_action_footage` (no check
+  existed at all in `_validate_profile_fields()` for this field).
+- Profile per-shot overrides (5):
+  `production_profile.per_shot_overrides[i].camera_movement`,
+  `.depth_of_field`, `.source_media`, `.visual_style` (the
+  `is not None` guards) and `.subjects` (same guard shape).
+
+The other 51 optional paths were already rejected by the runtime
+(their checks use `"key" in container and not isinstance(...)`
+shape, or the field is required at its level) — the 67-path matrix
+in §15.3 verifies that claim for every path, not just the 16.
+
+### 15.2 The fix — key-presence checks, no architecture change
+
+- Request tables (`validate_routing_request()`): `subject_kind` /
+  `articulation_target` (subjects) and `visual_style` /
+  `source_media` (shots) now report `"<path> must be a string, got
+  None"` when the key is present with `None`; the vocabulary check
+  runs only for a non-`None` value. Omission stays valid.
+- Per-subject overrides (`_validate_profile_fields()`): the shared
+  vocabulary loop now reports `"<path> must be a string, got None"`
+  for a present `None` (`subject_kind`, `representation`,
+  `source_media`, `rendering_style`, `articulation_target`);
+  `motion_methods` is read without the `or []` default — a present
+  `None` reports `"must be a list, got None"`, a present non-list
+  (including a falsy one) reports `"is not a list"`, absence still
+  means "no per-subject motion methods"; `is_live_action_footage`
+  gains the same boolean check the per-shot overrides and the
+  request tables already had (`"must be a boolean"`, so a present
+  `None` is rejected).
+- Per-shot overrides (`_validate_profile_fields()`):
+  `camera_movement` / `depth_of_field` / `source_media` /
+  `visual_style` now report `"must be a string, got None"` for a
+  present `None`; `subjects` reports `"must be a list of ids, got
+  None"`. Omission stays valid in every case.
+- No schema change (the schema already rejects null; changing it to
+  permit null was explicitly out of scope), no intent-mode
+  permission or selection logic changed, no canonical YAML/skill
+  rewritten, no P0 policy or P1-001 session code touched.
+  `resolve_skills()` needs no change: it calls
+  `validate_routing_request()` first and raises `RoutingError` on
+  any error, so the 16 cases now fail closed through both
+  production entry points (verified by the probe re-run and by a
+  per-case `resolve_skills` check in the test group).
+
+### 15.3 Regression group — CF-P1-002-R1-R3-NULL67
+
+New group in `tests/test_skill_router.py` after the preserved
+R1-R2 group (the 22 R1-R2 cases are untouched). Every one of the 67
+optional non-nullable paths is exercised exactly once, with five
+checks per path: (1) the base request is valid (schema + runtime);
+(2) setting the property to explicit `None` is rejected by the
+restricted schema validator AND by production
+`validate_routing_request()`; (3) the runtime error names the
+field/path; (4) `resolve_skills()` fails closed (`RoutingError`);
+(5) deleting the property restores validity. Bases are chosen per
+path family: a GENERATE_FROM_SCRIPT base with the s3 profile plus
+subject/shot/dialogue-line tables (51 paths), a REFERENCE_REVIEW
+base where `production_profile` is genuinely optional (1 path:
+`production_profile` itself), a REGISTER_CHARACTER base (12
+registration-evidence paths), and a scoped requested-skills base
+(3 scope paths).
+
+The complete declared matrix (67 paths; `[i]` = array item 0):
+
+- Request level (13): `additional_layers`, `dialogue_lines`,
+  `dialogue_rewrite_requested`, `explicit_request`,
+  `explicit_user_instruction`, `hints`, `primary_pathway`,
+  `registration_evidence`, `repair_authorised`,
+  `requested_skills`, `rights_provenance_checked`, `shots`,
+  `subjects`.
+- `hints.*` (6): `hints.consent`, `hints.dialogue`,
+  `hints.existing_character_registered`, `hints.explainer_structure`,
+  `hints.languages`, `hints.recurring_character`.
+- `subjects[i].*` (5): `subjects[i].articulation_target`,
+  `subjects[i].shots`, `subjects[i].speaking`,
+  `subjects[i].species`, `subjects[i].subject_kind`.
+- `shots[i].*` (4): `shots[i].is_live_action_footage`,
+  `shots[i].source_media`, `shots[i].subject_ids`,
+  `shots[i].visual_style`.
+- `dialogue_lines[i].*` (1): `dialogue_lines[i].shot_id`.
+- `production_profile.*` (5): `production_profile.name`,
+  `production_profile.per_shot_overrides`,
+  `production_profile.per_subject_overrides`,
+  `production_profile.project_id`,
+  `production_profile.skill_profiles`.
+- `production_profile.per_subject_overrides[i].*` (8):
+  `articulation_target`, `is_live_action_footage`,
+  `motion_methods`, `rendering_style`, `representation`,
+  `source_media`, `species`, `subject_kind`.
+- `production_profile.per_shot_overrides[i].*` (9):
+  `camera_movement`, `depth_of_field`, `focus_target`,
+  `is_live_action_footage`, `lighting`, `source_media`,
+  `subjects`, `transition_to_next_shot`, `visual_style`.
+- `production_profile` itself (1) — optional-mode base.
+- `registration_evidence.*` (12): `approved_reference`,
+  `character_link`, `explicit_authorisation`,
+  `explicit_instruction`, `licence_or_permission`, `name`,
+  `owner`, `project_scope`, `reference_audio`, `rights_consent`,
+  `source`, `unique_id`.
+- `requested_skills[i].scope*` (3): `requested_skills[i].scope`,
+  `requested_skills[i].scope.shots`,
+  `requested_skills[i].scope.subjects`.
+
+Coverage assertion: `_optional_schema_paths(req_schema)` walks the
+loaded request schema (properties, nested objects, array-item
+objects, `anyOf`/`oneOf` branches) and returns the set of optional
+paths; the summary check asserts the declared matrix equals that
+set exactly (67 = 67, no missing, no extra). Guard proven: with
+one entry (`shots[i].visual_style`) temporarily removed from the
+declared list, the summary check fails
+("declared=66 exercised=66 discovered=67
+missing=['shots[i].visual_style']") and the suite reports 1
+failure; restored, the suite passes. Required properties are never
+counted as optional paths.
+
+### 15.4 Tests executed — exact counts
+
+All commands run on this Linux VM; all PASS (exit 0):
+
+- `python3 tests/test_skill_router.py` — **766 checks, 0 failures**
+  (was 430; +336 = 67 paths × 5 checks + 1 coverage check).
+- `python3 tests/test_routing.py` — **305/0**.
+- `python3 tests/test_local_session_runtime.py` — **67/0** (Linux).
+- `python3 tests/test_session_authorization.py` — **47/0**.
+- `python3 tests/test_private_voice_security.py` — **158/0**
+  (unmodified).
+- `bash tests/run-tests.sh` — **PASS, 68 entries / 54 distinct IDs /
+  36 distinct commands, 0 failures**. `tests/last-run.json` SHA
+  `a24736d6…` (unchanged — the suite records entry-level results
+  only).
+- `python3 scripts/generate-routing-catalog.py --check` — OK
+  (fingerprint unchanged; no catalog regeneration needed).
+- `python3 scripts/validate-repo.py` — PASS (8/8).
+- `python3 scripts/generate-registries.py --check` — OK.
+- `python3 scripts/generate-report.py --check` — OK (after the
+  provenance regen below; the check fails right after a suite run
+  because the suite rewrites the living report — known behaviour,
+  same as R1/R1-R1/R1-R2).
+- `python3 tests/test_reports.py` — PASS (0 failures).
+- `git diff --check` — clean.
+- The 16-case probe was re-run after the fix: schema, runtime and
+  `resolve_skills()` all reject all 16; the baseline stays valid.
+
+### 15.5 Files changed
+
+- `runtime/skill_router.py` — key-presence null checks in the
+  request subject/shot tables and in `_validate_profile_fields()`
+  (per-subject + per-shot overrides); `motion_methods` `or []`
+  default removed; per-subject `is_live_action_footage` boolean
+  check added (Task A).
+- `tests/test_skill_router.py` — CF-P1-002-R1-R3-NULL67 regression
+  group (67 paths × 5 checks + schema-coverage assertion) + test-ID
+  header. The R1-R2 group is untouched.
+- `docs/runtime/SKILL_ROUTING_RUNTIME.md` — explicit-null paragraph
+  extended (16 cases + 67-path matrix).
+- `docs/implementation/CF-WO-P1-002-corrections.md` — this §15.
+- `CHANGELOG.md` — R1-R3 entry under [Unreleased].
+- `AGENTS.md` — one-line nullability note in the P1-002 section.
+- Regenerated provenance (manifest, living report, build report)
+  in the repo's required order; the manifest and CHECKSUMS values
+  live in the delivery report, not here (hash-chain rule §7).
+
+### 15.6 Remaining limitations + unresolved decisions
+
+- The fix covers nullability only. It does not change what a valid
+  value means: a present-but-wrong-typed or out-of-vocabulary value
+  was already rejected by the existing checks and still is.
+- The per-subject `motion_methods` change also rejects a present
+  falsy non-list (`False`, `0`) that the old `or []` default
+  silently swallowed; that is the same "present must be a list"
+  rule the work order states, not a separate behaviour change.
+- A receipt is still reported completion state, not proof of
+  external work (R1 §12 boundary, unchanged).
+- Script-to-performance runtime remains P1-003 territory; no
+  executor or scheduler for plans was added.

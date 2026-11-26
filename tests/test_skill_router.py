@@ -14,7 +14,7 @@ Exit 0 = PASS, 1 = FAIL. Test IDs: CF-P1-002-CATALOG,
 CF-P1-002-SCHEMA, CF-P1-002-ROUTING, CF-P1-002-CONFLICTS,
 CF-P1-002-MODES, CF-P1-002-PLAN, CF-P1-002-SECURITY,
 CF-P1-002-R1-SCOPE, CF-P1-002-R1-SCHEMA, CF-P1-002-R1-HANDOFF,
-CF-P1-002-R1-CATALOG, CF-P1-002-R1-R2-NULL.
+CF-P1-002-R1-CATALOG, CF-P1-002-R1-R2-NULL, CF-P1-002-R1-R3-NULL67.
 """
 import copy
 import fnmatch
@@ -1883,6 +1883,238 @@ def main():
           len(null_cases) == 22 and len(exercised) == 22
           and set(exercised) == {c[0] for c in null_cases},
           f"declared={len(null_cases)} exercised={len(exercised)}")
+
+    # --- CF-P1-002-R1-R3-NULL67: complete optional-field nullability
+    # R1-R2 fixed 22 cases; a schema-wide probe of all 67 unique
+    # optional property paths in schemas/skill-routing-request.json
+    # found 16 more (request subject/shot tables and the profile
+    # per-subject / per-shot overrides), which resolve_skills()
+    # also accepted. This group tests EVERY optional non-nullable
+    # path exactly once: base valid, null rejected by the schema
+    # AND by production validate_routing_request() AND by
+    # resolve_skills(), runtime error names the field, omission
+    # valid again. The declared matrix is compared against the
+    # optional paths discovered from the schema itself, so adding
+    # an optional schema property without a nullability test fails
+    # the coverage assertion. Required properties are never counted
+    # as optional paths. The original 22 R1-R2 cases above are
+    # preserved unchanged.
+    def _optional_schema_paths(schema):
+        """Optional property paths of the request schema, as dotted
+        paths with [i] for array-item objects. A path is optional
+        when its property is not in its parent's required list; no
+        optional property type includes null."""
+        found = set()
+
+        def walk(node, prefix, required):
+            for name, sub in (node.get("properties") or {}).items():
+                path = f"{prefix}.{name}" if prefix else name
+                if name not in required:
+                    found.add(path)
+                if sub.get("type") == "object":
+                    walk(sub, path, set(sub.get("required") or []))
+                items = sub.get("items")
+                if isinstance(items, dict) \
+                        and items.get("type") == "object":
+                    walk(items, path + "[i]",
+                         set(items.get("required") or []))
+                for key in ("anyOf", "oneOf"):
+                    for branch in sub.get(key) or []:
+                        if branch.get("type") == "object":
+                            walk(branch, path,
+                                 set(branch.get("required") or []))
+
+        walk(schema, "", set(schema.get("required") or []))
+        return found
+
+    def _m_navigate(req, path):
+        """Return (container, leaf key) for a dotted matrix path;
+        '[i]' steps index the list at position 0."""
+        cur = req
+        parts = path.split(".")
+        for part in parts[:-1]:
+            if part.endswith("[i]"):
+                cur = cur[part[:-3]][0]
+            else:
+                cur = cur[part]
+        return cur, parts[-1]
+
+    def _m_fragment(path):
+        """Runtime-error fragment expected for a matrix path. The
+        per-override validators name the field relative to the
+        profile (per_subject_overrides[0].subject_kind), so the
+        production_profile. prefix is stripped for those paths."""
+        frag = path.replace("[i]", "[0]")
+        for prefix in ("production_profile.per_subject_overrides",
+                       "production_profile.per_shot_overrides"):
+            if frag.startswith(prefix):
+                return frag[len("production_profile."):]
+        return frag
+
+    def _m_gen_base():
+        req = clone(parity_base)
+        req["subjects"] = [{"subject_id": human_s3,
+                            "subject_kind": "digital-human",
+                            "articulation_target": "human-mouth-lips"}]
+        req["shots"] = [{"shot_id": "sh-01",
+                         "visual_style": "photorealistic-digital-human",
+                         "source_media": "reference-image"}]
+        req["dialogue_lines"] = [{"line_id": "line-01",
+                                  "subject_id": human_s3,
+                                  "shot_id": "sh-01",
+                                  "articulation_target":
+                                      "human-mouth-lips"}]
+        return req
+
+    def _m_reg_base():
+        return clone(valid_reg)
+
+    def _m_opt_base():
+        # REFERENCE_REVIEW is a mode where production_profile is
+        # genuinely optional, so omitting it stays valid.
+        return request("r1r3-null-profile", "REFERENCE_REVIEW")
+
+    def _m_scope_base():
+        return request(
+            "r1r3-null-scope", "GENERATE_FROM_SCRIPT",
+            clone(PROFILES["s3"]), {"dialogue": True, "consent": True},
+            requested_skills=[{"skill": "cinematic-power",
+                               "source": "user-request",
+                               "scope": {"shots": ["sh-01"],
+                                         "subjects": [human_s3]}}])
+
+    # (schema path, base builder) — every optional non-nullable
+    # property path of schemas/skill-routing-request.json, once.
+    null67_cases = [
+        ("additional_layers", _m_gen_base),
+        ("dialogue_lines", _m_gen_base),
+        ("dialogue_rewrite_requested", _m_gen_base),
+        ("explicit_request", _m_gen_base),
+        ("explicit_user_instruction", _m_gen_base),
+        ("hints", _m_gen_base),
+        ("hints.consent", _m_gen_base),
+        ("hints.dialogue", _m_gen_base),
+        ("hints.existing_character_registered", _m_gen_base),
+        ("hints.explainer_structure", _m_gen_base),
+        ("hints.languages", _m_gen_base),
+        ("hints.recurring_character", _m_gen_base),
+        ("primary_pathway", _m_gen_base),
+        ("registration_evidence", _m_gen_base),
+        ("repair_authorised", _m_gen_base),
+        ("requested_skills", _m_gen_base),
+        ("rights_provenance_checked", _m_gen_base),
+        ("shots", _m_gen_base),
+        ("subjects", _m_gen_base),
+        ("subjects[i].articulation_target", _m_gen_base),
+        ("subjects[i].shots", _m_gen_base),
+        ("subjects[i].speaking", _m_gen_base),
+        ("subjects[i].species", _m_gen_base),
+        ("subjects[i].subject_kind", _m_gen_base),
+        ("shots[i].is_live_action_footage", _m_gen_base),
+        ("shots[i].source_media", _m_gen_base),
+        ("shots[i].subject_ids", _m_gen_base),
+        ("shots[i].visual_style", _m_gen_base),
+        ("dialogue_lines[i].shot_id", _m_gen_base),
+        ("production_profile.name", _m_gen_base),
+        ("production_profile.per_shot_overrides", _m_gen_base),
+        ("production_profile.per_subject_overrides", _m_gen_base),
+        ("production_profile.project_id", _m_gen_base),
+        ("production_profile.skill_profiles", _m_gen_base),
+        ("production_profile.per_subject_overrides[i].articulation_target",
+         _m_gen_base),
+        ("production_profile.per_subject_overrides[i].is_live_action_footage",
+         _m_gen_base),
+        ("production_profile.per_subject_overrides[i].motion_methods",
+         _m_gen_base),
+        ("production_profile.per_subject_overrides[i].rendering_style",
+         _m_gen_base),
+        ("production_profile.per_subject_overrides[i].representation",
+         _m_gen_base),
+        ("production_profile.per_subject_overrides[i].source_media",
+         _m_gen_base),
+        ("production_profile.per_subject_overrides[i].species",
+         _m_gen_base),
+        ("production_profile.per_subject_overrides[i].subject_kind",
+         _m_gen_base),
+        ("production_profile.per_shot_overrides[i].camera_movement",
+         _m_gen_base),
+        ("production_profile.per_shot_overrides[i].depth_of_field",
+         _m_gen_base),
+        ("production_profile.per_shot_overrides[i].focus_target",
+         _m_gen_base),
+        ("production_profile.per_shot_overrides[i].is_live_action_footage",
+         _m_gen_base),
+        ("production_profile.per_shot_overrides[i].lighting",
+         _m_gen_base),
+        ("production_profile.per_shot_overrides[i].source_media",
+         _m_gen_base),
+        ("production_profile.per_shot_overrides[i].subjects",
+         _m_gen_base),
+        ("production_profile.per_shot_overrides[i].transition_to_next_shot",
+         _m_gen_base),
+        ("production_profile.per_shot_overrides[i].visual_style",
+         _m_gen_base),
+        ("production_profile", _m_opt_base),
+        ("registration_evidence.approved_reference", _m_reg_base),
+        ("registration_evidence.character_link", _m_reg_base),
+        ("registration_evidence.explicit_authorisation", _m_reg_base),
+        ("registration_evidence.explicit_instruction", _m_reg_base),
+        ("registration_evidence.licence_or_permission", _m_reg_base),
+        ("registration_evidence.name", _m_reg_base),
+        ("registration_evidence.owner", _m_reg_base),
+        ("registration_evidence.project_scope", _m_reg_base),
+        ("registration_evidence.reference_audio", _m_reg_base),
+        ("registration_evidence.rights_consent", _m_reg_base),
+        ("registration_evidence.source", _m_reg_base),
+        ("registration_evidence.unique_id", _m_reg_base),
+        ("requested_skills[i].scope", _m_scope_base),
+        ("requested_skills[i].scope.shots", _m_scope_base),
+        ("requested_skills[i].scope.subjects", _m_scope_base),
+    ]
+    exercised67 = []
+    for path, make_base in null67_cases:
+        req = make_base()
+        check(f"CF-P1-002-R1-R3-NULL67: {path} base request is valid",
+              not errors_for(req_schema, req)
+              and not validate_routing_request(req, CATALOG),
+              f"schema={errors_for(req_schema, req)} "
+              f"router={validate_routing_request(req, CATALOG)}")
+        container, leaf = _m_navigate(req, path)
+        container[leaf] = None
+        schema_errs = errors_for(req_schema, req)
+        router_errs = validate_routing_request(req, CATALOG)
+        check(f"CF-P1-002-R1-R3-NULL67: {path} null is rejected by "
+              "schema and runtime",
+              bool(schema_errs) and bool(router_errs),
+              f"schema_errs={schema_errs} router_errs={router_errs}")
+        frag = _m_fragment(path)
+        check(f"CF-P1-002-R1-R3-NULL67: {path} runtime error names "
+              f"the field ({frag})",
+              any(frag in e for e in router_errs),
+              "; ".join(router_errs))
+        try:
+            resolve_skills(req, CATALOG)
+            check(f"CF-P1-002-R1-R3-NULL67: {path} resolve_skills "
+                  "fails closed", False, "resolved instead of refusing")
+        except RoutingError:
+            check(f"CF-P1-002-R1-R3-NULL67: {path} resolve_skills "
+                  "fails closed", True)
+        del container[leaf]
+        check(f"CF-P1-002-R1-R3-NULL67: {path} omission is valid again",
+              not errors_for(req_schema, req)
+              and not validate_routing_request(req, CATALOG),
+              f"schema={errors_for(req_schema, req)} "
+              f"router={validate_routing_request(req, CATALOG)}")
+        exercised67.append(path)
+    discovered67 = _optional_schema_paths(req_schema)
+    check("CF-P1-002-R1-R3-NULL67: declared matrix covers exactly the "
+          "optional schema paths",
+          set(exercised67) == discovered67
+          and len(null67_cases) == 67 and len(exercised67) == 67,
+          f"declared={len(null67_cases)} exercised={len(exercised67)} "
+          f"discovered={len(discovered67)} "
+          f"missing={sorted(discovered67 - set(exercised67))} "
+          f"extra={sorted(set(exercised67) - discovered67)}")
 
     # --- CF-P1-002-R1-HANDOFF: dependency-safe handoff packets -------
     s1_session = fresh_session()
