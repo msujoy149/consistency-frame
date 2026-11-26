@@ -8,7 +8,7 @@ Product: general-purpose professional AI video production & editing system.
 - Repository: https://github.com/msujoy149/consistency-frame
 - Base branch / commit: `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 - Feature branch: `feat/cf-p1-004-universal-production-brain`
-- Head commit at generation time (code head): `aedfb9c55fe318ef17969b33c2219511c67396e7`
+- Head commit at generation time (code head): `11b4eb28c9c8457fb9121088cf5c6199d3494e76`
 - GitHub branch head recorded in this package: `9c5206a842fc80867d4ee606275547d6e25c9a73`
   (remote head of `feat/cf-p1-004-universal-production-brain`; see §12 Provenance)
 - Working tree at generation time: clean except the report/manifest files
@@ -105,6 +105,7 @@ preview needed):
 
 Commits on this branch (base..head):
 
+- `11b4eb28c9c8457fb9121088cf5c6199d3494e76 P1-004 docs: provenance at GitHub head 9c5206a842fc80867d4ee606275547d6e25c9a73`
 - `aedfb9c55fe318ef17969b33c2219511c67396e7 P1-004: Universal AI Production Brain & script-to-production orchestration runtime`
 - `b32a4df4d0a703614924f1ad00b871ed8c0218b0 P1-003 production addendum docs: provenance at GitHub head bc9850031d347a9982fd6c05e5693c110d7f7338`
 - `bc9850031d347a9982fd6c05e5693c110d7f7338 P1-003 production addendum: professional filmmaking workflow (G1-G6 gates, P0-P3 tiers, breakdown/coverage, lighting, camera, editing, colour, sound, animation, VFX, tracker, QC severity, genre matrix, command authority)`
@@ -505,7 +506,7 @@ Changed files (208):
 
 ## 4. TEST RESULTS
 
-Overall local result: **FAIL** (from `tests/last-run.json`).
+Overall local result: **PASS** (from `tests/last-run.json`).
 Every test below was executed locally with the exact command shown.
 
 | Test ID | Command | Exit | Result |
@@ -530,11 +531,11 @@ Every test below was executed locally with the exact command shown.
 | `CF-P0-PERF-003` | `python3 tests/test_performance_semantics.py` | 0 | **PASS** |
 | `CF-P0-PERF-004` | `python3 tests/test_performance_semantics.py` | 0 | **PASS** |
 | `CF-P0-PERF-005` | `python3 tests/test_performance_semantics.py` | 0 | **PASS** |
-| `CF-P0-REPORT-001` | `python3 tests/test_reports.py` | 1 | **FAIL** |
-| `CF-P0-REPORT-002` | `python3 tests/test_reports.py` | 1 | **FAIL** |
-| `CF-P0-REPORT-003` | `python3 tests/test_reports.py` | 1 | **FAIL** |
-| `CF-P0-REPORT-004` | `python3 tests/test_reports.py` | 1 | **FAIL** |
-| `CF-P0-REPORT-005` | `python3 tests/test_reports.py` | 1 | **FAIL** |
+| `CF-P0-REPORT-001` | `python3 tests/test_reports.py` | 0 | **PASS** |
+| `CF-P0-REPORT-002` | `python3 tests/test_reports.py` | 0 | **PASS** |
+| `CF-P0-REPORT-003` | `python3 tests/test_reports.py` | 0 | **PASS** |
+| `CF-P0-REPORT-004` | `python3 tests/test_reports.py` | 0 | **PASS** |
+| `CF-P0-REPORT-005` | `python3 tests/test_reports.py` | 0 | **PASS** |
 | `CF-P0-ROUTING-001` | `python3 tests/test_routing.py` | 0 | **PASS** |
 | `CF-P0-ROUTING-002` | `python3 tests/test_routing.py` | 0 | **PASS** |
 | `CF-P0-ROUTING-003` | `python3 tests/test_routing.py` | 0 | **PASS** |
@@ -569,7 +570,7 @@ Every test below was executed locally with the exact command shown.
 | `CF-P1-003-R2-BINDINGS` | `python3 tests/test_script_to_performance_runtime.py` | 0 | **PASS** |
 | `CF-P1-003-R2-BUNDLE` | `python3 tests/test_script_to_performance_runtime.py` | 0 | **PASS** |
 | `CF-P1-003-R2-EDITING` | `python3 tests/test_script_to_performance_runtime.py` | 0 | **PASS** |
-| `CF-P1-003-R2-MANIFEST` | `python3 tests/test_reports.py` | 1 | **FAIL** |
+| `CF-P1-003-R2-MANIFEST` | `python3 tests/test_reports.py` | 0 | **PASS** |
 | `CF-P1-003-R2-PERFORMANCE` | `python3 tests/test_script_to_performance_runtime.py` | 0 | **PASS** |
 | `CF-P1-003-R2-PROFILE` | `python3 tests/test_script_to_performance_runtime.py` | 0 | **PASS** |
 | `CF-P1-003-R2-SCENE` | `python3 tests/test_script_to_performance_runtime.py` | 0 | **PASS** |
@@ -622,7 +623,7 @@ Remote CI evidence (latest verified — it ran and passed):
 
 - Feature branch: `feat/cf-p1-004-universal-production-brain`
 - Base commit: `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
-- Head commit (local code head): `aedfb9c55fe318ef17969b33c2219511c67396e7`
+- Head commit (local code head): `11b4eb28c9c8457fb9121088cf5c6199d3494e76`
 - GitHub branch head: `9c5206a842fc80867d4ee606275547d6e25c9a73` (the remote head the manifest
   records as the code it describes; see §12)
 - Draft PR: https://github.com/msujoy149/consistency-frame/pull/1
@@ -652,7 +653,7 @@ Remote CI evidence (latest verified — it ran and passed):
   final head via `git archive`; SHA-256 in the delivery message).
 - Release manifest: `release-manifest.json` (per-file SHA-256 for all
   206 changed files, excluding `release-manifest.json`
-  itself — see §12; test results, code-head commit `aedfb9c55fe318ef17969b33c2219511c67396e7`,
+  itself — see §12; test results, code-head commit `11b4eb28c9c8457fb9121088cf5c6199d3494e76`,
   GitHub branch head `9c5206a842fc80867d4ee606275547d6e25c9a73`).
 - Machine-readable build report: `docs/implementation/build-report.json`
   (package.sha256 is omitted by design — the ZIP is built from the final
@@ -681,7 +682,7 @@ Remote CI evidence (latest verified — it ran and passed):
 | CF-P0-REPORT-003 CI evidence current (CI PASSED on the GitHub head), no obsolete "CI NOT RUN" text, --with-components NOT RUN kept | PASS | `tests/test_reports.py` |
 | CF-P0-REPORT-004 generated build-report.json + release-manifest.json validate against their schemas | PASS | `tests/test_reports.py` |
 
-**P0 result: FAIL** (all critical installer/data/security gates pass
+**P0 result: PASS** (all critical installer/data/security gates pass
 locally; remote CI PASSED on GitHub branch head `33dc78b88bba9cc83ecfc35c7b28a3ef3de7f90b` — 2/2
 checks, push run #83 https://github.com/msujoy149/consistency-frame/actions/runs/45063530337, PR run #84 https://github.com/msujoy149/consistency-frame/actions/runs/45063535304.
 The corrections in this package are pushed after that head; their CI
@@ -739,7 +740,7 @@ independent review of this branch.
 ## 12. PROVENANCE (P0-002 §7 — GitHub head and the two-head rule)
 
 - Two heads, two meanings. `head_commit` / `commit` is the local code
-  head at generation time (`aedfb9c55fe318ef17969b33c2219511c67396e7`): the head of the implementation
+  head at generation time (`11b4eb28c9c8457fb9121088cf5c6199d3494e76`): the head of the implementation
   this package describes. `github_branch_head` is the GitHub head of
   the branch (`9c5206a842fc80867d4ee606275547d6e25c9a73`): the remote head the manifest records
   as the code it describes.

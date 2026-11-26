@@ -1,5 +1,5 @@
 {
-  "status": "FAIL",
+  "status": "PASS",
   "tests": [
     {
       "id": "P0-SHELL",
@@ -490,38 +490,38 @@
     {
       "id": "CF-P0-REPORT-001",
       "command": "python3 tests/test_reports.py",
-      "exit_code": 1,
-      "result": "FAIL"
+      "exit_code": 0,
+      "result": "PASS"
     },
     {
       "id": "CF-P0-REPORT-002",
       "command": "python3 tests/test_reports.py",
-      "exit_code": 1,
-      "result": "FAIL"
+      "exit_code": 0,
+      "result": "PASS"
     },
     {
       "id": "CF-P0-REPORT-003",
       "command": "python3 tests/test_reports.py",
-      "exit_code": 1,
-      "result": "FAIL"
+      "exit_code": 0,
+      "result": "PASS"
     },
     {
       "id": "CF-P0-REPORT-004",
       "command": "python3 tests/test_reports.py",
-      "exit_code": 1,
-      "result": "FAIL"
+      "exit_code": 0,
+      "result": "PASS"
     },
     {
       "id": "CF-P0-REPORT-005",
       "command": "python3 tests/test_reports.py",
-      "exit_code": 1,
-      "result": "FAIL"
+      "exit_code": 0,
+      "result": "PASS"
     },
     {
       "id": "CF-P1-003-R2-MANIFEST",
       "command": "python3 tests/test_reports.py",
-      "exit_code": 1,
-      "result": "FAIL"
+      "exit_code": 0,
+      "result": "PASS"
     },
     {
       "id": "CF-INT-023",

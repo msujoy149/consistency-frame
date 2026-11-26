@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-26 18:38 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-26 18:39 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,7 +23,7 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-004-universal-production-brain`
-**Head commit:** `aedfb9c55fe318ef17969b33c2219511c67396e7`
+**Head commit:** `11b4eb28c9c8457fb9121088cf5c6199d3494e76`
 **GitHub branch head:** `9c5206a842fc80867d4ee606275547d6e25c9a73` (remote head of `feat/cf-p1-004-universal-production-brain` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
@@ -377,7 +377,7 @@ tests/test_task_compiler.py
 tests/test_timeline_manifest.py
 ```
 
-## Tests and CI evidence — status: FAIL
+## Tests and CI evidence — status: PASS
 
 - `P0-SHELL` — bash -n scripts/sync-skills.sh — **PASS** (exit 0)
 - `P0-SHELL` — bash -n setup.sh — **PASS** (exit 0)
@@ -460,12 +460,12 @@ tests/test_timeline_manifest.py
 - `CF-P1-004-ORCHESTRATOR` — python3 tests/test_production_orchestrator.py — **PASS** (exit 0)
 - `CF-P1-004-COMPILER` — python3 tests/test_task_compiler.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
-- `CF-P0-REPORT-001` — python3 tests/test_reports.py — **FAIL** (exit 1)
-- `CF-P0-REPORT-002` — python3 tests/test_reports.py — **FAIL** (exit 1)
-- `CF-P0-REPORT-003` — python3 tests/test_reports.py — **FAIL** (exit 1)
-- `CF-P0-REPORT-004` — python3 tests/test_reports.py — **FAIL** (exit 1)
-- `CF-P0-REPORT-005` — python3 tests/test_reports.py — **FAIL** (exit 1)
-- `CF-P1-003-R2-MANIFEST` — python3 tests/test_reports.py — **FAIL** (exit 1)
+- `CF-P0-REPORT-001` — python3 tests/test_reports.py — **PASS** (exit 0)
+- `CF-P0-REPORT-002` — python3 tests/test_reports.py — **PASS** (exit 0)
+- `CF-P0-REPORT-003` — python3 tests/test_reports.py — **PASS** (exit 0)
+- `CF-P0-REPORT-004` — python3 tests/test_reports.py — **PASS** (exit 0)
+- `CF-P0-REPORT-005` — python3 tests/test_reports.py — **PASS** (exit 0)
+- `CF-P1-003-R2-MANIFEST` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-report.py — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-report.py --check — **PASS** (exit 0)
 - `CF-P0-ROUTING-004` — python3 tests/test_routing.py — **PASS** (exit 0)
@@ -554,4 +554,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-26 18:38 UTC.
+- Report generated: 2026-11-26 18:39 UTC.

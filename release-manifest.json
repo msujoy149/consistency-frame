@@ -2,7 +2,7 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-004-universal-production-brain",
-  "commit": "aedfb9c55fe318ef17969b33c2219511c67396e7",
+  "commit": "11b4eb28c9c8457fb9121088cf5c6199d3494e76",
   "github_branch_head": "9c5206a842fc80867d4ee606275547d6e25c9a73",
   "files": [
     {
@@ -142,7 +142,7 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "b04037718a257920265a69903edde56be30ccb3730f65ffde06a570f27ce097c",
+      "sha256": "9c12aa255593314343bd421a285ab1a9e7576fda1b9243456e1fb4d8073439ff",
       "bytes": 29662
     },
     {
@@ -152,8 +152,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "34fd900bd236ff25eebe1b3f3ff2ac656b2f70293cee9ffe05f1fdd54f2f22ae",
-      "bytes": 62615
+      "sha256": "275ee09ef8f8777acf6d1079254b9b9468dfcca8f1651fcbafb2d5b632d16bb0",
+      "bytes": 62740
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -252,7 +252,7 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "0968d636db0b49298df339d76462fff5801e66093b6080c4f7cbdb9041c8393e",
+      "sha256": "0d454d6af01d3604646d02fe5468812142d4d9411a8dd8ec3356da0f0a06acb5",
       "bytes": 27283
     },
     {
@@ -907,7 +907,7 @@
     },
     {
       "path": "tests/last-run.json",
-      "sha256": "e11ffdac0d61f4a6716698bb22c759e9e95855799c84be9334de259cd95efbce",
+      "sha256": "70da5611ad945baeece38658684a867747a4c832a5248f7c4fbebd80fdd9497d",
       "bytes": 13529
     },
     {
@@ -1119,23 +1119,23 @@
     },
     {
       "id": "CF-P0-REPORT-001",
-      "result": "FAIL"
+      "result": "PASS"
     },
     {
       "id": "CF-P0-REPORT-002",
-      "result": "FAIL"
+      "result": "PASS"
     },
     {
       "id": "CF-P0-REPORT-003",
-      "result": "FAIL"
+      "result": "PASS"
     },
     {
       "id": "CF-P0-REPORT-004",
-      "result": "FAIL"
+      "result": "PASS"
     },
     {
       "id": "CF-P0-REPORT-005",
-      "result": "FAIL"
+      "result": "PASS"
     },
     {
       "id": "CF-P0-ROUTING-001",
@@ -1275,7 +1275,7 @@
     },
     {
       "id": "CF-P1-003-R2-MANIFEST",
-      "result": "FAIL"
+      "result": "PASS"
     },
     {
       "id": "CF-P1-003-R2-PERFORMANCE",
@@ -1342,5 +1342,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-26T18:38:29Z"
+  "generated_at_utc": "2026-11-26T18:39:52Z"
 }
