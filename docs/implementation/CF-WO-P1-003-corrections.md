@@ -655,3 +655,15 @@ the same full `--github-head`: CHECK OK. CHECKSUMS recomputed
 by hand: all three entries OK. The manifest SHA and CHECKSUMS
 SHA are recorded in the delivery report, not here (hash-chain
 rule, §11.4).
+
+Post-push regen (parent, 2026-11-26): provenance regenerated
+with `--base e1571db68ed87fb973c45960a4a3e27e09ba0d06 --github-head cc45a284ae7d1f3a4a63323e9cf3301a0811bf72`
+(the actual GitHub head after the docs push; no `git update-ref`
+or ref manipulation was used at any point in R1 — the local
+`origin/main` ref was restored to its true value `8fc11fee` by a
+plain `git fetch origin main` before the regen). Manifest: 182
+entries, 0 mismatches against the tree at regen time; CHECKSUMS
+3/3 OK. Manifest head is `cc45a28`, manifest commit is `5d65010`
+(the local docs head at regen time) — both lag the final PR head
+by one docs commit, the established pattern; the manifest SHA
+lives in the delivery report, not here.

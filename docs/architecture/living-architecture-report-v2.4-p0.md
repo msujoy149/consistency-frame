@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-003-script-to-performance-runtime`
-**Head commit:** `32a96a93e1ada673b1958c37a9fb8afc74a75dd3`
-**GitHub branch head:** `32a96a93e1ada673b1958c37a9fb8afc74a75dd3` (remote head of `feat/cf-p1-003-script-to-performance-runtime` at
+**Head commit:** `5d65010f1766c27bb494f0da636dfca623f3cb5c`
+**GitHub branch head:** `cc45a284ae7d1f3a4a63323e9cf3301a0811bf72` (remote head of `feat/cf-p1-003-script-to-performance-runtime` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
