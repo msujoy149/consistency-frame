@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-002-skill-routing-runtime",
-  "commit": "b8887b45bf0fcc15939e4d8e41f83122b5ea2614",
-  "github_branch_head": "22ecc621acc13d20f286ceaf0ee667672ded77fc",
+  "commit": "d0a895772bc9d74753090c6d86b843ca7fe86420",
+  "github_branch_head": "60d0a941c20e736dd6f6d32f997f82f66f32c8c7",
   "files": [
     {
       "path": ".gitattributes",
@@ -127,7 +127,7 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "f995c192e70da77740a248298aaf3ddd3e255802fa72e139ff3099e6ec6a3fde",
+      "sha256": "c80c4e19c436de4596f9c983547ddbcdd26055339a87dda79f9e0ca7d9812e66",
       "bytes": 26179
     },
     {
@@ -137,7 +137,7 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "bb39b49a281e5af6b70bcc0aeffb28afbe124085afbcc67d5410ed48c0e13a07",
+      "sha256": "c76a3202a96f3de9da1980c33c479d9a10d9f52a59b9179d4070ddb4fc7c9566",
       "bytes": 50102
     },
     {
@@ -217,8 +217,8 @@
     },
     {
       "path": "docs/implementation/CF-WO-P1-002-corrections.md",
-      "sha256": "93de0c3c77c41dc6abbedd3811d4aa0dc03f1460109a1f33875e6c7f40950e7b",
-      "bytes": 50753
+      "sha256": "8e662da4a5a2839e5b7b788b5da317f6116db5bb981eb39320a100eb8be20317",
+      "bytes": 50732
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
@@ -227,7 +227,7 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "c45acd542acdd2d2033fd684e24cdca0ba01de1922f30c5dd31a9de6993c1229",
+      "sha256": "c97f766296c09f8d87e2a0da27b5a5cbf19d8114f5f1d5c7c10f297122c3a7ff",
       "bytes": 21507
     },
     {
@@ -1114,5 +1114,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-26T10:09:07Z"
+  "generated_at_utc": "2026-11-26T10:12:00Z"
 }
