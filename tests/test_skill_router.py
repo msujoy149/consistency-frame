@@ -12,7 +12,9 @@ handoff packets and tamper detection.
 Run: python3 tests/test_skill_router.py
 Exit 0 = PASS, 1 = FAIL. Test IDs: CF-P1-002-CATALOG,
 CF-P1-002-SCHEMA, CF-P1-002-ROUTING, CF-P1-002-CONFLICTS,
-CF-P1-002-MODES, CF-P1-002-PLAN, CF-P1-002-SECURITY.
+CF-P1-002-MODES, CF-P1-002-PLAN, CF-P1-002-SECURITY,
+CF-P1-002-R1-SCOPE, CF-P1-002-R1-SCHEMA, CF-P1-002-R1-HANDOFF,
+CF-P1-002-R1-CATALOG.
 """
 import copy
 import hashlib
@@ -475,11 +477,14 @@ def main():
     bird_s4 = subject_id(PROFILES["s4"], 1)
     fox_s6 = subject_id(PROFILES["s6"], 0)
     # TC-2 positive: live-action-vfx forced onto the digital-human
-    # subject in the same shot as realistic-person.
+    # subject in the same shot as realistic-person. (R1: the scoped
+    # shot is declared in the request's shots table, so the scope
+    # reference resolves.)
     res = resolve_skills(request(
         "tc2-plus", "GENERATE_FROM_SCRIPT", PROFILES["s3"],
         {"dialogue": True, "languages": ["en"],
          "recurring_character": True, "consent": True},
+        shots=[{"shot_id": "shot-01"}],
         requested_skills=[{"skill": "live-action-vfx",
                            "source": "user-request",
                            "scope": {"shots": ["shot-01"],
@@ -495,11 +500,14 @@ def main():
     check("CF-P1-002-CONFLICTS: TC-2 never silently removes either skill",
           {"live-action-vfx", "realistic-person"} <= res["skills"])
     # TC-2 negative: the same two skills in different shots stay allowed.
+    # (R1: both shots are declared, so the subject's shot reference
+    # and the scope reference resolve.)
     res = resolve_skills(request(
         "tc2-minus", "GENERATE_FROM_SCRIPT", PROFILES["s3"],
         {"dialogue": True, "languages": ["en"],
          "recurring_character": True, "consent": True},
         subjects=[{"subject_id": human_s3, "shots": ["shot-01"]}],
+        shots=[{"shot_id": "shot-01"}, {"shot_id": "shot-02"}],
         requested_skills=[{"skill": "live-action-vfx",
                            "source": "user-request",
                            "scope": {"shots": ["shot-02"]}}]), CATALOG)
@@ -512,6 +520,7 @@ def main():
         "tc4-plus", "GENERATE_FROM_SCRIPT", PROFILES["s3"],
         {"dialogue": True, "languages": ["en"],
          "recurring_character": True, "consent": True},
+        shots=[{"shot_id": "shot-01"}],
         requested_skills=[{"skill": "explainer-animation",
                            "source": "user-request",
                            "scope": {"shots": ["shot-01"],
@@ -612,6 +621,7 @@ def main():
         "tc6-plus", "GENERATE_FROM_SCRIPT", PROFILES["s3"],
         {"dialogue": True, "languages": ["en"],
          "recurring_character": True, "consent": True},
+        shots=[{"shot_id": "shot-01"}],
         requested_skills=[{"skill": "kids-family-animation",
                            "source": "user-request",
                            "scope": {"shots": ["shot-01"],
@@ -706,10 +716,13 @@ def main():
           "different shots",
           "TC-9" not in blocked_rules(res), f"blocked={res['blocked']}")
     # TC-10 positive: a bird line with human lip movement.
+    # (R1: the line's shot is declared, so the shot reference
+    # resolves.)
     res = resolve_skills(request(
         "tc10-plus", "GENERATE_FROM_SCRIPT", PROFILES["s4"],
         {"dialogue": True, "languages": ["en"],
          "recurring_character": True, "consent": True},
+        shots=[{"shot_id": "shot-01"}],
         dialogue_lines=[{"line_id": "line-01", "subject_id": bird_s4,
                          "shot_id": "shot-01",
                          "articulation_target": "human-mouth-lips"}]),
@@ -724,6 +737,7 @@ def main():
         "tc10-minus", "GENERATE_FROM_SCRIPT", PROFILES["s4"],
         {"dialogue": True, "languages": ["en"],
          "recurring_character": True, "consent": True},
+        shots=[{"shot_id": "shot-01"}],
         dialogue_lines=[{"line_id": "line-01", "subject_id": bird_s4,
                          "shot_id": "shot-01",
                          "articulation_target": "bird-beak"},
@@ -738,6 +752,7 @@ def main():
         "tc10-other", "GENERATE_FROM_SCRIPT", PROFILES["s4"],
         {"dialogue": True, "languages": ["en"],
          "recurring_character": True, "consent": True},
+        shots=[{"shot_id": "shot-01"}],
         dialogue_lines=[{"line_id": "line-01", "subject_id": bird_s4,
                          "shot_id": "shot-01",
                          "articulation_target": "other"}]), CATALOG)
@@ -1042,8 +1057,16 @@ def main():
                "recurring_character": True},
               additional_layers=["emotional-performance"]),
               CATALOG)["parallel_groups"]])
-    # Handoff packets.
-    packet = build_handoff_packet(plan, "realistic-person", CATALOG)
+    # Handoff packets (R1: receipts for every earlier step, so the
+    # realistic-person step is ready and its dependencies count as
+    # satisfied only because they were receipted).
+    receipts = [{"plan_id": plan["plan_id"], "step_id": step,
+                 "status": "completed"}
+                for step in ("command-authority", "character-consistency",
+                             "voice-consistency", "production-systems",
+                             "language-authenticity", "humanized-production")]
+    packet = build_handoff_packet(session, plan, "realistic-person",
+                                  receipts, CATALOG)
     record = next(e for e in CATALOG["skills"]
                   if e["skill"] == "realistic-person")
     plan_record = next(s for s in plan["selected_skills"]
@@ -1078,8 +1101,16 @@ def main():
           == ["mode GENERATE_FROM_SCRIPT: forbidden silent_dialogue_rewrite"])
     check("CF-P1-002-PLAN: handoff packet carries the selection basis",
           packet["selection_basis"] == "profile-dimension")
+    check("CF-P1-002-PLAN: handoff packet is bound to the plan and the "
+          "session and lists the receipted steps",
+          packet["plan_id"] == plan["plan_id"]
+          and packet["session_id"] == session.session_id
+          and packet["completed_step_ids"] == [
+              "command-authority", "character-consistency",
+              "voice-consistency", "production-systems",
+              "language-authenticity", "humanized-production"])
     try:
-        build_handoff_packet(plan, "not-a-step", CATALOG)
+        build_handoff_packet(session, plan, "not-a-step", [], CATALOG)
         check("CF-P1-002-PLAN: handoff packet for an unknown step is refused",
               False, "built instead of refusing")
     except RoutingError:
@@ -1112,6 +1143,7 @@ def main():
         "plan-tc2", "GENERATE_FROM_SCRIPT", PROFILES["s3"],
         {"dialogue": True, "languages": ["en"],
          "recurring_character": True, "consent": True},
+        shots=[{"shot_id": "shot-01"}],
         requested_skills=[{"skill": "live-action-vfx",
                            "source": "user-request",
                            "scope": {"shots": ["shot-01"],
@@ -1218,6 +1250,695 @@ def main():
           "standard library only",
           "import yaml" not in router_src
           and "import json" in router_src)
+
+    # --- CF-P1-002-R1-SCOPE: referential scope integrity --------------
+    # TC-8 reproduction with the digital-human profile: the real
+    # subject char-aria-001 triggers the same-subject conflict.
+    res = resolve_skills(request(
+        "r1-tc8-real", "GENERATE_FROM_SCRIPT", PROFILES["s3"],
+        {"dialogue": True, "languages": ["en"],
+         "recurring_character": True, "consent": True},
+        requested_skills=[{"skill": "agency-advertising",
+                           "source": "user-request",
+                           "scope": {"subjects": [human_s3]}}]), CATALOG)
+    item = blocked_item(res, "TC-8")
+    check("CF-P1-002-R1-SCOPE: TC-8 fires for the real subject "
+          "char-aria-001",
+          item is not None and item["subject_id"] == "char-aria-001",
+          f"blocked={res['blocked']}")
+    # A phantom subject in a skill scope is rejected at validation.
+    ghost_req = request(
+        "r1-tc8-ghost", "GENERATE_FROM_SCRIPT", PROFILES["s3"],
+        {"dialogue": True, "languages": ["en"],
+         "recurring_character": True, "consent": True},
+        requested_skills=[{"skill": "agency-advertising",
+                           "source": "user-request",
+                           "scope": {"subjects": ["ghost-subject-999"]}}])
+    check("CF-P1-002-R1-SCOPE: phantom subject ghost-subject-999 is "
+          "rejected during request validation",
+          any("ghost-subject-999" in e
+              for e in validate_routing_request(ghost_req, CATALOG)),
+          "; ".join(validate_routing_request(ghost_req, CATALOG)))
+    try:
+        resolve_skills(ghost_req, CATALOG)
+        check("CF-P1-002-R1-SCOPE: phantom subject never reaches "
+              "resolution", False, "resolved instead of refusing")
+    except RoutingError:
+        check("CF-P1-002-R1-SCOPE: phantom subject never reaches "
+              "resolution", True)
+    # A phantom shot in a skill scope is rejected the same way.
+    ghost_shot_req = request(
+        "r1-tc8-ghost-shot", "GENERATE_FROM_SCRIPT", PROFILES["s3"],
+        {"dialogue": True, "languages": ["en"],
+         "recurring_character": True, "consent": True},
+        shots=[{"shot_id": "shot-01"}],
+        requested_skills=[{"skill": "live-action-vfx",
+                           "source": "user-request",
+                           "scope": {"shots": ["ghost-shot-999"],
+                                     "subjects": [human_s3]}}])
+    check("CF-P1-002-R1-SCOPE: phantom shot ghost-shot-999 is rejected "
+          "during request validation",
+          any("ghost-shot-999" in e
+              for e in validate_routing_request(ghost_shot_req, CATALOG)))
+    # Phantom references are rejected wherever a rule consumes scope
+    # IDs: subject shot lists, shot subject lists, dialogue lines,
+    # and per-shot override subject lists.
+    for label, req in (
+            ("subject shot list", request(
+                "r1-ghost-subject-shots", "GENERATE_FROM_SCRIPT",
+                PROFILES["s3"],
+                {"dialogue": True, "consent": True},
+                subjects=[{"subject_id": human_s3,
+                           "shots": ["ghost-shot-999"]}])),
+            ("shot subject list", request(
+                "r1-ghost-shot-subjects", "GENERATE_FROM_SCRIPT",
+                PROFILES["s3"],
+                {"dialogue": True, "consent": True},
+                shots=[{"shot_id": "shot-01",
+                        "subject_ids": ["ghost-subject-999"]}])),
+            ("dialogue line subject", request(
+                "r1-ghost-line-subject", "GENERATE_FROM_SCRIPT",
+                PROFILES["s4"],
+                {"dialogue": True, "consent": True},
+                shots=[{"shot_id": "shot-01"}],
+                dialogue_lines=[{"line_id": "line-01",
+                                 "subject_id": "ghost-subject-999",
+                                 "shot_id": "shot-01",
+                                 "articulation_target": "human-mouth-lips"}])),
+            ("dialogue line shot", request(
+                "r1-ghost-line-shot", "GENERATE_FROM_SCRIPT",
+                PROFILES["s4"],
+                {"dialogue": True, "consent": True},
+                shots=[{"shot_id": "shot-01"}],
+                dialogue_lines=[{"line_id": "line-01",
+                                 "subject_id": bird_s4,
+                                 "shot_id": "ghost-shot-999",
+                                 "articulation_target": "bird-beak"}])),
+    ):
+        check(f"CF-P1-002-R1-SCOPE: phantom reference rejected — {label}",
+              bool(validate_routing_request(req, CATALOG)),
+              "; ".join(validate_routing_request(req, CATALOG)))
+    ghost_override = clone(PROFILES["s1"])
+    ghost_override["per_shot_overrides"] = [
+        {"shot_id": "shot-01", "subjects": ["ghost-subject-999"]}]
+    check("CF-P1-002-R1-SCOPE: per-shot override naming a phantom "
+          "subject is rejected",
+          bool(validate_routing_request(request(
+              "r1-ghost-override", "GENERATE_FROM_SCRIPT", ghost_override,
+              {"dialogue": True}), CATALOG)))
+    # Duplicate IDs inside the profile override tables are ambiguous.
+    dup_subject = clone(PROFILES["s3"])
+    dup_subject["per_subject_overrides"].append(
+        clone(dup_subject["per_subject_overrides"][0]))
+    check("CF-P1-002-R1-SCOPE: duplicate character_id in "
+          "per_subject_overrides is rejected",
+          bool(validate_routing_request(request(
+              "r1-dup-subject", "GENERATE_FROM_SCRIPT", dup_subject,
+              {"dialogue": True, "consent": True}), CATALOG)))
+    dup_shot = clone(PROFILES["s3"])
+    dup_shot["per_shot_overrides"].append(
+        clone(dup_shot["per_shot_overrides"][0]))
+    check("CF-P1-002-R1-SCOPE: duplicate shot_id in per_shot_overrides "
+          "is rejected",
+          bool(validate_routing_request(request(
+              "r1-dup-shot", "GENERATE_FROM_SCRIPT", dup_shot,
+              {"dialogue": True, "consent": True}), CATALOG)))
+    # Phantom scope references are rejected for every TC that consumes
+    # scope IDs, not just TC-8.
+    for rule, skill, scope in (
+            ("TC-2", "live-action-vfx",
+             {"shots": ["shot-01"], "subjects": ["ghost-subject-999"]}),
+            ("TC-4", "explainer-animation",
+             {"shots": ["shot-01"], "subjects": ["ghost-subject-999"]}),
+            ("TC-6", "kids-family-animation",
+             {"shots": ["shot-01"], "subjects": ["ghost-subject-999"]}),
+            ("TC-8", "agency-advertising",
+             {"subjects": ["ghost-subject-999"]}),
+    ):
+        req = request(
+            f"r1-ghost-{rule.lower()}", "GENERATE_FROM_SCRIPT",
+            PROFILES["s3"],
+            {"dialogue": True, "languages": ["en"],
+             "recurring_character": True, "consent": True},
+            shots=[{"shot_id": "shot-01"}],
+            requested_skills=[{"skill": skill, "source": "user-request",
+                               "scope": scope}])
+        check(f"CF-P1-002-R1-SCOPE: phantom scope rejected for {rule}",
+              bool(validate_routing_request(req, CATALOG)))
+    # A scope that names a profile shot resolves (the profile's
+    # per-shot override shot sh-01 is a real shot).
+    res = resolve_skills(request(
+        "r1-profile-shot", "GENERATE_FROM_SCRIPT", PROFILES["s3"],
+        {"dialogue": True, "languages": ["en"],
+         "recurring_character": True, "consent": True},
+        requested_skills=[{"skill": "live-action-vfx",
+                           "source": "user-request",
+                           "scope": {"shots": ["sh-01"],
+                                     "subjects": [human_s3]}}]), CATALOG)
+    check("CF-P1-002-R1-SCOPE: a scope naming a profile shot resolves "
+          "and TC-2 fires for it",
+          blocked_item(res, "TC-2") is not None
+          and blocked_item(res, "TC-2")["shot_id"] == "sh-01",
+          f"blocked={res['blocked']}")
+    # Valid cross-shot / cross-subject combinations stay allowed when
+    # their actual IDs resolve and the conflict rule permits them.
+    res = resolve_skills(request(
+        "r1-cross-ok", "GENERATE_FROM_SCRIPT", PROFILES["s4"],
+        {"dialogue": True, "languages": ["en"],
+         "recurring_character": True, "consent": True},
+        requested_skills=[{"skill": "agency-advertising",
+                           "source": "user-request",
+                           "scope": {"subjects": [bird_s4]}}]), CATALOG)
+    check("CF-P1-002-R1-SCOPE: agency-advertising on a different real "
+          "subject stays allowed",
+          "TC-8" not in blocked_rules(res), f"blocked={res['blocked']}")
+    # An invalid scope never produces a ready plan: the planner
+    # returns a blocked plan with an invalid-request diagnostic.
+    bad_plan = build_workflow_plan(session, ghost_req, CATALOG)
+    check("CF-P1-002-R1-SCOPE: an invalid scope produces a blocked plan, "
+          "never a ready plan",
+          bad_plan["status"] == "blocked"
+          and bad_plan["blocked_diagnostics"]
+          and bad_plan["blocked_diagnostics"][0]["code"] == "invalid-request"
+          and not bad_plan["steps"],
+          f"status={bad_plan['status']}")
+
+    # --- CF-P1-002-R1-SCHEMA: schema parity / typed evidence --------
+    # The supplied reproduction: a string "false" is never boolean
+    # authorisation evidence.
+    false_req = request(
+        "r1-evidence-false", "REGISTER_CHARACTER",
+        registration_evidence={"explicit_authorisation": "false",
+                               "name": "Nila",
+                               "unique_id": "char-nila-001",
+                               "approved_reference": True})
+    check("CF-P1-002-R1-SCHEMA: explicit_authorisation \"false\" is "
+          "rejected by request validation",
+          any("explicit_authorisation" in e and "boolean" in e
+              for e in validate_routing_request(false_req, CATALOG)),
+          "; ".join(validate_routing_request(false_req, CATALOG)))
+    false_plan = build_workflow_plan(session, false_req, CATALOG)
+    check("CF-P1-002-R1-SCHEMA: explicit_authorisation \"false\" never "
+          "builds a ready registration plan",
+          false_plan["status"] == "blocked",
+          f"status={false_plan['status']}")
+    # Every boolean authorisation field, every non-True value: only
+    # the actual boolean True can satisfy an affirmative approval.
+    for field in ("explicit_authorisation", "approved_reference",
+                  "rights_consent", "reference_audio",
+                  "explicit_instruction"):
+        for bad in ("true", "yes", 1, 0, None, ""):
+            req = request(
+                f"r1-bool-{field[:6]}", "REGISTER_CHARACTER",
+                registration_evidence={field: bad})
+            errs = validate_routing_request(req, CATALOG)
+            check(f"CF-P1-002-R1-SCHEMA: {field}={bad!r} is rejected",
+                  any(field in e for e in errs), "; ".join(errs))
+        req = request(
+            f"r1-bool-{field[:6]}-true", "REGISTER_CHARACTER",
+            registration_evidence={field: True})
+        check(f"CF-P1-002-R1-SCHEMA: {field}=True is well-formed",
+              not any("registration_evidence" in e
+                      for e in validate_routing_request(req, CATALOG)),
+              "; ".join(validate_routing_request(req, CATALOG)))
+    # A well-formed False is a denial, not a type error: it validates
+    # but does not satisfy the registration policy.
+    denied_req = request(
+        "r1-evidence-denied", "REGISTER_CHARACTER",
+        registration_evidence={"explicit_authorisation": False,
+                               "name": "Nila",
+                               "unique_id": "char-nila-001",
+                               "approved_reference": True})
+    check("CF-P1-002-R1-SCHEMA: explicit_authorisation False validates "
+          "(a well-formed denial)",
+          not validate_routing_request(denied_req, CATALOG),
+          "; ".join(validate_routing_request(denied_req, CATALOG)))
+    denied_plan = build_workflow_plan(session, denied_req, CATALOG)
+    check("CF-P1-002-R1-SCHEMA: explicit_authorisation False does not "
+          "satisfy the registration policy",
+          denied_plan["status"] == "blocked"
+          and denied_plan["blocked_diagnostics"][0]["code"]
+          == "missing-registration-evidence",
+          f"diagnostics={denied_plan['blocked_diagnostics']}")
+    # None and wrong types for every required profile field.
+    profile_bad_cases = []
+    for field in ("schema_version", "production_profile_id",
+                  "production_medium", "visual_style",
+                  "source_media_type", "motion_methods", "subject_types",
+                  "interaction_pattern", "is_live_action_footage",
+                  "version", "status"):
+        # "not-a-value" is a valid production_profile_id per the ID
+        # pattern, so that field gets a genuinely invalid string.
+        bad_string = "BAD ID!" if field == "production_profile_id" \
+            else "not-a-value"
+        for bad in (None, 123, bad_string):
+            profile_bad_cases.append((f"{field}={bad!r}", field, bad))
+    profile_bad_cases.extend([
+        ("version=True", "version", True),
+        ("version=0", "version", 0),
+        ("version='1'", "version", "1"),
+        ("status='pending'", "status", "pending"),
+        ("schema_version='2.4'", "schema_version", "2.4"),
+        ("motion_methods=[]", "motion_methods", []),
+        ("motion_methods='rig'", "motion_methods", "rig-2d-keyframe"),
+        ("subject_types=[]", "subject_types", []),
+        ("production_profile_id='BAD ID!'", "production_profile_id",
+         "BAD ID!"),
+    ])
+    for label, field, bad in profile_bad_cases:
+        prof = clone(PROFILES["s3"])
+        prof[field] = bad
+        req = request(f"r1-prof-{label[:12]}", "GENERATE_FROM_SCRIPT",
+                      prof, {"dialogue": True, "consent": True})
+        check(f"CF-P1-002-R1-SCHEMA: required profile field rejected — "
+              f"{label}",
+              bool(validate_routing_request(req, CATALOG)),
+              "; ".join(validate_routing_request(req, CATALOG)))
+    # Nested registration-evidence extra fields and invalid types.
+    for label, evidence in (
+            ("extra field", {"explicit_authorisation": True,
+                             "name": "Nila", "unique_id": "char-nila-001",
+                             "approved_reference": True, "note": "hi"}),
+            ("name is a number", {"explicit_authorisation": True,
+                                  "name": 123,
+                                  "unique_id": "char-nila-001",
+                                  "approved_reference": True}),
+            ("unique_id is empty", {"explicit_authorisation": True,
+                                    "name": "Nila", "unique_id": "",
+                                    "approved_reference": True}),
+            ("approved_reference is 1", {"explicit_authorisation": True,
+                                         "name": "Nila",
+                                         "unique_id": "char-nila-001",
+                                         "approved_reference": 1}),
+    ):
+        req = request("r1-evidence-nested", "REGISTER_CHARACTER",
+                      registration_evidence=evidence)
+        check(f"CF-P1-002-R1-SCHEMA: nested evidence rejected — {label}",
+              bool(validate_routing_request(req, CATALOG)),
+              "; ".join(validate_routing_request(req, CATALOG)))
+    # Schema parity: every deliberately schema-invalid request/profile
+    # in this table is rejected by the schema AND by the production
+    # runtime validator.
+    parity_base = request(
+        "r1-parity", "GENERATE_FROM_SCRIPT", PROFILES["s3"],
+        {"dialogue": True, "languages": ["bn"],
+         "recurring_character": True, "consent": True})
+
+    parity_cases = [
+        ("unknown top-level field",
+         lambda r: r.update({"surprise": True})),
+        ("unknown hints field",
+         lambda r: r["hints"].update({"surprise": True})),
+        ("unknown evidence field",
+         lambda r: r.update({"registration_evidence": {"surprise": 1}})),
+        ("evidence explicit_authorisation 'false'",
+         lambda r: r.update({"registration_evidence": {
+             "explicit_authorisation": "false"}})),
+        ("evidence explicit_authorisation 1",
+         lambda r: r.update({"registration_evidence": {
+             "explicit_authorisation": 1}})),
+        ("profile version None",
+         lambda r: r["production_profile"].update({"version": None})),
+        ("profile version '1'",
+         lambda r: r["production_profile"].update({"version": "1"})),
+        ("profile version True",
+         lambda r: r["production_profile"].update({"version": True})),
+        ("profile status None",
+         lambda r: r["production_profile"].update({"status": None})),
+        ("profile status 'pending'",
+         lambda r: r["production_profile"].update({"status": "pending"})),
+        ("profile is_live_action_footage None",
+         lambda r: r["production_profile"].update(
+             {"is_live_action_footage": None})),
+        ("profile is_live_action_footage 'false'",
+         lambda r: r["production_profile"].update(
+             {"is_live_action_footage": "false"})),
+        ("profile schema_version '2.4'",
+         lambda r: r["production_profile"].update(
+             {"schema_version": "2.4"})),
+        ("profile unknown field",
+         lambda r: r["production_profile"].update({"surprise": 1})),
+        ("per-subject override unknown field",
+         lambda r: r["production_profile"]["per_subject_overrides"][0]
+         .update({"surprise": 1})),
+        ("per-subject override character_id pattern",
+         lambda r: r["production_profile"]["per_subject_overrides"][0]
+         .update({"character_id": "BAD ID!"})),
+        ("per-subject override species type",
+         lambda r: r["production_profile"]["per_subject_overrides"][0]
+         .update({"species": 123})),
+        ("per-shot override unknown field",
+         lambda r: r["production_profile"]["per_shot_overrides"][0]
+         .update({"surprise": 1})),
+        ("subjects item unknown field",
+         lambda r: r.update({"subjects": [{"subject_id": human_s3,
+                                           "surprise": 1}]})),
+        ("shots item unknown field",
+         lambda r: r.update({"shots": [{"shot_id": "shot-01",
+                                        "surprise": 1}]})),
+        ("dialogue line unknown field",
+         lambda r: r.update({"dialogue_lines": [
+             {"line_id": "line-01", "subject_id": human_s3,
+              "articulation_target": "human-mouth-lips",
+              "surprise": 1}]})),
+        ("dialogue line missing articulation_target",
+         lambda r: r.update({"dialogue_lines": [
+             {"line_id": "line-01", "subject_id": human_s3}]})),
+        ("dialogue line shot_id type",
+         lambda r: r.update({"dialogue_lines": [
+             {"line_id": "line-01", "subject_id": human_s3,
+              "shot_id": 123,
+              "articulation_target": "human-mouth-lips"}]})),
+        ("requested_skills item unknown field",
+         lambda r: r.update({"requested_skills": [
+             {"skill": "cinematic-power", "source": "user-request",
+              "surprise": 1}]})),
+        ("requested_skills item missing source",
+         lambda r: r.update({"requested_skills": [
+             {"skill": "cinematic-power"}]})),
+        ("hints.languages short code",
+         lambda r: r["hints"].update({"languages": ["e"]})),
+        ("hints.dialogue string",
+         lambda r: r["hints"].update({"dialogue": "yes"})),
+        ("task_id empty",
+         lambda r: r.update({"task_id": ""})),
+        ("schema_version '2.3'",
+         lambda r: r.update({"schema_version": "2.3"})),
+        ("motion_methods None",
+         lambda r: r["production_profile"].update(
+             {"motion_methods": None})),
+        ("subject_types empty",
+         lambda r: r["production_profile"].update({"subject_types": []})),
+    ]
+    for label, mutator in parity_cases:
+        req = clone(parity_base)
+        mutator(req)
+        schema_errs = errors_for(req_schema, req)
+        router_errs = validate_routing_request(req, CATALOG)
+        check(f"CF-P1-002-R1-SCHEMA: schema parity — {label}",
+              bool(schema_errs) and bool(router_errs),
+              f"schema_errs={schema_errs} router_errs={router_errs}")
+    # Positive tests: valid schema-conforming requests still work.
+    check("CF-P1-002-R1-SCHEMA: a valid request still resolves",
+          "realistic-person" in resolve_skills(parity_base, CATALOG)["skills"])
+    valid_reg = request(
+        "r1-reg-ok", "REGISTER_CHARACTER",
+        registration_evidence={"explicit_authorisation": True,
+                               "name": "Nila",
+                               "unique_id": "char-nila-001",
+                               "approved_reference": True})
+    reg_plan = build_workflow_plan(session, valid_reg, CATALOG)
+    check("CF-P1-002-R1-SCHEMA: a valid registration request still "
+          "builds a plan-only plan",
+          reg_plan["status"] == "ready" and reg_plan["plan_only"] is True,
+          f"status={reg_plan['status']}")
+
+    # --- CF-P1-002-R1-HANDOFF: dependency-safe handoff packets -------
+    s1_session = fresh_session()
+    s1_plan = build_workflow_plan(s1_session, request(
+        "r1-handoff-s1", "GENERATE_FROM_SCRIPT", PROFILES["s1"],
+        {"dialogue": True, "languages": ["en"],
+         "recurring_character": True, "explainer_structure": True}),
+        CATALOG)
+    check("CF-P1-002-R1-HANDOFF: the s1 reproduction plan is ready",
+          s1_plan["status"] == "ready", f"status={s1_plan['status']}")
+
+    def _receipt(step_id, plan_id=None, status="completed"):
+        return {"plan_id": plan_id or s1_plan["plan_id"],
+                "step_id": step_id, "status": status}
+
+    def _handoff_fails(label, sess, plan, step, receipts):
+        try:
+            build_handoff_packet(sess, plan, step, receipts, CATALOG)
+            check(label, False, "packet built instead of refusing")
+        except RoutingError:
+            check(label, True)
+
+    # With zero completion receipts, the voice-consistency handoff
+    # must fail (its dependency character-consistency is not done).
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: voice-consistency with zero receipts fails",
+        s1_session, s1_plan, "voice-consistency", [])
+    # Completing character-consistency with a valid receipt allows
+    # the dependent step when every other dependency is ready (the
+    # earlier batch also needs production-systems).
+    voice_receipts = [_receipt("command-authority"),
+                      _receipt("character-consistency"),
+                      _receipt("production-systems")]
+    voice_packet = build_handoff_packet(
+        s1_session, s1_plan, "voice-consistency", voice_receipts, CATALOG)
+    check("CF-P1-002-R1-HANDOFF: voice-consistency is handed off once "
+          "its dependency is receipted",
+          voice_packet["step_id"] == "voice-consistency"
+          and voice_packet["satisfied_dependencies"]
+          == ["character-consistency"],
+          f"satisfied={voice_packet['satisfied_dependencies']}")
+    check("CF-P1-002-R1-HANDOFF: a packet lists only dependencies "
+          "actually present in validated receipts",
+          voice_packet["satisfied_dependencies"]
+          == ["character-consistency"]
+          and voice_packet["completed_step_ids"]
+          == ["command-authority", "character-consistency",
+              "production-systems"],
+          f"packet={voice_packet['satisfied_dependencies']}, "
+          f"{voice_packet['completed_step_ids']}")
+    # The first command-authority step is available with no deps.
+    first_packet = build_handoff_packet(
+        s1_session, s1_plan, "command-authority", [], CATALOG)
+    check("CF-P1-002-R1-HANDOFF: the first command-authority step is "
+          "available with no dependencies",
+          first_packet["step_id"] == "command-authority"
+          and first_packet["satisfied_dependencies"] == [])
+    # A receipt for only character-consistency is not enough: the
+    # earlier batch (command-authority, production-systems) is not
+    # complete.
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: voice-consistency fails when the earlier "
+        "batch is incomplete",
+        s1_session, s1_plan, "voice-consistency",
+        [_receipt("character-consistency")])
+    # A forged receipt for an unknown or different plan ID fails.
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a receipt for a different plan ID fails",
+        s1_session, s1_plan, "voice-consistency",
+        [_receipt("command-authority", plan_id="plan-someone-else"),
+         _receipt("character-consistency"),
+         _receipt("production-systems")])
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a receipt for an unknown step fails",
+        s1_session, s1_plan, "voice-consistency",
+        [_receipt("command-authority"),
+         _receipt("character-consistency"),
+         _receipt("production-systems"),
+         _receipt("not-a-step")])
+    # Duplicate, malformed and non-completed receipts fail.
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a duplicate receipt fails",
+        s1_session, s1_plan, "voice-consistency",
+        [_receipt("command-authority"),
+         _receipt("command-authority"),
+         _receipt("character-consistency"),
+         _receipt("production-systems")])
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a receipt with status 'complete' fails",
+        s1_session, s1_plan, "voice-consistency",
+        [_receipt("command-authority"),
+         _receipt("character-consistency", status="complete"),
+         _receipt("production-systems")])
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a receipt with an unknown field fails",
+        s1_session, s1_plan, "voice-consistency",
+        [_receipt("command-authority"),
+         {**_receipt("character-consistency"), "note": "done"},
+         _receipt("production-systems")])
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a receipt missing its status fails",
+        s1_session, s1_plan, "voice-consistency",
+        [_receipt("command-authority"),
+         {"plan_id": s1_plan["plan_id"],
+          "step_id": "character-consistency"},
+         _receipt("production-systems")])
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a non-object receipt fails",
+        s1_session, s1_plan, "voice-consistency",
+        [_receipt("command-authority"), "character-consistency"])
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a non-list receipts value fails",
+        s1_session, s1_plan, "voice-consistency",
+        "character-consistency")
+    # A handoff for an already-completed step fails.
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a handoff for an already-completed step "
+        "fails",
+        s1_session, s1_plan, "command-authority",
+        [_receipt("command-authority")])
+    # A valid plan modified after hashing fails validation.
+    tampered_plan = clone(s1_plan)
+    tampered_plan["steps"][0]["skill"] = "voice-consistency"
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a plan modified after hashing fails",
+        s1_session, tampered_plan, "command-authority", [])
+    # Copied, forged, expired, closed and wrong sessions fail.
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a copied session fails",
+        copy.copy(s1_session), s1_plan, "command-authority", [])
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a forged session fails",
+        SimpleNamespace(session_id=s1_session.session_id),
+        s1_plan, "command-authority", [])
+    wrong_session = fresh_session()
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a different session fails (plan/session "
+        "binding)",
+        wrong_session, s1_plan, "command-authority", [])
+    closing_session = fresh_session()
+    closing_plan = build_workflow_plan(closing_session, request(
+        "r1-handoff-closing", "GENERATE_FROM_SCRIPT", PROFILES["s1"],
+        {"dialogue": True, "languages": ["en"],
+         "recurring_character": True, "explainer_structure": True}),
+        CATALOG)
+    close_session(closing_session)
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a closed session fails",
+        closing_session, closing_plan, "command-authority", [])
+    short_session = fresh_session(lifetime_seconds=1)
+    short_plan = build_workflow_plan(short_session, request(
+        "r1-handoff-short", "GENERATE_FROM_SCRIPT", PROFILES["s1"],
+        {"dialogue": True, "languages": ["en"],
+         "recurring_character": True, "explainer_structure": True}),
+        CATALOG)
+    time.sleep(1.2)
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: an expired session fails",
+        short_session, short_plan, "command-authority", [])
+    _handoff_fails(
+        "CF-P1-002-R1-HANDOFF: a missing session fails",
+        None, s1_plan, "command-authority", [])
+
+    # --- CF-P1-002-R1-CATALOG: catalog semantic integrity -----------
+    from runtime.skill_router import catalog_fingerprint
+    check("CF-P1-002-R1-CATALOG: the stored fingerprint equals the "
+          "recomputed fingerprint",
+          CATALOG.get("integrity", {}).get("fingerprint")
+          == catalog_fingerprint(CATALOG)
+          and CATALOG.get("integrity", {}).get("algorithm")
+          == "sha256-canonical-json-v1")
+
+    def _altered_loads(label, mutator):
+        altered = clone(CATALOG)
+        mutator(altered)
+        with tempfile.NamedTemporaryFile("w", suffix=".json",
+                                        delete=False) as f:
+            json.dump(altered, f)
+            path = f.name
+        try:
+            load_routing_catalog(path)
+            check(label, False, "altered catalog loaded instead of "
+                  "being refused")
+        except RoutingError:
+            check(label, True)
+        finally:
+            os.unlink(path)
+
+    def _altered_loads_refingerprinted(label, mutator):
+        # The same altered catalog with a CORRECTLY recomputed
+        # fingerprint: the fingerprint check passes, so rejection must
+        # come from the semantic validation itself. This proves the
+        # semantic layer independently of the fingerprint backstop.
+        altered = clone(CATALOG)
+        mutator(altered)
+        altered["integrity"] = {
+            "algorithm": "sha256-canonical-json-v1",
+            "fingerprint": catalog_fingerprint(altered),
+        }
+        with tempfile.NamedTemporaryFile("w", suffix=".json",
+                                        delete=False) as f:
+            json.dump(altered, f)
+            path = f.name
+        try:
+            load_routing_catalog(path)
+            check(label, False, "altered catalog loaded instead of "
+                  "being refused by semantic validation")
+        except RoutingError:
+            check(label, True)
+        finally:
+            os.unlink(path)
+
+    _altered_loads(
+        "CF-P1-002-R1-CATALOG: a catalog missing TC-8 is rejected",
+        lambda c: c["graph"].update({"true_conflicts": [
+            tc for tc in c["graph"]["true_conflicts"]
+            if tc["id"] != "TC-8"]}))
+    _altered_loads_refingerprinted(
+        "CF-P1-002-R1-CATALOG: a catalog missing TC-8 is rejected by "
+        "semantic validation",
+        lambda c: c["graph"].update({"true_conflicts": [
+            tc for tc in c["graph"]["true_conflicts"]
+            if tc["id"] != "TC-8"]}))
+    _altered_loads(
+        "CF-P1-002-R1-CATALOG: altered applicable modes are rejected",
+        lambda c: next(
+            e for e in c["skills"]
+            if e["skill"] == "realistic-person")
+        ["applicable_modes"].remove("GENERATE_FROM_SCRIPT"))
+    _altered_loads_refingerprinted(
+        "CF-P1-002-R1-CATALOG: a skill with no applicable mode is "
+        "rejected by semantic validation",
+        lambda c: next(
+            e for e in c["skills"]
+            if e["skill"] == "realistic-person")
+        .update({"applicable_modes": []}))
+    _altered_loads_refingerprinted(
+        "CF-P1-002-R1-CATALOG: a missing graph edge is rejected by "
+        "semantic validation",
+        lambda c: c["graph"].update({"edges": [
+            e for e in c["graph"]["edges"]
+            if not (e["from"] == "character-consistency"
+                    and e["to"] == "voice-consistency")]}))
+    _altered_loads_refingerprinted(
+        "CF-P1-002-R1-CATALOG: a missing dependency is rejected by "
+        "semantic validation",
+        lambda c: next(
+            e for e in c["skills"]
+            if e["skill"] == "voice-consistency")
+        ["dependencies"].remove("character-consistency"))
+    _altered_loads_refingerprinted(
+        "CF-P1-002-R1-CATALOG: an asymmetric conflict pair is rejected "
+        "by semantic validation",
+        lambda c: next(
+            e for e in c["skills"]
+            if e["skill"] == "realistic-person")
+        ["conflicts"].remove("live-action-vfx"))
+    _altered_loads_refingerprinted(
+        "CF-P1-002-R1-CATALOG: an invalid parallel-group reference is "
+        "rejected by semantic validation",
+        lambda c: next(
+            g for g in c["graph"]["parallel_groups"]
+            if g["name"] == "foundation-planning")
+        ["skills"].append("not-a-skill"))
+    _altered_loads(
+        "CF-P1-002-R1-CATALOG: an incorrect fingerprint is rejected",
+        lambda c: c["integrity"].update({"fingerprint": "0" * 64}))
+    _altered_loads(
+        "CF-P1-002-R1-CATALOG: a missing integrity record is rejected",
+        lambda c: c.pop("integrity"))
+    _altered_loads_refingerprinted(
+        "CF-P1-002-R1-CATALOG: a renamed parallel group is rejected by "
+        "semantic validation",
+        lambda c: next(
+            g for g in c["graph"]["parallel_groups"]
+            if g["name"] == "foundation-planning")
+        .update({"name": "foundation-planning-renamed"}))
+    _altered_loads_refingerprinted(
+        "CF-P1-002-R1-CATALOG: a parallel group with an internal "
+        "dependency is rejected by semantic validation",
+        lambda c: next(
+            g for g in c["graph"]["parallel_groups"]
+            if g["name"] == "foundation-planning")
+        ["skills"].__setitem__(1, "voice-consistency"))
+    check("CF-P1-002-R1-CATALOG: the original generated catalog still "
+          "loads successfully",
+          load_routing_catalog()["catalog_version"] == "2.4")
 
     for s in _sessions:
         try:

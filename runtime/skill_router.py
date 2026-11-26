@@ -40,6 +40,17 @@ Session handling: :func:`build_workflow_plan` requires an exact
 active :class:`runtime.local_session.LocalSession`, verified with the
 P1-001 verifier. Actor identity comes only from that session — never
 from caller-provided owner or workspace strings.
+
+R1 (CF-WO-P1-002-R1) hardens the router without redesigning it:
+every scope reference must resolve to a request/profile subject or
+shot (referential integrity); the request validator enforces the
+same relevant constraints as the request and profile schemas, with
+exact JSON types and boolean authorisation evidence that must be the
+actual boolean ``True`` (a string such as ``"false"`` is never
+approval); handoff packets are issued only for a ready step under
+explicit, validated completion receipts; and the compiled catalog
+carries an integrity fingerprint plus full semantic validation, so
+an accidental hand edit is detected at load.
 """
 
 from __future__ import annotations
@@ -85,6 +96,37 @@ _REGISTRATION_CHAINS = {
     "REGISTER_VOICE_PROFILE": ["voice-consistency"],
     "REGISTER_SOUND_ASSET": [],
 }
+# The 13 intent modes (architecture/intent-modes.yaml) and the canonical
+# parallel-group names (architecture/WORKFLOW_GRAPH.yaml). The catalog
+# loader enforces these exact sets, so a hand-edited catalog cannot
+# silently rename a mode or a group the planner switches on.
+_INTENT_MODES = frozenset({
+    "UPLOAD_ONLY", "TEMPORARY_ASSET_USE", "PROJECT_CONSISTENCY",
+    "REGISTER_CHARACTER", "REGISTER_VOICE_PROFILE", "REGISTER_SOUND_ASSET",
+    "GENERATE_FROM_SCRIPT", "EDIT_EXISTING_MEDIA", "REFERENCE_REVIEW",
+    "REFERENCE_LEARN_AND_UPDATE", "VIDEO_QC", "REMAKE_OR_TRANSFORM",
+    "REPORT_UPDATE_ONLY",
+})
+_PARALLEL_GROUP_NAMES = frozenset({
+    "composable-pathways-different-shots", "foundation-planning",
+    "language-and-humanization-prep", "performance-layers-different-scenes",
+})
+_CONDITIONAL_GROUP_NAMES = frozenset({"existing-character-prep"})
+# Integrity fingerprint algorithm for the compiled catalog (Task D).
+_INTEGRITY_ALGORITHM = "sha256-canonical-json-v1"
+# Registration-evidence field types
+# (schemas/skill-routing-request.json). The boolean fields are
+# affirmative-approval evidence and must be the actual boolean True
+# wherever the policy requires approval; the string fields must be
+# non-empty text. A string such as "false" is never boolean evidence.
+_EVIDENCE_BOOL_FIELDS = frozenset({
+    "explicit_authorisation", "approved_reference", "rights_consent",
+    "reference_audio", "explicit_instruction",
+})
+_EVIDENCE_STRING_FIELDS = frozenset({
+    "name", "unique_id", "character_link", "source",
+    "licence_or_permission", "owner", "project_scope",
+})
 
 _REQUEST_FIELDS = frozenset({
     "schema_version", "task_id", "intent_mode", "production_profile",
@@ -164,13 +206,32 @@ class RoutingError(ValueError):
 # Catalog
 # ---------------------------------------------------------------------------
 
+def catalog_fingerprint(catalog: dict) -> str:
+    """SHA-256 of the canonical JSON of the catalog without its own
+    integrity record. The compiler
+    (``scripts/generate-routing-catalog.py``) computes the same value
+    over the same canonical form when it builds the catalog; the
+    loader refuses any catalog whose stored fingerprint differs, so
+    an accidental hand edit of the generated file is detected even
+    when every semantic check would still pass. This is integrity
+    against accidental / unsupported mutation, not cryptographic
+    protection against a malicious process with the same OS-user
+    access to the repository and the runtime source."""
+    body = {k: v for k, v in catalog.items() if k != "integrity"}
+    return hashlib.sha256(_canonical_json(body).encode("utf-8")).hexdigest()
+
+
 def load_routing_catalog(path=None) -> dict:
     """Load and verify the compiled routing catalog (stdlib JSON only).
 
     The catalog must be version 2.4, list exactly the 15 skills with
     unique precedence 1..15, name the same skill set as the workflow
-    graph nodes, and carry the SHA-256 of every canonical source. A
-    catalog that fails any of these checks is refused here, so a
+    graph nodes, and carry the SHA-256 of every canonical source.
+    Its integrity fingerprint must match its contents, and its
+    complete runtime-relevant structure is validated (exact TC-1..TC-10
+    rule IDs, graph edges against skill dependencies, conflict
+    symmetry, mode applicability, parallel and conditional groups).
+    A catalog that fails any of these checks is refused here, so a
     hand-edited catalog cannot silently change routing.
     """
     path = path or _DEFAULT_CATALOG_PATH
@@ -187,6 +248,24 @@ def load_routing_catalog(path=None) -> dict:
         raise RoutingError(
             "routing catalog version must be "
             f"'{CATALOG_VERSION}', got {catalog.get('catalog_version')!r}")
+    integrity = catalog.get("integrity")
+    if not isinstance(integrity, dict):
+        raise RoutingError("routing catalog has no integrity record")
+    if integrity.get("algorithm") != _INTEGRITY_ALGORITHM:
+        raise RoutingError(
+            "routing catalog integrity algorithm must be "
+            f"'{_INTEGRITY_ALGORITHM}', got "
+            f"{integrity.get('algorithm')!r}")
+    stored = integrity.get("fingerprint")
+    if not isinstance(stored, str) or not _SHA256_RE.match(stored):
+        raise RoutingError(
+            "routing catalog integrity fingerprint is not a SHA-256 digest")
+    if catalog_fingerprint(catalog) != stored:
+        raise RoutingError(
+            "routing catalog integrity fingerprint does not match the "
+            "catalog contents (the generated catalog was hand-edited or "
+            "is stale; regenerate it with "
+            "scripts/generate-routing-catalog.py)")
     skills = catalog.get("skills")
     if not isinstance(skills, list) or len(skills) != 15:
         raise RoutingError("routing catalog must list exactly 15 skills")
@@ -242,7 +321,402 @@ def load_routing_catalog(path=None) -> dict:
     modes = catalog.get("intent_modes")
     if not isinstance(modes, dict) or len(modes) != 13:
         raise RoutingError("routing catalog must list exactly 13 intent modes")
+    _validate_catalog_semantics(catalog)
     return catalog
+
+
+def _validate_catalog_semantics(catalog: dict) -> None:
+    """Semantic validation of the compiled catalog's complete
+    runtime-relevant structure, beyond the counts and ID shapes the
+    loader checks above. Raises RoutingError on the first defect.
+
+    Enforced here (all grounded in the canonical records, never in
+    prose): exact TC-1..TC-10 rule IDs; every matrix dependency is a
+    graph edge and every non-router graph edge is a matrix dependency;
+    matrix conflict symmetry; every skill lists at least one known
+    mode (a skill with no applicable mode could never be selected);
+    parallel and conditional groups name exactly the canonical groups
+    with known, duplicate-free members and no internal dependency
+    inside a parallel group; nodes, chains, cross-cutting records,
+    mode records and vocabularies have their canonical shapes. The
+    integrity fingerprint (checked by the loader before this runs)
+    is the backstop for everything else in the file, including the
+    companion and agent records the router never reads.
+    """
+    skills = catalog["skills"]
+    by_slug = {e["skill"]: e for e in skills}
+    slugs = set(by_slug)
+    prec_by_skill = {e["skill"]: e["precedence"] for e in skills}
+    vocab = catalog.get("vocabularies") or {}
+
+    def _str_list(value, what):
+        if not isinstance(value, list) \
+                or any(not isinstance(x, str) for x in value):
+            raise RoutingError(f"routing catalog: {what} is not a list "
+                               "of strings")
+        return value
+
+    def _non_empty_str(value, what):
+        if not isinstance(value, str) or not value.strip():
+            raise RoutingError(f"routing catalog: {what} is not a "
+                               "non-empty string")
+        return value
+
+    # Sources: exactly the five canonical files.
+    expected_sources = {
+        "architecture/SKILL_ROUTING_MATRIX.yaml",
+        "architecture/WORKFLOW_GRAPH.yaml",
+        "architecture/intent-modes.yaml",
+        "architecture/COMPANION_CAPABILITY_REGISTRY.yaml",
+        "architecture/AGENT_COMPATIBILITY_MATRIX.yaml",
+    }
+    if set((catalog.get("sources") or {}).keys()) != expected_sources:
+        raise RoutingError(
+            "routing catalog sources must be exactly the five canonical "
+            "files, got "
+            f"{sorted((catalog.get('sources') or {}).keys())}")
+
+    # Intent modes: exactly the 13 modes, each with its record shape.
+    modes = catalog.get("intent_modes") or {}
+    if set(modes) != set(_INTENT_MODES):
+        raise RoutingError(
+            "routing catalog intent modes must be exactly the 13 modes, "
+            f"got {sorted(modes)}")
+    for name, record in modes.items():
+        if not isinstance(record, dict):
+            raise RoutingError(
+                f"routing catalog: intent mode {name} is not an object")
+        _str_list(record.get("allowed"), f"intent mode {name} allowed")
+        if not record.get("allowed"):
+            raise RoutingError(
+                f"routing catalog: intent mode {name} allows nothing")
+        if "forbidden" in record:
+            _str_list(record.get("forbidden"),
+                      f"intent mode {name} forbidden")
+        if "requires" in record:
+            _str_list(record.get("requires"),
+                      f"intent mode {name} requires")
+        if "dialogue_mode_default" in record:
+            _non_empty_str(record.get("dialogue_mode_default"),
+                           f"intent mode {name} dialogue_mode_default")
+        if not isinstance(record.get("creates_permanent_record"), bool):
+            raise RoutingError(
+                f"routing catalog: intent mode {name} "
+                "creates_permanent_record is not a boolean")
+
+    # Vocabularies: every dimension is a non-empty list of unique
+    # strings; the derived sets stay inside their parent vocabulary.
+    dim_keys = ("visual_style", "production_medium", "source_media",
+                "motion_method", "subject_kind", "interaction_pattern",
+                "articulation_target")
+    for key in dim_keys:
+        values = _str_list(vocab.get(key), f"vocabulary {key}")
+        if not values or len(values) != len(set(values)):
+            raise RoutingError(
+                f"routing catalog vocabulary {key} is empty or has "
+                "duplicate values")
+    for key, parent in (("cinematic_styles", "visual_style"),
+                        ("animation_styles", "visual_style"),
+                        ("generated_media", "production_medium"),
+                        ("generated_subjects", "subject_kind")):
+        values = _str_list(vocab.get(key), f"vocabulary {key}")
+        if not set(values) <= set(vocab.get(parent) or []):
+            raise RoutingError(
+                f"routing catalog vocabulary {key} names values outside "
+                f"{parent}")
+    if set(vocab.get("intent_modes") or []) != set(_INTENT_MODES):
+        raise RoutingError(
+            "routing catalog vocabulary intent_modes must be the 13 modes")
+
+    # Skills: identity, fingerprint, precedence, modes, dependencies,
+    # conflicts (and their symmetry), routing dimensions, text fields.
+    for entry in skills:
+        slug = entry["skill"]
+        if entry.get("skill_id") != f"skill-{slug}":
+            raise RoutingError(
+                f"routing catalog: skill {slug} has skill_id "
+                f"{entry.get('skill_id')!r}, expected 'skill-{slug}'")
+        if entry.get("path") != f"skills/{slug}/SKILL.md":
+            raise RoutingError(
+                f"routing catalog: skill {slug} has path "
+                f"{entry.get('path')!r}")
+        applicable = entry.get("applicable_modes")
+        _str_list(applicable, f"skill {slug} applicable_modes")
+        if not applicable:
+            raise RoutingError(
+                f"routing catalog: skill {slug} lists no applicable mode "
+                "(it could never be selected)")
+        if len(applicable) != len(set(applicable)):
+            raise RoutingError(
+                f"routing catalog: skill {slug} lists a mode twice")
+        for mode in applicable:
+            if mode not in _INTENT_MODES:
+                raise RoutingError(
+                    f"routing catalog: skill {slug} lists unknown mode "
+                    f"{mode!r}")
+        for field in ("dependencies", "conflicts"):
+            values = _str_list(entry.get(field), f"skill {slug} {field}")
+            if len(values) != len(set(values)):
+                raise RoutingError(
+                    f"routing catalog: skill {slug} lists a {field[:-1]} "
+                    "twice")
+            for other in values:
+                if other not in slugs:
+                    raise RoutingError(
+                        f"routing catalog: skill {slug} names unknown "
+                        f"{field[:-1]} {other!r}")
+                if other == slug:
+                    raise RoutingError(
+                        f"routing catalog: skill {slug} lists itself in "
+                        f"{field}")
+        for dep in entry.get("dependencies") or []:
+            if prec_by_skill[dep] >= entry["precedence"]:
+                raise RoutingError(
+                    f"routing catalog: skill {slug} depends on {dep}, "
+                    "which does not run earlier")
+        dims = entry.get("routing_dimensions")
+        if dims is not None:
+            if not isinstance(dims, dict):
+                raise RoutingError(
+                    f"routing catalog: skill {slug} routing_dimensions "
+                    "is not an object")
+            for key, values in dims.items():
+                if key not in dim_keys:
+                    raise RoutingError(
+                        f"routing catalog: skill {slug} routing_dimensions "
+                        f"names unknown dimension {key!r}")
+                _str_list(values,
+                          f"skill {slug} routing_dimensions.{key}")
+                if not set(values) <= set(vocab.get(key) or []):
+                    raise RoutingError(
+                        f"routing catalog: skill {slug} "
+                        f"routing_dimensions.{key} names values outside "
+                        "the vocabulary")
+        _non_empty_str(entry.get("quality_gate"),
+                       f"skill {slug} quality_gate")
+        _non_empty_str(entry.get("activation_trigger"),
+                       f"skill {slug} activation_trigger")
+        _non_empty_str(entry.get("non_trigger"),
+                       f"skill {slug} non_trigger")
+        for field in ("approval_conditions", "required_inputs",
+                      "expected_outputs"):
+            value = entry.get(field)
+            if isinstance(value, list):
+                for item in value:
+                    if not isinstance(item, (str, dict)):
+                        raise RoutingError(
+                            f"routing catalog: skill {slug} {field} holds "
+                            f"a non-text value {item!r}")
+            elif not isinstance(value, (str, dict)):
+                raise RoutingError(
+                    f"routing catalog: skill {slug} {field} is not text")
+        if "conflict_scope" in entry:
+            _non_empty_str(entry.get("conflict_scope"),
+                           f"skill {slug} conflict_scope")
+    for entry in skills:
+        for other in entry.get("conflicts") or []:
+            if entry["skill"] not in (by_slug[other].get("conflicts") or []):
+                raise RoutingError(
+                    "routing catalog: conflict pair is asymmetric — "
+                    f"{entry['skill']} lists {other} but {other} does not "
+                    f"list {entry['skill']}")
+
+    # Graph: nodes, edges, groups, true conflicts, chains, cross-cutting.
+    graph = catalog.get("graph") or {}
+    if not isinstance(graph, dict):
+        raise RoutingError("routing catalog graph is not an object")
+    nodes = graph.get("nodes") or []
+    if not isinstance(nodes, list) or len(nodes) != 15:
+        raise RoutingError("routing catalog graph must list 15 nodes")
+    for node in nodes:
+        if not isinstance(node, dict):
+            raise RoutingError("routing catalog graph node is not an object")
+        ident = node.get("id")
+        if ident not in slugs:
+            raise RoutingError(
+                f"routing catalog graph node {ident!r} is not a skill")
+        if node.get("skill") != ident:
+            raise RoutingError(
+                f"routing catalog graph node {ident!r} names skill "
+                f"{node.get('skill')!r}")
+        if node.get("precedence") != prec_by_skill[ident]:
+            raise RoutingError(
+                f"routing catalog graph node {ident!r} precedence "
+                f"{node.get('precedence')} != skill "
+                f"{prec_by_skill[ident]}")
+        _non_empty_str(node.get("stage"), f"graph node {ident} stage")
+    edges = graph.get("edges") or []
+    if not isinstance(edges, list):
+        raise RoutingError("routing catalog graph edges is not a list")
+    edge_pairs: set[tuple] = set()
+    for edge in edges:
+        if not isinstance(edge, dict):
+            raise RoutingError("routing catalog graph edge is not an object")
+        src, dst = edge.get("from"), edge.get("to")
+        if src not in slugs or dst not in slugs:
+            raise RoutingError(
+                f"routing catalog graph edge {src!r} -> {dst!r} names an "
+                "unknown skill")
+        if src == dst:
+            raise RoutingError(
+                f"routing catalog graph edge {src!r} -> {dst!r} is a "
+                "self-edge")
+        if (src, dst) in edge_pairs:
+            raise RoutingError(
+                f"routing catalog graph edge {src!r} -> {dst!r} appears "
+                "twice")
+        edge_pairs.add((src, dst))
+        _non_empty_str(edge.get("reason"),
+                       f"graph edge {src} -> {dst} reason")
+    matrix_deps = {(d, e["skill"]) for e in skills
+                   for d in (e.get("dependencies") or [])}
+    missing = sorted(matrix_deps - edge_pairs)
+    if missing:
+        raise RoutingError(
+            "routing catalog: matrix dependencies missing from the "
+            f"workflow graph: {missing}")
+    non_dep = sorted(edge_pairs - matrix_deps)
+    bad = [pair for pair in non_dep if pair[0] != "command-authority"]
+    if bad:
+        raise RoutingError(
+            "routing catalog: non-dependency graph edges must be router "
+            f"edges (command-authority -> skill), got: {bad}")
+    router_edges = [pair for pair in edge_pairs
+                    if pair[0] == "command-authority"]
+    if len(router_edges) != len(slugs) - 1 or \
+            {dst for _, dst in router_edges} != (slugs - {"command-authority"}):
+        raise RoutingError(
+            "routing catalog: the router must edge command-authority to "
+            "every other skill exactly once")
+    groups = graph.get("parallel_groups") or []
+    if not isinstance(groups, list):
+        raise RoutingError("routing catalog parallel_groups is not a list")
+    if {g.get("name") for g in groups} != set(_PARALLEL_GROUP_NAMES):
+        raise RoutingError(
+            "routing catalog parallel groups must be exactly "
+            f"{sorted(_PARALLEL_GROUP_NAMES)}, got "
+            f"{sorted(g.get('name') for g in groups if isinstance(g, dict))}")
+    for group in groups:
+        _validate_parallel_group(group, edge_pairs, "parallel", slugs)
+    cond_groups = graph.get("conditional_parallel_groups") or []
+    if not isinstance(cond_groups, list):
+        raise RoutingError(
+            "routing catalog conditional_parallel_groups is not a list")
+    if {g.get("name") for g in cond_groups} != set(_CONDITIONAL_GROUP_NAMES):
+        raise RoutingError(
+            "routing catalog conditional parallel groups must be exactly "
+            f"{sorted(_CONDITIONAL_GROUP_NAMES)}")
+    for group in cond_groups:
+        _validate_parallel_group(group, edge_pairs, "conditional", slugs)
+        condition = group.get("condition")
+        if not isinstance(condition, str) or len(condition.strip()) < 20:
+            raise RoutingError(
+                f"routing catalog conditional group {group.get('name')}: "
+                "missing condition")
+    tc_ids = [tc.get("id") for tc in (graph.get("true_conflicts") or [])]
+    if tc_ids != [f"TC-{i}" for i in range(1, 11)]:
+        raise RoutingError(
+            "routing catalog true_conflicts must be exactly TC-1..TC-10 "
+            f"in order, got {tc_ids}")
+    for tc in graph.get("true_conflicts") or []:
+        if not isinstance(tc, dict):
+            raise RoutingError("routing catalog true conflict is not an object")
+        members = _str_list(tc.get("skills"),
+                            f"true conflict {tc.get('id')} skills")
+        if len(members) < 2 or len(members) != len(set(members)):
+            raise RoutingError(
+                f"routing catalog true conflict {tc.get('id')} must name "
+                "at least two distinct skills")
+        for skill in members:
+            if skill not in slugs:
+                raise RoutingError(
+                    f"routing catalog true conflict {tc.get('id')} names "
+                    f"unknown skill {skill!r}")
+        _non_empty_str(tc.get("rule"), f"true conflict {tc.get('id')} rule")
+        _non_empty_str(tc.get("scope"),
+                       f"true conflict {tc.get('id')} scope")
+        _non_empty_str(tc.get("resolution"),
+                       f"true conflict {tc.get('id')} resolution")
+    chains = graph.get("sequential_chains") or []
+    if not isinstance(chains, list):
+        raise RoutingError("routing catalog sequential_chains is not a list")
+    for chain in chains:
+        if not isinstance(chain, dict):
+            raise RoutingError("routing catalog sequential chain is not an object")
+        _non_empty_str(chain.get("name"), "sequential chain name")
+        members = _str_list(chain.get("skills"),
+                            f"sequential chain {chain.get('name')} skills")
+        if not members or len(members) != len(set(members)):
+            raise RoutingError(
+                f"routing catalog sequential chain {chain.get('name')} "
+                "must name distinct skills")
+        for skill in members:
+            if skill not in slugs:
+                raise RoutingError(
+                    f"routing catalog sequential chain {chain.get('name')} "
+                    f"names unknown skill {skill!r}")
+    cross = graph.get("cross_cutting") or []
+    if not isinstance(cross, list) or not cross:
+        raise RoutingError("routing catalog cross_cutting is empty")
+    for record in cross:
+        if not isinstance(record, dict):
+            raise RoutingError("routing catalog cross_cutting entry is not "
+                               "an object")
+        if record.get("skill") not in slugs:
+            raise RoutingError(
+                "routing catalog cross_cutting names unknown skill "
+                f"{record.get('skill')!r}")
+        _non_empty_str(record.get("note"), "cross_cutting note")
+    # Companion and agent records are not read by the router; their
+    # shape is checked lightly and the fingerprint guards the rest.
+    for key in ("companions", "agents", "non_hosts"):
+        records = catalog.get(key)
+        if not isinstance(records, list):
+            raise RoutingError(f"routing catalog {key} is not a list")
+        for record in records:
+            if not isinstance(record, dict) \
+                    or not isinstance(record.get("name"), str) \
+                    or not record["name"]:
+                raise RoutingError(
+                    f"routing catalog {key} entry has no name")
+
+
+def _validate_parallel_group(group, edge_pairs, kind, slugs) -> None:
+    """One parallel (or conditional parallel) group: a known name, at
+    least two distinct known members, and — for a plain parallel
+    group — no internal dependency edge between its members (members
+    run together, so a dependency between them would be a
+    contradiction). A conditional group may carry the edge it
+    relaxes (existing-character-prep relaxes character-consistency
+    -> voice-consistency), so the internal-edge rule does not apply
+    there."""
+    if not isinstance(group, dict):
+        raise RoutingError(f"routing catalog {kind} group is not an object")
+    name = group.get("name")
+    if not isinstance(name, str) or not name:
+        raise RoutingError(f"routing catalog {kind} group has no name")
+    members = group.get("skills")
+    if not isinstance(members, list) \
+            or any(not isinstance(x, str) for x in members):
+        raise RoutingError(
+            f"routing catalog {kind} group {name}: skills is not a list "
+            "of skill slugs")
+    if len(members) < 2 or len(members) != len(set(members)):
+        raise RoutingError(
+            f"routing catalog {kind} group {name} must name at least two "
+            "distinct skills")
+    for skill in members:
+        if skill not in slugs:
+            raise RoutingError(
+                f"routing catalog {kind} group {name} names unknown skill "
+                f"{skill!r}")
+    if kind == "parallel":
+        internal = [(a, b) for a in members for b in members
+                    if (a, b) in edge_pairs]
+        if internal:
+            raise RoutingError(
+                f"routing catalog parallel group {name}: internal "
+                f"dependency {internal}")
 
 
 def _skills_by_slug(catalog: dict) -> dict:
@@ -285,7 +759,7 @@ def validate_routing_request(request, catalog: dict) -> list:
         errors.append("task_id must be a non-empty id "
                       "(letters, digits, '.', '_' or '-', max 128 chars)")
     mode = request.get("intent_mode")
-    if mode not in modes:
+    if not isinstance(mode, str) or mode not in modes:
         errors.append(f"intent_mode {mode!r} is not one of the 13 intent modes")
         return errors  # mode-dependent checks cannot run without a mode
 
@@ -317,7 +791,7 @@ def validate_routing_request(request, catalog: dict) -> list:
 
     pathway = request.get("primary_pathway")
     if pathway is not None:
-        if pathway not in skills_by_slug:
+        if not isinstance(pathway, str) or pathway not in skills_by_slug:
             errors.append(f"primary_pathway {pathway!r} is not a known skill")
         elif pathway == "resource-management":
             errors.append("resource-management is cross-cutting, never a "
@@ -330,7 +804,7 @@ def validate_routing_request(request, catalog: dict) -> list:
         errors.append("additional_layers is not a list")
     else:
         for layer in layers:
-            if layer not in skills_by_slug:
+            if not isinstance(layer, str) or layer not in skills_by_slug:
                 errors.append(f"additional layer {layer!r} is not a known skill")
             elif layer == "resource-management":
                 errors.append("resource-management is cross-cutting, never a "
@@ -349,17 +823,24 @@ def validate_routing_request(request, catalog: dict) -> list:
             if not isinstance(item, dict):
                 errors.append(f"requested_skills[{i}] is not an object")
                 continue
+            extra_item = sorted(set(item) - {"skill", "source", "scope"})
+            if extra_item:
+                errors.append(f"requested_skills[{i}] has unknown fields: "
+                              f"{extra_item}")
             skill = item.get("skill")
-            if skill not in skills_by_slug:
+            if not isinstance(skill, str) or skill not in skills_by_slug:
                 errors.append(
                     f"requested_skills[{i}].skill {skill!r} is not a known skill")
-            if skill in seen:
-                errors.append(f"requested skill {skill!r} is listed twice")
-            seen.add(skill)
-            if item.get("source") not in _REQUESTED_SKILL_SOURCES:
+            if isinstance(skill, str):
+                if skill in seen:
+                    errors.append(f"requested skill {skill!r} is listed twice")
+                seen.add(skill)
+            source = item.get("source")
+            if not isinstance(source, str) \
+                    or source not in _REQUESTED_SKILL_SOURCES:
                 errors.append(
                     f"requested_skills[{i}].source "
-                    f"{item.get('source')!r} is not a known selection source")
+                    f"{source!r} is not a known selection source")
             scope = item.get("scope")
             if scope is not None:
                 if not isinstance(scope, dict):
@@ -377,6 +858,12 @@ def validate_routing_request(request, catalog: dict) -> list:
                                 f"requested_skills[{i}].scope.{key} must be a "
                                 "list of ids")
 
+    _TABLE_FIELDS = {
+        "subjects": {"subject_id", "subject_kind", "articulation_target",
+                     "shots", "speaking", "species"},
+        "shots": {"shot_id", "visual_style", "source_media", "subject_ids",
+                  "is_live_action_footage"},
+    }
     for table, id_key in (("subjects", "subject_id"), ("shots", "shot_id")):
         items = request.get(table) or []
         if not isinstance(items, list):
@@ -387,27 +874,36 @@ def validate_routing_request(request, catalog: dict) -> list:
             if not isinstance(item, dict):
                 errors.append(f"{table}[{i}] is not an object")
                 continue
+            extra_item = sorted(set(item) - _TABLE_FIELDS[table])
+            if extra_item:
+                errors.append(f"{table}[{i}] has unknown fields: {extra_item}")
             ident = item.get(id_key)
             if not isinstance(ident, str) or not ident:
                 errors.append(f"{table}[{i}] has no {id_key}")
-            if ident in seen_ids:
+            elif ident in seen_ids:
                 errors.append(f"{table} lists {id_key} {ident!r} twice")
-            seen_ids.add(ident)
+            else:
+                seen_ids.add(ident)
     if isinstance(request.get("subjects"), list):
         for i, sub in enumerate(request["subjects"]):
             if not isinstance(sub, dict):
                 continue
             kind = sub.get("subject_kind")
-            if kind is not None and kind not in _vocab(catalog, "subject_kind"):
+            if kind is not None and (
+                    not isinstance(kind, str)
+                    or kind not in _vocab(catalog, "subject_kind")):
                 errors.append(f"subjects[{i}].subject_kind {kind!r} is not "
                               "in the fixed vocabulary")
             art = sub.get("articulation_target")
-            if art is not None \
-                    and art not in _vocab(catalog, "articulation_target"):
+            if art is not None and (
+                    not isinstance(art, str)
+                    or art not in _vocab(catalog, "articulation_target")):
                 errors.append(f"subjects[{i}].articulation_target {art!r} is "
                               "not in the fixed vocabulary")
             if "speaking" in sub and not isinstance(sub["speaking"], bool):
                 errors.append(f"subjects[{i}].speaking must be a boolean")
+            if "species" in sub and not isinstance(sub["species"], str):
+                errors.append(f"subjects[{i}].species must be a string")
             for key in ("shots",):
                 if key in sub and (
                         not isinstance(sub[key], list)
@@ -418,15 +914,25 @@ def validate_routing_request(request, catalog: dict) -> list:
             if not isinstance(shot, dict):
                 continue
             style = shot.get("visual_style")
-            if style is not None \
-                    and style not in _vocab(catalog, "visual_style"):
+            if style is not None and (
+                    not isinstance(style, str)
+                    or style not in _vocab(catalog, "visual_style")):
                 errors.append(f"shots[{i}].visual_style {style!r} is not in "
                               "the fixed vocabulary")
             media = shot.get("source_media")
-            if media is not None \
-                    and media not in _vocab(catalog, "source_media"):
+            if media is not None and (
+                    not isinstance(media, str)
+                    or media not in _vocab(catalog, "source_media")):
                 errors.append(f"shots[{i}].source_media {media!r} is not in "
                               "the fixed vocabulary")
+            if "subject_ids" in shot and (
+                    not isinstance(shot["subject_ids"], list)
+                    or any(not isinstance(x, str) for x in shot["subject_ids"])):
+                errors.append(f"shots[{i}].subject_ids must be a list of ids")
+            if "is_live_action_footage" in shot \
+                    and not isinstance(shot["is_live_action_footage"], bool):
+                errors.append(f"shots[{i}].is_live_action_footage must be a "
+                              "boolean")
 
     lines = request.get("dialogue_lines") or []
     if not isinstance(lines, list):
@@ -436,13 +942,21 @@ def validate_routing_request(request, catalog: dict) -> list:
             if not isinstance(line, dict):
                 errors.append(f"dialogue_lines[{i}] is not an object")
                 continue
+            extra_line = sorted(set(line) - {"line_id", "subject_id",
+                                             "shot_id", "articulation_target"})
+            if extra_line:
+                errors.append(f"dialogue_lines[{i}] has unknown fields: "
+                              f"{extra_line}")
             if not isinstance(line.get("line_id"), str) or not line.get("line_id"):
                 errors.append(f"dialogue_lines[{i}] has no line_id")
             if not isinstance(line.get("subject_id"), str) \
                     or not line.get("subject_id"):
                 errors.append(f"dialogue_lines[{i}] has no subject_id")
+            if "shot_id" in line and not isinstance(line["shot_id"], str):
+                errors.append(f"dialogue_lines[{i}].shot_id must be a string")
             art = line.get("articulation_target")
-            if art not in _vocab(catalog, "articulation_target"):
+            if not isinstance(art, str) \
+                    or art not in _vocab(catalog, "articulation_target"):
                 errors.append(f"dialogue_lines[{i}].articulation_target "
                               f"{art!r} is not in the fixed vocabulary")
 
@@ -452,8 +966,152 @@ def validate_routing_request(request, catalog: dict) -> list:
         if flag in request and not isinstance(request[flag], bool):
             errors.append(f"{flag} must be a boolean")
     evidence = request.get("registration_evidence")
-    if evidence is not None and not isinstance(evidence, dict):
-        errors.append("registration_evidence is not an object")
+    if evidence is not None:
+        errors.extend(_validate_registration_evidence(evidence))
+    errors.extend(_validate_referential_integrity(request))
+    return errors
+
+
+def _validate_registration_evidence(evidence) -> list:
+    """Shape and type validation of registration evidence
+    (schemas/skill-routing-request.json: registration_evidence,
+    additionalProperties false).
+
+    This is shape only: whether the evidence satisfies a mode's
+    required fields is a policy decision made by
+    :func:`build_workflow_plan`, which returns a blocked plan. A
+    boolean field carrying anything but an actual bool — the string
+    "false" included — is a type error here, so a string can never
+    reach the policy check where Python truthiness would treat
+    "false" as approval. A well-formed False is a denial, not a
+    type error: it passes this check and fails the policy check.
+    """
+    errors: list[str] = []
+    if not isinstance(evidence, dict):
+        return ["registration_evidence is not an object"]
+    unknown = sorted(set(evidence)
+                     - _EVIDENCE_BOOL_FIELDS - _EVIDENCE_STRING_FIELDS)
+    if unknown:
+        errors.append(
+            f"registration_evidence has unknown fields: {unknown}")
+    for field in sorted(_EVIDENCE_BOOL_FIELDS):
+        if field in evidence and not isinstance(evidence[field], bool):
+            errors.append(
+                f"registration_evidence.{field} must be a boolean, got "
+                f"{evidence[field]!r} — a string such as \"false\" is never "
+                "boolean authorisation evidence")
+    for field in sorted(_EVIDENCE_STRING_FIELDS):
+        value = evidence.get(field)
+        if value is not None \
+                and (not isinstance(value, str) or not value):
+            errors.append(
+                f"registration_evidence.{field} must be a non-empty string")
+    return errors
+
+
+def _validate_referential_integrity(request) -> list:
+    """Referential integrity of every scope reference in the request
+    (Task A). The canonical request-local reference sets are the
+    union of the profile's per-subject override character IDs and
+    per-shot override shot IDs with the request's own subject and
+    shot tables. Every scope, subject, shot, dialogue-line and
+    override reference must resolve into those sets; a reference
+    that does not resolve is a validation error, never a silently
+    dropped scope — an invalid scope must not produce a ready plan.
+    Duplicate IDs inside the profile override tables are ambiguous
+    and rejected (the request tables are already duplicate-checked
+    by the structural validation above; a profile override and a
+    request table entry sharing one ID is the documented merge, not
+    a duplicate).
+    """
+    errors: list[str] = []
+    profile = request.get("production_profile")
+    if not isinstance(profile, dict):
+        profile = {}
+    subjects: set[str] = set()
+    shots: set[str] = set()
+    for i, sub in enumerate(profile.get("per_subject_overrides") or []):
+        if not isinstance(sub, dict):
+            continue
+        ident = sub.get("character_id")
+        if not isinstance(ident, str) or not ident:
+            continue
+        if ident in subjects:
+            errors.append(
+                "production_profile.per_subject_overrides lists "
+                f"character_id {ident!r} twice")
+        subjects.add(ident)
+    for i, shot in enumerate(profile.get("per_shot_overrides") or []):
+        if not isinstance(shot, dict):
+            continue
+        ident = shot.get("shot_id")
+        if not isinstance(ident, str) or not ident:
+            continue
+        if ident in shots:
+            errors.append(
+                "production_profile.per_shot_overrides lists shot_id "
+                f"{ident!r} twice")
+        shots.add(ident)
+    for sub in request.get("subjects") or []:
+        if isinstance(sub, dict):
+            ident = sub.get("subject_id")
+            if isinstance(ident, str) and ident:
+                subjects.add(ident)
+    for shot in request.get("shots") or []:
+        if isinstance(shot, dict):
+            ident = shot.get("shot_id")
+            if isinstance(ident, str) and ident:
+                shots.add(ident)
+
+    def _check_subjects(values, where):
+        for value in values or []:
+            if isinstance(value, str) and value not in subjects:
+                errors.append(
+                    f"{where} {value!r} does not resolve to a request or "
+                    "profile subject")
+
+    def _check_shots(values, where):
+        for value in values or []:
+            if isinstance(value, str) and value not in shots:
+                errors.append(
+                    f"{where} {value!r} does not resolve to a request or "
+                    "profile shot")
+
+    for i, item in enumerate(request.get("requested_skills") or []):
+        if not isinstance(item, dict):
+            continue
+        scope = item.get("scope")
+        if isinstance(scope, dict):
+            _check_subjects(scope.get("subjects"),
+                            f"requested_skills[{i}].scope.subjects entry")
+            _check_shots(scope.get("shots"),
+                         f"requested_skills[{i}].scope.shots entry")
+    for i, sub in enumerate(request.get("subjects") or []):
+        if isinstance(sub, dict):
+            _check_shots(sub.get("shots"), f"subjects[{i}].shots entry")
+    for i, shot in enumerate(request.get("shots") or []):
+        if isinstance(shot, dict):
+            _check_subjects(shot.get("subject_ids"),
+                            f"shots[{i}].subject_ids entry")
+    for i, line in enumerate(request.get("dialogue_lines") or []):
+        if not isinstance(line, dict):
+            continue
+        subject = line.get("subject_id")
+        if isinstance(subject, str) and subject \
+                and subject not in subjects:
+            errors.append(
+                f"dialogue_lines[{i}].subject_id {subject!r} does not "
+                "resolve to a request or profile subject")
+        shot = line.get("shot_id")
+        if isinstance(shot, str) and shot and shot not in shots:
+            errors.append(
+                f"dialogue_lines[{i}].shot_id {shot!r} does not resolve "
+                "to a request or profile shot")
+    for i, shot in enumerate(profile.get("per_shot_overrides") or []):
+        if isinstance(shot, dict):
+            _check_subjects(
+                shot.get("subjects"),
+                f"per_shot_overrides[{i}].subjects entry")
     return errors
 
 
@@ -471,7 +1129,7 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
         if field not in profile:
             errors.append(
                 f"production_profile is missing required v2.5 field '{field}'")
-    if profile.get("schema_version") not in (None, "2.5"):
+    if profile.get("schema_version") != "2.5":
         errors.append(
             "production_profile.schema_version must be '2.5', got "
             f"{profile.get('schema_version')!r}")
@@ -481,14 +1139,17 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
                 not isinstance(value, str) or not _ID_RE.match(value)):
             errors.append(
                 f"production_profile.{field} {value!r} is not a valid id")
+    if "production_profile_id" in profile \
+            and profile.get("production_profile_id") is None:
+        errors.append(
+            "production_profile.production_profile_id must be a valid id, "
+            "got None")
     version = profile.get("version")
-    if version is not None and (
-            not isinstance(version, int) or isinstance(version, bool)
-            or version < 1):
+    if not isinstance(version, int) or isinstance(version, bool) \
+            or version < 1:
         errors.append("production_profile.version must be an integer >= 1")
     status = profile.get("status")
-    if status is not None \
-            and status not in ("draft", "approved", "deprecated"):
+    if status not in ("draft", "approved", "deprecated"):
         errors.append(
             f"production_profile.status {status!r} is not draft, approved "
             "or deprecated")
@@ -509,8 +1170,11 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
             ("production_medium", "production_medium"),
             ("source_media_type", "source_media"),
             ("interaction_pattern", "interaction_pattern")):
+        if key not in profile:
+            continue
         value = profile.get(key)
-        if value is not None and value not in _vocab(catalog, vocab_key):
+        if not isinstance(value, str) \
+                or value not in _vocab(catalog, vocab_key):
             errors.append(
                 f"production_profile.{key} {value!r} is not in the fixed "
                 "vocabulary")
@@ -525,7 +1189,8 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
                 errors.append(
                     f"production_profile.{key} must name at least one value")
             for value in values:
-                if value not in _vocab(catalog, vocab_key):
+                if not isinstance(value, str) \
+                        or value not in _vocab(catalog, vocab_key):
                     errors.append(
                         f"production_profile.{key} value {value!r} is not in "
                         "the fixed vocabulary")
@@ -545,9 +1210,13 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
             if unknown_sub:
                 errors.append(f"per_subject_overrides[{i}] has unknown "
                               f"fields: {unknown_sub}")
-            if not isinstance(sub.get("character_id"), str) \
-                    or not sub.get("character_id"):
-                errors.append(f"per_subject_overrides[{i}] has no character_id")
+            character = sub.get("character_id")
+            if not isinstance(character, str) or not _ID_RE.match(character):
+                errors.append(f"per_subject_overrides[{i}].character_id "
+                              f"{character!r} is not a valid id")
+            if "species" in sub and not isinstance(sub["species"], str):
+                errors.append(f"per_subject_overrides[{i}].species must be "
+                              "a string")
             for key, vocab_key in (
                     ("subject_kind", "subject_kind"),
                     ("representation", "production_medium"),
@@ -555,7 +1224,9 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
                     ("rendering_style", "visual_style"),
                     ("articulation_target", "articulation_target")):
                 value = sub.get(key)
-                if value is not None and value not in _vocab(catalog, vocab_key):
+                if value is not None and (
+                        not isinstance(value, str)
+                        or value not in _vocab(catalog, vocab_key)):
                     errors.append(f"per_subject_overrides[{i}].{key} "
                                   f"{value!r} is not in the fixed vocabulary")
             motions = sub.get("motion_methods") or []
@@ -564,7 +1235,8 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
                               "is not a list")
             else:
                 for value in motions:
-                    if value not in _vocab(catalog, "motion_method"):
+                    if not isinstance(value, str) \
+                            or value not in _vocab(catalog, "motion_method"):
                         errors.append(f"per_subject_overrides[{i}].motion_methods "
                                       f"value {value!r} is not in the fixed "
                                       "vocabulary")
@@ -583,13 +1255,15 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
             if not isinstance(shot.get("shot_id"), str) or not shot.get("shot_id"):
                 errors.append(f"per_shot_overrides[{i}] has no shot_id")
             style = shot.get("visual_style")
-            if style is not None \
-                    and style not in _vocab(catalog, "visual_style"):
+            if style is not None and (
+                    not isinstance(style, str)
+                    or style not in _vocab(catalog, "visual_style")):
                 errors.append(f"per_shot_overrides[{i}].visual_style "
                               f"{style!r} is not in the fixed vocabulary")
             media = shot.get("source_media")
-            if media is not None \
-                    and media not in _vocab(catalog, "source_media"):
+            if media is not None and (
+                    not isinstance(media, str)
+                    or media not in _vocab(catalog, "source_media")):
                 errors.append(f"per_shot_overrides[{i}].source_media "
                               f"{media!r} is not in the fixed vocabulary")
             movement = shot.get("camera_movement")
@@ -1285,7 +1959,7 @@ def resolve_skills(request, catalog: dict) -> dict:
                              "anthropomorphic"} and hints.get("dialogue"):
             _select("cinematic-power", "profile-dimension")
         if facts["digital_human"]:
-            if not hints.get("consent"):
+            if hints.get("consent") is not True:
                 raise RoutingError("consent record required before animating "
                                    "a real person's photo")
             _select("realistic-person", "profile-dimension")
@@ -1454,6 +2128,18 @@ def _as_text_list(value) -> list:
     return [str(value)]
 
 
+def _registration_field_satisfied(field, value) -> bool:
+    """Whether one registration-evidence value satisfies the policy:
+    a boolean field only when it is the actual boolean True, a
+    string field only when it is a non-empty string. Anything else —
+    including the string "false", the integer 1, or an empty string —
+    does not satisfy it, so no string or number can stand in for
+    affirmative approval."""
+    if field in _EVIDENCE_BOOL_FIELDS:
+        return value is True
+    return isinstance(value, str) and bool(value)
+
+
 def _new_plan_base(task_id, mode, catalog, session) -> dict:
     return {
         "schema_version": SCHEMA_VERSION,
@@ -1529,7 +2215,7 @@ def build_workflow_plan(session, request, catalog=None) -> dict:
     mode = request.get("intent_mode")
     task_id = request.get("task_id") or "unknown"
     modes = set((catalog.get("intent_modes") or {}).keys())
-    if mode not in modes:
+    if not isinstance(mode, str) or mode not in modes:
         raise RoutingError(f"intent_mode {mode!r} is not one of the 13 "
                            "intent modes")
     if mode in _NON_ROUTING_MODES:
@@ -1546,8 +2232,10 @@ def build_workflow_plan(session, request, catalog=None) -> dict:
             _diagnostic("invalid-request", error) for error in errors])
     # Mode-specific evidence and behaviour (architecture/intent-modes.yaml).
     if mode in _REGISTRATION_MODES:
+        evidence = request.get("registration_evidence") or {}
         missing = [field for field in _REGISTRATION_EVIDENCE[mode]
-                   if not (request.get("registration_evidence") or {}).get(field)]
+                   if not _registration_field_satisfied(
+                       field, evidence.get(field))]
         if missing:
             return _blocked_plan(task_id, mode, catalog, session, [
                 _diagnostic(
@@ -2047,30 +2735,129 @@ def get_ready_steps(plan, completed_step_ids) -> list:
     return sorted(ready, key=lambda s: precedence.get(s, 99))
 
 
-def build_handoff_packet(plan, step_id, catalog=None) -> dict:
+def build_handoff_packet(session, plan, step_id, completed_receipts=None,
+                         catalog=None) -> dict:
     """Build the handoff packet for one step: everything the skill
     that runs the step needs, and nothing it must not do.
 
     The packet carries the exact skill path and SHA-256 fingerprint,
     the selection reason, the inputs, the expected outputs, the
-    satisfied dependencies (the prerequisites the plan schedules
-    before this step), the quality gate, the approval requirements,
-    and the conflicting and prohibited operations. When a catalog is
-    supplied, the conflicting operations also name the skill's matrix
-    conflicts and the true-conflict rules that involve it; without a
-    catalog only the plan's own conflict records are used.
+    satisfied dependencies, the quality gate, the approval
+    requirements, and the conflicting and prohibited operations.
+    When a catalog is supplied, the conflicting operations also name
+    the skill's matrix conflicts and the true-conflict rules that
+    involve it; without a catalog only the plan's own conflict
+    records are used.
+
+    Dependency-safe (Task C): a declared dependency is never labelled
+    satisfied merely because the plan lists it. The caller supplies
+    explicit completion receipts — one per completed step — and only
+    a receipt that validates against this exact plan (matching
+    plan_id, a known step ID, explicit ``status == "completed"``)
+    counts as completed input. The requested step must be ready
+    under :func:`get_ready_steps` for those receipts, or the packet
+    is refused. Receipts are reported completion state, not
+    cryptographic proof that an external agent actually executed
+    the work; there is no execution engine here.
+
+    Validation order: the exact active session first (a missing,
+    forged, expired, copied or closed session raises and nothing is
+    built), then the plan structure and its deterministic hash, then
+    the plan/session binding, then every receipt, then readiness.
     """
+    if not local_session.is_active_session(session):
+        reasons = local_session.validate_session(session)
+        raise RoutingError(
+            "no active session for this handoff"
+            + (f": {'; '.join(reasons)}" if reasons else ""))
+    catalog = catalog or load_routing_catalog()
     if not isinstance(plan, dict):
         raise RoutingError("plan is not an object")
+    plan_errors = validate_routing_plan(plan, catalog)
+    if plan_errors:
+        raise RoutingError(
+            "plan does not validate: " + "; ".join(plan_errors))
+    if plan.get("status") != "ready":
+        raise RoutingError(
+            f"plan status is {plan.get('status')!r}, not 'ready': no "
+            "handoff is issued for a blocked plan")
+    plan_session_id = (plan.get("session") or {}).get("session_id")
+    if plan_session_id != session.session_id:
+        raise RoutingError(
+            "plan belongs to a different session: the handoff session "
+            "does not match the plan's session")
+    step_ids = [s.get("step_id") for s in (plan.get("steps") or [])]
+    receipts = completed_receipts if completed_receipts is not None else []
+    if not isinstance(receipts, list):
+        raise RoutingError("completed_receipts is not a list")
+    completed: set[str] = set()
+    for i, receipt in enumerate(receipts):
+        if not isinstance(receipt, dict):
+            raise RoutingError(
+                f"completion receipt [{i}] is not an object")
+        extra = sorted(set(receipt) - {"plan_id", "step_id", "status"})
+        if extra:
+            raise RoutingError(
+                f"completion receipt [{i}] has unknown fields: {extra}")
+        for field in ("plan_id", "step_id", "status"):
+            if field not in receipt:
+                raise RoutingError(
+                    f"completion receipt [{i}] is missing '{field}'")
+        if receipt["plan_id"] != plan.get("plan_id"):
+            raise RoutingError(
+                f"completion receipt [{i}] names plan "
+                f"{receipt['plan_id']!r}, not this plan "
+                f"{plan.get('plan_id')!r}")
+        if receipt["step_id"] not in step_ids:
+            raise RoutingError(
+                f"completion receipt [{i}] names unknown step "
+                f"{receipt['step_id']!r}")
+        if receipt["status"] != "completed":
+            raise RoutingError(
+                f"completion receipt [{i}] for step "
+                f"{receipt['step_id']!r} has status "
+                f"{receipt['status']!r}, not 'completed'")
+        if receipt["step_id"] in completed:
+            raise RoutingError(
+                f"completion receipt [{i}] duplicates the receipt for "
+                f"step {receipt['step_id']!r}")
+        completed.add(receipt["step_id"])
     step = next((s for s in (plan.get("steps") or [])
                  if s.get("step_id") == step_id), None)
     if step is None:
         raise RoutingError(f"step {step_id!r} is not in the plan")
+    ready = get_ready_steps(plan, completed)
+    if step_id not in ready:
+        missing_deps = [d for d in (step.get("dependencies") or [])
+                        if d not in completed]
+        batches = plan.get("execution_batches") or []
+        batch_of: dict[str, int] = {}
+        for i, batch in enumerate(batches):
+            for member in batch:
+                batch_of[member] = i
+        earlier_missing = sorted(
+            s for s, b in batch_of.items()
+            if b < batch_of.get(step_id, 0) and s not in completed)
+        detail = ""
+        if step_id in completed:
+            detail = f"step {step_id!r} is already complete"
+        elif missing_deps:
+            detail = ("its dependencies are not complete: "
+                      f"{missing_deps}")
+        elif earlier_missing:
+            detail = ("earlier batch steps are not complete: "
+                      f"{earlier_missing}")
+        else:
+            detail = "it is not ready under the supplied receipts"
+        raise RoutingError(
+            f"step {step_id!r} is not ready for handoff: {detail}")
     skill = step["skill"]
     record = next((s for s in (plan.get("selected_skills") or [])
                    if s.get("skill") == skill), None)
     if record is None:
         raise RoutingError(f"skill {skill} has no selected-skills record")
+    satisfied = [d for d in (step.get("dependencies") or [])
+                 if d in completed]
     conflicting: list[str] = []
     prohibited: list[str] = []
     for conflict in plan.get("conflicts") or []:
@@ -2084,20 +2871,23 @@ def build_handoff_packet(plan, step_id, catalog=None) -> dict:
     for constraint in plan.get("constraints") or []:
         if ": forbidden " in constraint:
             prohibited.append(constraint)
-    if catalog is not None:
-        skills_by_slug = _skills_by_slug(catalog)
-        entry = skills_by_slug.get(skill) or {}
-        for other in entry.get("conflicts") or []:
-            scope = entry.get("conflict_scope") or "same subject, same shot"
+    skills_by_slug = _skills_by_slug(catalog)
+    entry = skills_by_slug.get(skill) or {}
+    for other in entry.get("conflicts") or []:
+        scope = entry.get("conflict_scope") or "same subject, same shot"
+        conflicting.append(
+            f"matrix conflict with {other} ({scope}) — the two skills "
+            "cannot both apply to one subject in one shot")
+    for tc in (catalog.get("graph") or {}).get("true_conflicts") or []:
+        if skill in (tc.get("skills") or []):
             conflicting.append(
-                f"matrix conflict with {other} ({scope}) — the two skills "
-                "cannot both apply to one subject in one shot")
-        for tc in (catalog.get("graph") or {}).get("true_conflicts") or []:
-            if skill in (tc.get("skills") or []):
-                conflicting.append(
-                    f"{tc.get('id')}: {tc.get('rule', '')} "
-                    f"Resolution: {tc.get('resolution', '')}")
+                f"{tc.get('id')}: {tc.get('rule', '')} "
+                f"Resolution: {tc.get('resolution', '')}")
+    precedence = {s.get("step_id"): s.get("precedence", 99)
+                  for s in plan.get("steps") or []}
     return {
+        "plan_id": plan.get("plan_id"),
+        "session_id": session.session_id,
         "step_id": step_id,
         "skill": skill,
         "skill_id": record["skill_id"],
@@ -2112,8 +2902,10 @@ def build_handoff_packet(plan, step_id, catalog=None) -> dict:
         "precedence": step.get("precedence"),
         "inputs": list(record["required_inputs"]),
         "expected_outputs": list(record["expected_outputs"]),
-        "satisfied_dependencies": list(step.get("dependencies") or []),
+        "satisfied_dependencies": list(satisfied),
         "dependency_steps": list(step.get("dependencies") or []),
+        "completed_step_ids": sorted(
+            completed, key=lambda s: precedence.get(s, 99)),
         "quality_gate": step.get("quality_gate"),
         "approval_requirements": list(step.get("approval_conditions") or []),
         "conflicting_operations": sorted(set(conflicting)),
@@ -2123,6 +2915,7 @@ def build_handoff_packet(plan, step_id, catalog=None) -> dict:
 
 __all__ = [
     "RoutingError",
+    "catalog_fingerprint",
     "load_routing_catalog",
     "validate_routing_request",
     "resolve_skills",

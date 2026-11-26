@@ -332,6 +332,30 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-002-R1-SCOPE",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-002-R1-SCHEMA",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-002-R1-HANDOFF",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-002-R1-CATALOG",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "command": "git diff --check",
       "exit_code": 0,

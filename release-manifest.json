@@ -2,13 +2,13 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-002-skill-routing-runtime",
-  "commit": "665488a0aac21a12e3425afb6dd5460aa4aa575c",
-  "github_branch_head": "14eb178c8586b58f5ca52114d950022098c151b1",
+  "commit": "614c25130cd0aeae4458a41943d896c436b55aef",
+  "github_branch_head": "900a7e0ba8d55106e7b9131897d3ca07bd17c981",
   "files": [
     {
       "path": ".github/workflows/p0-ci.yml",
-      "sha256": "15ed8c0a1d0bf94a781cf9bf5adf1fe8c91ee1602d6f11532bb32e16eadfc732",
-      "bytes": 4569
+      "sha256": "1a08bae1494e1442a5a0743dbc6deef8fd874214891819a8286c2970797839df",
+      "bytes": 5097
     },
     {
       "path": ".gitignore",
@@ -17,13 +17,13 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "fc72b17d73b3e3dd97d40f67d2f057ace863eea98002a9feb1fb7cf89162cdcd",
-      "bytes": 29262
+      "sha256": "533add78e3c4414480e28061b4456ee333112b8a18bb44173a12254d03194a50",
+      "bytes": 30579
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "e34aec3c1d1cde84c414b76c93ccdf9254c075686a5b5e420cd38acefb40e763",
-      "bytes": 78939
+      "sha256": "5664ee1e69ea5c64f09ecc6c91309ecd6309a4734670b7d0e2633170ed0a69bc",
+      "bytes": 81810
     },
     {
       "path": "README.md",
@@ -122,8 +122,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "2a90c52cde722df50ebb130076883edd17141ad8f8d9af08f91017fae8475f4a",
-      "bytes": 25823
+      "sha256": "47eddc45e12cbda4bd1fb402ef66069d99109af3243c831952d0ecb97d0ecab8",
+      "bytes": 26164
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -132,8 +132,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "6df69f1e6866aab0da7bbfb0056fea03a3541528588be4b6ee2886bdf14a80b0",
-      "bytes": 49097
+      "sha256": "afee69bed80b31ee5b2ff7498db045ee65571f077a8faef01c8beb6fe70669c2",
+      "bytes": 49645
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -212,8 +212,8 @@
     },
     {
       "path": "docs/implementation/CF-WO-P1-002-corrections.md",
-      "sha256": "28bbd374c80035a1cfa92b32f14db127aa70857d3145d724fcec8a02b7ec899d",
-      "bytes": 19849
+      "sha256": "2352b81a3c395ec12e2200ec4b2f0fd08d8946eb2c3e785ffd442e7483944e68",
+      "bytes": 35128
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
@@ -222,8 +222,8 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "654941c546cdcd0048c12a61c95715a0363b7f4a933b48a2c99907efdb8f9b28",
-      "bytes": 20728
+      "sha256": "a2d4696cfbfd227fdae65bf6b34fb5fc0989a45ee7d352ce95d00db209b6c8ee",
+      "bytes": 21485
     },
     {
       "path": "docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md",
@@ -232,8 +232,8 @@
     },
     {
       "path": "docs/runtime/SKILL_ROUTING_RUNTIME.md",
-      "sha256": "c97a406b5bf1222a210e3aac65f718313f1f6a777f78c4b830edd8b043d73ade",
-      "bytes": 15984
+      "sha256": "c21bb567797a8136bf88571bea4c75a74bcaacd8f1aaa4e14d9b49ea8ff7485c",
+      "bytes": 20930
     },
     {
       "path": "registry/adapters.json",
@@ -247,8 +247,8 @@
     },
     {
       "path": "registry/routing-catalog.json",
-      "sha256": "3d09fbd3fc61890a9408a08b98a9c96ece464553e312b34bc1e0cae69e494429",
-      "bytes": 131793
+      "sha256": "387d86ebd8b76074b72b9243be169315131cb6e459c05593b37248b75b79d9ed",
+      "bytes": 131946
     },
     {
       "path": "registry/skills.json",
@@ -277,8 +277,8 @@
     },
     {
       "path": "runtime/skill_router.py",
-      "sha256": "5f01b52b6f41f7ce67c3e5d3511ee588d81017b4e5b87272100d7a6a66df5032",
-      "bytes": 98687
+      "sha256": "32f1fcb136cdd88d11710efad87c6c5210b4372d8e967b8cecb7efc45f688703",
+      "bytes": 137632
     },
     {
       "path": "schemas/README.md",
@@ -452,8 +452,8 @@
     },
     {
       "path": "scripts/generate-routing-catalog.py",
-      "sha256": "6729326f9107dd2cdc813bd7df047b9eee206c75c7e3fb7d684af46d2c8c394d",
-      "bytes": 18153
+      "sha256": "a07337538bb669589218a3fced3cce4b8f29e8068aa23d62e179caeef5f3bca4",
+      "bytes": 20053
     },
     {
       "path": "scripts/sync-skills.sh",
@@ -782,13 +782,13 @@
     },
     {
       "path": "tests/last-run.json",
-      "sha256": "cfa9f2714156ab8e0de48f274a1dfd9096af4f880f26412ea8dad0031960fb2d",
-      "bytes": 9340
+      "sha256": "a24736d63d588d9f0b54375f0d72c4f2a4af6fed21447ca1b1f09af5ab7504b8",
+      "bytes": 9933
     },
     {
       "path": "tests/run-tests.sh",
-      "sha256": "937181514d98a239f80d0d3800027e90e89919edcbca3afaca7cf3d99b28d639",
-      "bytes": 6485
+      "sha256": "ad21e05ad6cf1cbcb5025a4f00f67313dc4ab82747d1d33093387588d072f4b5",
+      "bytes": 6746
     },
     {
       "path": "tests/test_atomic_write.py",
@@ -882,8 +882,8 @@
     },
     {
       "path": "tests/test_skill_router.py",
-      "sha256": "dfb4ba99b7c848033a8c5586a4f26f24f44fcb381893a77b76b3ccf11a2d59fd",
-      "bytes": 63028
+      "sha256": "eb7f186816bc12a68f2f67ec04d57697ad0495b626ed335abf6fad05058c5f86",
+      "bytes": 99217
     },
     {
       "path": "tests/test_timeline_manifest.py",
@@ -1061,6 +1061,22 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-002-R1-CATALOG",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-002-R1-HANDOFF",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-002-R1-SCHEMA",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-002-R1-SCOPE",
+      "result": "PASS"
+    },
+    {
       "id": "CF-P1-002-ROUTING",
       "result": "PASS"
     },
@@ -1093,5 +1109,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-26T06:25:25Z"
+  "generated_at_utc": "2026-11-26T08:14:54Z"
 }

@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-26 06:25 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-26 08:14 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-002-skill-routing-runtime`
-**Head commit:** `665488a0aac21a12e3425afb6dd5460aa4aa575c`
-**GitHub branch head:** `14eb178c8586b58f5ca52114d950022098c151b1` (remote head of `feat/cf-p1-002-skill-routing-runtime` at
+**Head commit:** `614c25130cd0aeae4458a41943d896c436b55aef`
+**GitHub branch head:** `900a7e0ba8d55106e7b9131897d3ca07bd17c981` (remote head of `feat/cf-p1-002-skill-routing-runtime` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -402,6 +402,10 @@ tests/test_timeline_manifest.py
 - `CF-P1-002-MODES` — python3 tests/test_skill_router.py — **PASS** (exit 0)
 - `CF-P1-002-PLAN` — python3 tests/test_skill_router.py — **PASS** (exit 0)
 - `CF-P1-002-SECURITY` — python3 tests/test_skill_router.py — **PASS** (exit 0)
+- `CF-P1-002-R1-SCOPE` — python3 tests/test_skill_router.py — **PASS** (exit 0)
+- `CF-P1-002-R1-SCHEMA` — python3 tests/test_skill_router.py — **PASS** (exit 0)
+- `CF-P1-002-R1-HANDOFF` — python3 tests/test_skill_router.py — **PASS** (exit 0)
+- `CF-P1-002-R1-CATALOG` — python3 tests/test_skill_router.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-report.py — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-report.py --check — **PASS** (exit 0)
@@ -496,4 +500,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-26 06:25 UTC.
+- Report generated: 2026-11-26 08:14 UTC.

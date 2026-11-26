@@ -394,3 +394,284 @@ hash-chain rule).
   content commit; the workflow commit changes no runtime, test, or
   policy file. The regenerated manifest and CHECKSUMS values live in
   the delivery report, not here (hash-chain rule §7).
+
+## 12. CF-WO-P1-002-R1 — Referential Scope Integrity, Typed Evidence, Safe Handoffs & Catalog Integrity (2026-11-26)
+
+Independent-review follow-up to P1-002. Four independently
+reproduced defects, fixed without redesigning the router and
+without changing the P1-001 session runtime. Same branch
+(`feat/cf-p1-002-skill-routing-runtime`), same PR (#3, Draft,
+unmerged). No canonical YAML or skill was rewritten; no protected
+file was touched (`scripts/asset_policy.py`,
+`scripts/timeline_policy.py`, `scripts/atomic_write.py`,
+`runtime/local_session.py`, `runtime/authorization.py`,
+VoiceStudio, OpenMontage — all 0 lines changed).
+
+### 12.1 Reproductions (all four defects confirmed on pre-fix code)
+
+The reproductions were run against the P1-002 tree (`f18de74`,
+extracted with `git archive` into an isolated directory) and
+again against the fixed code:
+
+- **Task A — phantom scope resolves.** On pre-fix code a
+  `requested_skills` scope naming `ghost-subject-999` passed
+  `validate_routing_request()` with zero errors and resolved
+  (TC-8 silently fired on nothing). On fixed code the same request
+  fails validation with
+  `requested_skills[0].scope.subjects entry 'ghost-subject-999'
+  does not resolve to a request or profile subject`, and
+  `resolve_skills()` raises.
+- **Task B — string "false" authorises registration.** On pre-fix
+  code `{"explicit_authorisation": "false"}` passed validation and
+  `build_workflow_plan()` built a **ready** `REGISTER_CHARACTER`
+  plan. On fixed code validation rejects it as a type error and
+  the plan is blocked.
+- **Task C — handoff labels dependencies satisfied with no
+  receipts.** On pre-fix code `build_handoff_packet(plan,
+  "voice-consistency")` returned
+  `satisfied_dependencies: ["character-consistency"]` with zero
+  completion evidence. On fixed code the same handoff (zero
+  receipts) raises `RoutingError: step 'voice-consistency' is not
+  ready for handoff: its dependencies are not complete:
+  ['character-consistency']`.
+- **Task D — altered catalog loads.** On pre-fix code a catalog
+  with TC-8 deleted loaded successfully. On fixed code it is
+  refused at load (integrity fingerprint mismatch).
+
+### 12.2 What changed
+
+**Task A — referential scope integrity
+(`runtime/skill_router.py`).** New `_validate_referential_integrity()`,
+called at the end of `validate_routing_request()`. Canonical
+request-local reference sets are the union of the profile's
+`per_subject_overrides` character IDs and `per_shot_overrides`
+shot IDs with the request's own subject and shot tables. Checked:
+every skill-scope subjects/shots entry; every subject's shot
+references; every shot's `subject_ids`; every dialogue line's
+`subject_id` and `shot_id`; every per-shot override's `subjects`
+list. Duplicate IDs inside the profile override tables are
+rejected as ambiguous (the request tables were already
+duplicate-checked; a profile override and a request-table entry
+sharing one ID is the documented merge). An invalid reference is a
+validation error — the scope is never silently removed and the
+request never produces a ready plan.
+
+- **ADR-P1-002-R1-1 — TC tests now declare the shots they scope
+  to.** The pre-existing TC-2/TC-4/TC-6/TC-10 and plan-tc2 tests
+  scoped skills and dialogue lines to `shot-01`/`shot-02` without
+  declaring those shots anywhere. Under Task A those scopes are
+  invalid, so the tests now declare them in the request's shots
+  table (`shots=[{"shot_id": "shot-01"}]`, both shots for the
+  TC-2 cross-shot case). This is a test correction to the new
+  rule, not a weakening: the conflict behaviour asserted is
+  unchanged, and the R1-SCOPE section adds the phantom-reference
+  negatives for the same rules.
+
+**Task B — strict runtime/schema parity and boolean authorisation
+evidence (`runtime/skill_router.py`).** One validation path, still
+stdlib-only, still no `jsonschema` or PyYAML at runtime:
+
+- New `_validate_registration_evidence()`: shape and type checks
+  for `registration_evidence` — unknown fields rejected
+  (`additionalProperties: false`), boolean fields must be actual
+  bools, string fields must be non-empty strings. A string such as
+  `"false"` is a type error here, so it can never reach the policy
+  check where Python truthiness would treat it as approval.
+- Required profile fields are now strict: `schema_version` must be
+  exactly `"2.5"` (the old code let `None` through);
+  `production_profile_id` must match the ID pattern (and `None` is
+  an error); `version` must be an integer `>= 1` (a boolean is not
+  an integer; `None` and strings are errors); `status` must be one
+  of its enum; `is_live_action_footage` must be a boolean when
+  present (missing is already the missing-required-field error);
+  the dimension fields must be strings in the fixed vocabulary.
+  `per_subject_overrides[].character_id` must match the ID pattern
+  (the schema requires it); `species` must be a string.
+- `additionalProperties: false` is now enforced inside items too:
+  unknown fields in `requested_skills`, `subjects`, `shots` and
+  `dialogue_lines` items; `dialogue_lines[].shot_id` must be a
+  string; `shots[].subject_ids` must be a list of IDs;
+  `subjects[].species` must be a string.
+- Membership tests that could raise `TypeError` on unhashable
+  input (a list where a string is expected) are now type-guarded,
+  so `validate_routing_request()` never raises for a bad request —
+  it returns errors.
+- Policy points hardened to `value is True`: the
+  `realistic-person` consent gate in `resolve_skills()` and the
+  registration-evidence satisfaction check in
+  `build_workflow_plan()` (new `_registration_field_satisfied()`:
+  boolean fields need `is True`, string fields need a non-empty
+  string). A well-formed `False` is a denial, not a type error: it
+  validates and then fails the policy check. The other mode gates
+  (`explicit_user_instruction`, `explicit_request`,
+  `rights_provenance_checked`, `repair_authorised`,
+  `dialogue_rewrite_requested`) already used `is True` and are
+  unchanged. Registration and permanent-mutation modes stay
+  plan-only; a valid plan never means registration was authorised
+  or executed.
+
+**Task C — dependency-safe handoff packets
+(`runtime/skill_router.py`).** `build_handoff_packet()` changes
+signature to `build_handoff_packet(session, plan, step_id,
+completed_receipts=None, catalog=None)` (the old
+`build_handoff_packet(plan, step_id, catalog=None)` form is gone;
+its two call sites in `tests/test_skill_router.py` are updated).
+Validation order: the exact active session first (P1-001 verifier
+— a missing, forged, expired, copied or closed session raises and
+nothing is built), then the plan structure and its deterministic
+hash (`validate_routing_plan()` — a plan modified after hashing is
+refused), then the plan/session binding (the plan's session ID must
+equal the session's), then every receipt, then readiness. A receipt
+is exactly `{"plan_id", "step_id", "status"}` — matching plan ID,
+a known step ID, explicit `status == "completed"`, no duplicates,
+no unknown fields, no missing fields. The requested step must be in
+`get_ready_steps(plan, completed_step_ids)` or the packet is
+refused (the error names the incomplete dependencies or the
+incomplete earlier batch). `satisfied_dependencies` is populated
+only from the validated receipts; the packet also carries
+`plan_id`, `session_id` and `completed_step_ids` (precedence
+order). Receipts are reported completion state, not cryptographic
+proof that an external agent executed the work; no execution
+engine, worker or scheduler was added.
+
+- **ADR-P1-002-R1-2 — receipts are the only satisfaction source,
+  the declared list stays descriptive.** `dependency_steps` still
+  carries the plan's declared dependencies (it describes the plan
+  structure); `satisfied_dependencies` carries only the receipted
+  subset. For a ready step the two coincide, because readiness
+  requires every dependency to be complete — but the code path
+  that fills `satisfied_dependencies` reads only the receipts.
+
+**Task D — compiled catalog integrity
+(`runtime/skill_router.py`, `scripts/generate-routing-catalog.py`,
+`tests/test_skill_router.py`,
+`docs/runtime/SKILL_ROUTING_RUNTIME.md`).**
+
+- The compiler now stamps `integrity: {algorithm:
+  "sha256-canonical-json-v1", fingerprint}` on the catalog — the
+  SHA-256 of the canonical JSON of the catalog without the
+  integrity record itself. The runtime exposes the same
+  computation as `catalog_fingerprint()` and the loader refuses
+  any catalog whose stored fingerprint differs (missing record,
+  wrong algorithm, or non-digest value are refused too). The
+  fingerprint is recomputed deterministically on every build, so
+  the update procedure is a rebuild, never a hand edit (documented
+  in `docs/runtime/SKILL_ROUTING_RUNTIME.md`); `--check` compares
+  the full regenerated bytes, so it covers fingerprint freshness.
+- The loader now validates the catalog's complete runtime-relevant
+  structure (`_validate_catalog_semantics()`): sources are exactly
+  the five canonical files; intent modes are exactly the 13, each
+  with its record shape (`allowed` non-empty list of strings,
+  `creates_permanent_record` boolean, optional `forbidden` /
+  `requires` / `dialogue_mode_default`); vocabularies are
+  non-empty unique string lists with the derived sets inside their
+  parent vocabulary; each skill's `skill_id` is `skill-<slug>`,
+  its path is `skills/<slug>/SKILL.md`, its `applicable_modes` is
+  a non-empty duplicate-free list of known modes, its
+  dependencies and conflicts name known distinct skills (no
+  self-references), dependencies run earlier by precedence, and
+  its routing dimensions stay inside the vocabularies; conflicts
+  are symmetric; graph nodes carry the skill's precedence and a
+  stage; every matrix dependency is a graph edge and every
+  non-router graph edge is a matrix dependency, with
+  command-authority edging to every other skill exactly once;
+  parallel groups are exactly the four canonical names and
+  conditional groups exactly `existing-character-prep`, each with
+  at least two distinct known members and (for plain parallel
+  groups) no internal dependency edge; true conflicts are exactly
+  TC-1..TC-10 in order with known skills and non-empty rule /
+  scope / resolution; sequential chains and cross-cutting records
+  have their canonical shapes.
+- Two findings from building the semantic checks (no canonical
+  data was changed): (1) TC pairs are NOT all matrix conflicts —
+  only TC-2 and TC-4 are pairwise matrix conflicts — so no
+  TC↔matrix agreement is enforced; (2) one router edge
+  (`command-authority -> kids-family-animation`) is also a matrix
+  dependency, so the router-edge check counts the full edge set
+  (14), not the non-dependency remainder (13).
+- The documentation claim is narrowed: this is integrity against
+  accidental / unsupported mutation and malformed catalogs, not
+  cryptographic protection against a malicious process with the
+  same OS-user access to the repository and the runtime source.
+- The altered-catalog tests prove the semantic layer
+  independently of the fingerprint: each semantic case is loaded
+  twice, once as-is (fingerprint mismatch) and once with a
+  correctly recomputed fingerprint (so only the semantic check can
+  reject it).
+
+**Windows CI (`.github/workflows/p0-ci.yml`).** The
+`windows-compat` job now runs `tests/test_skill_router.py` as its
+own step on both matrix versions (Python 3.10 and 3.12), after the
+private-voice-security step; the existing three P1-001 suites are
+unchanged. The header comment now says four suites. (Per the
+standing rule the workflow file cannot be pushed via the API; the
+parent uploads it via the browser. ADR-P1-002-9's recommended step
+is now applied in this round, as the work order asked.)
+
+**Test registration (`tests/run-tests.sh`).** Four new entries for
+the new categories (`CF-P1-002-R1-SCOPE`, `CF-P1-002-R1-SCHEMA`,
+`CF-P1-002-R1-HANDOFF`, `CF-P1-002-R1-CATALOG`), each running
+`tests/test_skill_router.py`.
+
+### 12.3 Tests executed — exact counts
+
+- `tests/test_skill_router.py` — **339 checks, 0 failures** (was
+  166 in P1-002; +173: the R1 sections plus the updated handoff
+  assertions and the shots-table declarations in the TC tests).
+- Full suite `bash tests/run-tests.sh` — counts recalculated from
+  the final run (see the delivery report; the suite gained the four
+  R1 entries).
+- The other suites were re-run unchanged as part of the full suite
+  (`test_routing`, `test_local_session_runtime`,
+  `test_session_authorization`, `test_private_voice_security`).
+- Parent verification correction (2026-11-26): the R1 provenance
+  was first generated with `--github-head 900a7e0b` (8 characters).
+  `tests/test_reports.py` requires `github_branch_head` to be a
+  full 40-character SHA (CF-P0-REPORT-001/004), so the full suite
+  failed on the five CF-P0-REPORT entries until the provenance was
+  regenerated with the full head
+  `900a7e0ba8d55106e7b9131897d3ca07bd17c981` (generate-report.py,
+  then generate-build-report.py last) and the full suite re-run.
+  No code or test changed in this correction — provenance only.
+- The new R1 checks fail on pre-fix code: the four reproductions
+  in §12.1 were demonstrated against the P1-002 tree before the
+  fix, and the fixed code refuses each of them.
+
+### 12.4 Files changed
+
+- `runtime/skill_router.py` — Tasks A–D (referential integrity,
+  schema parity / typed evidence, receipt-based handoffs, catalog
+  fingerprint + semantic validation).
+- `scripts/generate-routing-catalog.py` — integrity fingerprint
+  computation (build-time only).
+- `registry/routing-catalog.json` — regenerated (integrity record
+  added; all other content identical).
+- `tests/test_skill_router.py` — four new R1 regression categories
+  + updated handoff calls + shots declarations in TC tests.
+- `tests/run-tests.sh` — four new R1 entries.
+- `.github/workflows/p0-ci.yml` — router suite step in
+  `windows-compat` (browser upload by the parent; not API-pushed).
+- `docs/runtime/SKILL_ROUTING_RUNTIME.md` — R1 sections
+  (referential integrity, schema parity / typed evidence,
+  dependency-safe handoffs, catalog integrity + update procedure +
+  narrowed claim).
+- `docs/implementation/CF-WO-P1-002-corrections.md` — this §12.
+- `CHANGELOG.md` — R1 entry under [Unreleased].
+- `AGENTS.md` — R1 note in the P1-002 section.
+- Regenerated provenance (manifest, living report, build report)
+  in the repo's required order; the manifest and CHECKSUMS values
+  live in the delivery report, not here (hash-chain rule §7).
+
+### 12.5 Remaining limitations + unresolved decisions
+
+- Receipts are reported completion state, not proof of execution:
+  a caller that lies about completion gets a packet. That is the
+  documented boundary; no execution engine or verification of
+  external work is in scope.
+- The fingerprint proves the catalog file is the compiler's
+  output, not who ran the compiler; it does not stop a malicious
+  same-OS-user process.
+- The Windows CI evidence for the new router step exists only
+  after the PR run; Windows success is not claimed before that run.
+- Script-to-performance runtime remains P1-003 territory; no
+  executor or scheduler for plans was added.

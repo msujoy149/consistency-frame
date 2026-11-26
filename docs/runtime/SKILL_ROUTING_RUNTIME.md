@@ -55,6 +55,40 @@ hand; `generate-routing-catalog.py --check` fails CI when it is
 stale (wired into `.github/workflows/p0-ci.yml` and
 `tests/run-tests.sh`).
 
+**Integrity (R1).** The generated catalog carries an integrity
+record — `integrity.algorithm` (`sha256-canonical-json-v1`) and
+`integrity.fingerprint`, the SHA-256 of the canonical JSON of the
+catalog without the integrity record itself. The compiler computes
+it deterministically on every build; the runtime loader recomputes
+it and refuses any catalog whose stored fingerprint differs, so an
+accidental hand edit of the generated file is detected at load even
+when every semantic check would still pass. The loader also
+validates the catalog's complete runtime-relevant structure: the
+exact TC-1..TC-10 rule IDs; every matrix dependency is a graph edge
+and every non-router graph edge is a matrix dependency; matrix
+conflict symmetry; every skill lists at least one known mode (a
+skill with no applicable mode could never be selected); parallel
+and conditional groups name exactly the canonical groups with
+known, duplicate-free members and no internal dependency inside a
+plain parallel group; and the node, chain, cross-cutting, mode
+record and vocabulary shapes.
+
+Updating the catalog is a rebuild, never a hand edit: change the
+canonical YAML (or the compiler), run
+`python3 scripts/generate-routing-catalog.py`, and commit the
+regenerated `registry/routing-catalog.json` — the new fingerprint
+is computed by that run. `--check` fails if the committed file
+differs from a fresh build, which covers fingerprint freshness as
+well.
+
+Scope of the claim, stated plainly: this is integrity against
+accidental / unsupported mutation and malformed catalogs. It is
+not cryptographic protection against a malicious process with the
+same OS-user access to the repository and the runtime source — such
+a process could rebuild the catalog (or edit the loader) and the
+fingerprint would match. The fingerprint proves the file is the
+compiler's output, not who ran the compiler.
+
 One documented absence, not a contradiction: the cross-cutting
 `resource-management` skill states no `routing_dimensions` in the
 matrix (it is consulted at every phase, never routed as a stage).
@@ -87,6 +121,42 @@ What the router never does:
   instructions for agents, not executable rules. Routing reads only
   the structured fields (dimensions, dependencies, conflicts,
   modes, graph edges, true conflicts).
+
+**Referential integrity (R1).** Every scope reference must resolve
+to an actual request/profile subject or shot. The reference sets
+are the union of the profile's per-subject override character IDs
+and per-shot override shot IDs with the request's own subject and
+shot tables. Skill-scope subjects and shots, a subject's shot
+references, a shot's subject references, every dialogue line's
+subject and shot, and every per-shot override's subject list are
+all checked against those sets; a reference that does not resolve
+is a validation error, and an invalid scope never produces a ready
+plan — nothing is silently removed and planning does not continue
+past it. Duplicate IDs inside the profile override tables are
+rejected as ambiguous (a profile override and a request-table entry
+sharing one ID is the documented merge, not a duplicate).
+
+**Schema parity and typed evidence (R1).** The request validator
+enforces the same relevant constraints as
+`schemas/skill-routing-request.json` and
+`schemas/production-profile.json`, with exact JSON types in one
+validation path and no third-party schema library at runtime.
+Required profile fields cannot be `None` or the wrong type
+(`schema_version` must be exactly `"2.5"`, `version` an integer
+`>= 1` — a boolean is not an integer — `status` one of its enum,
+`is_live_action_footage` a boolean); unknown fields are rejected
+wherever the schema says `additionalProperties: false`, including
+inside requested-skill, subject, shot, dialogue-line and override
+items; names, IDs and evidence text must be non-empty strings of
+the right type. Boolean authorisation evidence must be the actual
+boolean `True` wherever the policy requires affirmative approval:
+the string `"false"` (and `"true"`, `"yes"`, `1`, `0`, `None`, `""`)
+is never treated as approval — it is a type error at validation,
+and the policy check itself requires `value is True`. A
+well-formed `False` is a denial, not a type error: it validates
+and then fails the policy check. Registration and permanent
+mutation modes stay plan-only; a valid plan never means
+registration was authorised or executed.
 
 ## Resolution
 
@@ -253,15 +323,30 @@ and every step in every earlier execution batch is complete. No
 sleeps, no workers, no external scheduler; the caller drives
 execution and reports receipts back.
 
-`build_handoff_packet(plan, step_id, catalog=None)` builds the
-packet for one step: the exact skill path and SHA-256 fingerprint,
-the selection basis and reason, the scope, the stage and precedence,
-the inputs, the expected outputs, the satisfied dependencies (the
-prerequisites the plan schedules before this step), the quality gate,
-the approval requirements, and the conflicting and prohibited
-operations (the skill's matrix conflicts and the true-conflict rules
-that involve it, plus the mode's forbidden actions, when a catalog
-is supplied).
+`build_handoff_packet(session, plan, step_id, completed_receipts=None,
+catalog=None)` builds the packet for one step: the exact skill path
+and SHA-256 fingerprint, the selection basis and reason, the scope,
+the stage and precedence, the inputs, the expected outputs, the
+satisfied dependencies, the quality gate, the approval requirements,
+and the conflicting and prohibited operations (the skill's matrix
+conflicts and the true-conflict rules that involve it, plus the
+mode's forbidden actions, when a catalog is supplied).
+
+**Dependency-safe handoffs (R1).** A declared dependency is never
+labelled satisfied merely because the plan lists it. The caller
+supplies explicit completion receipts — one per completed step,
+each `{"plan_id", "step_id", "status": "completed"}` — and only a
+receipt that validates against this exact plan (matching plan ID,
+a known step ID, explicit completed status, no duplicates, no
+unknown fields) counts as completed input. The packet is issued
+only when the session is the exact active session the plan belongs
+to, the plan validates (structure and deterministic hash — a plan
+modified after hashing is refused), and the requested step is ready
+under `get_ready_steps` for those receipts; otherwise it is
+refused. `satisfied_dependencies` is populated only from the
+validated receipts. Receipts are reported completion state, not
+cryptographic proof that an external agent actually executed the
+work; there is no execution engine, worker, or scheduler here.
 
 ## Intent modes
 

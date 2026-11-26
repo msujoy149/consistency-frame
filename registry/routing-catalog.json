@@ -1069,6 +1069,10 @@
       }
     ]
   },
+  "integrity": {
+    "algorithm": "sha256-canonical-json-v1",
+    "fingerprint": "b28be0dbd17ce61abb64ee7bf6065c7c75883161bb0a50241c20529a1eeafdfa"
+  },
   "intent_modes": {
     "EDIT_EXISTING_MEDIA": {
       "allowed": [

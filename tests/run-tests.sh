@@ -105,6 +105,10 @@ run_one "CF-P1-002-CONFLICTS" python3 tests/test_skill_router.py
 run_one "CF-P1-002-MODES" python3 tests/test_skill_router.py
 run_one "CF-P1-002-PLAN" python3 tests/test_skill_router.py
 run_one "CF-P1-002-SECURITY" python3 tests/test_skill_router.py
+run_one "CF-P1-002-R1-SCOPE" python3 tests/test_skill_router.py
+run_one "CF-P1-002-R1-SCHEMA" python3 tests/test_skill_router.py
+run_one "CF-P1-002-R1-HANDOFF" python3 tests/test_skill_router.py
+run_one "CF-P1-002-R1-CATALOG" python3 tests/test_skill_router.py
 
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check

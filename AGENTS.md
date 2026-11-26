@@ -477,6 +477,28 @@ step-by-step order for every video, in §7).
   never route production work. Full record:
   `docs/implementation/CF-WO-P1-002-corrections.md`, and the
   runtime contract in `docs/runtime/SKILL_ROUTING_RUNTIME.md`.
+- **R1 hardening (2026-11-26, same branch and PR #3).** Every
+  scope reference must resolve to a request/profile subject or shot
+  (a phantom reference is a validation error, never a silently
+  dropped scope). The request validator enforces the same relevant
+  constraints as the request/profile schemas with exact JSON types,
+  and boolean authorisation evidence must be the actual boolean
+  `True` — a string such as `"false"` is never approval. Handoff
+  packets take explicit completion receipts
+  (`build_handoff_packet(session, plan, step_id,
+  completed_receipts, catalog=None)`); a dependency counts as
+  satisfied only when a validated receipt says so, and the packet
+  is refused unless the session is the exact active session the
+  plan belongs to, the plan hash validates, and the step is ready
+  under those receipts. The compiled catalog carries a
+  deterministic integrity fingerprint plus full semantic
+  validation at load (exact TC-1..TC-10, edges vs dependencies,
+  conflict symmetry, mode applicability, canonical groups) —
+  integrity against accidental / unsupported mutation, not
+  cryptographic protection against a malicious same-OS-user
+  process. `tests/test_skill_router.py` also runs natively on
+  Windows now (both `windows-compat` matrix versions). Record:
+  corrections doc §12.
 
 ## Rules that always apply
 
