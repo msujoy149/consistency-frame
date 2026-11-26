@@ -910,3 +910,131 @@ per the existing `_known_characters` design), not dangling.
   `docs/implementation/build-report.json`,
   `docs/implementation/CHECKSUMS.txt`, `release-manifest.json`,
   `tests/last-run.json`
+
+### 12.7 F1 — Cross-Platform Manifest Path Safety (2026-11-26)
+
+Follow-up to the R2 manifest group: one residual defect in the new
+validator, independently reproduced by the reviewer.
+
+#### The defect
+
+`_is_unsafe_manifest_path()` in `tests/test_reports.py` rejected
+POSIX absolute paths, backslashes, NUL bytes and traversal
+components — but it ACCEPTED `C:/Windows/win.ini`, a Windows
+absolute path. The reproduction (evidence
+`evidence/p1003-r2-f1/repro-p1003-r2-f1.py` with
+`repro-p1003-r2-f1-before.txt` / `repro-p1003-r2-f1-after.txt`):
+
+- `ntpath.isabs("C:/r2-absolute-path-probe.txt")` returns True.
+- The old function did not reject `C:/Windows/win.ini`,
+  `D:/outside.txt` or `C:relative.txt` — all three were accepted.
+- A synthetic manifest entry using `C:/Windows/win.ini` was
+  accepted by `verify_manifest_entries()` when a same-named test
+  file existed under the POSIX extraction root (the decoy case):
+  the entry verified, because on POSIX the path joins and reads
+  normally.
+- On Windows, `os.path.join(root, "C:/Windows/win.ini")`
+  discards the repository root and resolves to the absolute drive
+  path (`ntpath.join` shows the same discard on any host).
+
+The current 182-entry release manifest does NOT contain this
+path — this is a verifier hardening requirement, not an existing
+manifest corruption. No production code was involved; only the
+test-side verifier in `tests/test_reports.py` changed.
+
+#### The fix
+
+`_is_unsafe_manifest_path()` now uses cross-platform path
+semantics and never relies only on `os.path.isabs()`, whose
+answer depends on the host OS. It rejects, in order: non-string
+or empty paths; NUL bytes; any backslash; POSIX absolute paths
+(leading `/`, which also covers UNC `//server/share/...`); any
+path with a Windows drive prefix detected by
+`ntpath.splitdrive()` (drive-absolute `C:/...`,
+drive-relative `C:...`, UNC); and anything `ntpath.isabs()`
+reports absolute. Empty, dot and parent-traversal components
+are rejected as before. Repository manifest paths must be
+normalized, repository-relative POSIX paths.
+
+`verify_manifest_entries()` keeps rejecting unsafe paths BEFORE
+joining them to the repository root or opening any file (the
+unsafe check `continue`s before the join, as before). In
+addition, after the join it resolves the final candidate path
+with `os.path.realpath()` and requires the real path to stay
+inside the real repository root, rejecting symlink targets that
+escape the root with an explicit `manifest path escapes
+repository root` error — before any file is opened. A symlink
+inside the root pointing outside it can therefore never let a
+manifest entry read outside content.
+
+#### Regression tests
+
+The `CF-P1-003-R2-MANIFEST` group gained 19 checks (group total
+36; `tests/test_reports.py` total 83, pre-existing 64 intact).
+The new cases do NOT merely assert that
+`verify_manifest_entries()` returns some error (a missing file
+would do that too) — each proves two things: that
+`_is_unsafe_manifest_path()` itself rejects the path, and that
+`verify_manifest_entries()` returns an EXPLICIT unsafe-path
+validation error:
+
+- Eight negative paths, each with both assertions:
+  `C:/Windows/win.ini`, `D:/outside.txt`, `C:relative.txt`,
+  `//server/share/file.txt`, `../escape.txt`, `/etc/passwd`,
+  `docs/../escape.txt`, `docs\escape.txt`. (The five paths the
+  old validator already rejected keep their previous weak
+  assertions too — no existing test was weakened.)
+- Decoy case (the reviewer's reproduction): a same-named file
+  `C:/Windows/win.ini` exists under a temporary extraction root
+  with matching SHA-256 and byte count, so a validator that
+  checked the file first would ACCEPT the entry. The entry is
+  rejected with an explicit unsafe-path error, and a second
+  assertion proves no hash/size/missing error appears — the
+  rejection happens before any file access.
+- Symlink-escape case: a symlink inside a temporary repository
+  root pointing to a file outside it, with an entry carrying the
+  outside file's correct SHA-256 and byte count, is rejected
+  with the explicit escapes-root error. Where the platform
+  cannot create symlinks the test prints an explicit SKIP line
+  (not a silent pass) and never fails CI.
+
+#### Verification
+
+- Repro evidence: `evidence/p1003-r2-f1/` — before: 8 unsafe
+  paths accepted (the three Windows paths, the decoy case, the
+  symlink escape); after: all unsafe paths rejected with
+  explicit errors, exit 0.
+- `tests/test_reports.py`: 83 checks (64 pre-existing + 19 new
+  F1 checks). At document-finalization time exactly one check
+  fails — the 182-entry check on the not-yet-regenerated
+  manifest, because `tests/test_reports.py` itself grew when the
+  fix landed; that is the manifest group doing exactly the job
+  it was built for. After the final regen the 182-entry check
+  passes and the manifest verifies 182/182 against the final
+  tree with CHECKSUMS 3/3 OK (parent verifies; final manifest
+  SHA and CHECKSUMS SHA are in the delivery report, not here).
+- `tests/test_script_to_performance_runtime.py`: 1,787 checks,
+  0 failures — unchanged; the S2P runtime was not modified in
+  this round.
+- Full suite `bash tests/run-tests.sh`: 87 entries / 73
+  distinct IDs / 37 distinct commands, 0 failures (unchanged —
+  the F1 checks live inside the existing MANIFEST group entry).
+- `validate-repo.py`: PASS. `generate-registries.py --check`:
+  OK. `generate-routing-catalog.py --check`: OK.
+  `git diff --check`: clean.
+- The suite's own regen dirties the living report when run
+  locally; it is restored afterwards with `git checkout` and
+  `test_reports.py` is re-run on the clean tree (R2 pattern).
+
+#### Files changed (F1 content)
+
+- `tests/test_reports.py` (hardened `_is_unsafe_manifest_path()`,
+  realpath containment in `verify_manifest_entries()`, 19 new
+  F1 checks in the `CF-P1-003-R2-MANIFEST` group)
+- `docs/implementation/CF-WO-P1-003-corrections.md` (this §12.7)
+- `AGENTS.md`, `CHANGELOG.md`
+- Generated (regen only): `docs/architecture/living-architecture-report-v2.4-p0.md`,
+  `docs/implementation/BUILD_REPORT_P0.md`,
+  `docs/implementation/build-report.json`,
+  `docs/implementation/CHECKSUMS.txt`, `release-manifest.json`,
+  `tests/last-run.json`

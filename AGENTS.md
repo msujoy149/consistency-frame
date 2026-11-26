@@ -628,6 +628,20 @@ step-by-step order for every video, in §7).
   empty-string identifiers that silently passed, and dangling
   per-shot overrides that silently built. Record: corrections
   doc §12.
+- **R2-F1 cross-platform manifest path safety (2026-11-26,
+  same branch and PR #4).** The R2 validator accepted Windows
+  absolute paths (`C:/Windows/win.ini`) because POSIX
+  `os.path.isabs()` says False for them; the validator now uses
+  host-independent `ntpath.splitdrive()` / `ntpath.isabs()`
+  checks plus a realpath containment check, so drive-absolute,
+  drive-relative and UNC paths, and symlinks escaping the
+  repository root, are all rejected before any file is opened.
+  Regression tests cover eight unsafe paths with explicit
+  unsafe-path errors, the reviewer's decoy-file case, and a
+  symlink-escape case (explicitly skipped where the platform
+  cannot create symlinks). Only `tests/test_reports.py` and
+  docs changed; the S2P runtime is untouched (1,787 checks).
+  Record: corrections doc §12.7.
 
 ## Rules that always apply
 
