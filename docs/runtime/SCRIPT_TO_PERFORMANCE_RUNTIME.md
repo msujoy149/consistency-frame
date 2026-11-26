@@ -152,9 +152,15 @@ reorders lines, or drops lines without a validation error. Every
 source dialogue line maps to exactly one Performance Plan line,
 by `line_id`, in order. Checked: missing line IDs, extra line IDs,
 duplicate line IDs, reordered source dialogue, changed dialogue
-text, and mismatched character IDs where the source supplies one.
-Language agreement is not enforced — it is not in the work
-order's check list.
+text, and source-supplied dialogue metadata: when the source line
+supplies a `character_id`, the Performance Plan line must carry
+the SAME `character_id` (omitted, wrong type or different all fail
+closed); when the source line supplies a `language`, the
+Performance Plan line must carry the SAME language (omitted,
+wrong type or different all fail closed). Nothing is invented and
+nothing is translated — no replacement character ID is created
+and no language is inferred (P1-003-R1, Task C). A source line
+that supplies neither imposes no metadata requirement.
 
 A non-verbal source line (empty text) must be performed
 non-verbally: the performance line carries no spoken text (the
@@ -271,6 +277,31 @@ Errors are structured strings naming the record, field and rule
 `subject char-001: contradictory subject_kind: ...`). The builder
 raises at the first failing stage and never returns a partial
 bundle.
+
+Bundle shape validation (P1-003-R1, Task A): the bundle
+validator checks every required field for BOTH presence AND
+correct type — `bundle_id`, `schema_version`, `session_id`,
+`routing_plan_id`, `bundle_hash` and all six embedded records
+(`script_contract`, `production_profile`,
+`script_to_performance`, `scene_plan`, `shot_plan`,
+`performance_plan`). A required field containing `None`, or a
+required record containing a list, scalar or other wrong type,
+is invalid; validation is never skipped because a field is
+`None` or is not a dictionary, so a malformed bundle is never
+reported valid merely because its hash was recomputed.
+
+Fail-closed input validation (P1-003-R1, Task B): public
+validation functions never leak a raw Python implementation
+exception on schema-invalid JSON-shaped input. Types are checked
+before a value is used as a dictionary or set key, before a
+string method is called on it, and before set membership is
+tested with it — malformed identifiers, project IDs, schema
+versions, subject dimensions, articulation/species values and
+live-action provenance fields all return structured
+field-specific errors. The builder converts invalid input into
+`ScriptToPerformanceError`, never a raw `TypeError` or
+`AttributeError`. Invalid values are never silently coerced into
+valid ones.
 
 ## Deterministic hashing
 

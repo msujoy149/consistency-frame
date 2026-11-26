@@ -398,6 +398,24 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-003-R1-BUNDLE-SHAPE",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R1-FAIL-CLOSED",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R1-DIALOGUE-META",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "command": "git diff --check",
       "exit_code": 0,

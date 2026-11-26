@@ -422,3 +422,236 @@ hash-chain rule).
   effectively the P0 base commit, and a future round should
   give the generator an explicit `--base` instead of reading
   a ref that any fetch can move.
+
+## 11. R1 — Bundle Shape Integrity, Fail-Closed Validation & Source Metadata Preservation (2026-11-26)
+
+Reviewer work order (relayed by the user, same branch and PR #4,
+no merge, no P1-004): harden the P1-003 runtime in three places.
+Starting HEAD `082efb595d1b4b6dd5b930e77111b6e648fb65b3` (P1-003
+delivery head; local HEAD `1302ee4`, tree clean, merge-base with
+P1-002 `b9072f07`). All three defects were reproduced on the
+pre-fix code FIRST with a standalone repro script
+(`~/workspace/consistency-frame-p1-delivery/evidence/p1003-r1/repro-p1003-r1.py`;
+before-run output `repro-p1003-r1-before.txt`, after-run output
+`repro-p1003-r1-after.txt`), then fixed, then re-run.
+
+### 11.1 Defect A — bundle shape: required records replaced, hash recomputed, still accepted
+
+Reproduced (pre-fix, 0 errors = accepted): `script_contract`,
+`production_profile`, `script_to_performance`, `scene_plan`,
+`shot_plan`, `performance_plan` each replaced by `None`;
+`scene_plan` replaced by `["not", "an", "object"]`,
+`script_to_performance` by `"scalar"`, `shot_plan` by `42`,
+`performance_plan` by `3.5`; `session_id=None`,
+`routing_plan_id=None`, `bundle_hash=None` — all accepted with
+the bundle hash recomputed. Already rejected pre-fix:
+`script_contract` as a list (1 error), `bundle_id=None` (1),
+`bundle_id` as a list (2), `session_id=42` (1),
+`bundle_hash="not-a-hash"` (1). Root cause:
+`validate_script_to_performance_bundle()` skipped each record
+validator when the field was `None` or not a dict, and skipped
+the `session_id` / `routing_plan_id` / `bundle_hash` checks when
+the value was `None`.
+
+Fix (Task A, `validate_script_to_performance_bundle()` only):
+every required field is now validated for BOTH presence AND
+correct type — the `is not None` / `isinstance` guards are gone
+and all six record validators run unconditionally (each already
+returns a schema type error for a non-dict value);
+`bundle_id` / `session_id` / `routing_plan_id` error when not a
+valid non-empty string (covers `None`); `bundle_hash` errors
+when not a string matching the SHA-256 regex, else it is
+recomputed and compared. The cross-reference block stays
+guarded by `isinstance(scene/shot/perf, dict)`. After the fix
+every Defect A case is rejected (1–2 errors each; `bundle_id`
+`None` now 2 — invalid ID plus the s2p record's ID mismatch);
+the valid baseline bundle still validates.
+
+### 11.2 Defect B — malformed input leaks raw TypeError
+
+Reproduced (pre-fix, all raw `TypeError: unhashable type:
+'list'/'dict'`): `script.dialogue[0].line_id = []` and
+`scene_plan.scenes[0].scene_id = {}` in `_unique_id_errors()`;
+`build()` with `scene_id=[]`; articulation target as a list;
+`production_medium` as a list with `is_live_action_footage=true`.
+
+Fix (Task B): type is now checked before a value is used as a
+dictionary or set key, before a string method is called on it,
+and before set membership is tested with it — never silently
+coerced, never swallowed indiscriminately. Hardened, in
+`runtime/script_to_performance.py`: `_articulation_errors()`
+(non-string target/kind/species append a field-naming error and
+skip that check); `_live_action_errors()` and
+`_subject_live_action_errors()` (membership in the generated
+media/style sets guarded by a new `_is_hashable()` helper);
+`_unique_id_errors()` (non-string identifier appends an error
+and is never used as a dict key); `_kind_species_lookup()`
+(only `str` values enter the kind/species tables);
+`_dimension_agreement_errors()` (unhashable dimension value
+appends an error and is skipped from the agreement map);
+`_cross_reference_errors()` (project agreement only from `str`
+project IDs; schema versions collected as a `list[str]` with a
+field-naming error for a non-string; `beat_ids` only from `str`
+beat IDs); `_dialogue_mapping_errors()` (source/performance
+line-ID sets built from `str` IDs only, non-string IDs append an
+error; the same str-only rule for the `source_by_id` /
+`perf_by_id` maps); `_binding_errors()` (`shot_ref` checked
+`isinstance(str)` before membership); `_agreed_project_id()`
+(only `str` project IDs count); `_assemble_s2p_record()`
+(versions from `str` schema versions only);
+`build_script_to_performance_bundle()` stage A (the routing
+plan's `session` record guarded against a non-dict, and the
+blocked-diagnostics join guarded against a non-list and
+non-dict entries — a list `session` raised `AttributeError`
+before this fix). After the fix every Defect B case returns
+structured field-specific errors (the two validator cases: 2
+errors each; the build cases: `ScriptToPerformanceError`, never
+a raw exception).
+
+### 11.3 Defect C — source dialogue metadata dropped or changed
+
+Reproduced (pre-fix, all passed validation when they must fail):
+the Performance Plan line's `character_id` removed while the
+source line supplies `char-001`; the Performance Plan line's
+`language` changed `en` → `bn` while the source line supplies
+`en`; the Performance Plan line's `language` removed.
+
+Fix (Task C, `_dialogue_mapping_errors()` only): when the source
+dialogue line supplies a non-empty string `character_id`, the
+Performance Plan line must contain the SAME value (missing,
+wrong type or different string all fail); when the source
+supplies a non-empty string `language`, the Performance Plan
+line's top-level `language` must equal it (missing, wrong type
+or different all fail). No replacement ID is invented and no
+language is inferred. A source line that supplies neither
+imposes no metadata requirement. The exact dialogue text, line
+ID and ordering protections are unchanged. After the fix all
+three Defect C cases are rejected; the correct character ID and
+language still build.
+
+### 11.4 `--base` generator parameter and provenance clarification (§8)
+
+The P1-003 provenance trap (§10) is fixed at the source: both
+generators now take a minimal, backwards-compatible
+`--base <sha>` parameter (a `resolve_base()` helper mirroring
+`resolve_github_head()`; default = current behaviour, the local
+`origin/main` ref). Default behaviour is unchanged —
+`python3 tests/test_reports.py` still passes. **Deviation from
+the work order's literal regen commands, recorded here:** the
+brief names `--base` only for `scripts/generate-report.py`, but
+`--base` was added to `scripts/generate-build-report.py` too
+(same helper, same default), because build-report is the writer
+of `release-manifest.json` — without `--base` there, a fetched
+`origin/main` (`8fc11fee`) would silently shrink the manifest
+from 182 entries to 30 again, which is exactly the trap §8
+wants fixed. No other generator behaviour changed.
+
+No `git update-ref` or remote-tracking-ref manipulation was used
+in this round, and the local `origin/main` ref (still held at the
+P0 base `e1571db68ed87fb973c45960a4a3e27e09ba0d06` from P1-003)
+was not relied on or reproduced. The parent restores
+`origin/main` to its true value with a plain
+`git fetch origin main` before the regen; the regen uses
+`--base e1571db68ed87fb973c45960a4a3e27e09ba0d06` explicitly.
+
+The three SHAs and their roles, made explicit (per §8):
+
+- P1-002 base
+  `b9072f07910b77621e3f5bdad1fd7546f5fc09c2` — the base commit
+  the P1-003 branch stacks on.
+- Workflow commit
+  `6547893db8a8cb34eb47fa9f47f3e41a7116699f` — the
+  website-uploaded workflow-file commit on the P1-003 branch.
+- Final P1-003 PR HEAD
+  `082efb595d1b4b6dd5b930e77111b6e648fb65b3` — the P1-003
+  delivery head; R1 produces a new final head (content commit +
+  docs/provenance commit; the parent pushes and re-runs the
+  regen with the actual GitHub head).
+
+The R1 regen runs
+`python3 scripts/generate-report.py --base e1571db… --github-head <content SHA>`
+then
+`python3 scripts/generate-build-report.py --base e1571db… --github-head <content SHA>`
+LAST, then
+`python3 scripts/generate-report.py --check --base e1571db… --github-head <content SHA>`
+with the SAME full `--github-head` (the local content-commit SHA
+as the provisional head, exactly as P1-003 did). The manifest
+must stay 182 entries with every entry resolving; the
+manifest/build-report head is not claimed to equal the final PR
+HEAD unless it actually does. The manifest SHA and CHECKSUMS SHA
+are recorded in the delivery report, not in this doc (hash-chain
+rule: this doc cannot quote the manifest SHA of the generation
+that includes the doc's own final text); the post-push regen gets
+a brief addendum here recording the regen head only.
+
+### 11.5 Verification
+
+- `tests/test_script_to_performance_runtime.py`: **691 checks, 0
+  failures** — baseline 606 intact (SESSION-ROUTING 22, SCRIPT
+  18, PLANS 23, DIALOGUE 23, XREF 35, DETERMINISM 16, NULL156
+  469) plus 85 new (BUNDLE-SHAPE 35, FAIL-CLOSED 41,
+  DIALOGUE-META 9).
+- `tests/test_skill_router.py`: 766 checks, 0 failures.
+  `tests/test_routing.py`: 305 checks, 0 failures.
+  `tests/test_performance_semantics.py`: 32 checks, 0 failures.
+- `python3 scripts/validate-repo.py`: PASS.
+  `python3 scripts/generate-registries.py --check`: CHECK OK.
+  `python3 scripts/generate-routing-catalog.py --check`: CHECK OK.
+  `python3 tests/test_reports.py`: PASS (0 failures).
+- Full suite `bash tests/run-tests.sh`: **78 entries / 64
+  distinct IDs / 37 distinct commands, 0 failures, status PASS**
+  (was 75/61/37; the three new group IDs are registered one
+  `run_one` line each, following the existing per-group
+  pattern).
+- `git diff --check`: clean (also the suite's P0-DIFF-CHECK
+  entry, PASS).
+- Repro evidence: `repro-p1003-r1-before.txt` (all three defects
+  reproduced on pre-fix code) vs `repro-p1003-r1-after.txt`
+  (every case rejected / structured, baseline bundle still
+  validates).
+
+### 11.6 Files changed (R1 content)
+
+- `runtime/script_to_performance.py` — Task A bundle validator,
+  Task B hardening of the nine named functions plus the builder
+  stage A, Task C dialogue mapping.
+- `tests/test_script_to_performance_runtime.py` — three new
+  groups: `CF-P1-003-R1-BUNDLE-SHAPE` (35),
+  `CF-P1-003-R1-FAIL-CLOSED` (41),
+  `CF-P1-003-R1-DIALOGUE-META` (9); no existing test weakened
+  or removed.
+- `tests/run-tests.sh` — three new `run_one` lines (one per new
+  group ID).
+- `scripts/generate-report.py`, `scripts/generate-build-report.py`
+  — `--base <sha>` parameter (default unchanged).
+- `docs/implementation/CF-WO-P1-003-corrections.md` — this §11.
+- `docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md` — dialogue
+  preservation (Task C) and validation/error model (Tasks A/B).
+- `AGENTS.md` — short R1 note in the P1-003 section.
+- `CHANGELOG.md` — R1 entry under [Unreleased].
+- `tests/last-run.json` — regenerated by the full suite run.
+
+Protected paths untouched: no P0 schema, canonical YAML, skill,
+`local_session` / `authorization` / `skill_router`,
+`asset_policy` / `timeline_policy` / `atomic_write`, or
+component file changed. The only `scripts/` changes are the two
+`--base` additions listed above. No file over 100 MiB, no media
+added. The zero-dialogue schema tension stays documented and
+fail-closed; no Performance Plan line was invented and no P0
+schema was modified.
+
+### 11.7 Provenance regen addendum (docs commit)
+
+Provenance regenerated locally with
+`--base e1571db68ed87fb973c45960a4a3e27e09ba0d06 --github-head 32a96a93e1ada673b1958c37a9fb8afc74a75dd3`
+(the R1 content commit as the provisional head, exactly as
+P1-003 did); the parent re-runs the regen with the actual
+GitHub head after pushing. Manifest: 182 entries, every entry
+resolves, no hash mismatches, no silent scope change (the
+`changed_files` list holds 184 names — the 182 manifest files
+plus `release-manifest.json` and `CHECKSUMS.txt`, both excluded
+from the manifest by design). `generate-report.py --check` with
+the same full `--github-head`: CHECK OK. CHECKSUMS recomputed
+by hand: all three entries OK. The manifest SHA and CHECKSUMS
+SHA are recorded in the delivery report, not here (hash-chain
+rule, §11.4).

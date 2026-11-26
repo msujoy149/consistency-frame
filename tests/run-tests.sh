@@ -116,6 +116,9 @@ run_one "CF-P1-003-DIALOGUE" python3 tests/test_script_to_performance_runtime.py
 run_one "CF-P1-003-XREF" python3 tests/test_script_to_performance_runtime.py
 run_one "CF-P1-003-DETERMINISM" python3 tests/test_script_to_performance_runtime.py
 run_one "CF-P1-003-NULL156" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-R1-BUNDLE-SHAPE" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-R1-FAIL-CLOSED" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-R1-DIALOGUE-META" python3 tests/test_script_to_performance_runtime.py
 
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check

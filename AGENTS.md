@@ -590,6 +590,25 @@ step-by-step order for every video, in §7).
   builder fails closed. A non-verbal performance line omits
   `dialogue.text` (minLength 1); an explicit `""` is
   schema-invalid.
+- **R1 hardening (2026-11-26, same branch and PR #4).** Bundle
+  shape integrity (every required bundle field validated for
+  presence AND type — a `None`, list or scalar record no longer
+  passes with a recomputed hash), fail-closed input validation
+  (malformed identifiers, project IDs, schema versions, subject
+  dimensions, articulation/species values and live-action
+  provenance fields return structured errors; the builder raises
+  `ScriptToPerformanceError`, never a raw `TypeError` /
+  `AttributeError`), and source dialogue metadata preservation
+  (a source-supplied `character_id` or `language` must match
+  exactly in the Performance Plan line — omitted or different
+  fails closed; nothing invented, nothing translated). The two
+  report generators take an explicit `--base <sha>` (default:
+  the local `origin/main` ref) so the manifest base no longer
+  depends on a ref any fetch can move. Regression groups
+  `CF-P1-003-R1-BUNDLE-SHAPE` (35), `CF-P1-003-R1-FAIL-CLOSED`
+  (41), `CF-P1-003-R1-DIALOGUE-META` (9) in
+  `tests/test_script_to_performance_runtime.py` (691 checks
+  total; baseline 606 intact). Record: corrections doc §11.
 
 ## Rules that always apply
 

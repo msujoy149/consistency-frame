@@ -357,6 +357,18 @@ def _non_verbal_line_errors(plan: dict) -> list[str]:
     return errors
 
 
+def _is_hashable(value) -> bool:
+    """True when ``value`` can be used as a dict key / set member.
+    JSON-shaped input may carry a list or dict where an identifier
+    belongs; such a value must be reported, never used as a key
+    (``in`` on a dict/set raises TypeError for it)."""
+    try:
+        hash(value)
+    except TypeError:
+        return False
+    return True
+
+
 def _articulation_errors(entries, label: str,
                          fail_closed_unknown: bool = False) -> list[str]:
     """Articulation must match the subject's anatomy. Each entry is a
@@ -369,20 +381,35 @@ def _articulation_errors(entries, label: str,
     the supplied context, the check fails closed — anatomy is never
     guessed. (Single-record validators leave it unset: they cannot
     see the kind another record supplies; the cross-reference phase
-    resolves kinds first and then fails closed.)"""
+    resolves kinds first and then fails closed.) A non-string
+    articulation target, subject kind or species is a validation
+    error naming the field — never a crash, never silently coerced."""
     errors = []
     for i, entry in enumerate(entries or []):
         if not isinstance(entry, dict):
             continue
         target = entry.get("articulation_target") or entry.get("articulation")
+        if target is not None and not isinstance(target, str):
+            errors.append(
+                f"{label}[{i}]: articulation target {target!r} is not "
+                "a string")
+            continue
         if not target:
             continue
         kind = entry.get("subject_kind")
-        species = (entry.get("species") or "").lower()
+        if kind is not None and not isinstance(kind, str):
+            errors.append(
+                f"{label}[{i}]: subject_kind {kind!r} is not a string")
+        species_raw = entry.get("species")
+        if species_raw is not None and not isinstance(species_raw, str):
+            errors.append(
+                f"{label}[{i}]: species {species_raw!r} is not a string")
+            species_raw = None
+        species = (species_raw or "").lower()
         who = entry.get("character_id") or entry.get("dialogue_line_id") \
             or f"{label}[{i}]"
-        if kind in _ARTICULATION_BY_SUBJECT_KIND and \
-                target not in _ARTICULATION_BY_SUBJECT_KIND[kind]:
+        if isinstance(kind, str) and kind in _ARTICULATION_BY_SUBJECT_KIND \
+                and target not in _ARTICULATION_BY_SUBJECT_KIND[kind]:
             errors.append(
                 f"{who}: articulation '{target}' is not valid for "
                 f"subject_kind '{kind}'")
@@ -413,8 +440,10 @@ def _live_action_errors(profile: dict) -> list[str]:
     medium = profile.get("production_medium")
     style = profile.get("visual_style")
     pid = profile.get("production_profile_id", "?")
-    if flag is True and (medium in _GENERATED_MEDIA
-                         or style in _GENERATED_STYLES):
+    if flag is True and ((_is_hashable(medium)
+                         and medium in _GENERATED_MEDIA)
+                        or (_is_hashable(style)
+                            and style in _GENERATED_STYLES)):
         errors.append(
             f"{pid}: is_live_action_footage=true but "
             f"production_medium='{medium}' / visual_style='{style}' is "
@@ -426,13 +455,15 @@ def _live_action_errors(profile: dict) -> list[str]:
     for i, sub in enumerate(profile.get("per_subject_overrides") or []):
         if not isinstance(sub, dict):
             continue
+        representation = sub.get("representation")
         if sub.get("is_live_action_footage") is True and \
-                sub.get("representation") in _GENERATED_MEDIA:
+                _is_hashable(representation) and \
+                representation in _GENERATED_MEDIA:
             errors.append(
                 f"{pid} per_subject_overrides[{i}] "
                 f"({sub.get('character_id', '?')}): "
                 "is_live_action_footage=true but representation "
-                f"'{sub.get('representation')}' is generated")
+                f"'{representation}' is generated")
     return errors
 
 
@@ -444,17 +475,23 @@ def _subject_live_action_errors(subjects, label: str) -> list[str]:
     for i, sub in enumerate(subjects or []):
         if not isinstance(sub, dict):
             continue
+        representation = sub.get("representation")
         if sub.get("is_live_action_footage") is True and \
-                sub.get("representation") in _GENERATED_MEDIA:
+                _is_hashable(representation) and \
+                representation in _GENERATED_MEDIA:
             errors.append(
                 f"{label}[{i}] ({sub.get('character_id', '?')}): "
                 "is_live_action_footage=true but representation "
-                f"'{sub.get('representation')}' is generated")
+                f"'{representation}' is generated")
     return errors
 
 
 def _unique_id_errors(values, key: str, label: str) -> list[str]:
-    """Duplicate identifier check for a list of records."""
+    """Duplicate identifier check for a list of records. An
+    identifier that is present but not a string is a validation
+    error naming the field — it is never used as a dict key (an
+    unhashable list/dict identifier raised a raw TypeError before
+    this fix)."""
     errors = []
     seen: dict[str, int] = {}
     for i, item in enumerate(values or []):
@@ -462,6 +499,10 @@ def _unique_id_errors(values, key: str, label: str) -> list[str]:
             continue
         ident = item.get(key)
         if ident is None:
+            continue
+        if not isinstance(ident, str):
+            errors.append(
+                f"{label}: {key} {ident!r} is not a string identifier")
             continue
         if ident in seen:
             errors.append(
@@ -631,9 +672,11 @@ def _kind_species_lookup(table, perf_lines):
     species: dict[str, str] = {}
     for cid, records in table.items():
         for _, rec in records:
-            if kind.get(cid) is None and rec.get("subject_kind"):
+            if kind.get(cid) is None \
+                    and isinstance(rec.get("subject_kind"), str):
                 kind[cid] = rec["subject_kind"]
-            if species.get(cid) is None and rec.get("species"):
+            if species.get(cid) is None \
+                    and isinstance(rec.get("species"), str):
                 species[cid] = rec["species"]
     for line in perf_lines or []:
         if not isinstance(line, dict):
@@ -641,9 +684,11 @@ def _kind_species_lookup(table, perf_lines):
         cid = line.get("character_id")
         if not isinstance(cid, str):
             continue
-        if kind.get(cid) is None and line.get("subject_kind"):
+        if kind.get(cid) is None \
+                and isinstance(line.get("subject_kind"), str):
             kind[cid] = line["subject_kind"]
-        if species.get(cid) is None and line.get("species"):
+        if species.get(cid) is None \
+                and isinstance(line.get("species"), str):
             species[cid] = line["species"]
     return kind, species
 
@@ -660,7 +705,13 @@ def _dimension_agreement_errors(table) -> list[str]:
             seen: dict[object, list] = {}
             for source, rec in records:
                 if field in rec:
-                    seen.setdefault(rec[field], []).append(source)
+                    value = rec[field]
+                    if not _is_hashable(value):
+                        errors.append(
+                            f"subject {cid}: {field} value {value!r} "
+                            "is not a usable dimension value")
+                        continue
+                    seen.setdefault(value, []).append(source)
             if len(seen) > 1:
                 parts = ", ".join(
                     f"{value!r} ({', '.join(sources)})"
@@ -748,17 +799,30 @@ def _cross_reference_errors(script, profile, scene, shot, perf,
     shots = shot.get("shots") or []
     lines = perf.get("lines") or []
 
-    # -- Project IDs agree wherever supplied.
-    projects: dict[object, list] = {}
+    # -- Project IDs agree wherever supplied. Only string project
+    # IDs take part in the agreement: a list/dict project ID is a
+    # validation error, never a dict key (unhashable) and never an
+    # agreed ID.
+    projects: dict[str, list] = {}
     for label, record in (("script", script), ("production_profile", profile),
                           ("scene_plan", scene), ("shot_plan", shot),
                           ("performance_plan", perf)):
         if isinstance(record, dict) and "project_id" in record:
-            projects.setdefault(record["project_id"], []).append(label)
+            pid = record["project_id"]
+            if isinstance(pid, str):
+                projects.setdefault(pid, []).append(label)
+            else:
+                errors.append(
+                    f"{label}: project_id {pid!r} is not a string")
     if s2p is not None and isinstance(s2p, dict) \
             and "project_id" in s2p:
-        projects.setdefault(s2p["project_id"], []).append(
-            "script_to_performance")
+        pid = s2p["project_id"]
+        if isinstance(pid, str):
+            projects.setdefault(pid, []).append("script_to_performance")
+        else:
+            errors.append(
+                "script_to_performance: project_id "
+                f"{pid!r} is not a string")
     if len(projects) > 1:
         parts = ", ".join(
             f"{value!r} ({', '.join(labels)})"
@@ -766,13 +830,22 @@ def _cross_reference_errors(script, profile, scene, shot, perf,
         errors.append(f"project_id disagreement: {parts}")
 
     # -- Schema versions agree across the three plans (the S2P record
-    # carries the agreed version).
-    versions = {plan.get("schema_version")
-                for plan in (scene, shot, perf)}
-    if len(versions) > 1:
+    # carries the agreed version). Only string versions take part:
+    # a list/dict version is a validation error, never a set member.
+    versions: list[str] = []
+    for label, plan in (("scene_plan", scene), ("shot_plan", shot),
+                        ("performance_plan", perf)):
+        version = plan.get("schema_version")
+        if isinstance(version, str):
+            versions.append(version)
+        else:
+            errors.append(
+                f"{label}: schema_version "
+                f"{version!r} is not a string")
+    if len(set(versions)) > 1:
         errors.append(
             "schema_version disagreement across scene/shot/performance "
-            f"plans: {sorted(str(v) for v in versions)}")
+            f"plans: {sorted(set(versions))}")
 
     # -- Dialogue modes agree (script vs performance plan).
     script_mode = script.get("dialogue_mode") \
@@ -813,7 +886,8 @@ def _cross_reference_errors(script, profile, scene, shot, perf,
         if isinstance(beat_id, str) and isinstance(scene_id, str):
             beats = scene_ids[scene_id].get("beats") or []
             beat_ids = {b.get("beat_id") for b in beats
-                        if isinstance(b, dict)}
+                        if isinstance(b, dict)
+                        and isinstance(b.get("beat_id"), str)}
             if beat_id not in beat_ids:
                 errors.append(
                     f"shot_plan.shots[{i}] ({shot_id or '?'}): beat_id "
@@ -914,7 +988,15 @@ def _dialogue_mapping_errors(script, perf) -> list[str]:
     Plan line, in the same order, with the text preserved exactly.
     A spoken source line must carry its text in the performance
     line; a non-verbal source line (empty text) must be performed
-    non-verbally."""
+    non-verbally. Source-supplied dialogue metadata is preserved:
+    when the source line supplies a ``character_id``, the
+    performance line must carry the same one (omitted or different
+    fails closed); when the source line supplies a ``language``,
+    the performance line must carry the same language. Nothing is
+    invented and nothing is inferred — no replacement character ID,
+    no translated language. Line IDs that are present but not
+    strings are validation errors, never set members (an unhashable
+    list/dict line ID raised a raw TypeError before this fix)."""
     errors: list[str] = []
     if not isinstance(script, dict) or not isinstance(perf, dict):
         return errors
@@ -922,10 +1004,28 @@ def _dialogue_mapping_errors(script, perf) -> list[str]:
     lines = perf.get("lines")
     if not isinstance(source, list) or not isinstance(lines, list):
         return errors
-    source_ids = [ln.get("line_id") for ln in source
-                  if isinstance(ln, dict)]
-    perf_ids = [ln.get("line_id") for ln in lines
-                if isinstance(ln, dict)]
+    source_ids: list[str] = []
+    for ln in source:
+        if not isinstance(ln, dict):
+            continue
+        line_id = ln.get("line_id")
+        if isinstance(line_id, str):
+            source_ids.append(line_id)
+        else:
+            errors.append(
+                "source dialogue line has a non-string line_id "
+                f"{line_id!r}")
+    perf_ids: list[str] = []
+    for ln in lines:
+        if not isinstance(ln, dict):
+            continue
+        line_id = ln.get("line_id")
+        if isinstance(line_id, str):
+            perf_ids.append(line_id)
+        else:
+            errors.append(
+                "performance plan line has a non-string line_id "
+                f"{line_id!r}")
     source_set = set(source_ids)
     perf_set = set(perf_ids)
     for missing in source_ids:
@@ -944,9 +1044,11 @@ def _dialogue_mapping_errors(script, perf) -> list[str]:
             f"source dialogue (source order {source_ids}, plan order "
             f"{perf_ids})")
     source_by_id = {ln.get("line_id"): ln for ln in source
-                    if isinstance(ln, dict)}
+                    if isinstance(ln, dict)
+                    and isinstance(ln.get("line_id"), str)}
     perf_by_id = {ln.get("line_id"): ln for ln in lines
-                  if isinstance(ln, dict)}
+                  if isinstance(ln, dict)
+                  and isinstance(ln.get("line_id"), str)}
     for line_id in source_ids:
         src = source_by_id.get(line_id)
         dst = perf_by_id.get(line_id)
@@ -973,12 +1075,20 @@ def _dialogue_mapping_errors(script, perf) -> list[str]:
                     "for a non-verbal source line")
         src_char = src.get("character_id")
         dst_char = dst.get("character_id")
-        if isinstance(src_char, str) and isinstance(dst_char, str) \
-                and src_char != dst_char:
-            errors.append(
-                f"performance line {line_id!r} character_id "
-                f"{dst_char!r} does not match the source dialogue "
-                f"character_id {src_char!r}")
+        if isinstance(src_char, str) and src_char:
+            if dst_char != src_char:
+                errors.append(
+                    f"performance line {line_id!r} character_id "
+                    f"{dst_char!r} does not match the source dialogue "
+                    f"character_id {src_char!r}")
+        src_lang = src.get("language")
+        dst_lang = dst.get("language")
+        if isinstance(src_lang, str) and src_lang:
+            if dst_lang != src_lang:
+                errors.append(
+                    f"performance line {line_id!r} language "
+                    f"{dst_lang!r} does not match the source dialogue "
+                    f"language {src_lang!r}")
     return errors
 
 
@@ -1060,7 +1170,10 @@ def _binding_errors(s2p, lines, shot_ids, known, kind_by_id,
             continue
         by_line.setdefault(line_ref, []).append((label, binding))
         shot_ref = binding.get("shot_id")
-        if shot_ref is not None and shot_ref not in shot_ids:
+        if shot_ref is not None and not isinstance(shot_ref, str):
+            errors.append(
+                f"{label}: shot_id {shot_ref!r} is not a string")
+        elif isinstance(shot_ref, str) and shot_ref not in shot_ids:
             errors.append(
                 f"{label}: shot_id {shot_ref!r} does not reference a "
                 "valid shot")
@@ -1183,9 +1296,12 @@ def validate_script_plan_drafts(draft, script=None) -> list[str]:
 def _agreed_project_id(records) -> object:
     """The single project ID all supplied records agree on, or None
     when no record supplies one. Disagreement is reported by the
-    cross-reference check, not resolved here."""
+    cross-reference check, not resolved here. Only string project
+    IDs count: a list/dict project ID is never used as a set member
+    (unhashable) and never returned as the agreed ID."""
     values = {rec["project_id"] for rec in records
-              if isinstance(rec, dict) and "project_id" in rec}
+              if isinstance(rec, dict) and "project_id" in rec
+              and isinstance(rec["project_id"], str)}
     return values.pop() if len(values) == 1 else None
 
 
@@ -1197,7 +1313,8 @@ def _assemble_s2p_record(bundle_id: str, dialogue_mode: str,
     comes from the caller, the validated drafts or the agreed
     cross-plan values (project ID, schema version, dialogue mode)."""
     versions = {plan.get("schema_version")
-                for plan in (scene, shot, perf)}
+                for plan in (scene, shot, perf)
+                if isinstance(plan.get("schema_version"), str)}
     record = {
         "schema_version": versions.pop() if len(versions) == 1 else "2.5",
         "id": bundle_id,
@@ -1234,7 +1351,13 @@ def validate_script_to_performance_bundle(bundle) -> list[str]:
     record against its canonical schema plus the P0 semantic rules,
     the full cross-reference validation, and the bundle-hash
     recomputation. An empty list means the bundle is coherent and
-    untampered."""
+    untampered. Every required field is validated for BOTH presence
+    AND correct type: a required field containing ``None`` is
+    invalid, and a required record containing a list, scalar or
+    other wrong type is invalid — validation is never skipped
+    because a field is ``None`` or is not a dictionary, so a
+    malformed bundle is never reported valid merely because its
+    hash was recomputed."""
     errors: list[str] = []
     if not isinstance(bundle, dict):
         return ["bundle is not an object"]
@@ -1242,9 +1365,7 @@ def validate_script_to_performance_bundle(bundle) -> list[str]:
         if key not in bundle:
             errors.append(f"bundle: missing required field '{key}'")
     bundle_id = bundle.get("bundle_id")
-    if bundle_id is not None and (
-            not isinstance(bundle_id, str)
-            or not _ID_RE.match(bundle_id)):
+    if not isinstance(bundle_id, str) or not _ID_RE.match(bundle_id):
         errors.append(
             f"bundle.bundle_id {bundle_id!r} is not a valid bundle ID")
     if bundle.get("schema_version") != BUNDLE_SCHEMA_VERSION:
@@ -1253,41 +1374,32 @@ def validate_script_to_performance_bundle(bundle) -> list[str]:
             f"'{BUNDLE_SCHEMA_VERSION}', got "
             f"{bundle.get('schema_version')!r}")
     session_id = bundle.get("session_id")
-    if session_id is not None and (
-            not isinstance(session_id, str) or not session_id):
+    if not isinstance(session_id, str) or not session_id:
         errors.append("bundle.session_id must be a non-empty string")
     routing_plan_id = bundle.get("routing_plan_id")
-    if routing_plan_id is not None and (
-            not isinstance(routing_plan_id, str) or not routing_plan_id):
+    if not isinstance(routing_plan_id, str) or not routing_plan_id:
         errors.append("bundle.routing_plan_id must be a non-empty string")
     stored_hash = bundle.get("bundle_hash")
-    if stored_hash is not None:
-        if not isinstance(stored_hash, str) \
-                or not _SHA256_RE.match(stored_hash):
-            errors.append("bundle.bundle_hash is not a SHA-256 hex digest")
-        elif script_to_performance_hash(bundle) != stored_hash:
-            errors.append(
-                "bundle.bundle_hash does not match the bundle contents "
-                "(the bundle was tampered with)")
+    if not isinstance(stored_hash, str) \
+            or not _SHA256_RE.match(stored_hash):
+        errors.append("bundle.bundle_hash is not a SHA-256 hex digest")
+    elif script_to_performance_hash(bundle) != stored_hash:
+        errors.append(
+            "bundle.bundle_hash does not match the bundle contents "
+            "(the bundle was tampered with)")
     script = bundle.get("script_contract")
     profile = bundle.get("production_profile")
     s2p = bundle.get("script_to_performance")
     scene = bundle.get("scene_plan")
     shot = bundle.get("shot_plan")
     perf = bundle.get("performance_plan")
-    if script is not None:
-        errors.extend(validate_script_contract(script))
-    if profile is not None:
-        errors.extend(validate_production_profile(profile))
-    if isinstance(s2p, dict):
-        errors.extend(_schema_errors(_SCRIPT_TO_PERFORMANCE_SCHEMA, s2p,
-                                     "script_to_performance"))
-    if isinstance(scene, dict):
-        errors.extend(validate_scene_plan(scene))
-    if isinstance(shot, dict):
-        errors.extend(validate_shot_plan(shot))
-    if isinstance(perf, dict):
-        errors.extend(validate_performance_plan(perf))
+    errors.extend(validate_script_contract(script))
+    errors.extend(validate_production_profile(profile))
+    errors.extend(_schema_errors(_SCRIPT_TO_PERFORMANCE_SCHEMA, s2p,
+                                 "script_to_performance"))
+    errors.extend(validate_scene_plan(scene))
+    errors.extend(validate_shot_plan(shot))
+    errors.extend(validate_performance_plan(perf))
     if isinstance(scene, dict) and isinstance(shot, dict) \
             and isinstance(perf, dict):
         errors.extend(_cross_reference_errors(
@@ -1379,17 +1491,25 @@ def build_script_to_performance_bundle(
         raise ScriptToPerformanceError(
             ["invalid routing plan: " + err for err in plan_errors])
     if routing_plan.get("status") != "ready":
+        diagnostics = routing_plan.get("blocked_diagnostics")
+        messages: list[str] = []
+        if isinstance(diagnostics, list):
+            for item in diagnostics:
+                if isinstance(item, dict):
+                    messages.append(item.get("message", str(item)))
+                else:
+                    messages.append(str(item))
         raise ScriptToPerformanceError(
             "routing plan is not ready: "
-            + "; ".join(
-                d.get("message", str(d))
-                for d in routing_plan.get("blocked_diagnostics") or []
-            ) or f"status is {routing_plan.get('status')!r}")
+            + "; ".join(messages)
+            or f"status is {routing_plan.get('status')!r}")
     if routing_plan.get("intent_mode") != "GENERATE_FROM_SCRIPT":
         raise ScriptToPerformanceError(
             "routing plan intent_mode must be GENERATE_FROM_SCRIPT, got "
             f"{routing_plan.get('intent_mode')!r}")
-    plan_session_id = (routing_plan.get("session") or {}).get("session_id")
+    plan_session = routing_plan.get("session")
+    plan_session_id = plan_session.get("session_id") \
+        if isinstance(plan_session, dict) else None
     if plan_session_id != session.session_id:
         raise ScriptToPerformanceError(
             "routing plan session does not match the exact active "

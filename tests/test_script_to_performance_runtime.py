@@ -1537,6 +1537,418 @@ def _null_group():
 
 
 # ---------------------------------------------------------------------------
+# CF-P1-003-R1-BUNDLE-SHAPE: strict bundle shape validation (Task A).
+# Every required bundle field is validated for BOTH presence AND
+# correct type. A required record replaced by None, a list or a
+# scalar must fail even when the bundle hash is recomputed — the
+# test proves structural validation, not hash mismatch, rejects
+# the bundle.
+# ---------------------------------------------------------------------------
+
+def _bundle_shape_group():
+    session = fresh_session()
+    plan = fresh_routing_plan(session)
+    bundle = build(session=session, plan=plan)
+    check("CF-P1-003-R1-BUNDLE-SHAPE: the valid bundle validates",
+          validate_script_to_performance_bundle(bundle) == [])
+
+    def rehash(mutated):
+        probe = clone(mutated)
+        probe["bundle_hash"] = script_to_performance_hash(probe)
+        return probe
+
+    for field in ("script_contract", "production_profile",
+                  "script_to_performance", "scene_plan", "shot_plan",
+                  "performance_plan"):
+        for bad in (None, ["not", "an", "object"]):
+            probe = clone(bundle)
+            probe[field] = bad
+            probe = rehash(probe)
+            check(f"CF-P1-003-R1-BUNDLE-SHAPE: {field}={bad!r} "
+                  "fails even with a recomputed hash",
+                  validate_script_to_performance_bundle(probe) != [])
+    for field, bad in (
+            ("script_contract", "scalar"),
+            ("production_profile", 42),
+            ("script_to_performance", "scalar"),
+            ("scene_plan", 42),
+            ("shot_plan", True),
+            ("performance_plan", 3.5)):
+        probe = clone(bundle)
+        probe[field] = bad
+        probe = rehash(probe)
+        check(f"CF-P1-003-R1-BUNDLE-SHAPE: {field}={bad!r} "
+              "fails even with a recomputed hash",
+              validate_script_to_performance_bundle(probe) != [])
+
+    # Scalar top-level IDs: present but null or incorrectly typed.
+    for field, bad in (
+            ("bundle_id", None), ("bundle_id", ["bad"]), ("bundle_id", 42),
+            ("session_id", None), ("session_id", 42), ("session_id", ["x"]),
+            ("routing_plan_id", None), ("routing_plan_id", 42),
+            ("routing_plan_id", {"x": 1}),
+            ("bundle_hash", None), ("bundle_hash", "not-a-hash"),
+            ("bundle_hash", 42), ("bundle_hash", ["x"])):
+        probe = clone(bundle)
+        probe[field] = bad
+        check(f"CF-P1-003-R1-BUNDLE-SHAPE: {field}={bad!r} fails",
+              validate_script_to_performance_bundle(probe) != [])
+
+    # Missing required fields still fail.
+    probe = clone(bundle)
+    del probe["bundle_hash"]
+    check("CF-P1-003-R1-BUNDLE-SHAPE: missing bundle_hash fails",
+          validate_script_to_performance_bundle(probe) != [])
+    probe = clone(bundle)
+    del probe["scene_plan"]
+    check("CF-P1-003-R1-BUNDLE-SHAPE: missing scene_plan fails",
+          validate_script_to_performance_bundle(probe) != [])
+    probe = clone(bundle)
+    del probe["bundle_id"]
+    check("CF-P1-003-R1-BUNDLE-SHAPE: missing bundle_id fails",
+          validate_script_to_performance_bundle(probe) != [])
+
+
+# ---------------------------------------------------------------------------
+# CF-P1-003-R1-FAIL-CLOSED: total fail-closed input validation
+# (Task B). Schema-invalid JSON-shaped input must never leak a raw
+# Python implementation exception from a public validation function;
+# the builder must convert invalid input into
+# ScriptToPerformanceError. Each invalid case must fail at the
+# correct validation boundary.
+# ---------------------------------------------------------------------------
+
+def _no_crash_returns_errors(label, fn):
+    """A public validator called with malformed input must return a
+    non-empty structured error list — never raise."""
+    try:
+        errors = fn()
+    except Exception as exc:  # noqa: BLE001 - the test asserts no raise
+        check(label, False, f"raised {type(exc).__name__}: {exc}")
+        return []
+    check(label, isinstance(errors, list) and errors != [],
+          "validator returned no errors")
+    return errors
+
+
+def _build_fails_structured(label, **kwargs):
+    """Like build_fails, but a raw implementation exception leaking
+    out of the builder fails the check instead of crashing the
+    suite — the boundary under test."""
+    try:
+        build(**kwargs)
+    except ScriptToPerformanceError as exc:
+        check(label, True)
+        return exc.errors
+    except Exception as exc:  # noqa: BLE001 - the test asserts no raise
+        check(label, False, f"raised {type(exc).__name__}: {exc}")
+        return []
+    check(label, False, "bundle built instead of refusing")
+    return []
+
+
+def _fail_closed_group():
+    session = fresh_session()
+    plan = fresh_routing_plan(session)
+
+    # The two independently reproduced crashes.
+    bad = script()
+    bad["dialogue"][0]["line_id"] = []
+    _no_crash_returns_errors(
+        "CF-P1-003-R1-FAIL-CLOSED: dialogue line_id as a list does "
+        "not crash validate_script_contract",
+        lambda: validate_script_contract(bad))
+    bad = scene_plan()
+    bad["scenes"][0]["scene_id"] = {}
+    _no_crash_returns_errors(
+        "CF-P1-003-R1-FAIL-CLOSED: scene_id as a dict does not "
+        "crash validate_scene_plan",
+        lambda: validate_scene_plan(bad))
+    bad = draft()
+    bad["scene_plan"]["scenes"][0]["scene_id"] = []
+    _build_fails_structured(
+        "CF-P1-003-R1-FAIL-CLOSED: build with scene_id as a list "
+        "raises ScriptToPerformanceError, not TypeError",
+        session=session, plan=plan, drf=bad)
+
+    # Malformed identifiers at every boundary.
+    for label, fn in (
+            ("script dialogue line_id as a dict",
+             lambda: validate_script_contract(_mut(script(), (
+                 ("dialogue", 0, "line_id", {}))))),
+            ("script shot_id as a list",
+             lambda: validate_script_contract(_mut(script(), (
+                 ("shots", 0, "shot_id", []))))),
+            ("scene beat_id as a dict",
+             lambda: validate_scene_plan(_mut(scene_plan(), (
+                 ("scenes", 0, "beats", 0, "beat_id", {}))))),
+            ("shot shot_id as a list",
+             lambda: validate_shot_plan(_mut(shot_plan(), (
+                 ("shots", 0, "shot_id", []))))),
+            ("performance line_id as a dict",
+             lambda: validate_performance_plan(_mut(performance_plan(), (
+                 ("lines", 0, "line_id", {}))))),
+            ("performance dialogue_line_id as a list",
+             lambda: validate_performance_plan(_mut(performance_plan(), (
+                 ("lines", 0, "dialogue_line_id", []))))),
+            ("scene subject character_id as a list",
+             lambda: validate_scene_plan(_mut(scene_plan(), (
+                 ("scenes", 0, "subjects", 0, "character_id", []))))),
+            ("shot subject character_id as a dict",
+             lambda: validate_shot_plan(_mut(shot_plan(), (
+                 ("shots", 0, "subjects", 0, "character_id", {})))))):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R1-FAIL-CLOSED: {label} returns structured "
+            "errors, never a raw exception", fn)
+
+    # Malformed project IDs (agreement + _agreed_project_id).
+    for label, fn in (
+            ("script project_id as a list",
+             lambda: validate_script_contract(_mut(script(), (
+                 ("project_id", []))))),
+            ("profile project_id as a dict",
+             lambda: validate_production_profile(_mut(profile(), (
+                 ("project_id", {}))))),
+            ("scene plan project_id as a list",
+             lambda: validate_scene_plan(_mut(scene_plan(), (
+                 ("project_id", []))))),
+            ("shot plan project_id as a dict",
+             lambda: validate_shot_plan(_mut(shot_plan(), (
+                 ("project_id", {}))))),
+            ("performance plan project_id as a list",
+             lambda: validate_performance_plan(_mut(performance_plan(), (
+                 ("project_id", [])))))):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R1-FAIL-CLOSED: {label} returns structured "
+            "errors, never a raw exception", fn)
+    bad = profile()
+    bad["project_id"] = []
+    _build_fails_structured(
+        "CF-P1-003-R1-FAIL-CLOSED: build with a list project_id "
+        "raises ScriptToPerformanceError, not TypeError",
+        session=session, plan=plan, prof=bad)
+
+    # Malformed schema versions.
+    for label, fn in (
+            ("scene plan schema_version as a list",
+             lambda: validate_scene_plan(_mut(scene_plan(), (
+                 ("schema_version", []))))),
+            ("shot plan schema_version as a dict",
+             lambda: validate_shot_plan(_mut(shot_plan(), (
+                 ("schema_version", {}))))),
+            ("performance plan schema_version as a number",
+             lambda: validate_performance_plan(_mut(performance_plan(), (
+                 ("schema_version", 42))))),
+            ("script schema_version as a list",
+             lambda: validate_script_contract(_mut(script(), (
+                 ("schema_version", [])))))):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R1-FAIL-CLOSED: {label} returns structured "
+            "errors, never a raw exception", fn)
+    bad = draft()
+    bad["scene_plan"]["schema_version"] = []
+    _build_fails_structured(
+        "CF-P1-003-R1-FAIL-CLOSED: build with a list schema_version "
+        "raises ScriptToPerformanceError, not TypeError",
+        session=session, plan=plan, drf=bad)
+
+    # Malformed subject dimensions (contradiction detection must not
+    # use an unhashable value as a dict key).
+    for label, fn in (
+            ("scene subject subject_kind as a list",
+             lambda: validate_scene_plan(_mut(scene_plan(), (
+                 ("scenes", 0, "subjects", 0, "subject_kind", []))))),
+            ("shot subject representation as a dict",
+             lambda: validate_shot_plan(_mut(shot_plan(), (
+                 ("shots", 0, "subjects", 0, "representation", {}))))),
+            ("profile per-subject subject_kind as a list",
+             lambda: validate_production_profile(_mut(profile(), (
+                 ("per_subject_overrides", 0, "subject_kind", []))))),
+            ("profile per-subject representation as a dict",
+             lambda: validate_production_profile(_mut(profile(), (
+                 ("per_subject_overrides", 0, "representation", {})))))):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R1-FAIL-CLOSED: {label} returns structured "
+            "errors, never a raw exception", fn)
+    bad = draft()
+    bad["shot_plan"]["shots"][0]["subjects"][0]["subject_kind"] = []
+    _build_fails_structured(
+        "CF-P1-003-R1-FAIL-CLOSED: build with a list subject_kind "
+        "in a shot subject raises ScriptToPerformanceError, not "
+        "TypeError",
+        session=session, plan=plan, drf=bad)
+
+    # Malformed articulation values and species values.
+    for label, fn in (
+            ("performance articulation_target as a list",
+             lambda: validate_performance_plan(_mut(performance_plan(), (
+                 ("lines", 0, "articulation_target",
+                  ["human-mouth-lips"]))))),
+            ("scene subject articulation_target as a dict",
+             lambda: validate_scene_plan(_mut(scene_plan(), (
+                 ("scenes", 0, "subjects", 0, "articulation_target",
+                  {}))))),
+            ("performance species as a list",
+             lambda: validate_performance_plan(_mut(performance_plan(), (
+                 ("lines", 0, "species", ["parrot"]))))),
+            ("scene subject species as a dict",
+             lambda: validate_scene_plan(_mut(scene_plan(), (
+                 ("scenes", 0, "subjects", 0, "species", {}))))),
+            ("performance subject_kind as a list",
+             lambda: validate_performance_plan(_mut(performance_plan(), (
+                 ("lines", 0, "subject_kind", [])))))):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R1-FAIL-CLOSED: {label} returns structured "
+            "errors, never a raw exception", fn)
+    bad = draft()
+    bad["performance_plan"]["lines"][0]["articulation_target"] = \
+        ["human-mouth-lips"]
+    _build_fails_structured(
+        "CF-P1-003-R1-FAIL-CLOSED: build with a list "
+        "articulation_target raises ScriptToPerformanceError, not "
+        "TypeError",
+        session=session, plan=plan, drf=bad)
+
+    # Malformed live-action provenance fields.
+    for label, fn in (
+            ("profile production_medium as a list with the flag true",
+             lambda: validate_production_profile(_mut(profile(),
+                 ("production_medium", ["ai-digital-human"]),
+                 ("is_live_action_footage", True)))),
+            ("profile visual_style as a dict with the flag true",
+             lambda: validate_production_profile(_mut(profile(),
+                 ("visual_style", {}),
+                 ("is_live_action_footage", True)))),
+            ("profile per-subject representation as a list with the "
+             "flag true",
+             lambda: validate_production_profile(_mut(profile(),
+                 ("per_subject_overrides", 0, "representation", []),
+                 ("per_subject_overrides", 0, "is_live_action_footage",
+                  True)))),
+            ("scene subject representation as a list with the flag "
+             "true",
+             lambda: validate_scene_plan(_mut(scene_plan(),
+                 ("scenes", 0, "subjects", 0, "representation", []),
+                 ("scenes", 0, "subjects", 0, "is_live_action_footage",
+                  True)))),
+            ("shot subject representation as a dict with the flag "
+             "true",
+             lambda: validate_shot_plan(_mut(shot_plan(),
+                 ("shots", 0, "subjects", 0, "representation", {}),
+                 ("shots", 0, "subjects", 0, "is_live_action_footage",
+                  True))))):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R1-FAIL-CLOSED: {label} returns structured "
+            "errors, never a raw exception", fn)
+    bad = profile()
+    bad["production_medium"] = ["ai-digital-human"]
+    bad["is_live_action_footage"] = True
+    _build_fails_structured(
+        "CF-P1-003-R1-FAIL-CLOSED: build with a list "
+        "production_medium raises ScriptToPerformanceError, not "
+        "TypeError",
+        session=session, plan=plan, prof=bad)
+
+    # Malformed voice-binding / reaction-hold references.
+    bad = draft()
+    bad["character_voice_binding"]["shot_id"] = ["sh-01"]
+    _build_fails_structured(
+        "CF-P1-003-R1-FAIL-CLOSED: build with a list binding "
+        "shot_id raises ScriptToPerformanceError, not TypeError",
+        session=session, plan=plan, drf=bad)
+    bad = draft()
+    bad["editing_plan"]["reaction_holds"][0]["after_line_id"] = {"x": 1}
+    _build_fails_structured(
+        "CF-P1-003-R1-FAIL-CLOSED: build with a dict reaction-hold "
+        "after_line_id raises ScriptToPerformanceError, not "
+        "TypeError",
+        session=session, plan=plan, drf=bad)
+
+
+def _mut(record, *steps):
+    """Apply (path..., value) mutations to a cloned record. Each
+    step is a tuple of path segments ending in the new value; a
+    segment that is an int indexes a list, otherwise a dict key."""
+    value = clone(record)
+    for step in steps:
+        *path, new = step
+        cur = value
+        for part in path[:-1]:
+            cur = cur[part]
+        cur[path[-1]] = new
+    return value
+
+
+# ---------------------------------------------------------------------------
+# CF-P1-003-R1-DIALOGUE-META: source dialogue metadata preservation
+# (Task C). When the source line supplies a character_id or a
+# language, the Performance Plan line must carry the SAME value.
+# Missing or mismatched supplied metadata fails closed; nothing is
+# invented and nothing is translated.
+# ---------------------------------------------------------------------------
+
+def _dialogue_meta_group():
+    session = fresh_session()
+    plan = fresh_routing_plan(session)
+    built = build(session=session, plan=plan)
+    check("CF-P1-003-R1-DIALOGUE-META: correct character ID and "
+          "language preserved builds",
+          built["performance_plan"]["lines"][0]["character_id"]
+          == "char-001"
+          and built["performance_plan"]["lines"][0]["language"] == "en")
+
+    bad = draft()
+    del bad["performance_plan"]["lines"][0]["character_id"]
+    build_fails("CF-P1-003-R1-DIALOGUE-META: character ID omitted "
+                "from the Performance Plan fails",
+                session=session, plan=plan, drf=bad)
+    bad = draft()
+    bad["performance_plan"]["lines"][0]["character_id"] = "char-kiki-001"
+    build_fails("CF-P1-003-R1-DIALOGUE-META: character ID mismatch "
+                "fails", session=session, plan=plan, drf=bad)
+    bad = draft()
+    bad["performance_plan"]["lines"][0]["character_id"] = ["char-001"]
+    build_fails("CF-P1-003-R1-DIALOGUE-META: character ID as a "
+                "list fails", session=session, plan=plan, drf=bad)
+    bad = draft()
+    del bad["performance_plan"]["lines"][0]["language"]
+    build_fails("CF-P1-003-R1-DIALOGUE-META: source language "
+                "omitted from the Performance Plan fails",
+                session=session, plan=plan, drf=bad)
+    bad = draft()
+    bad["performance_plan"]["lines"][0]["language"] = "bn"
+    build_fails("CF-P1-003-R1-DIALOGUE-META: source language "
+                "mismatch fails (no implicit translation)",
+                session=session, plan=plan, drf=bad)
+    bad = draft()
+    bad["performance_plan"]["lines"][0]["language"] = ["en"]
+    build_fails("CF-P1-003-R1-DIALOGUE-META: language as a list "
+                "fails", session=session, plan=plan, drf=bad)
+
+    # No metadata supplied by the source means no metadata is
+    # required: the rule only preserves what the source supplies,
+    # it never invents a requirement.
+    scr = script()
+    del scr["dialogue"][0]["character_id"]
+    del scr["dialogue"][0]["language"]
+    drf = draft()
+    del drf["performance_plan"]["lines"][0]["character_id"]
+    del drf["performance_plan"]["lines"][0]["language"]
+    check("CF-P1-003-R1-DIALOGUE-META: a source line without "
+          "character_id or language builds without them",
+          build(session=session, plan=plan, scr=scr,
+                drf=drf)["performance_plan"]["lines"][0].get(
+                    "character_id") is None)
+    # The second line keeps its metadata, so the rule still binds
+    # it.
+    check("CF-P1-003-R1-DIALOGUE-META: the untouched second line "
+          "still carries its metadata",
+          build(session=session, plan=plan, scr=scr,
+                drf=drf)["performance_plan"]["lines"][1]["language"]
+          == "en")
+
+
+# ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
 
@@ -1548,6 +1960,9 @@ def main():
     _xref_group()
     _determinism_group()
     _null_group()
+    _bundle_shape_group()
+    _fail_closed_group()
+    _dialogue_meta_group()
     total = 0
     if failures:
         print(f"\n{len(failures)} FAILURES:")
