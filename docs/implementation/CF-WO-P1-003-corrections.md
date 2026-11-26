@@ -642,28 +642,271 @@ schema was modified.
 
 ### 11.7 Provenance regen addendum (docs commit)
 
-Provenance regenerated locally with
-`--base e1571db68ed87fb973c45960a4a3e27e09ba0d06 --github-head 32a96a93e1ada673b1958c37a9fb8afc74a75dd3`
-(the R1 content commit as the provisional head, exactly as
-P1-003 did); the parent re-runs the regen with the actual
-GitHub head after pushing. Manifest: 182 entries, every entry
-resolves, no hash mismatches, no silent scope change (the
-`changed_files` list holds 184 names — the 182 manifest files
-plus `release-manifest.json` and `CHECKSUMS.txt`, both excluded
-from the manifest by design). `generate-report.py --check` with
-the same full `--github-head`: CHECK OK. CHECKSUMS recomputed
-by hand: all three entries OK. The manifest SHA and CHECKSUMS
-SHA are recorded in the delivery report, not here (hash-chain
-rule, §11.4).
+Provenance was regenerated locally with the explicit `--base`
+mechanism (§11.4), using the R1 content commit as the
+provisional head, exactly as P1-003 did; the parent re-ran the
+regen with the actual GitHub head after pushing. Manifest: 182
+entries, every entry resolves, no hash mismatches, no silent
+scope change (the `changed_files` list holds 184 names — the
+182 manifest files plus `release-manifest.json` and
+`CHECKSUMS.txt`, both excluded from the manifest by design).
+`generate-report.py --check` with the same full `--github-head`:
+CHECK OK. CHECKSUMS recomputed by hand: all three entries OK.
 
 Post-push regen (parent, 2026-11-26): provenance regenerated
-with `--base e1571db68ed87fb973c45960a4a3e27e09ba0d06 --github-head cc45a284ae7d1f3a4a63323e9cf3301a0811bf72`
-(the actual GitHub head after the docs push; no `git update-ref`
-or ref manipulation was used at any point in R1 — the local
-`origin/main` ref was restored to its true value `8fc11fee` by a
-plain `git fetch origin main` before the regen). Manifest: 182
-entries, 0 mismatches against the tree at regen time; CHECKSUMS
-3/3 OK. Manifest head is `cc45a28`, manifest commit is `5d65010`
-(the local docs head at regen time) — both lag the final PR head
-by one docs commit, the established pattern; the manifest SHA
-lives in the delivery report, not here.
+with the explicit `--base` mechanism and the actual GitHub head
+after the docs push; no `git update-ref` or ref manipulation
+was used at any point in R1 — the local `origin/main` ref was
+restored to its true value by a plain `git fetch origin main`
+before the regen. Manifest: 182 entries, 0 mismatches against
+the tree at regen time; CHECKSUMS 3/3 OK. The manifest head and
+manifest commit lag the final PR head by one docs commit, the
+established pattern.
+
+No final provenance values are quoted in this section: the
+manifest SHA, the manifest head and commit, the CHECKSUMS SHA
+and the final GitHub head are recorded in the delivery report
+and the PR body, not here (hash-chain rule, §11.4) — so that
+regenerating the manifest never requires editing this document.
+
+## 12. R2 — Manifest Integrity & Adversarial Nested JSON Validation (2026-11-26)
+
+Reviewer work order (relayed by the user, same branch and PR #4,
+no merge, no P1-004): restore complete release-manifest
+integrity and expand adversarial nested JSON validation across
+the Script-to-Performance runtime. Starting HEAD
+`6bb8e0a51b8e037ba7875f79fc7dbdaed063e527` (R1 delivery head;
+local HEAD `235533a`, tree clean, merge-base with P1-002
+`b9072f07`). No rebase, no branch-reference manipulation, no
+`git update-ref` anywhere in R2.
+
+### 12.1 Task 0 — verified baseline preflight
+
+All seven preflight checks passed before any file was modified:
+(1) branch is `feat/cf-p1-003-script-to-performance-runtime`;
+(2) remote starting HEAD is the R1 final head above; (3) PR #3
+is based on P1-001 HEAD `b2db48828b3e964eebca3fe585bff84bafb00dae`;
+(4) PR #3 current HEAD is `b9072f07910b77621e3f5bdad1fd7546f5fc09c2`;
+(5) PR #4 base SHA equals the current PR #3 HEAD; (6) PR #2, #3
+and #4 are all Open, Draft, Unmerged (verified live via the
+GitHub API); (7) the R1 combined ZIP's code matches the remote
+source — 215 files, 0 mismatches, 0 missing.
+
+### 12.2 Task A — manifest defect and fix
+
+Known reproducible defect: the R1 manifest held 182 entries and
+exactly one was mismatched —
+`docs/implementation/CF-WO-P1-003-corrections.md`, recorded
+34,017 bytes against an actual 34,742 bytes at the start of R2.
+Root cause: the corrections document was edited AFTER the R1
+manifest was generated (the §11.7 post-push regen addendum),
+so the manifest hashed a version of the document that no longer
+existed. The R1 manifest's own SHA and the CHECKSUMS entries
+were still internally consistent — only the one listed file had
+drifted.
+
+Fix, in two parts. First, finalize-first ordering: the
+corrections document is completed BEFORE the final manifest is
+generated, and it is not edited afterwards. Second, the
+self-referential pattern is removed: §11.7 was rewritten to
+quote no generated value at all — no final manifest hash, no
+manifest head or commit, no final GitHub head. Final provenance
+values live only in the external delivery report and the PR
+body, never in this document, so regenerating the manifest can
+never again require editing the document that the manifest
+hashes. The 182-file manifest scope is preserved (no scope
+defect was demonstrated); the intentional exclusions of
+`release-manifest.json` and `CHECKSUMS.txt` from the manifest's
+own file list are preserved.
+
+Automated verification: `tests/test_reports.py` gains the
+`CF-P1-003-R2-MANIFEST` group (17 checks). A pure helper,
+`verify_manifest_entries(manifest, root)`, iterates every
+manifest entry and checks existence, recomputed SHA-256 and
+recomputed byte count; rejects duplicate paths and unsafe
+paths (`..`, leading `/`, backslashes, empty path); verifies the
+two intentional exclusions and the manifest structure and
+provenance fields (head/commit present as 40-char hex, entry
+count, `changed_files` accounting: every manifest file plus the
+two excluded files). The group also carries negative checks
+that tamper in-memory copies of the manifest (byte count, SHA,
+duplicate, five unsafe paths, excluded file listed, missing
+file, malformed provenance head, dropped entry) — each tampered
+copy MUST be rejected. The group fails on the pre-regen tree
+(the two files changed in R2 are stale in the old manifest, as
+designed) and passes after the final regen. Existing
+CF-P0-REPORT-001..005 checks are untouched.
+
+Suite-interaction defect found by the new group (fixed in R2):
+`tests/run-tests.sh` used to regenerate the living report
+(`python3 scripts/generate-report.py`, defaults) BEFORE the
+report tests ran — and the living report is itself a
+manifest-listed file, so the regen invalidated the manifest
+check on every full-suite run (all six `test_reports.py`
+group entries failed, even though the standalone file passed).
+The regen also uses the local `origin/main` ref as its base,
+which R1 restored to the true main head, so the suite's
+regenerated report additionally carried a different base and a
+different changed-files list than the committed one. Fix: the
+six report-test entries now run BEFORE the living-report regen
+step in `run-tests.sh`, so the manifest-integrity group
+verifies the committed manifest against the committed tree;
+the regen + `--check` pair still runs afterwards and still
+verifies the generator. No check was weakened — the group
+still fails if any listed file changes without a regen.
+
+### 12.3 Task B — adversarial nested JSON validation
+
+Eight boundaries, table-driven, over schema-valid baseline
+fixtures — 1,096 new checks in eight new groups in
+`tests/test_script_to_performance_runtime.py`
+(`CF-P1-003-R2-SCRIPT` 121, `CF-P1-003-R2-PROFILE` 200,
+`CF-P1-003-R2-SCENE` 170, `CF-P1-003-R2-SHOT` 150,
+`CF-P1-003-R2-PERFORMANCE` 202, `CF-P1-003-R2-EDITING` 51,
+`CF-P1-003-R2-BINDINGS` 131, `CF-P1-003-R2-BUNDLE` 71).
+For every applicable required object/array boundary the
+malformed types are `null`, boolean, number, string, array
+instead of object, object instead of array, and malformed
+array elements; for identifiers and reference fields the matrix
+adds empty string, object, array, nested arrays and nested
+objects. Every bundle case recomputes the hash, so only
+structural validation can reject it. Public validators return
+structured errors; the builder raises `ScriptToPerformanceError`;
+no raw `TypeError`/`AttributeError`/`KeyError`/`IndexError`
+escapes. Baseline 691 checks are intact (total S2P 1,787).
+Valid baselines still pass; truly optional omitted fields stay
+valid where the schema permits omission; explicit null stays
+invalid where the schema declares a non-nullable field; no
+malformed input produces a partial bundle and no invalid data
+is silently discarded. No canonical schema was weakened.
+
+### 12.4 Task C — production-code defects found and fixed
+
+Twenty cases, all reproduced on the pre-fix code FIRST with a
+standalone repro script
+(`~/workspace/consistency-frame-p1-delivery/evidence/p1003-r2/repro-p1003-r2.py`;
+before-run output `repro-p1003-r2-before.txt`, after-run output
+`repro-p1003-r2-after.txt`), then fixed, then re-run: 0/20
+fixed before, 20/20 fixed after.
+
+- **D1–D14 — raw `TypeError` crash class.** A truthy
+  non-iterable scalar (int/float/bool) where an array is
+  required was iterated via `x or []` (`'int' object is not
+  iterable`). Crash sites: `_unique_id_errors` (script shots),
+  `_live_action_errors` (profile per-subject overrides), and the
+  cross-reference helpers (`_subject_table`,
+  `_known_characters`, `_cross_reference_errors`,
+  `resolved_entries`, `_kind_species_lookup`, `_binding_errors`)
+  for scene scenes/beats/subjects/character_ids, shot
+  shots/subjects/character_ids, performance lines, script
+  dialogue, voice bindings and reaction holds — escaping
+  `validate_script_contract`, `validate_production_profile`,
+  `validate_script_plan_drafts`,
+  `validate_script_to_performance_bundle` and the builder (as a
+  raw `TypeError`, not `ScriptToPerformanceError`). Fix: a new
+  `_as_list()` helper (the list itself, else `[]`; schema
+  validation still reports the type error) applied at every
+  iteration site.
+- **D12 — non-JSON-serialisable bundle hash.** A bundle
+  containing a set crashed `validate_script_to_performance_bundle`
+  inside the hash recomputation (`TypeError: Object of type set
+  is not JSON serializable`). Fix: hash recomputation in the
+  bundle validator is wrapped so it appends a structured error
+  instead.
+- **D15–D18 — empty-string identifiers silently passed.**
+  `scene_id`, `shot_id` (script and shot plan), `line_id` and
+  shot `scene_id`/`beat_id` have no schema pattern and passed
+  with `""`. Fix: `_unique_id_errors` now rejects an empty
+  identifier, and `validate_shot_plan` rejects empty
+  `scene_id`/`beat_id` references.
+- **D19–D20 — dangling per-shot overrides silently built.** A
+  profile `per_shot_overrides` entry with `shot_id` `""` or an
+  unknown shot built successfully — no cross-check existed.
+  Fix: `_cross_reference_errors` now requires every per-shot
+  override `shot_id` to reference a valid shot-plan shot (a
+  non-string `shot_id` is reported too).
+
+Deliberately NOT changed (schema-permitted, no resolution rule
+exists): empty free-text fields (`language`, `focus_target`,
+`eyeline_target`, `audio_asset_id`, `purpose`, `rhythm`,
+etc.), script `beats` elements, and duplicate per-shot
+override `shot_id`s; a per-subject override character not
+appearing elsewhere is definitional (the profile is context,
+per the existing `_known_characters` design), not dangling.
+
+### 12.5 Verification
+
+- S2P suite: **1,787 checks, 0 failures** — baseline 691
+  intact (SESSION-ROUTING 22, SCRIPT 18, PLANS 23, DIALOGUE
+  23, XREF 35, DETERMINISM 16, NULL156 469, R1-BUNDLE-SHAPE
+  35, R1-FAIL-CLOSED 41, R1-DIALOGUE-META 9) plus the eight
+  new R2 groups (1,096). Per-suite, all 0 failures: router
+  766, routing 305, S2P 1,787, local session 67, authorization
+  47, private voice security 158, performance semantics 32.
+- `tests/test_reports.py`: 64 checks (47 pre-existing +
+  17 new manifest-integrity checks). On the pre-regen tree 63
+  pass and exactly one fails — the manifest entry-by-entry
+  check, because the R1 manifest is stale for the two files R2
+  changed (this document and `test_reports.py` itself); that
+  failure is the defect the group exists to catch, and it is
+  cleared by the final regen. All 16 tamper negative checks
+  pass (every tampered in-memory copy is rejected).
+- Full suite `bash tests/run-tests.sh`: **87 entries / 73
+  distinct IDs / 37 distinct commands** (was 78/64/37; nine
+  new group entries). Pre-regen: 81 PASS / 6 FAIL — all six
+  failures are the six `test_reports.py` group entries, which
+  share the one stale-manifest failure above; every other entry
+  passes. The post-regen full-suite re-run did NOT come back
+  all-PASS at first: it exposed the suite-interaction defect
+  documented in §12.2 — the suite's own living-report regen
+  step ran before the report tests and rewrote a
+  manifest-listed file, and the run also caught the two
+  content files edited after the first regen (this document,
+  46,398 B vs 45,385 B recorded, and `tests/run-tests.sh`,
+  8,652 B vs 8,301 B recorded) plus `tests/last-run.json`
+  (whose bytes change on every suite run). The fix is the
+  `run-tests.sh` reorder in §12.2 plus a second regen after
+  the final all-PASS suite run, so the manifest records the
+  final all-PASS `last-run.json` (a later all-PASS run
+  reproduces it byte-identically). The final full-suite
+  result and the final manifest SHA are recorded in the
+  delivery report, not here, because the delivery report is
+  where final provenance values live.
+- `validate-repo.py`: PASS. `generate-registries.py --check`:
+  OK. `generate-routing-catalog.py --check`: OK.
+  `git diff --check`: clean.
+- `generate-report.py --check` with the explicit `--base` and
+  the content head: reported out of date, for the known
+  one-commit-lag reason only — the committed living report was
+  generated at the content head while the local HEAD had moved
+  to the docs commit; the generated files themselves
+  (build-report.json, BUILD_REPORT_P0.md, CHECKSUMS.txt,
+  release-manifest.json) were byte-identical after a fresh
+  regen. The `--check` behaviour is unchanged from R1.
+- Manifest: 182 entries; after the final regen every entry
+  verifies against the tree (existence + SHA-256 + byte
+  count, 0 mismatches) and CHECKSUMS recompute 3/3 OK — the
+  final manifest SHA and CHECKSUMS SHA are in the delivery
+  report, not here.
+
+### 12.6 Files changed (R2 content)
+
+- `runtime/script_to_performance.py` (`_as_list()` helper,
+  empty-identifier rejection, per-shot override cross-check,
+  bundle-hash wrap)
+- `tests/test_script_to_performance_runtime.py` (eight new
+  R2 groups)
+- `tests/test_reports.py` (`CF-P1-003-R2-MANIFEST` group)
+- `tests/run-tests.sh` (nine new group entries: eight R2 S2P
+  groups + the manifest group; the six report-test entries
+  moved BEFORE the living-report regen step, so the
+  manifest-integrity group checks the committed tree — see
+  §12.2)
+- `docs/implementation/CF-WO-P1-003-corrections.md` (this §12;
+  §11.7 rewritten with no generated values)
+- `AGENTS.md`, `CHANGELOG.md`
+- Generated (regen only): `docs/architecture/living-architecture-report-v2.4-p0.md`,
+  `docs/implementation/BUILD_REPORT_P0.md`,
+  `docs/implementation/build-report.json`,
+  `docs/implementation/CHECKSUMS.txt`, `release-manifest.json`,
+  `tests/last-run.json`

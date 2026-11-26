@@ -1949,6 +1949,1429 @@ def _dialogue_meta_group():
 
 
 # ---------------------------------------------------------------------------
+# CF-P1-003-R2-NESTED-JSON: adversarial nested JSON validation (Task B).
+# Table-driven regression tests over the eight validation boundaries.
+# Malformed-type value sets (shared by all eight groups):
+#   _R2_BAD_OBJECT -- where an object is required
+#   _R2_BAD_ARRAY  -- where an array is required
+#   _R2_BAD_ID     -- identifier / reference fields (incl. empty string,
+#                     nested arrays and nested objects)
+#   _R2_BAD_ID_NO_EMPTY -- the same, without "" (fields whose empty
+#                     string is only caught once cross-references run,
+#                     i.e. at build / bundle level, not by the draft
+#                     validator alone)
+#   _R2_BAD_STR / _R2_BAD_NUM / _R2_BAD_BOOL -- scalar-typed fields
+#   _R2_BAD_RECORD -- a whole record replaced by a non-object
+# Every case asserts the same contract: a public validator returns a
+# non-empty structured error list and never raises, and the builder
+# raises ScriptToPerformanceError and never returns a partial bundle.
+# ---------------------------------------------------------------------------
+
+_R2_BAD_OBJECT = [None, True, 42, 3.5, "x", ["a"], {"k": 1}]
+_R2_BAD_ARRAY = [None, True, 42, 3.5, "x", {"k": 1}]
+_R2_BAD_ID = [None, True, 42, "", [], {}, ["x"], {"k": "x"}]
+_R2_BAD_ID_NO_EMPTY = [None, True, 42, [], {}, ["x"], {"k": "x"}]
+_R2_BAD_STR = [None, True, 42, [], {}]
+_R2_BAD_NUM = [None, True, "x", [], {}]
+_R2_BAD_BOOL = [None, 42, "x", [], {}]
+_R2_BAD_RECORD = [None, True, 42, "x", []]
+
+
+def _r2_rehash(bundle):
+    probe = clone(bundle)
+    probe["bundle_hash"] = script_to_performance_hash(probe)
+    return probe
+
+
+def _r2_bundle_rejects(label, bundle):
+    """validate_script_to_performance_bundle must return a non-empty
+    structured error list — never raise, never accept."""
+    try:
+        errors = validate_script_to_performance_bundle(bundle)
+    except Exception as exc:  # noqa: BLE001 - the test asserts no raise
+        check(label, False, f"raised {type(exc).__name__}: {exc}")
+        return []
+    check(label, isinstance(errors, list) and errors != [],
+          "bundle validator returned no errors")
+    return errors
+
+
+# ---------------------------------------------------------------------------
+# CF-P1-003-R2-SCRIPT: Script Contract boundary (dialogue records,
+# shot records, nested identifiers and references).
+# ---------------------------------------------------------------------------
+
+def _r2_script_group():
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: dialogue as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("dialogue", bad))))
+    for bad in (None, True, 42, "x", ["l-01"]):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: dialogue element {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("dialogue", [bad]))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: dialogue line_id {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("dialogue", 0, "line_id", bad))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: dialogue text {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("dialogue", 0, "text", bad))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: dialogue character_id {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("dialogue", 0, "character_id", bad))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: dialogue language {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("dialogue", 0, "language", bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: shots as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("shots", bad))))
+    for bad in (None, True, 42, "x", ["sh-01"]):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: shot element {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("shots", [bad]))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: shot shot_id {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("shots", 0, "shot_id", bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: shot character_ids as {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("shots", 0, "character_ids", bad))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: shot character_ids element "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("shots", 0, "character_ids", [bad]))))
+    for bad in _R2_BAD_NUM:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: shot duration_seconds {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("shots", 0, "duration_seconds", bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: beats as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("beats", bad))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: beats element {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("beats", [bad]))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: performance_cues as {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("performance_cues", bad))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: audio_plan {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("audio_plan", bad))))
+    for bad in _R2_BAD_RECORD:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: script as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(bad))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: dialogue_mode {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("dialogue_mode", bad))))
+    for bad in _R2_BAD_NUM:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCRIPT: version {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_contract(
+                _mut(script(), ("version", bad))))
+
+    session = fresh_session()
+    plan = fresh_routing_plan(session)
+    for bad in (5, True, 3.5):
+        _build_fails_structured(
+            f"CF-P1-003-R2-SCRIPT: build with dialogue as {bad!r} "
+            "raises ScriptToPerformanceError, not TypeError",
+            session=session, plan=plan,
+            scr=_mut(script(), ("dialogue", bad)))
+    for bad in (5, True):
+        _build_fails_structured(
+            f"CF-P1-003-R2-SCRIPT: build with shots as {bad!r} "
+            "raises ScriptToPerformanceError, not TypeError",
+            session=session, plan=plan,
+            scr=_mut(script(), ("shots", bad)))
+    for bad in ([], {}):
+        _build_fails_structured(
+            f"CF-P1-003-R2-SCRIPT: build with shot_id as {bad!r} "
+            "raises ScriptToPerformanceError",
+            session=session, plan=plan,
+            scr=_mut(script(), ("shots", 0, "shot_id", bad)))
+    _build_fails_structured(
+        "CF-P1-003-R2-SCRIPT: build with dialogue line_id as a "
+        "list raises ScriptToPerformanceError",
+        session=session, plan=plan,
+        scr=_mut(script(), ("dialogue", 0, "line_id", [])))
+    _build_fails_structured(
+        "CF-P1-003-R2-SCRIPT: build with beats as an int raises "
+        "ScriptToPerformanceError",
+        session=session, plan=plan,
+        scr=_mut(script(), ("beats", 5)))
+
+
+# ---------------------------------------------------------------------------
+# CF-P1-003-R2-PROFILE: Production Profile boundary (required fields,
+# per-subject overrides, per-shot overrides).
+# ---------------------------------------------------------------------------
+
+def _r2_profile_group():
+    for bad in _R2_BAD_RECORD:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: profile as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(bad))
+    for field in ("production_medium", "visual_style",
+                  "source_media_type", "interaction_pattern", "status"):
+        for bad in _R2_BAD_STR:
+            _no_crash_returns_errors(
+                f"CF-P1-003-R2-PROFILE: {field} {bad!r} returns "
+                "structured errors, never a raw exception",
+                lambda bad=bad, field=field:
+                validate_production_profile(
+                    _mut(profile(), (field, bad))))
+    for bad in _R2_BAD_BOOL:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: is_live_action_footage {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("is_live_action_footage", bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: motion_methods as {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("motion_methods", bad))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: motion_methods element {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("motion_methods", [bad]))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: subject_types as {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("subject_types", bad))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: subject_types element {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("subject_types", [bad]))))
+    for bad in _R2_BAD_NUM:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: version {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("version", bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: per_subject_overrides as "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("per_subject_overrides", bad))))
+    for bad in (None, True, 42, "x", ["char-001"]):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: per-subject element {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("per_subject_overrides", [bad]))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: per-subject character_id "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("per_subject_overrides", 0,
+                                 "character_id", bad))))
+    for field in ("subject_kind", "representation",
+                  "articulation_target", "species", "rendering_style",
+                  "source_media"):
+        for bad in _R2_BAD_STR:
+            _no_crash_returns_errors(
+                f"CF-P1-003-R2-PROFILE: per-subject {field} {bad!r} "
+                "returns structured errors, never a raw exception",
+                lambda bad=bad, field=field:
+                validate_production_profile(
+                    _mut(profile(), ("per_subject_overrides", 0,
+                                     field, bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: per-subject motion_methods as "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("per_subject_overrides", 0,
+                                 "motion_methods", bad))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: per-subject motion_methods "
+            f"element {bad!r} returns structured errors, never a "
+            "raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("per_subject_overrides", 0,
+                                 "motion_methods", [bad]))))
+    for bad in _R2_BAD_BOOL:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: per-subject "
+            f"is_live_action_footage {bad!r} returns structured "
+            "errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("per_subject_overrides", 0,
+                                 "is_live_action_footage", bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: per_shot_overrides as {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("per_shot_overrides", bad))))
+    for bad in (None, True, 42, "x", ["sh-01"]):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: per-shot element {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("per_shot_overrides", [bad]))))
+    # Empty-string per-shot shot_id is schema-valid in isolation
+    # (no pattern covers it); it is rejected at build / bundle
+    # level by the shot-resolution check, asserted below.
+    for bad in _R2_BAD_ID_NO_EMPTY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: per-shot shot_id {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("per_shot_overrides", 0,
+                                 "shot_id", bad))))
+    for field in ("camera_movement", "focus_target", "depth_of_field",
+                  "lighting", "transition_to_next_shot"):
+        for bad in _R2_BAD_STR:
+            _no_crash_returns_errors(
+                f"CF-P1-003-R2-PROFILE: per-shot {field} {bad!r} "
+                "returns structured errors, never a raw exception",
+                lambda bad=bad, field=field:
+                validate_production_profile(
+                    _mut(profile(), ("per_shot_overrides", 0,
+                                     field, bad))))
+    for bad in [None, True, 42, "", [], {}]:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: name {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("name", bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: skill_profiles as {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("skill_profiles", bad))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: skill_profiles element {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("skill_profiles", [bad]))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PROFILE: project_id {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_production_profile(
+                _mut(profile(), ("project_id", bad))))
+
+    session = fresh_session()
+    plan = fresh_routing_plan(session)
+    for bad in (5, True, 3.5):
+        _build_fails_structured(
+            f"CF-P1-003-R2-PROFILE: build with "
+            f"per_subject_overrides as {bad!r} raises "
+            "ScriptToPerformanceError, not TypeError",
+            session=session, plan=plan,
+            prof=_mut(profile(), ("per_subject_overrides", bad)))
+    _build_fails_structured(
+        "CF-P1-003-R2-PROFILE: build with per-shot shot_id '' "
+        "raises ScriptToPerformanceError (no shot resolves)",
+        session=session, plan=plan,
+        prof=_mut(profile(), ("per_shot_overrides", 0, "shot_id", "")))
+    _build_fails_structured(
+        "CF-P1-003-R2-PROFILE: build with per-shot shot_id "
+        "'sh-99' raises ScriptToPerformanceError (dangling shot)",
+        session=session, plan=plan,
+        prof=_mut(profile(), ("per_shot_overrides", 0, "shot_id",
+                              "sh-99")))
+
+
+# ---------------------------------------------------------------------------
+# CF-P1-003-R2-SCENE: Scene Plan boundary (scenes, beats, subjects).
+# ---------------------------------------------------------------------------
+
+def _r2_scene_group():
+    for bad in _R2_BAD_RECORD:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: scene plan as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(bad))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: scenes as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", bad))))
+    for bad in (None, True, 42, "x", ["sc-01"]):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: scene element {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", [bad]))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: scene_id {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "scene_id", bad))))
+    for bad in [None, True, 42, "", [], {}]:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: dramatic_intent {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "dramatic_intent",
+                                    bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: character_ids as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "character_ids",
+                                    bad))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: character_ids element {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "character_ids",
+                                    [bad]))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: beats as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "beats", bad))))
+    for bad in (None, True, 42, "x", ["b-01"]):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: beat element {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "beats", [bad]))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: beat_id {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "beats", 0,
+                                    "beat_id", bad))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: primary_emotion {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "beats", 0,
+                                    "primary_emotion", bad))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: secondary_emotion {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "beats", 0,
+                                    "secondary_emotion", bad))))
+    for bad in _R2_BAD_NUM:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: emotion_intensity {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "beats", 0,
+                                    "emotion_intensity", bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: beat non_verbal_events as "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "beats", 0,
+                                    "non_verbal_events", bad))))
+    for bad in (None, True, 42, "x", ["silence"]):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: beat non-verbal element {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "beats", 0,
+                                    "non_verbal_events", [bad]))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: beat non-verbal type {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "beats", 0,
+                                    "non_verbal_events", 0,
+                                    "type", bad))))
+    for bad in _R2_BAD_NUM:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: beat non-verbal duration_seconds "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "beats", 0,
+                                    "non_verbal_events", 0,
+                                    "duration_seconds", bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: subjects as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "subjects", bad))))
+    for bad in (None, True, 42, "x", ["char-001"]):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: subject element {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "subjects", [bad]))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: subject character_id {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "subjects", 0,
+                                    "character_id", bad))))
+    for field in ("subject_kind", "articulation_target", "species",
+                  "representation", "motion_method"):
+        for bad in _R2_BAD_STR:
+            _no_crash_returns_errors(
+                f"CF-P1-003-R2-SCENE: subject {field} {bad!r} "
+                "returns structured errors, never a raw exception",
+                lambda bad=bad, field=field: validate_scene_plan(
+                    _mut(scene_plan(), ("scenes", 0, "subjects", 0,
+                                        field, bad))))
+    for bad in _R2_BAD_BOOL:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: subject is_live_action_footage "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "subjects", 0,
+                                    "is_live_action_footage", bad))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: location_id {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0, "location_id", bad))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SCENE: visual_style_profile_id {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_scene_plan(
+                _mut(scene_plan(), ("scenes", 0,
+                                    "visual_style_profile_id", bad))))
+
+    session = fresh_session()
+    plan = fresh_routing_plan(session)
+    for bad in (5, True, 3.5):
+        _build_fails_structured(
+            f"CF-P1-003-R2-SCENE: build with scenes as {bad!r} "
+            "raises ScriptToPerformanceError, not TypeError",
+            session=session, plan=plan,
+            drf=_mut(draft(), ("scene_plan", "scenes", bad)))
+    _build_fails_structured(
+        "CF-P1-003-R2-SCENE: build with beats as an int raises "
+        "ScriptToPerformanceError, not TypeError",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("scene_plan", "scenes", 0, "beats", 5)))
+    _build_fails_structured(
+        "CF-P1-003-R2-SCENE: build with subjects as an int raises "
+        "ScriptToPerformanceError, not TypeError",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("scene_plan", "scenes", 0, "subjects", 5)))
+    _build_fails_structured(
+        "CF-P1-003-R2-SCENE: build with character_ids as an int "
+        "raises ScriptToPerformanceError, not TypeError",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("scene_plan", "scenes", 0,
+                           "character_ids", 5)))
+
+
+# ---------------------------------------------------------------------------
+# CF-P1-003-R2-SHOT: Shot Plan boundary (shots, subject references).
+# ---------------------------------------------------------------------------
+
+def _r2_shot_group():
+    for bad in _R2_BAD_RECORD:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SHOT: shot plan as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_shot_plan(bad))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SHOT: shots as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_shot_plan(
+                _mut(shot_plan(), ("shots", bad))))
+    for bad in (None, True, 42, "x", ["sh-01"]):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SHOT: shot element {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_shot_plan(
+                _mut(shot_plan(), ("shots", [bad]))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SHOT: shot_id {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_shot_plan(
+                _mut(shot_plan(), ("shots", 0, "shot_id", bad))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SHOT: scene_id {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_shot_plan(
+                _mut(shot_plan(), ("shots", 0, "scene_id", bad))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SHOT: beat_id {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_shot_plan(
+                _mut(shot_plan(), ("shots", 0, "beat_id", bad))))
+    for field in ("framing", "camera_movement", "angle", "shot_size",
+                  "focus_target", "transition_to_next_shot"):
+        for bad in _R2_BAD_STR:
+            _no_crash_returns_errors(
+                f"CF-P1-003-R2-SHOT: {field} {bad!r} returns "
+                "structured errors, never a raw exception",
+                lambda bad=bad, field=field: validate_shot_plan(
+                    _mut(shot_plan(), ("shots", 0, field, bad))))
+    for bad in _R2_BAD_NUM:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SHOT: duration_seconds {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_shot_plan(
+                _mut(shot_plan(), ("shots", 0, "duration_seconds",
+                                   bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SHOT: character_ids as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_shot_plan(
+                _mut(shot_plan(), ("shots", 0, "character_ids", bad))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SHOT: character_ids element {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_shot_plan(
+                _mut(shot_plan(), ("shots", 0, "character_ids",
+                                   [bad]))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SHOT: subjects as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_shot_plan(
+                _mut(shot_plan(), ("shots", 0, "subjects", bad))))
+    for bad in (None, True, 42, "x", ["char-001"]):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SHOT: subject element {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_shot_plan(
+                _mut(shot_plan(), ("shots", 0, "subjects", [bad]))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SHOT: subject character_id {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_shot_plan(
+                _mut(shot_plan(), ("shots", 0, "subjects", 0,
+                                   "character_id", bad))))
+    for field in ("subject_kind", "articulation_target", "species",
+                  "representation", "motion_method"):
+        for bad in _R2_BAD_STR:
+            _no_crash_returns_errors(
+                f"CF-P1-003-R2-SHOT: subject {field} {bad!r} "
+                "returns structured errors, never a raw exception",
+                lambda bad=bad, field=field: validate_shot_plan(
+                    _mut(shot_plan(), ("shots", 0, "subjects", 0,
+                                       field, bad))))
+    for bad in _R2_BAD_BOOL:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SHOT: subject is_live_action_footage "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_shot_plan(
+                _mut(shot_plan(), ("shots", 0, "subjects", 0,
+                                   "is_live_action_footage", bad))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-SHOT: scene_plan_id {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_shot_plan(
+                _mut(shot_plan(), ("scene_plan_id", bad))))
+
+    session = fresh_session()
+    plan = fresh_routing_plan(session)
+    for bad in (5, True):
+        _build_fails_structured(
+            f"CF-P1-003-R2-SHOT: build with shots as {bad!r} "
+            "raises ScriptToPerformanceError, not TypeError",
+            session=session, plan=plan,
+            drf=_mut(draft(), ("shot_plan", "shots", bad)))
+    _build_fails_structured(
+        "CF-P1-003-R2-SHOT: build with subjects as an int raises "
+        "ScriptToPerformanceError, not TypeError",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("shot_plan", "shots", 0, "subjects", 5)))
+    _build_fails_structured(
+        "CF-P1-003-R2-SHOT: build with character_ids as an int "
+        "raises ScriptToPerformanceError, not TypeError",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("shot_plan", "shots", 0,
+                           "character_ids", 5)))
+
+
+# ---------------------------------------------------------------------------
+# CF-P1-003-R2-PERFORMANCE: Performance Plan boundary (dialogue lines,
+# dialogue metadata, character references).
+# ---------------------------------------------------------------------------
+
+def _r2_performance_group():
+    for bad in _R2_BAD_RECORD:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: performance plan as "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(bad))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: lines as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", bad))))
+    for bad in (None, True, 42, "x", ["l-01"]):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: line element {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", [bad]))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: line_id {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0, "line_id",
+                                         bad))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: dialogue_line_id {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0,
+                                         "dialogue_line_id", bad))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: character_id {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0, "character_id",
+                                         bad))))
+    for bad in (None, True, 42, "x", []):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: dialogue as {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0, "dialogue",
+                                         bad))))
+    for bad in [None, True, 42, "", [], {}]:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: dialogue text {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0, "dialogue",
+                                         "text", bad))))
+    for bad in _R2_BAD_BOOL:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: rewrite_permitted {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0, "dialogue",
+                                         "rewrite_permitted", bad))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: rewritten_text {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0, "dialogue",
+                                         "rewritten_text", bad))))
+    for bad in _R2_BAD_BOOL:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: lip_sync_required {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0,
+                                         "lip_sync_required", bad))))
+    for field in ("speaking_state", "articulation_target",
+                  "subject_kind", "species", "language",
+                  "primary_emotion", "secondary_emotion", "gaze",
+                  "facial_expression"):
+        for bad in _R2_BAD_STR:
+            _no_crash_returns_errors(
+                f"CF-P1-003-R2-PERFORMANCE: {field} {bad!r} "
+                "returns structured errors, never a raw exception",
+                lambda bad=bad, field=field:
+                validate_performance_plan(
+                    _mut(performance_plan(), ("lines", 0, field,
+                                             bad))))
+    for bad in _R2_BAD_NUM:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: emotion_intensity {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0,
+                                         "emotion_intensity", bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: gestures as {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0, "gestures",
+                                         bad))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: gestures element {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0, "gestures",
+                                         [bad]))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: non_verbal_events as "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0,
+                                         "non_verbal_events", bad))))
+    for bad in (None, True, 42, "x", ["breathing"]):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: non-verbal element "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0,
+                                         "non_verbal_events", [bad]))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: non-verbal type {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0,
+                                         "non_verbal_events", 0,
+                                         "type", bad))))
+    for bad in _R2_BAD_NUM:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: non-verbal "
+            f"duration_seconds {bad!r} returns structured errors, "
+            "never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0,
+                                         "non_verbal_events", 0,
+                                         "duration_seconds", bad))))
+    for bad in (None, True, 42, "x", []):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: voice as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0, "voice", bad))))
+    for field in ("emotion", "pitch", "pace"):
+        for bad in _R2_BAD_STR:
+            _no_crash_returns_errors(
+                f"CF-P1-003-R2-PERFORMANCE: voice {field} {bad!r} "
+                "returns structured errors, never a raw exception",
+                lambda bad=bad, field=field:
+                validate_performance_plan(
+                    _mut(performance_plan(), ("lines", 0, "voice",
+                                             field, bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: voice pauses as {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0, "voice",
+                                         "pauses", bad))))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: voice_profile_id {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0,
+                                         "voice_profile_id", bad))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: audio_asset_id {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0,
+                                         "audio_asset_id", bad))))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: reference_asset_ids as "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0,
+                                         "reference_asset_ids", bad))))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-PERFORMANCE: reference_asset_ids "
+            f"element {bad!r} returns structured errors, never a "
+            "raw exception",
+            lambda bad=bad: validate_performance_plan(
+                _mut(performance_plan(), ("lines", 0,
+                                         "reference_asset_ids",
+                                         [bad]))))
+
+    session = fresh_session()
+    plan = fresh_routing_plan(session)
+    for bad in (5, True, 3.5):
+        _build_fails_structured(
+            f"CF-P1-003-R2-PERFORMANCE: build with lines as "
+            f"{bad!r} raises ScriptToPerformanceError, not TypeError",
+            session=session, plan=plan,
+            drf=_mut(draft(), ("performance_plan", "lines", bad)))
+    _build_fails_structured(
+        "CF-P1-003-R2-PERFORMANCE: build with line_id as a list "
+        "raises ScriptToPerformanceError",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("performance_plan", "lines", 0, "line_id",
+                           [])))
+
+
+# ---------------------------------------------------------------------------
+# CF-P1-003-R2-EDITING: Editing Plan boundary (reaction holds,
+# dialogue-line references). Draft-level cases go through
+# validate_script_plan_drafts; the empty-string and dangling
+# references are enforced once the binding record is assembled,
+# so they are asserted at build / bundle level.
+# ---------------------------------------------------------------------------
+
+def _r2_editing_group():
+    session = fresh_session()
+    plan = fresh_routing_plan(session)
+    good = build(session=session, plan=plan)
+
+    for bad in (None, True, 42, "x", []):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-EDITING: editing_plan as {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("editing_plan", bad)), script()))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-EDITING: reaction_holds as {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("editing_plan", "reaction_holds",
+                               bad)), script()))
+    for bad in (None, True, 42, "x", ["l-01"]):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-EDITING: reaction-hold element {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("editing_plan", "reaction_holds",
+                               [bad])), script()))
+    for bad in _R2_BAD_ID_NO_EMPTY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-EDITING: after_line_id {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("editing_plan", "reaction_holds", 0,
+                               "after_line_id", bad)), script()))
+    for bad in _R2_BAD_NUM:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-EDITING: hold_seconds {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("editing_plan", "reaction_holds", 0,
+                               "hold_seconds", bad)), script()))
+    for bad in (0, -1):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-EDITING: hold_seconds {bad!r} returns "
+            "structured errors (strictly positive), never a raw "
+            "exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("editing_plan", "reaction_holds", 0,
+                               "hold_seconds", bad)), script()))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-EDITING: hold purpose {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("editing_plan", "reaction_holds", 0,
+                               "purpose", bad)), script()))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-EDITING: rhythm {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("editing_plan", "rhythm", bad)),
+                script()))
+
+    for bad in (5, True, 3.5):
+        _build_fails_structured(
+            f"CF-P1-003-R2-EDITING: build with reaction_holds as "
+            f"{bad!r} raises ScriptToPerformanceError, not TypeError",
+            session=session, plan=plan,
+            drf=_mut(draft(), ("editing_plan", "reaction_holds", bad)))
+    _build_fails_structured(
+        "CF-P1-003-R2-EDITING: build with after_line_id '' raises "
+        "ScriptToPerformanceError (no line resolves)",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("editing_plan", "reaction_holds", 0,
+                           "after_line_id", "")))
+    _build_fails_structured(
+        "CF-P1-003-R2-EDITING: build with after_line_id as a list "
+        "raises ScriptToPerformanceError",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("editing_plan", "reaction_holds", 0,
+                           "after_line_id", ["l-01"])))
+    _build_fails_structured(
+        "CF-P1-003-R2-EDITING: build with after_line_id 'l-99' "
+        "raises ScriptToPerformanceError (dangling line)",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("editing_plan", "reaction_holds", 0,
+                           "after_line_id", "l-99")))
+    _build_fails_structured(
+        "CF-P1-003-R2-EDITING: build with hold_seconds 0 raises "
+        "ScriptToPerformanceError",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("editing_plan", "reaction_holds", 0,
+                           "hold_seconds", 0)))
+
+    for bad in (5, True, 3.5):
+        _r2_bundle_rejects(
+            f"CF-P1-003-R2-EDITING: bundle with reaction_holds as "
+            f"{bad!r} fails even with a recomputed hash",
+            _r2_rehash(_mut(good, ("script_to_performance",
+                                   "editing_plan", "reaction_holds",
+                                   bad))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-EDITING: bundle with after_line_id '' fails "
+        "even with a recomputed hash",
+        _r2_rehash(_mut(good, ("script_to_performance",
+                               "editing_plan", "reaction_holds", 0,
+                               "after_line_id", ""))))
+
+
+# ---------------------------------------------------------------------------
+# CF-P1-003-R2-BINDINGS: Character Voice Bindings boundary (singular
+# binding, plural bindings, nested identifiers and references).
+# ---------------------------------------------------------------------------
+
+def _r2_bindings_group():
+    session = fresh_session()
+    plan = fresh_routing_plan(session)
+    good = build(session=session, plan=plan)
+
+    for bad in (None, True, 42, "x", []):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BINDINGS: character_voice_binding as "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("character_voice_binding", bad)),
+                script()))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BINDINGS: singular character_id {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("character_voice_binding",
+                               "character_id", bad)), script()))
+    for bad in _R2_BAD_ID_NO_EMPTY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BINDINGS: singular dialogue_line_id "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("character_voice_binding",
+                               "dialogue_line_id", bad)), script()))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BINDINGS: singular voice_profile_id "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("character_voice_binding",
+                               "voice_profile_id", bad)), script()))
+    for bad in _R2_BAD_ID_NO_EMPTY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BINDINGS: singular shot_id {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("character_voice_binding", "shot_id",
+                               bad)), script()))
+    for field in ("articulation", "speaking_state", "delivery",
+                  "emotion", "audio_asset_id"):
+        for bad in _R2_BAD_STR:
+            _no_crash_returns_errors(
+                f"CF-P1-003-R2-BINDINGS: singular {field} {bad!r} "
+                "returns structured errors, never a raw exception",
+                lambda bad=bad, field=field:
+                validate_script_plan_drafts(
+                    _mut(draft(), ("character_voice_binding", field,
+                                   bad)), script()))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BINDINGS: singular reference_asset_ids "
+            f"as {bad!r} returns structured errors, never a raw "
+            "exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("character_voice_binding",
+                               "reference_asset_ids", bad)), script()))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BINDINGS: singular reference_asset_ids "
+            f"element {bad!r} returns structured errors, never a "
+            "raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("character_voice_binding",
+                               "reference_asset_ids", [bad])), script()))
+    for bad in _R2_BAD_ARRAY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BINDINGS: character_voice_bindings as "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("character_voice_bindings", bad)),
+                script()))
+    for bad in (None, True, 42, "x", ["char-kiki-001"]):
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BINDINGS: plural binding element "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("character_voice_bindings", [bad])),
+                script()))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BINDINGS: plural character_id {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("character_voice_bindings", 0,
+                               "character_id", bad)), script()))
+    for bad in _R2_BAD_ID_NO_EMPTY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BINDINGS: plural dialogue_line_id "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("character_voice_bindings", 0,
+                               "dialogue_line_id", bad)), script()))
+    for bad in _R2_BAD_ID:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BINDINGS: plural voice_profile_id "
+            f"{bad!r} returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("character_voice_bindings", 0,
+                               "voice_profile_id", bad)), script()))
+    for bad in _R2_BAD_ID_NO_EMPTY:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BINDINGS: plural shot_id {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("character_voice_bindings", 0,
+                               "shot_id", bad)), script()))
+    for bad in _R2_BAD_STR:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BINDINGS: plural articulation {bad!r} "
+            "returns structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(
+                _mut(draft(), ("character_voice_bindings", 0,
+                               "articulation", bad)), script()))
+
+    for bad in (5, True, 3.5):
+        _build_fails_structured(
+            f"CF-P1-003-R2-BINDINGS: build with "
+            f"character_voice_bindings as {bad!r} raises "
+            "ScriptToPerformanceError, not TypeError",
+            session=session, plan=plan,
+            drf=_mut(draft(), ("character_voice_bindings", bad)))
+    _build_fails_structured(
+        "CF-P1-003-R2-BINDINGS: build with character_voice_binding "
+        "as an int raises ScriptToPerformanceError",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("character_voice_binding", 5)))
+    _build_fails_structured(
+        "CF-P1-003-R2-BINDINGS: build with binding "
+        "dialogue_line_id '' raises ScriptToPerformanceError",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("character_voice_binding",
+                           "dialogue_line_id", "")))
+    _build_fails_structured(
+        "CF-P1-003-R2-BINDINGS: build with binding shot_id '' "
+        "raises ScriptToPerformanceError",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("character_voice_binding", "shot_id", "")))
+    _build_fails_structured(
+        "CF-P1-003-R2-BINDINGS: build with binding shot_id "
+        "'sh-99' raises ScriptToPerformanceError (dangling shot)",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("character_voice_binding", "shot_id",
+                           "sh-99")))
+    _build_fails_structured(
+        "CF-P1-003-R2-BINDINGS: build with binding character_id "
+        "'char-unknown' raises ScriptToPerformanceError",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("character_voice_binding", "character_id",
+                           "char-unknown")))
+    _build_fails_structured(
+        "CF-P1-003-R2-BINDINGS: build with binding "
+        "dialogue_line_id 'd-99' raises ScriptToPerformanceError",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("character_voice_binding",
+                           "dialogue_line_id", "d-99")))
+    _build_fails_structured(
+        "CF-P1-003-R2-BINDINGS: build with binding "
+        "dialogue_line_id as a list raises ScriptToPerformanceError",
+        session=session, plan=plan,
+        drf=_mut(draft(), ("character_voice_binding",
+                           "dialogue_line_id", ["d-01"])))
+
+    for bad in (5, True, 3.5):
+        _r2_bundle_rejects(
+            f"CF-P1-003-R2-BINDINGS: bundle with "
+            f"character_voice_bindings as {bad!r} fails even with a "
+            "recomputed hash",
+            _r2_rehash(_mut(good, ("script_to_performance",
+                                   "character_voice_bindings", bad))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BINDINGS: bundle with "
+        "character_voice_binding as an int fails even with a "
+        "recomputed hash",
+        _r2_rehash(_mut(good, ("script_to_performance",
+                               "character_voice_binding", 5))))
+
+
+# ---------------------------------------------------------------------------
+# CF-P1-003-R2-BUNDLE: Complete Script-to-Performance Bundle boundary
+# (all required root records, nested plan objects, bundle identity,
+# cross-plan references, bundle hash integrity). Every mutated bundle
+# is rehashed, so only structural validation — never a stale hash —
+# may reject it.
+# ---------------------------------------------------------------------------
+
+def _r2_bundle_group():
+    session = fresh_session()
+    plan = fresh_routing_plan(session)
+    good = build(session=session, plan=plan)
+    check("CF-P1-003-R2-BUNDLE: the valid bundle validates",
+          validate_script_to_performance_bundle(good) == [])
+
+    for bad in _R2_BAD_RECORD:
+        _r2_bundle_rejects(
+            f"CF-P1-003-R2-BUNDLE: bundle as {bad!r} returns "
+            "structured errors, never a raw exception",
+            bad)
+    for bad in _R2_BAD_RECORD:
+        _no_crash_returns_errors(
+            f"CF-P1-003-R2-BUNDLE: draft as {bad!r} returns "
+            "structured errors, never a raw exception",
+            lambda bad=bad: validate_script_plan_drafts(bad, script()))
+
+    for field in ("script_contract", "production_profile",
+                  "script_to_performance", "scene_plan", "shot_plan",
+                  "performance_plan"):
+        for bad in (True, 3.5, "x", {"k": 1}):
+            _r2_bundle_rejects(
+                f"CF-P1-003-R2-BUNDLE: {field} as {bad!r} fails "
+                "even with a recomputed hash",
+                _r2_rehash(_mut(good, (field, bad))))
+
+    for bad in (5, True, 3.5):
+        _r2_bundle_rejects(
+            f"CF-P1-003-R2-BUNDLE: script dialogue as {bad!r} "
+            "fails even with a recomputed hash",
+            _r2_rehash(_mut(good, ("script_contract", "dialogue",
+                                   bad))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: script shots as an int fails even "
+        "with a recomputed hash",
+        _r2_rehash(_mut(good, ("script_contract", "shots", 5))))
+    for bad in (5, True):
+        _r2_bundle_rejects(
+            f"CF-P1-003-R2-BUNDLE: profile per_subject_overrides "
+            f"as {bad!r} fails even with a recomputed hash",
+            _r2_rehash(_mut(good, ("production_profile",
+                                   "per_subject_overrides", bad))))
+    for bad in (5, True, 3.5):
+        _r2_bundle_rejects(
+            f"CF-P1-003-R2-BUNDLE: scene scenes as {bad!r} fails "
+            "even with a recomputed hash",
+            _r2_rehash(_mut(good, ("scene_plan", "scenes", bad))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: scene beats as an int fails even "
+        "with a recomputed hash",
+        _r2_rehash(_mut(good, ("scene_plan", "scenes", 0, "beats",
+                               5))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: scene subjects as an int fails even "
+        "with a recomputed hash",
+        _r2_rehash(_mut(good, ("scene_plan", "scenes", 0, "subjects",
+                               5))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: scene character_ids as an int fails "
+        "even with a recomputed hash",
+        _r2_rehash(_mut(good, ("scene_plan", "scenes", 0,
+                               "character_ids", 5))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: shot shots as an int fails even "
+        "with a recomputed hash",
+        _r2_rehash(_mut(good, ("shot_plan", "shots", 5))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: shot subjects as an int fails even "
+        "with a recomputed hash",
+        _r2_rehash(_mut(good, ("shot_plan", "shots", 0, "subjects",
+                               5))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: shot character_ids as an int fails "
+        "even with a recomputed hash",
+        _r2_rehash(_mut(good, ("shot_plan", "shots", 0,
+                               "character_ids", 5))))
+    for bad in (5, True, 3.5):
+        _r2_bundle_rejects(
+            f"CF-P1-003-R2-BUNDLE: performance lines as {bad!r} "
+            "fails even with a recomputed hash",
+            _r2_rehash(_mut(good, ("performance_plan", "lines",
+                                   bad))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: s2p character_voice_binding as an "
+        "int fails even with a recomputed hash",
+        _r2_rehash(_mut(good, ("script_to_performance",
+                               "character_voice_binding", 5))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: s2p editing_plan as an int fails "
+        "even with a recomputed hash",
+        _r2_rehash(_mut(good, ("script_to_performance",
+                               "editing_plan", 5))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: s2p audio_plan as an int fails "
+        "even with a recomputed hash",
+        _r2_rehash(_mut(good, ("script_to_performance",
+                               "audio_plan", 5))))
+
+    # Non-JSON-serialisable contents: the hash cannot be
+    # recomputed, so the validator reports a structured error
+    # instead of leaking the serialiser's TypeError.
+    probe = clone(good)
+    probe["script_contract"]["beats"] = {"a", "b"}
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: bundle with a set value returns "
+        "structured errors, never a raw exception", probe)
+
+    # Malformed nested identifiers inside an otherwise valid,
+    # rehashed bundle.
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: scene_id as a dict fails even with "
+        "a recomputed hash",
+        _r2_rehash(_mut(good, ("scene_plan", "scenes", 0, "scene_id",
+                               {}))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: performance line_id as a list fails "
+        "even with a recomputed hash",
+        _r2_rehash(_mut(good, ("performance_plan", "lines", 0,
+                               "line_id", []))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: binding dialogue_line_id as a list "
+        "fails even with a recomputed hash",
+        _r2_rehash(_mut(good, ("script_to_performance",
+                               "character_voice_binding",
+                               "dialogue_line_id", ["d-01"]))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: per-shot override shot_id 'sh-99' "
+        "fails even with a recomputed hash",
+        _r2_rehash(_mut(good, ("production_profile",
+                               "per_shot_overrides", 0, "shot_id",
+                               "sh-99"))))
+    _r2_bundle_rejects(
+        "CF-P1-003-R2-BUNDLE: per-shot override shot_id '' fails "
+        "even with a recomputed hash",
+        _r2_rehash(_mut(good, ("production_profile",
+                               "per_shot_overrides", 0, "shot_id",
+                               ""))))
+
+    # A malformed required nested record must never pass: delete
+    # one required field from each nested boundary.
+    for label, path in (
+            ("scene beat beat_id",
+             ("scene_plan", "scenes", 0, "beats", 0, "beat_id")),
+            ("performance line line_id",
+             ("performance_plan", "lines", 0, "line_id")),
+            ("voice binding character_id",
+             ("script_to_performance", "character_voice_binding",
+              "character_id")),
+            ("reaction hold after_line_id",
+             ("script_to_performance", "editing_plan",
+              "reaction_holds", 0, "after_line_id")),
+            ("per-subject override character_id",
+             ("production_profile", "per_subject_overrides", 0,
+              "character_id")),
+            ("script dialogue text",
+             ("script_contract", "dialogue", 0, "text"))):
+        probe = clone(good)
+        cur = probe
+        for part in path[:-1]:
+            cur = cur[part]
+        del cur[path[-1]]
+        _r2_bundle_rejects(
+            f"CF-P1-003-R2-BUNDLE: missing nested {label} fails "
+            "even with a recomputed hash", _r2_rehash(probe))
+
+    # The build() helper treats None as "use the default fixture",
+    # so the None-input builder cases call the builder directly.
+    for label, args in (
+            ("CF-P1-003-R2-BUNDLE: build with script None raises "
+             "ScriptToPerformanceError",
+             (None, profile(), draft())),
+            ("CF-P1-003-R2-BUNDLE: build with profile None raises "
+             "ScriptToPerformanceError",
+             (script(), None, draft())),
+            ("CF-P1-003-R2-BUNDLE: build with draft None raises "
+             "ScriptToPerformanceError",
+             (script(), profile(), None))):
+        try:
+            build_script_to_performance_bundle(
+                session, plan, args[0], args[1], args[2],
+                "s2p-test-001")
+        except ScriptToPerformanceError:
+            check(label, True)
+        except Exception as exc:  # noqa: BLE001 - boundary under test
+            check(label, False, f"raised {type(exc).__name__}: {exc}")
+        else:
+            check(label, False, "bundle built instead of refusing")
+
+
+# ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
 
@@ -1963,6 +3386,14 @@ def main():
     _bundle_shape_group()
     _fail_closed_group()
     _dialogue_meta_group()
+    _r2_script_group()
+    _r2_profile_group()
+    _r2_scene_group()
+    _r2_shot_group()
+    _r2_performance_group()
+    _r2_editing_group()
+    _r2_bindings_group()
+    _r2_bundle_group()
     total = 0
     if failures:
         print(f"\n{len(failures)} FAILURES:")

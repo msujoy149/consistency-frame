@@ -86,6 +86,84 @@ def errors_for(schema, value):
     return errs
 
 
+# --- CF-P1-003-R2-MANIFEST helpers ---------------------------------------
+# The release manifest must hash the final committed content of every
+# listed file. These helpers are pure functions over the loaded
+# manifest dict (files are read from `root` only to recompute hashes
+# and byte counts), so the negative tests can tamper in-memory copies
+# without touching the committed manifest on disk.
+MANIFEST_EXPECTED_COUNT = 182
+MANIFEST_EXCLUDED = ("release-manifest.json",
+                     "docs/implementation/CHECKSUMS.txt")
+
+
+def _is_unsafe_manifest_path(path):
+    if not isinstance(path, str) or not path:
+        return True
+    if path.startswith("/") or "\\" in path or "\x00" in path:
+        return True
+    return any(part in ("", ".", "..") for part in path.split("/"))
+
+
+def verify_manifest_entries(manifest, root):
+    """Return a list of error strings for the manifest; [] means the
+    manifest verifies entry-by-entry against the tree at `root`."""
+    errors = []
+    if not isinstance(manifest, dict):
+        return ["manifest is not an object"]
+    files = manifest.get("files")
+    if not isinstance(files, list):
+        return ["manifest files is not a list"]
+    if len(files) != MANIFEST_EXPECTED_COUNT:
+        errors.append(f"manifest has {len(files)} entries, expected "
+                      f"{MANIFEST_EXPECTED_COUNT}")
+    seen = set()
+    for entry in files:
+        if not isinstance(entry, dict):
+            errors.append(f"manifest entry is not an object: "
+                          f"{str(entry)[:80]}")
+            continue
+        path = entry.get("path")
+        sha = entry.get("sha256")
+        size = entry.get("bytes")
+        if not isinstance(path, str) or not path:
+            errors.append(f"manifest entry has no path string: "
+                          f"{str(entry)[:80]}")
+            continue
+        if path in seen:
+            errors.append(f"duplicate manifest path: {path}")
+        seen.add(path)
+        if _is_unsafe_manifest_path(path):
+            errors.append(f"unsafe manifest path: {path}")
+            continue
+        if path in MANIFEST_EXCLUDED:
+            errors.append(f"excluded file listed in manifest: {path}")
+        if not isinstance(sha, str) \
+                or re.fullmatch(r"[0-9a-f]{64}", sha) is None:
+            errors.append(f"manifest entry {path} has no valid sha256")
+        if not isinstance(size, int) or isinstance(size, bool) \
+                or size < 0:
+            errors.append(f"manifest entry {path} has no valid byte "
+                          f"count")
+            continue
+        full = os.path.join(root, path)
+        if not os.path.isfile(full):
+            errors.append(f"manifest file missing: {path}")
+            continue
+        data = open(full, "rb").read()
+        if len(data) != size:
+            errors.append(f"manifest entry {path}: {len(data)} bytes, "
+                          f"expected {size}")
+        if hashlib.sha256(data).hexdigest() != sha:
+            errors.append(f"manifest entry {path}: sha256 mismatch")
+    for field in ("github_branch_head", "commit"):
+        value = manifest.get(field)
+        if not isinstance(value, str) \
+                or re.fullmatch(r"[0-9a-f]{40}", value) is None:
+            errors.append(f"manifest {field} is not a 40-char hex SHA")
+    return errors
+
+
 def main():
     build_report = load_json("docs/implementation/build-report.json")
     manifest = load_json("release-manifest.json")
@@ -264,6 +342,95 @@ def main():
           "is NEVER downloaded by this script" in setup
           and "Components were NOT installed (default)" in setup,
           "setup.sh must refuse the model download and say so")
+
+    # --- CF-P1-003-R2-MANIFEST: release-manifest integrity (R2) ---------
+    # The R1 manifest carried exactly one stale entry: the corrections
+    # document was edited AFTER the manifest was generated, so its
+    # recorded byte count (34,017) no longer matched the file (34,742).
+    # This group verifies every manifest entry against the working
+    # tree and fails if even one listed file changes without a regen.
+    # The check is a pure function over the loaded manifest dict, so
+    # the negative cases tamper in-memory copies without touching the
+    # committed manifest on disk.
+    manifest_errors = verify_manifest_entries(manifest, ROOT)
+    check("CF-P1-003-R2-MANIFEST: all 182 entries verify "
+          "(existence + SHA-256 + byte count)",
+          not manifest_errors, "; ".join(manifest_errors[:5]))
+    manifest_paths = [f["path"] for f in manifest.get("files", [])]
+    check("CF-P1-003-R2-MANIFEST: manifest scope is exactly the "
+          "182 managed files",
+          len(manifest_paths) == MANIFEST_EXPECTED_COUNT
+          and len(set(manifest_paths)) == MANIFEST_EXPECTED_COUNT,
+          f"entries={len(manifest_paths)}")
+    check("CF-P1-003-R2-MANIFEST: intentional exclusions kept "
+          "(release-manifest.json + CHECKSUMS.txt absent)",
+          all(p not in manifest_paths for p in MANIFEST_EXCLUDED))
+    check("CF-P1-003-R2-MANIFEST: changed_files accounts for every "
+          "manifest file plus the two excluded files",
+          len(build_report.get("changed_files", []))
+          == MANIFEST_EXPECTED_COUNT + len(MANIFEST_EXCLUDED)
+          and set(manifest_paths)
+          <= set(build_report.get("changed_files", []))
+          and all(p in build_report.get("changed_files", [])
+                  for p in MANIFEST_EXCLUDED),
+          f"changed_files={len(build_report.get('changed_files', []))}")
+    check("CF-P1-003-R2-MANIFEST: manifest structure + provenance "
+          "fields present and well-formed",
+          isinstance(manifest.get("schema_version"), str)
+          and isinstance(manifest.get("branch"), str)
+          and isinstance(manifest.get("generated_at_utc"), str)
+          and re.fullmatch(r"[0-9a-f]{40}",
+                           manifest.get("github_branch_head") or "")
+          is not None
+          and re.fullmatch(r"[0-9a-f]{40}",
+                           manifest.get("commit") or "") is not None)
+    # Negative checks: each tampered in-memory copy MUST fail.
+    import copy
+    tampered = copy.deepcopy(manifest)
+    tampered["files"][0]["bytes"] = tampered["files"][0]["bytes"] + 1
+    check("CF-P1-003-R2-MANIFEST: tampered byte count is rejected",
+          bool(verify_manifest_entries(tampered, ROOT)))
+    tampered = copy.deepcopy(manifest)
+    tampered["files"][0]["sha256"] = "0" * 64
+    check("CF-P1-003-R2-MANIFEST: tampered SHA-256 is rejected",
+          bool(verify_manifest_entries(tampered, ROOT)))
+    tampered = copy.deepcopy(manifest)
+    tampered["files"].append(copy.deepcopy(tampered["files"][0]))
+    check("CF-P1-003-R2-MANIFEST: duplicate path is rejected",
+          bool(verify_manifest_entries(tampered, ROOT)))
+    for bad_path in ("../escape.txt", "/etc/passwd", "docs\\x.md",
+                     "", "docs/../escape.txt"):
+        tampered = copy.deepcopy(manifest)
+        tampered["files"].append({"path": bad_path,
+                                  "sha256": "0" * 64, "bytes": 0})
+        check("CF-P1-003-R2-MANIFEST: unsafe path is rejected: "
+              f"{bad_path!r}",
+              bool(verify_manifest_entries(tampered, ROOT)))
+    tampered = copy.deepcopy(manifest)
+    tampered["files"].append(
+        {"path": "release-manifest.json",
+         "sha256": hashlib.sha256(
+             open(os.path.join(ROOT, "release-manifest.json"),
+                  "rb").read()).hexdigest(),
+         "bytes": os.path.getsize(
+             os.path.join(ROOT, "release-manifest.json"))})
+    check("CF-P1-003-R2-MANIFEST: excluded file listed in the "
+          "manifest is rejected",
+          bool(verify_manifest_entries(tampered, ROOT)))
+    tampered = copy.deepcopy(manifest)
+    tampered["files"][0]["path"] = "docs/no-such-file.md"
+    check("CF-P1-003-R2-MANIFEST: missing file is rejected",
+          bool(verify_manifest_entries(tampered, ROOT)))
+    tampered = copy.deepcopy(manifest)
+    tampered["github_branch_head"] = "not-a-sha"
+    check("CF-P1-003-R2-MANIFEST: malformed provenance head is "
+          "rejected",
+          bool(verify_manifest_entries(tampered, ROOT)))
+    tampered = copy.deepcopy(manifest)
+    del tampered["files"][0]
+    check("CF-P1-003-R2-MANIFEST: dropped entry (wrong count) is "
+          "rejected",
+          bool(verify_manifest_entries(tampered, ROOT)))
 
     print(f"test_reports: {'PASS' if not failures else 'FAIL'} "
           f"({len(failures)} failure(s))")

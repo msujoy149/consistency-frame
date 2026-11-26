@@ -320,7 +320,7 @@ def _dialogue_rewrite_errors(plan: dict) -> list[str]:
     errors = []
     if not isinstance(plan, dict):
         return ["performance plan is not an object"]
-    for i, line in enumerate(plan.get("lines") or []):
+    for i, line in enumerate(_as_list(plan.get("lines"))):
         if not isinstance(line, dict):
             continue
         dialogue = line.get("dialogue")
@@ -343,7 +343,7 @@ def _non_verbal_line_errors(plan: dict) -> list[str]:
     errors = []
     if not isinstance(plan, dict):
         return ["performance plan is not an object"]
-    for i, line in enumerate(plan.get("lines") or []):
+    for i, line in enumerate(_as_list(plan.get("lines"))):
         if not isinstance(line, dict):
             continue
         dialogue = line.get("dialogue")
@@ -369,6 +369,16 @@ def _is_hashable(value) -> bool:
     return True
 
 
+def _as_list(value) -> list:
+    """JSON-array view of ``value``: the list itself, else [].
+    A non-array where the schema requires an array is reported by
+    schema validation; iteration here must never raise a raw
+    TypeError on a non-iterable scalar (a truthy int, float or
+    bool). A dict or string is likewise never iterated as if it
+    were the array — its keys/characters are not records."""
+    return value if isinstance(value, list) else []
+
+
 def _articulation_errors(entries, label: str,
                          fail_closed_unknown: bool = False) -> list[str]:
     """Articulation must match the subject's anatomy. Each entry is a
@@ -385,7 +395,7 @@ def _articulation_errors(entries, label: str,
     articulation target, subject kind or species is a validation
     error naming the field — never a crash, never silently coerced."""
     errors = []
-    for i, entry in enumerate(entries or []):
+    for i, entry in enumerate(_as_list(entries)):
         if not isinstance(entry, dict):
             continue
         target = entry.get("articulation_target") or entry.get("articulation")
@@ -452,7 +462,8 @@ def _live_action_errors(profile: dict) -> list[str]:
         errors.append(
             f"{pid}: is_live_action_footage=false but "
             "production_medium='live-action-footage'")
-    for i, sub in enumerate(profile.get("per_subject_overrides") or []):
+    for i, sub in enumerate(
+            _as_list(profile.get("per_subject_overrides"))):
         if not isinstance(sub, dict):
             continue
         representation = sub.get("representation")
@@ -472,7 +483,7 @@ def _subject_live_action_errors(subjects, label: str) -> list[str]:
     subjects: a generated representation is never live-action
     footage."""
     errors = []
-    for i, sub in enumerate(subjects or []):
+    for i, sub in enumerate(_as_list(subjects)):
         if not isinstance(sub, dict):
             continue
         representation = sub.get("representation")
@@ -494,7 +505,7 @@ def _unique_id_errors(values, key: str, label: str) -> list[str]:
     this fix)."""
     errors = []
     seen: dict[str, int] = {}
-    for i, item in enumerate(values or []):
+    for i, item in enumerate(_as_list(values)):
         if not isinstance(item, dict):
             continue
         ident = item.get(key)
@@ -503,6 +514,9 @@ def _unique_id_errors(values, key: str, label: str) -> list[str]:
         if not isinstance(ident, str):
             errors.append(
                 f"{label}: {key} {ident!r} is not a string identifier")
+            continue
+        if not ident:
+            errors.append(f"{label}: {key} must not be empty")
             continue
         if ident in seen:
             errors.append(
@@ -598,6 +612,12 @@ def validate_shot_plan(plan) -> list[str]:
         if not isinstance(shot, dict):
             continue
         label = f"shot_plan.shots[{si}]"
+        scene_ref = shot.get("scene_id")
+        if isinstance(scene_ref, str) and not scene_ref:
+            errors.append(f"{label}: scene_id must not be empty")
+        beat_ref = shot.get("beat_id")
+        if isinstance(beat_ref, str) and not beat_ref:
+            errors.append(f"{label}: beat_id must not be empty")
         subjects = shot.get("subjects")
         if isinstance(subjects, list):
             errors.extend(_unique_id_errors(
@@ -645,18 +665,18 @@ def _subject_table(scene, shot, profile):
     table: dict[str, list] = {}
 
     def add(source, records):
-        for rec in records or []:
+        for rec in _as_list(records):
             if isinstance(rec, dict) \
                     and isinstance(rec.get("character_id"), str):
                 table.setdefault(rec["character_id"], []).append(
                     (source, rec))
 
     if isinstance(scene, dict):
-        for item in scene.get("scenes") or []:
+        for item in _as_list(scene.get("scenes")):
             if isinstance(item, dict):
                 add("scene_plan", item.get("subjects"))
     if isinstance(shot, dict):
-        for item in shot.get("shots") or []:
+        for item in _as_list(shot.get("shots")):
             if isinstance(item, dict):
                 add("shot_plan", item.get("subjects"))
     if isinstance(profile, dict):
@@ -678,7 +698,7 @@ def _kind_species_lookup(table, perf_lines):
             if species.get(cid) is None \
                     and isinstance(rec.get("species"), str):
                 species[cid] = rec["species"]
-    for line in perf_lines or []:
+    for line in _as_list(perf_lines):
         if not isinstance(line, dict):
             continue
         cid = line.get("character_id")
@@ -758,23 +778,23 @@ def _known_characters(script, profile, scene) -> set:
     must resolve into this set."""
     known: set[str] = set()
     if isinstance(script, dict):
-        for line in script.get("dialogue") or []:
+        for line in _as_list(script.get("dialogue")):
             if isinstance(line, dict) \
                     and isinstance(line.get("character_id"), str):
                 known.add(line["character_id"])
     if isinstance(profile, dict):
-        for sub in profile.get("per_subject_overrides") or []:
+        for sub in _as_list(profile.get("per_subject_overrides")):
             if isinstance(sub, dict) \
                     and isinstance(sub.get("character_id"), str):
                 known.add(sub["character_id"])
     if isinstance(scene, dict):
-        for item in scene.get("scenes") or []:
+        for item in _as_list(scene.get("scenes")):
             if not isinstance(item, dict):
                 continue
-            for cid in item.get("character_ids") or []:
+            for cid in _as_list(item.get("character_ids")):
                 if isinstance(cid, str):
                     known.add(cid)
-            for sub in item.get("subjects") or []:
+            for sub in _as_list(item.get("subjects")):
                 if isinstance(sub, dict) \
                         and isinstance(sub.get("character_id"), str):
                     known.add(sub["character_id"])
@@ -795,9 +815,9 @@ def _cross_reference_errors(script, profile, scene, shot, perf,
     if not isinstance(scene, dict) or not isinstance(shot, dict) \
             or not isinstance(perf, dict):
         return ["scene, shot and performance plans must be objects"]
-    scenes = scene.get("scenes") or []
-    shots = shot.get("shots") or []
-    lines = perf.get("lines") or []
+    scenes = _as_list(scene.get("scenes"))
+    shots = _as_list(shot.get("shots"))
+    lines = _as_list(perf.get("lines"))
 
     # -- Project IDs agree wherever supplied. Only string project
     # IDs take part in the agreement: a list/dict project ID is a
@@ -884,7 +904,7 @@ def _cross_reference_errors(script, profile, scene, shot, perf,
             continue
         beat_id = item.get("beat_id")
         if isinstance(beat_id, str) and isinstance(scene_id, str):
-            beats = scene_ids[scene_id].get("beats") or []
+            beats = _as_list(scene_ids[scene_id].get("beats"))
             beat_ids = {b.get("beat_id") for b in beats
                         if isinstance(b, dict)
                         and isinstance(b.get("beat_id"), str)}
@@ -896,7 +916,7 @@ def _cross_reference_errors(script, profile, scene, shot, perf,
 
     # -- Source shot IDs are never silently omitted.
     if isinstance(script, dict):
-        for item in script.get("shots") or []:
+        for item in _as_list(script.get("shots")):
             if isinstance(item, dict) \
                     and isinstance(item.get("shot_id"), str) \
                     and item["shot_id"] not in shot_ids:
@@ -904,6 +924,28 @@ def _cross_reference_errors(script, profile, scene, shot, perf,
                     "script.shots shot_id "
                     f"{item['shot_id']!r} is not present in the shot plan "
                     "(source shots are never silently omitted)")
+
+    # -- Profile per-shot overrides reference valid shots. A
+    # per-shot override names a shot of this production; an empty
+    # or dangling shot_id is a broken cross-reference, never a
+    # silently ignored override.
+    if isinstance(profile, dict):
+        for i, override in enumerate(
+                _as_list(profile.get("per_shot_overrides"))):
+            if not isinstance(override, dict):
+                continue
+            if "shot_id" not in override:
+                continue
+            shot_ref = override["shot_id"]
+            if not isinstance(shot_ref, str):
+                errors.append(
+                    "production_profile.per_shot_overrides"
+                    f"[{i}]: shot_id {shot_ref!r} is not a string")
+            elif shot_ref not in shot_ids:
+                errors.append(
+                    "production_profile.per_shot_overrides"
+                    f"[{i}]: shot_id {shot_ref!r} does not reference "
+                    "a valid shot")
 
     # -- Subject dimension agreement + articulation with resolved kinds.
     table = _subject_table(scene, shot, profile)
@@ -914,7 +956,7 @@ def _cross_reference_errors(script, profile, scene, shot, perf,
         """Entries with kind/species resolved from the subject table
         so the articulation check sees the full context."""
         out = []
-        for rec in records or []:
+        for rec in _as_list(records):
             if not isinstance(rec, dict):
                 continue
             merged = dict(rec)
@@ -947,13 +989,13 @@ def _cross_reference_errors(script, profile, scene, shot, perf,
     for i, item in enumerate(shots):
         if not isinstance(item, dict):
             continue
-        for cid in item.get("character_ids") or []:
+        for cid in _as_list(item.get("character_ids")):
             if isinstance(cid, str) and cid not in known:
                 errors.append(
                     f"shot_plan.shots[{i}] ({item.get('shot_id', '?')}): "
                     f"character_id {cid!r} does not resolve from the "
                     "supplied project/script context")
-        for sub in item.get("subjects") or []:
+        for sub in _as_list(item.get("subjects")):
             if isinstance(sub, dict) \
                     and isinstance(sub.get("character_id"), str) \
                     and sub["character_id"] not in known:
@@ -1103,7 +1145,7 @@ def _rewrite_authorisation_errors(perf, dialogue_mode,
     errors = []
     if not isinstance(perf, dict):
         return errors
-    for i, line in enumerate(perf.get("lines") or []):
+    for i, line in enumerate(_as_list(perf.get("lines"))):
         if not isinstance(line, dict):
             continue
         dialogue = line.get("dialogue")
@@ -1144,7 +1186,7 @@ def _binding_errors(s2p, lines, shot_ids, known, kind_by_id,
     errors: list[str] = []
     valid_line_ids: set[str] = set()
     line_by_ref: dict[str, dict] = {}
-    for line in lines:
+    for line in _as_list(lines):
         if not isinstance(line, dict):
             continue
         for key in ("line_id", "dialogue_line_id"):
@@ -1156,7 +1198,8 @@ def _binding_errors(s2p, lines, shot_ids, known, kind_by_id,
     single = s2p.get("character_voice_binding")
     if isinstance(single, dict):
         bindings.append(("character_voice_binding", single))
-    for i, entry in enumerate(s2p.get("character_voice_bindings") or []):
+    for i, entry in enumerate(
+            _as_list(s2p.get("character_voice_bindings"))):
         if isinstance(entry, dict):
             bindings.append((f"character_voice_bindings[{i}]", entry))
     by_line: dict[str, list] = {}
@@ -1218,7 +1261,8 @@ def _binding_errors(s2p, lines, shot_ids, known, kind_by_id,
                         f"{first.get(field)!r})")
     editing = s2p.get("editing_plan")
     if isinstance(editing, dict):
-        for i, hold in enumerate(editing.get("reaction_holds") or []):
+        for i, hold in enumerate(
+                _as_list(editing.get("reaction_holds"))):
             if not isinstance(hold, dict):
                 continue
             after = hold.get("after_line_id")
@@ -1383,10 +1427,21 @@ def validate_script_to_performance_bundle(bundle) -> list[str]:
     if not isinstance(stored_hash, str) \
             or not _SHA256_RE.match(stored_hash):
         errors.append("bundle.bundle_hash is not a SHA-256 hex digest")
-    elif script_to_performance_hash(bundle) != stored_hash:
-        errors.append(
-            "bundle.bundle_hash does not match the bundle contents "
-            "(the bundle was tampered with)")
+    else:
+        try:
+            recomputed = script_to_performance_hash(bundle)
+        except (TypeError, ValueError):
+            # Non-JSON-serialisable contents (a set, a circular
+            # reference) cannot be hashed: a structured error, never
+            # the serialiser's raw exception.
+            errors.append(
+                "bundle contents are not JSON-serialisable, so the "
+                "bundle hash cannot be recomputed")
+            recomputed = None
+        if recomputed is not None and recomputed != stored_hash:
+            errors.append(
+                "bundle.bundle_hash does not match the bundle contents "
+                "(the bundle was tampered with)")
     script = bundle.get("script_contract")
     profile = bundle.get("production_profile")
     s2p = bundle.get("script_to_performance")

@@ -609,6 +609,25 @@ step-by-step order for every video, in §7).
   (41), `CF-P1-003-R1-DIALOGUE-META` (9) in
   `tests/test_script_to_performance_runtime.py` (691 checks
   total; baseline 606 intact). Record: corrections doc §11.
+- **R2 hardening (2026-11-26, same branch and PR #4).** Manifest
+  integrity (the R1 manifest carried one stale entry — the
+  corrections document was edited after generation — so the
+  document is now finalized before the manifest is generated and
+  quotes no generated value; a new automated group
+  `CF-P1-003-R2-MANIFEST` in `tests/test_reports.py` verifies
+  all 182 entries entry-by-entry against the tree and rejects
+  tampered copies) and adversarial nested JSON validation (eight
+  table-driven groups over all eight boundaries — script,
+  profile, scene, shot, performance, editing, bindings, bundle —
+  with malformed types at every required object/array boundary
+  and identifier field; 1,096 new checks, suite total 1,787,
+  baseline 691 intact). Twenty production defects were
+  reproduced pre-fix and fixed: a raw `TypeError` crash class
+  from truthy non-iterable scalars where arrays are required
+  (new `_as_list()` helper), a non-serialisable bundle hash,
+  empty-string identifiers that silently passed, and dangling
+  per-shot overrides that silently built. Record: corrections
+  doc §12.
 
 ## Rules that always apply
 
