@@ -662,7 +662,7 @@ the new categories (`CF-P1-002-R1-SCOPE`, `CF-P1-002-R1-SCHEMA`,
   in the repo's required order; the manifest and CHECKSUMS values
   live in the delivery report, not here (hash-chain rule §7).
   Post-push regen (parent): provenance regenerated with the full
-  GitHub head `60d0a941c20e736dd6f6d32f997f82f66f32c8c7` (R1-R2
+  GitHub head `d8ae1150b2026980400211f702adc7f281fe31f4` (R1-R3
   content push); the new manifest SHA is recorded in the delivery
   report, not here.
 
