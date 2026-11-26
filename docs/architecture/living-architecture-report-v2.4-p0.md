@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-26 15:07 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-26 15:41 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-003-script-to-performance-runtime`
-**Head commit:** `b6b75f12f6831ae862f923e19acb7398205e554f`
-**GitHub branch head:** `9a3e068da2c311c8137b98f9d58471abcf73fb72` (remote head of `feat/cf-p1-003-script-to-performance-runtime` at
+**Head commit:** `8f6383ba64cb9d15ae5d5c6a48983c51e5267d52`
+**GitHub branch head:** `05b1c92c9d7baefd58ed718f8d7a19ccda17b778` (remote head of `feat/cf-p1-003-script-to-performance-runtime` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -524,4 +524,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-26 15:07 UTC.
+- Report generated: 2026-11-26 15:41 UTC.
