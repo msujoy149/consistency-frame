@@ -56,6 +56,10 @@ run_one "P0-SCHEMA" python3 scripts/validate-repo.py
 # Registry generation check (committed registries must match the live repo).
 run_one "CF-INT-023" python3 scripts/generate-registries.py --check
 
+# Routing catalog generation check (committed catalog must match the
+# canonical routing sources).
+run_one "CF-P1-002-CATALOG" python3 scripts/generate-routing-catalog.py --check
+
 # Unit / integration tests.
 run_one "P0-SCHEMA" python3 tests/test_schemas.py
 run_one "P0-ROUTING" python3 tests/test_routing.py
@@ -94,6 +98,17 @@ run_one "CF-P0-015-WT" bash tests/test_installer_status.sh
 run_one "CF-P1-001-SESSION" python3 tests/test_local_session_runtime.py
 run_one "CF-P1-001-AUTHZ" python3 tests/test_session_authorization.py
 run_one "CF-P0-ATOMIC-001" python3 tests/test_atomic_write.py
+run_one "CF-P1-002-CATALOG" python3 tests/test_skill_router.py
+run_one "CF-P1-002-SCHEMA" python3 tests/test_skill_router.py
+run_one "CF-P1-002-ROUTING" python3 tests/test_skill_router.py
+run_one "CF-P1-002-CONFLICTS" python3 tests/test_skill_router.py
+run_one "CF-P1-002-MODES" python3 tests/test_skill_router.py
+run_one "CF-P1-002-PLAN" python3 tests/test_skill_router.py
+run_one "CF-P1-002-SECURITY" python3 tests/test_skill_router.py
+run_one "CF-P1-002-R1-SCOPE" python3 tests/test_skill_router.py
+run_one "CF-P1-002-R1-SCHEMA" python3 tests/test_skill_router.py
+run_one "CF-P1-002-R1-HANDOFF" python3 tests/test_skill_router.py
+run_one "CF-P1-002-R1-CATALOG" python3 tests/test_skill_router.py
 
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check

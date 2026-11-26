@@ -49,186 +49,37 @@ def errors_for(schema, value):
     return errs
 
 
-# --- P0-006 composable routing helper (TEST-ONLY) -------------------------
-# NOT a runtime engine: P0 defines contracts + validation only; the routing
-# engine is P1. This helper encodes the composable model of
-# docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md §10 so the
-# eight P0-006 routing scenarios can be checked against the routing matrix
-# and workflow graph as data. It resolves skills from a production-profile
-# dict plus small routing hints (dialogue, languages, recurring character,
-# explainer structure, consent). It raises RoutingError on contradictory
-# profiles instead of silently picking a side. Fixed vocabularies — never
-# a single `animation_type` enum.
-VISUAL_STYLES = {"flat-2d-vector", "hand-drawn-2d", "illustrated-2d",
-                 "anime", "cartoon-2d", "stylized-3d", "semi-realistic-3d",
-                 "photorealistic-3d-cgi", "photorealistic-digital-human",
-                 "photorealistic-digital-animal-creature", "mixed",
-                 "captured-live-action"}
-PRODUCTION_MEDIA = {"2d-drawn-vector", "3d-cgi-rigged", "ai-digital-human",
-                    "ai-digital-creature", "live-action-footage",
-                    "hybrid-live-action-cgi"}
-SOURCE_MEDIA = {"script-only", "reference-image", "reference-video",
-                "captured-footage", "generated-image", "generated-video",
-                "mixed"}
-MOTION_METHODS = {"rig-2d-keyframe", "rig-3d-keyframe", "ai-image-to-video",
-                  "ai-video-to-video", "motion-capture",
-                  "performance-transfer", "face-animation", "body-animation",
-                  "pose-gesture-transfer", "lip-sync-phoneme-viseme",
-                  "creature-articulation", "rotoscoping-compositing",
-                  "captured-motion"}
-SUBJECT_KINDS = {"human", "digital-human", "real-animal", "cgi-animal",
-                 "fictional-creature", "anthropomorphic", "mixed",
-                 "non-character"}
-INTERACTION_PATTERNS = {"single-performance", "two-person-conversation",
-                        "multi-person-conversation", "human-animal",
-                        "human-creature", "multiple-animals-creatures",
-                        "group-scene", "silent-reaction",
-                        "physical-contact-object"}
-ARTICULATION_TARGETS = {"human-mouth-lips", "bird-beak", "animal-muzzle",
-                        "creature-jaw-mandibles", "other"}
-GENERATED_MEDIA = {"2d-drawn-vector", "3d-cgi-rigged", "ai-digital-human",
-                   "ai-digital-creature"}
-GENERATED_SUBJECTS = {"digital-human", "cgi-animal", "fictional-creature",
-                      "anthropomorphic"}
-# Styles whose skill carries a style lock (cinematic-power §1).
-CINEMATIC_STYLES = {"stylized-3d", "anime", "cartoon-2d",
-                    "semi-realistic-3d", "photorealistic-3d-cgi"}
+# --- Production routing (CF-WO-P1-002) --------------------------------
+# P0 defined the composable routing model as a test-only helper; P1-002
+# promoted it into production code (runtime/skill_router.py), reading
+# only the compiled catalog (registry/routing-catalog.json). The
+# duplicate test-only algorithm was removed: every scenario below
+# runs through the production resolver, with the same expected skill
+# sets, the same refusal cases and the same precedence invariant.
+# The resolver takes a structured routing request (schemas/
+# skill-routing-request.json): a task id, an intent mode, a validated
+# v2.5 production profile and structured hints. Scenario 7 and the
+# reference-video fixture are video-to-video remakes, so they run in
+# REMAKE_OR_TRANSFORM mode (video-regeneration is not applicable in
+# GENERATE_FROM_SCRIPT) with the mode's required evidence.
+sys.path.insert(0, os.path.abspath(ROOT))
+from runtime.skill_router import (  # noqa: E402
+    RoutingError, load_routing_catalog, resolve_skills)
+
+CATALOG = load_routing_catalog()
 
 
-class RoutingError(ValueError):
-    pass
+def route_request(prof, hints, mode="GENERATE_FROM_SCRIPT",
+                  task_id="p0-routing", **extra):
+    req = {"schema_version": "2.4", "task_id": task_id,
+           "intent_mode": mode, "production_profile": prof,
+           "hints": hints}
+    req.update(extra)
+    return resolve_skills(req, CATALOG)
 
 
-def _vocab(name, value, allowed):
-    if value not in allowed:
-        raise RoutingError(f"{name} {value!r} is not in the fixed vocabulary")
-
-
-def resolve_skills(profile, hints, matrix_entries):
-    """Resolve skills for one production profile. Returns a dict with
-    `skills` (set of skill slugs), `styles` (effective rendering styles),
-    `blocked` (matrix-conflict pairs inside the resolved set),
-    `visual_style` and `source_media_type` as resolved (never inferred
-    from each other). Raises RoutingError on a contradictory profile."""
-    if "animation_type" in profile:
-        raise RoutingError("single animation_type enum is withdrawn; "
-                           "use the separate dimensions")
-    style = profile.get("visual_style")
-    if style is None:
-        raise RoutingError("visual_style is required: no style is ever "
-                           "inferred, and cartoon is never the default")
-    _vocab("visual_style", style, VISUAL_STYLES)
-    medium = profile.get("production_medium")
-    _vocab("production_medium", medium, PRODUCTION_MEDIA)
-    source = profile.get("source_media_type")
-    _vocab("source_media_type", source, SOURCE_MEDIA)
-    motions = profile.get("motion_methods") or []
-    for m in motions:
-        _vocab("motion_method", m, MOTION_METHODS)
-    subjects = set(profile.get("subject_types") or [])
-    for s in subjects:
-        _vocab("subject_kind", s, SUBJECT_KINDS)
-    _vocab("interaction_pattern", profile.get("interaction_pattern"),
-           INTERACTION_PATTERNS)
-    overrides = profile.get("per_subject_overrides") or []
-    for sub in overrides:
-        for s in (sub.get("subject_kind"),):
-            if s is not None:
-                _vocab("subject_kind", s, SUBJECT_KINDS)
-                subjects.add(s)
-        if sub.get("representation") is not None:
-            _vocab("representation", sub["representation"], PRODUCTION_MEDIA)
-        if sub.get("source_media") is not None:
-            _vocab("source_media", sub["source_media"], SOURCE_MEDIA)
-        art = sub.get("articulation_target")
-        if art is not None:
-            _vocab("articulation_target", art, ARTICULATION_TARGETS)
-            species = (sub.get("species") or "").lower()
-            if ("bird" in species or "parrot" in species) \
-                    and art == "human-mouth-lips":
-                raise RoutingError(
-                    "a bird never uses human lip movement: "
-                    f"{sub.get('character_id')} needs bird-beak articulation")
-        if sub.get("rendering_style") is not None:
-            _vocab("rendering_style", sub["rendering_style"], VISUAL_STYLES)
-    # Pure captured footage needs no motion-generation method; anything
-    # generated must name at least one.
-    generated_here = medium in GENERATED_MEDIA \
-        or bool(subjects & GENERATED_SUBJECTS) \
-        or medium == "hybrid-live-action-cgi"
-    if not motions and generated_here:
-        raise RoutingError("motion_methods required for a generated subject")
-    # Provenance: a generated subject is NEVER live-action footage.
-    is_live = profile.get("is_live_action_footage")
-    if is_live and (medium in GENERATED_MEDIA
-                    or medium == "hybrid-live-action-cgi"
-                    or subjects & GENERATED_SUBJECTS):
-        raise RoutingError("generated subjects are never live-action footage")
-    for sub in overrides:
-        if sub.get("is_live_action_footage") and (
-                sub.get("representation") in GENERATED_MEDIA
-                or sub.get("subject_kind") in GENERATED_SUBJECTS):
-            raise RoutingError(
-                f"generated subject {sub.get('character_id')} is never "
-                "live-action footage")
-    # True conflict (§10): one shot cannot be both flat 2D vector and
-    # captured live-action footage.
-    eff_styles = {style} if style != "mixed" else {
-        sub["rendering_style"] for sub in overrides
-        if sub.get("rendering_style")}
-    if "flat-2d-vector" in eff_styles and is_live:
-        raise RoutingError("one shot cannot be both flat 2D vector and "
-                           "captured live-action footage")
-
-    selected = {"command-authority", "production-systems",
-                "humanized-production"}
-    if hints.get("dialogue"):
-        selected.add("voice-consistency")
-    if hints.get("recurring_character"):
-        selected.add("character-consistency")
-    if any(lang != "en" for lang in (hints.get("languages") or [])):
-        selected.add("language-authenticity")
-    if hints.get("explainer_structure") and "flat-2d-vector" in eff_styles:
-        # The flat 2D explainer is ONE optional profile, not the
-        # explainer model: explainer structure at another style does
-        # NOT route through explainer-animation.
-        selected.add("explainer-animation")
-    if eff_styles & CINEMATIC_STYLES:
-        selected.add("cinematic-power")  # style lock for the output style
-    if subjects & {"cgi-animal", "fictional-creature", "anthropomorphic"} \
-            and hints.get("dialogue"):
-        selected.add("cinematic-power")  # creature performance (§2)
-    digital_human = any(
-        sub.get("subject_kind") == "digital-human"
-        and sub.get("representation") == "ai-digital-human"
-        and sub.get("source_media") == "reference-image"
-        for sub in overrides) or (
-            medium == "ai-digital-human" and source == "reference-image"
-            and style == "photorealistic-digital-human")
-    if digital_human:
-        if not hints.get("consent"):
-            raise RoutingError("consent record required before animating "
-                               "a real person's photo")
-        selected.add("realistic-person")
-    if is_live or source == "captured-footage" or any(
-            sub.get("representation") == "live-action-footage"
-            for sub in overrides):
-        selected.add("live-action-vfx")
-    if source == "reference-video" and "ai-video-to-video" in motions:
-        selected.add("video-regeneration")
-    # Real-animal subjects are handled by live-action-vfx §6 (cut from
-    # real behaviour): CGI creature-performance rules are never forced
-    # onto an actual animal, so real-animal alone adds no CG skill.
-
-    conflicts = {}
-    for e in matrix_entries:
-        conflicts.setdefault(e["skill"], set()).update(
-            e.get("conflicts") or [])
-    blocked = sorted(
-        (a, b) for i, a in enumerate(sorted(selected)) for b in sorted(selected)[i + 1:]
-        if b in conflicts.get(a, set()) or a in conflicts.get(b, set()))
-    return {"skills": selected, "styles": eff_styles, "blocked": blocked,
-            "visual_style": style, "source_media_type": source}
+REMAKE_EVIDENCE = {"explicit_request": True,
+                   "rights_provenance_checked": True}
 
 
 def main():
@@ -505,12 +356,12 @@ def main():
           bool(errors_for(scene_schema, bad_scene)))
 
     # --- CF-P0-ROUTING-005: P0-006 composable routing scenarios ---------
-    # The routing helper above is test-only (P0 is contracts + validation,
-    # no runtime engine). Each scenario resolves skills from a
-    # schema-valid production profile + hints, and asserts the exact
-    # resolved set, that no matrix conflict blocks the valid combination,
-    # and the scenario-specific routing proofs. The matrix/graph are
-    # version-agnostic here on purpose: R1 may bump them 2.4 -> 2.5.
+    # Each scenario resolves skills through the production resolver
+    # (runtime/skill_router.py) from a schema-valid production profile
+    # + hints, and asserts the exact resolved set, that no matrix
+    # conflict blocks the valid combination, and the scenario-specific
+    # routing proofs. The matrix/graph are version-agnostic here on
+    # purpose: R1 may bump them 2.4 -> 2.5.
     with open(os.path.join(ROOT, "schemas", "production-profile.json"),
               encoding="utf-8") as f:
         prof_schema = json.load(f)
@@ -584,8 +435,16 @@ def main():
     }
     resolved = {}
     for key, (prof, hints, expected) in scenarios.items():
+        # Scenario 7 is a video-to-video remake: REMAKE_OR_TRANSFORM
+        # mode with the mode's required evidence. The rest generate
+        # from a script.
+        if key == "s7":
+            mode, extra = "REMAKE_OR_TRANSFORM", REMAKE_EVIDENCE
+        else:
+            mode, extra = "GENERATE_FROM_SCRIPT", {}
         try:
-            res = resolve_skills(prof, hints, entries)
+            res = route_request(prof, hints, mode=mode,
+                                task_id=f"p0-routing-{key}", **extra)
         except RoutingError as exc:
             check(f"CF-P0-ROUTING-005: scenario {key} resolves", False,
                   str(exc))
@@ -697,10 +556,12 @@ def main():
         check("CF-P0-ROUTING-005: (7) character-consistency selected "
               "(identity preserved across the transformation)",
               "character-consistency" in resolved["s7"]["skills"])
-        old_refvid = resolve_skills(
+        old_refvid = route_request(
             load_json("tests/fixtures/production-profile-reference-video.json"),
             {"dialogue": True, "languages": ["en"],
-             "recurring_character": True}, entries)
+             "recurring_character": True},
+            mode="REMAKE_OR_TRANSFORM", task_id="p0-routing-refvid",
+            **REMAKE_EVIDENCE)
         check("CF-P0-ROUTING-005: (7) existing reference-video fixture "
               "also routes to video-regeneration",
               "video-regeneration" in old_refvid["skills"])
@@ -716,16 +577,19 @@ def main():
     # Style is never inferred as cartoon by default; source media is
     # never confused with rendering style.
     try:
-        resolve_skills({k: v for k, v in routing_profiles["s3"].items()
-                        if k != "visual_style"}, {"dialogue": True}, entries)
+        route_request({k: v for k, v in routing_profiles["s3"].items()
+                       if k != "visual_style"}, {"dialogue": True},
+                      task_id="p0-routing-nostyle")
         check("CF-P0-ROUTING-005: profile without visual_style is refused "
               "(no cartoon default)", False, "resolved without a style")
     except RoutingError:
         check("CF-P0-ROUTING-005: profile without visual_style is refused "
               "(no cartoon default)", True)
-    refvid_cartoon = resolve_skills(
+    refvid_cartoon = route_request(
         load_json("tests/fixtures/production-profile-reference-video.json"),
-        {"dialogue": True, "recurring_character": True}, entries)
+        {"dialogue": True, "recurring_character": True},
+        mode="REMAKE_OR_TRANSFORM", task_id="p0-routing-refvid-cartoon",
+        **REMAKE_EVIDENCE)
     check("CF-P0-ROUTING-005: same source-media (reference-video), "
           "different requested styles stay different",
           refvid_cartoon["styles"] == {"cartoon-2d"}
@@ -734,7 +598,8 @@ def main():
           "style 'image' — S3 resolves photorealistic-digital-human",
           resolved.get("s3", {}).get("styles")
           == {"photorealistic-digital-human"})
-    # Incompatible operations are still prevented (helper refusals).
+    # Incompatible operations are still prevented (production resolver
+    # refusals).
     for label, prof, hints in (
             ("single animation_type enum",
              load_json("tests/fixtures/production-profile-invalid-animation-type.json"),
@@ -753,7 +618,7 @@ def main():
               "explainer_structure": True}),
     ):
         try:
-            resolve_skills(prof, hints, entries)
+            route_request(prof, hints, task_id="p0-routing-refuse")
             check(f"CF-P0-ROUTING-005: incompatible operation refused — "
                   f"{label}", False, "resolved instead of refusing")
         except RoutingError:
@@ -764,9 +629,9 @@ def main():
         if sub["character_id"] == "char-kiki-001":
             sub["articulation_target"] = "human-mouth-lips"
     try:
-        resolve_skills(bird_lips,
-                       {"dialogue": True, "recurring_character": True,
-                        "consent": True}, entries)
+        route_request(bird_lips,
+                      {"dialogue": True, "recurring_character": True,
+                       "consent": True}, task_id="p0-routing-bird")
         check("CF-P0-ROUTING-005: incompatible operation refused — bird "
               "with human-mouth-lips articulation", False,
               "resolved instead of refusing")

@@ -445,6 +445,91 @@ step-by-step order for every video, in §7).
   engine, script-to-performance generation, or the
   script-to-finished-video pipeline.
 
+## P1-002 Deterministic runtime skill router (2026-11-25)
+
+- **The router plans; it never generates.** `runtime/skill_router.py`
+  is the second P1 runtime component: it resolves skills and builds
+  deterministic workflow plans from structured requests, reading
+  only the compiled catalog `registry/routing-catalog.json` (built
+  by `scripts/generate-routing-catalog.py` from the matrix, graph,
+  and intent modes; standard-library only at runtime, PyYAML only
+  in the build-time compiler). No provider calls, no companion
+  invocation, no media generation, no persistence, no server, no
+  LLM classifier, no script-to-performance generation.
+- **Dependencies order, they never expand the selection.** A
+  dependent is never ready before a prerequisite that is also
+  selected, but selecting a skill never forces its dependencies
+  into the plan. A dependency that is not selected and does not
+  list the mode is recorded in the plan as resolved per mode scope
+  — never silently dropped, never invented. Precedence is a
+  tie-breaker only, never an exclusion.
+- **Conflicts are scoped, never global.** TC-1..TC-10 fire only in
+  their documented scope — same subject, same shot, same dialogue
+  line. Cross-shot and cross-subject combinations stay allowed, and
+  a blocked plan names the rule, the skills, the shot, the subject,
+  and the decision required; neither skill is ever silently removed.
+  TC-10 fails closed when a speaking subject's anatomy cannot be
+  established.
+- **Plans need an exact active session.** `build_workflow_plan`
+  accepts only an exact `LocalSession` verified by the P1-001
+  verifier; identity comes only from the session, and the plan
+  records only the session ID. UPLOAD_ONLY and REPORT_UPDATE_ONLY
+  never route production work. Full record:
+  `docs/implementation/CF-WO-P1-002-corrections.md`, and the
+  runtime contract in `docs/runtime/SKILL_ROUTING_RUNTIME.md`.
+- **R1 hardening (2026-11-26, same branch and PR #3).** Every
+  scope reference must resolve to a request/profile subject or shot
+  (a phantom reference is a validation error, never a silently
+  dropped scope). The request validator enforces the same relevant
+  constraints as the request/profile schemas with exact JSON types,
+  and boolean authorisation evidence must be the actual boolean
+  `True` — a string such as `"false"` is never approval. Handoff
+  packets take explicit completion receipts
+  (`build_handoff_packet(session, plan, step_id,
+  completed_receipts, catalog=None)`); a dependency counts as
+  satisfied only when a validated receipt says so, and the packet
+  is refused unless the session is the exact active session the
+  plan belongs to, the plan hash validates, and the step is ready
+  under those receipts. The compiled catalog carries a
+  deterministic integrity fingerprint plus full semantic
+  validation at load (exact TC-1..TC-10, edges vs dependencies,
+  conflict symmetry, mode applicability, canonical groups) —
+  integrity against accidental / unsupported mutation, not
+  cryptographic protection against a malicious same-OS-user
+  process. `tests/test_skill_router.py` also runs natively on
+  Windows now (both `windows-compat` matrix versions). Record:
+  corrections doc §12.
+- **Checkout contract (R1-R1, 2026-11-26, same branch and PR #3).**
+  `.gitattributes` pins `eol=lf` on every file the routing catalog
+  hashes (the five canonical YAML sources, every
+  `skills/*/SKILL.md`, and the catalog itself) — a Windows LF→CRLF
+  checkout changes their raw-byte SHA-256 and fails the catalog
+  checks (PR run #237); the router suite also needs PyYAML
+  installed in `windows-compat`, mirroring `p0-validate`. Record:
+  corrections doc §13.
+- **Explicit nulls (R1-R2, 2026-11-26, same branch and PR #3).**
+  An optional field that is present with an explicit `null` is a
+  type error naming the field — never treated as if the field
+  were absent — while an omitted field stays valid wherever the
+  schema permits omission. Covers 22 cases (10 request-level, 5
+  profile, 7 evidence strings); boolean approval evidence is
+  unchanged (only the actual boolean `True` counts). Regression
+  group CF-P1-002-R1-R2-NULL in `tests/test_skill_router.py`
+  (22 cases × 4 checks + a summary check that fails if any
+  declared case is dropped). Record: corrections doc §14.
+- **Explicit nulls, complete parity (R1-R3, 2026-11-26, same
+  branch and PR #3).** A schema-wide probe of all 67 unique
+  optional property paths found 16 further explicit-null
+  mismatches R1-R2 had not covered — request subject/shot tables
+  (4) and profile per-subject (7) / per-shot (5) overrides —
+  which `resolve_skills()` also accepted; all 16 are now rejected
+  by both validators with a field-naming error. Regression group
+  CF-P1-002-R1-R3-NULL67 in `tests/test_skill_router.py`
+  (67 paths × 5 checks + a coverage assertion that compares the
+  declared matrix against the optional paths discovered from the
+  schema, so a new optional schema property without a test fails
+  the suite). Record: corrections doc §15.
+
 ## Rules that always apply
 
 - A character's identity (face, eyes, nose, mouth, hands, feet) is

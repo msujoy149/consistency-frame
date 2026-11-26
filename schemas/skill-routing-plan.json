@@ -1,0 +1,572 @@
+{
+  "$id": "https://consistencyframe.example/schemas/skill-routing-plan.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A deterministic workflow plan built by the runtime skill router (CF-WO-P1-002). The plan is a pure planning record: it names the skills, their order, their parallel groups, their quality gates and their approval requirements, and it carries the catalog version and source hashes it was built from. It contains no timestamps, so plan_hash is deterministic: the SHA-256 of the canonical JSON of the plan without the plan_hash field itself. A plan whose recomputed hash differs from plan_hash was tampered with. resource-management never appears as a step: it is cross-cutting phase-level instruction, recorded under resource_management.",
+  "properties": {
+    "analysis_only": {
+      "description": "True for REFERENCE_REVIEW: the plan analyses and reports only; it never mutates skills or registries.",
+      "type": "boolean"
+    },
+    "blocked_diagnostics": {
+      "description": "Structured blocked diagnostics. A blocked plan has status blocked and lists every reason here; nothing is silently dropped.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "rule_id": {
+            "type": "string"
+          },
+          "shot_id": {
+            "type": "string"
+          },
+          "skill": {
+            "type": "string"
+          },
+          "subject_id": {
+            "type": "string"
+          },
+          "suggested_mode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "catalog_sources": {
+      "additionalProperties": false,
+      "description": "The SHA-256 and version of each canonical source the catalog was compiled from, copied from the catalog at plan time.",
+      "properties": {
+        "architecture/AGENT_COMPATIBILITY_MATRIX.yaml": {
+          "additionalProperties": false,
+          "properties": {
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "sha256",
+            "version"
+          ],
+          "type": "object"
+        },
+        "architecture/COMPANION_CAPABILITY_REGISTRY.yaml": {
+          "additionalProperties": false,
+          "properties": {
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "sha256",
+            "version"
+          ],
+          "type": "object"
+        },
+        "architecture/SKILL_ROUTING_MATRIX.yaml": {
+          "additionalProperties": false,
+          "properties": {
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "sha256",
+            "version"
+          ],
+          "type": "object"
+        },
+        "architecture/WORKFLOW_GRAPH.yaml": {
+          "additionalProperties": false,
+          "properties": {
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "sha256",
+            "version"
+          ],
+          "type": "object"
+        },
+        "architecture/intent-modes.yaml": {
+          "additionalProperties": false,
+          "properties": {
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "sha256",
+            "version"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "architecture/SKILL_ROUTING_MATRIX.yaml",
+        "architecture/WORKFLOW_GRAPH.yaml",
+        "architecture/intent-modes.yaml",
+        "architecture/COMPANION_CAPABILITY_REGISTRY.yaml",
+        "architecture/AGENT_COMPATIBILITY_MATRIX.yaml"
+      ],
+      "type": "object"
+    },
+    "catalog_version": {
+      "enum": [
+        "2.4"
+      ],
+      "type": "string"
+    },
+    "conflicts": {
+      "description": "Scoped true conflicts found while planning (TC-1..TC-10). Each names the rule, the skills, the shot and subject it applies to, the decision the requester must make, and the input required. A conflict never silently removes either skill.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "type": "string"
+          },
+          "required_input": {
+            "type": "string"
+          },
+          "rule_id": {
+            "type": "string"
+          },
+          "shot_id": {
+            "type": "string"
+          },
+          "skills": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "subject_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule_id",
+          "skills",
+          "decision",
+          "required_input"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "constraints": {
+      "description": "Mode constraints recorded on the plan (allowed and forbidden actions for the intent mode).",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "execution_batches": {
+      "description": "Deterministic execution order: each batch is a list of step IDs that may run together (no dependency between them, and any parallel group in the batch respects its scope). Batches run in order; resource-management is never a batch member.",
+      "items": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "type": "array"
+    },
+    "intent_mode": {
+      "enum": [
+        "UPLOAD_ONLY",
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "REGISTER_CHARACTER",
+        "REGISTER_VOICE_PROFILE",
+        "REGISTER_SOUND_ASSET",
+        "GENERATE_FROM_SCRIPT",
+        "EDIT_EXISTING_MEDIA",
+        "REFERENCE_REVIEW",
+        "REFERENCE_LEARN_AND_UPDATE",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM",
+        "REPORT_UPDATE_ONLY"
+      ],
+      "type": "string"
+    },
+    "parallel_groups": {
+      "description": "Canonical parallel groups active in this plan, with the scope each one is limited to.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "skills": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "skills",
+          "scope"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "plan_hash": {
+      "description": "SHA-256 of the canonical JSON of this plan without the plan_hash field (sort_keys, compact separators).",
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "plan_id": {
+      "pattern": "^plan-[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "plan_only": {
+      "description": "True for registration modes: the plan is a plan only, and registration itself needs its own explicit authorisation and evidence.",
+      "type": "boolean"
+    },
+    "primary_pathway": {
+      "enum": [
+        "command-authority",
+        "resource-management",
+        "character-consistency",
+        "voice-consistency",
+        "production-systems",
+        "language-authenticity",
+        "humanized-production",
+        "cinematic-power",
+        "emotional-performance",
+        "live-action-vfx",
+        "kids-family-animation",
+        "explainer-animation",
+        "realistic-person",
+        "agency-advertising",
+        "video-regeneration"
+      ],
+      "type": "string"
+    },
+    "proposal_only": {
+      "description": "True for REFERENCE_LEARN_AND_UPDATE: the plan is a reviewable proposal only; it never writes to canonical records.",
+      "type": "boolean"
+    },
+    "resource_management": {
+      "description": "Cross-cutting resource-management instructions, one per phase boundary. Never a scheduled step.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "instructions": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "phase",
+          "instructions"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "schema_version": {
+      "enum": [
+        "2.4"
+      ],
+      "type": "string"
+    },
+    "selected_skills": {
+      "description": "Every skill the plan selects, with its exact skill path and SHA-256 fingerprint, its selection source, its scope, its quality gate and its approval requirements.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_conditions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "basis": {
+            "enum": [
+              "profile-dimension",
+              "hint",
+              "canonical-dependency",
+              "user-request",
+              "mode-default",
+              "router-default"
+            ],
+            "type": "string"
+          },
+          "expected_outputs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "quality_gate": {
+            "type": "string"
+          },
+          "required_inputs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scope": {
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "production",
+                  "shot",
+                  "subject",
+                  "shot-subject"
+                ],
+                "type": "string"
+              },
+              "shots": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "subjects": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "skill": {
+            "enum": [
+              "command-authority",
+              "resource-management",
+              "character-consistency",
+              "voice-consistency",
+              "production-systems",
+              "language-authenticity",
+              "humanized-production",
+              "cinematic-power",
+              "emotional-performance",
+              "live-action-vfx",
+              "kids-family-animation",
+              "explainer-animation",
+              "realistic-person",
+              "agency-advertising",
+              "video-regeneration"
+            ],
+            "type": "string"
+          },
+          "skill_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "skill",
+          "skill_id",
+          "path",
+          "sha256",
+          "basis",
+          "scope",
+          "quality_gate",
+          "approval_conditions",
+          "required_inputs",
+          "expected_outputs"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "session": {
+      "additionalProperties": false,
+      "description": "The exact active local session the plan was built under. Only the opaque session identifier is recorded; no owner or workspace identity string is ever accepted from a caller.",
+      "properties": {
+        "session_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "session_id"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "blocked"
+      ],
+      "type": "string"
+    },
+    "steps": {
+      "description": "Every scheduled step in precedence order. A step is ready only when all of its dependencies are complete; resource-management is never a step.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_conditions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "dependencies": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "parallel_group": {
+            "type": "string"
+          },
+          "precedence": {
+            "maximum": 15,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "quality_gate": {
+            "type": "string"
+          },
+          "scope": {
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "production",
+                  "shot",
+                  "subject",
+                  "shot-subject"
+                ],
+                "type": "string"
+              },
+              "shots": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "subjects": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "skill": {
+            "enum": [
+              "command-authority",
+              "resource-management",
+              "character-consistency",
+              "voice-consistency",
+              "production-systems",
+              "language-authenticity",
+              "humanized-production",
+              "cinematic-power",
+              "emotional-performance",
+              "live-action-vfx",
+              "kids-family-animation",
+              "explainer-animation",
+              "realistic-person",
+              "agency-advertising",
+              "video-regeneration"
+            ],
+            "type": "string"
+          },
+          "stage": {
+            "type": "string"
+          },
+          "step_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "step_id",
+          "skill",
+          "precedence",
+          "dependencies",
+          "stage",
+          "scope",
+          "quality_gate",
+          "approval_conditions"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "task_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    },
+    "temporary_only": {
+      "description": "True for TEMPORARY_ASSET_USE: the plan creates no permanent record and nothing it uses may be reused across projects.",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "schema_version",
+    "plan_id",
+    "task_id",
+    "intent_mode",
+    "catalog_version",
+    "catalog_sources",
+    "session",
+    "status",
+    "selected_skills",
+    "steps",
+    "execution_batches",
+    "plan_hash"
+  ],
+  "title": "Skill routing plan",
+  "type": "object"
+}

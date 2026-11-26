@@ -1,0 +1,727 @@
+{
+  "$id": "https://consistencyframe.example/schemas/skill-routing-request.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A request to the deterministic runtime skill router (CF-WO-P1-002). The router resolves skills from the production profile dimensions and the structured hints, never from prose: style and production medium are never inferred from one another, no default cartoon style exists, consent and registration are never inferred from an upload, and activation_trigger prose is never parsed as a routing rule. production_profile is required for production modes (GENERATE_FROM_SCRIPT, EDIT_EXISTING_MEDIA, REMAKE_OR_TRANSFORM, PROJECT_CONSISTENCY, TEMPORARY_ASSET_USE); it is optional for intake, registration, review, QC and report modes, where the router enforces that requirement semantically. Every requested skill selection must carry a source, so the plan can show why each skill was selected.",
+  "properties": {
+    "additional_layers": {
+      "description": "Compatible layers requested alongside the primary pathway. Each must be compatible with the pathway and the intent mode; the router rejects an incompatible layer instead of silently dropping it.",
+      "items": {
+        "enum": [
+          "command-authority",
+          "resource-management",
+          "character-consistency",
+          "voice-consistency",
+          "production-systems",
+          "language-authenticity",
+          "humanized-production",
+          "cinematic-power",
+          "emotional-performance",
+          "live-action-vfx",
+          "kids-family-animation",
+          "explainer-animation",
+          "realistic-person",
+          "agency-advertising",
+          "video-regeneration"
+        ],
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "dialogue_lines": {
+      "description": "Per-line dialogue scope for TC-10: each line names the subject speaking it and the articulation the line uses, in a shot. Articulation must match the subject's anatomy.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "articulation_target": {
+            "enum": [
+              "human-mouth-lips",
+              "bird-beak",
+              "animal-muzzle",
+              "creature-jaw-mandibles",
+              "other"
+            ],
+            "type": "string"
+          },
+          "line_id": {
+            "type": "string"
+          },
+          "shot_id": {
+            "type": "string"
+          },
+          "subject_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "line_id",
+          "subject_id",
+          "articulation_target"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "dialogue_rewrite_requested": {
+      "description": "Whether a dialogue rewrite is requested. GENERATE_FROM_SCRIPT forbids a silent dialogue rewrite; a rewrite is never assumed.",
+      "type": "boolean"
+    },
+    "explicit_request": {
+      "description": "REMAKE_OR_TRANSFORM only: the remake or transform was expressly requested.",
+      "type": "boolean"
+    },
+    "explicit_user_instruction": {
+      "description": "REFERENCE_LEARN_AND_UPDATE only: the learn-and-update was explicitly instructed by the user.",
+      "type": "boolean"
+    },
+    "hints": {
+      "additionalProperties": false,
+      "description": "Structured routing hints. Every hint is an explicit structured value; nothing is inferred from prose or from an upload.",
+      "properties": {
+        "consent": {
+          "type": "boolean"
+        },
+        "dialogue": {
+          "type": "boolean"
+        },
+        "existing_character_registered": {
+          "type": "boolean"
+        },
+        "explainer_structure": {
+          "type": "boolean"
+        },
+        "languages": {
+          "items": {
+            "minLength": 2,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "recurring_character": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "intent_mode": {
+      "enum": [
+        "UPLOAD_ONLY",
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "REGISTER_CHARACTER",
+        "REGISTER_VOICE_PROFILE",
+        "REGISTER_SOUND_ASSET",
+        "GENERATE_FROM_SCRIPT",
+        "EDIT_EXISTING_MEDIA",
+        "REFERENCE_REVIEW",
+        "REFERENCE_LEARN_AND_UPDATE",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM",
+        "REPORT_UPDATE_ONLY"
+      ],
+      "type": "string"
+    },
+    "primary_pathway": {
+      "description": "Exactly one primary pathway per production, when one applies. The primary pathway supplies the production's main rules; it does not own the production exclusively.",
+      "enum": [
+        "command-authority",
+        "resource-management",
+        "character-consistency",
+        "voice-consistency",
+        "production-systems",
+        "language-authenticity",
+        "humanized-production",
+        "cinematic-power",
+        "emotional-performance",
+        "live-action-vfx",
+        "kids-family-animation",
+        "explainer-animation",
+        "realistic-person",
+        "agency-advertising",
+        "video-regeneration"
+      ],
+      "type": "string"
+    },
+    "production_profile": {
+      "additionalProperties": false,
+      "description": "A validated v2.5 production profile (schemas/production-profile.json), embedded in the request. All v2.5 fields are accepted; the router reads the routing dimensions and the per-subject / per-shot routing overrides. The per-shot overrides additionally accept the routing fields subjects, visual_style, source_media and is_live_action_footage, which scope a skill to named shots.",
+      "properties": {
+        "interaction_pattern": {
+          "enum": [
+            "single-performance",
+            "two-person-conversation",
+            "multi-person-conversation",
+            "human-animal",
+            "human-creature",
+            "multiple-animals-creatures",
+            "group-scene",
+            "silent-reaction",
+            "physical-contact-object"
+          ],
+          "type": "string"
+        },
+        "is_live_action_footage": {
+          "type": "boolean"
+        },
+        "motion_methods": {
+          "items": {
+            "enum": [
+              "rig-2d-keyframe",
+              "rig-3d-keyframe",
+              "ai-image-to-video",
+              "ai-video-to-video",
+              "motion-capture",
+              "performance-transfer",
+              "face-animation",
+              "body-animation",
+              "pose-gesture-transfer",
+              "lip-sync-phoneme-viseme",
+              "creature-articulation",
+              "rotoscoping-compositing",
+              "captured-motion"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "per_shot_overrides": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "camera_movement": {
+                "enum": [
+                  "static",
+                  "pan",
+                  "tilt",
+                  "tracking",
+                  "dolly-in",
+                  "dolly-out",
+                  "push-in",
+                  "pull-back",
+                  "follow",
+                  "handheld"
+                ],
+                "type": "string"
+              },
+              "depth_of_field": {
+                "enum": [
+                  "shallow",
+                  "deep",
+                  "rack-focus"
+                ],
+                "type": "string"
+              },
+              "focus_target": {
+                "type": "string"
+              },
+              "is_live_action_footage": {
+                "type": "boolean"
+              },
+              "lighting": {
+                "type": "string"
+              },
+              "shot_id": {
+                "type": "string"
+              },
+              "source_media": {
+                "enum": [
+                  "script-only",
+                  "reference-image",
+                  "reference-video",
+                  "captured-footage",
+                  "generated-image",
+                  "generated-video",
+                  "mixed"
+                ],
+                "type": "string"
+              },
+              "subjects": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "transition_to_next_shot": {
+                "type": "string"
+              },
+              "visual_style": {
+                "enum": [
+                  "flat-2d-vector",
+                  "hand-drawn-2d",
+                  "illustrated-2d",
+                  "anime",
+                  "cartoon-2d",
+                  "stylized-3d",
+                  "semi-realistic-3d",
+                  "photorealistic-3d-cgi",
+                  "photorealistic-digital-human",
+                  "photorealistic-digital-animal-creature",
+                  "mixed",
+                  "captured-live-action"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "shot_id"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "per_subject_overrides": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "articulation_target": {
+                "enum": [
+                  "human-mouth-lips",
+                  "bird-beak",
+                  "animal-muzzle",
+                  "creature-jaw-mandibles",
+                  "other"
+                ],
+                "type": "string"
+              },
+              "character_id": {
+                "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+                "type": "string"
+              },
+              "is_live_action_footage": {
+                "type": "boolean"
+              },
+              "motion_methods": {
+                "items": {
+                  "enum": [
+                    "rig-2d-keyframe",
+                    "rig-3d-keyframe",
+                    "ai-image-to-video",
+                    "ai-video-to-video",
+                    "motion-capture",
+                    "performance-transfer",
+                    "face-animation",
+                    "body-animation",
+                    "pose-gesture-transfer",
+                    "lip-sync-phoneme-viseme",
+                    "creature-articulation",
+                    "rotoscoping-compositing",
+                    "captured-motion"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "rendering_style": {
+                "enum": [
+                  "flat-2d-vector",
+                  "hand-drawn-2d",
+                  "illustrated-2d",
+                  "anime",
+                  "cartoon-2d",
+                  "stylized-3d",
+                  "semi-realistic-3d",
+                  "photorealistic-3d-cgi",
+                  "photorealistic-digital-human",
+                  "photorealistic-digital-animal-creature",
+                  "mixed",
+                  "captured-live-action"
+                ],
+                "type": "string"
+              },
+              "representation": {
+                "enum": [
+                  "2d-drawn-vector",
+                  "3d-cgi-rigged",
+                  "ai-digital-human",
+                  "ai-digital-creature",
+                  "live-action-footage",
+                  "hybrid-live-action-cgi"
+                ],
+                "type": "string"
+              },
+              "source_media": {
+                "enum": [
+                  "script-only",
+                  "reference-image",
+                  "reference-video",
+                  "captured-footage",
+                  "generated-image",
+                  "generated-video",
+                  "mixed"
+                ],
+                "type": "string"
+              },
+              "species": {
+                "type": "string"
+              },
+              "subject_kind": {
+                "enum": [
+                  "human",
+                  "digital-human",
+                  "real-animal",
+                  "cgi-animal",
+                  "fictional-creature",
+                  "anthropomorphic",
+                  "mixed",
+                  "non-character"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "character_id"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "production_medium": {
+          "enum": [
+            "2d-drawn-vector",
+            "3d-cgi-rigged",
+            "ai-digital-human",
+            "ai-digital-creature",
+            "live-action-footage",
+            "hybrid-live-action-cgi"
+          ],
+          "type": "string"
+        },
+        "production_profile_id": {
+          "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+          "type": "string"
+        },
+        "project_id": {
+          "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$",
+          "type": "string"
+        },
+        "schema_version": {
+          "enum": [
+            "2.5"
+          ],
+          "type": "string"
+        },
+        "skill_profiles": {
+          "items": {
+            "pattern": "^skill-[a-z0-9][a-z0-9\\-]*$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "source_media_type": {
+          "enum": [
+            "script-only",
+            "reference-image",
+            "reference-video",
+            "captured-footage",
+            "generated-image",
+            "generated-video",
+            "mixed"
+          ],
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "approved",
+            "deprecated"
+          ],
+          "type": "string"
+        },
+        "subject_types": {
+          "items": {
+            "enum": [
+              "human",
+              "digital-human",
+              "real-animal",
+              "cgi-animal",
+              "fictional-creature",
+              "anthropomorphic",
+              "mixed",
+              "non-character"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "version": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "visual_style": {
+          "enum": [
+            "flat-2d-vector",
+            "hand-drawn-2d",
+            "illustrated-2d",
+            "anime",
+            "cartoon-2d",
+            "stylized-3d",
+            "semi-realistic-3d",
+            "photorealistic-3d-cgi",
+            "photorealistic-digital-human",
+            "photorealistic-digital-animal-creature",
+            "mixed",
+            "captured-live-action"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "production_profile_id",
+        "production_medium",
+        "visual_style",
+        "source_media_type",
+        "motion_methods",
+        "subject_types",
+        "interaction_pattern",
+        "is_live_action_footage",
+        "version",
+        "status"
+      ],
+      "type": "object"
+    },
+    "registration_evidence": {
+      "additionalProperties": false,
+      "description": "Registration modes only: the evidence the mode requires. Which fields are required depends on the mode and is enforced by the router: REGISTER_CHARACTER needs explicit_authorisation, name, unique_id and approved_reference; REGISTER_VOICE_PROFILE needs explicit_authorisation, rights_consent, character_link and reference_audio; REGISTER_SOUND_ASSET needs explicit_instruction, source, licence_or_permission, owner and project_scope.",
+      "properties": {
+        "approved_reference": {
+          "type": "boolean"
+        },
+        "character_link": {
+          "type": "string"
+        },
+        "explicit_authorisation": {
+          "type": "boolean"
+        },
+        "explicit_instruction": {
+          "type": "boolean"
+        },
+        "licence_or_permission": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "project_scope": {
+          "type": "string"
+        },
+        "reference_audio": {
+          "type": "boolean"
+        },
+        "rights_consent": {
+          "type": "boolean"
+        },
+        "source": {
+          "type": "string"
+        },
+        "unique_id": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "repair_authorised": {
+      "description": "VIDEO_QC only: whether regeneration as a repair is authorised. Without it, VIDEO_QC may inspect and report defects but never regenerate.",
+      "type": "boolean"
+    },
+    "requested_skills": {
+      "description": "Explicitly requested skill selections. Each selection must name its source, so the plan records why the skill was selected; scope narrows the selection to named shots and subjects.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "scope": {
+            "additionalProperties": false,
+            "properties": {
+              "shots": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "subjects": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "skill": {
+            "enum": [
+              "command-authority",
+              "resource-management",
+              "character-consistency",
+              "voice-consistency",
+              "production-systems",
+              "language-authenticity",
+              "humanized-production",
+              "cinematic-power",
+              "emotional-performance",
+              "live-action-vfx",
+              "kids-family-animation",
+              "explainer-animation",
+              "realistic-person",
+              "agency-advertising",
+              "video-regeneration"
+            ],
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "user-request",
+              "profile-dimension",
+              "hint",
+              "canonical-dependency",
+              "mode-default",
+              "router-default"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "skill",
+          "source"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "rights_provenance_checked": {
+      "description": "REMAKE_OR_TRANSFORM only: the rights provenance of the source material was checked.",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "enum": [
+        "2.4"
+      ],
+      "type": "string"
+    },
+    "shots": {
+      "description": "Per-shot scope table. A shot's style lock binds the shots it covers, per subject per shot.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "is_live_action_footage": {
+            "type": "boolean"
+          },
+          "shot_id": {
+            "type": "string"
+          },
+          "source_media": {
+            "enum": [
+              "script-only",
+              "reference-image",
+              "reference-video",
+              "captured-footage",
+              "generated-image",
+              "generated-video",
+              "mixed"
+            ],
+            "type": "string"
+          },
+          "subject_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "visual_style": {
+            "enum": [
+              "flat-2d-vector",
+              "hand-drawn-2d",
+              "illustrated-2d",
+              "anime",
+              "cartoon-2d",
+              "stylized-3d",
+              "semi-realistic-3d",
+              "photorealistic-3d-cgi",
+              "photorealistic-digital-human",
+              "photorealistic-digital-animal-creature",
+              "mixed",
+              "captured-live-action"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "shot_id"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "subjects": {
+      "description": "Per-subject scope table. A subject's capabilities and constraints apply only to that subject, never to another subject in the same production.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "articulation_target": {
+            "enum": [
+              "human-mouth-lips",
+              "bird-beak",
+              "animal-muzzle",
+              "creature-jaw-mandibles",
+              "other"
+            ],
+            "type": "string"
+          },
+          "shots": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "speaking": {
+            "type": "boolean"
+          },
+          "species": {
+            "type": "string"
+          },
+          "subject_id": {
+            "type": "string"
+          },
+          "subject_kind": {
+            "enum": [
+              "human",
+              "digital-human",
+              "real-animal",
+              "cgi-animal",
+              "fictional-creature",
+              "anthropomorphic",
+              "mixed",
+              "non-character"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_id"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "task_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "task_id",
+    "intent_mode"
+  ],
+  "title": "Skill routing request",
+  "type": "object"
+}

@@ -1,0 +1,16 @@
+# CF-WO-P1-002-R1-R1: files whose raw bytes the routing catalog hashes
+# must check out with LF on every platform. A Windows checkout
+# converting LF to CRLF changes their SHA-256 and fails the catalog
+# freshness checks (CF-P1-002-CATALOG) — PR run #237 proved it: both
+# windows-compat jobs failed exactly the source-SHA-256 and
+# skill-fingerprint checks. The checkout contract is pinned here,
+# not in code: the fingerprint semantics are unchanged and no hash
+# is ever normalised. Rebuild the catalog, never hand-edit it; see
+# docs/runtime/SKILL_ROUTING_RUNTIME.md ("The catalog").
+architecture/SKILL_ROUTING_MATRIX.yaml eol=lf
+architecture/WORKFLOW_GRAPH.yaml eol=lf
+architecture/intent-modes.yaml eol=lf
+architecture/COMPANION_CAPABILITY_REGISTRY.yaml eol=lf
+architecture/AGENT_COMPATIBILITY_MATRIX.yaml eol=lf
+skills/*/SKILL.md eol=lf
+registry/routing-catalog.json eol=lf

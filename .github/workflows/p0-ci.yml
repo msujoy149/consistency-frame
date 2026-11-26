@@ -13,7 +13,7 @@
 # natively on Windows (Python 3.10 and 3.12), including the real
 # multiprocessing first-run race test under the spawn start
 # method. The Windows job produces no last-run.json artefact —
-# its evidence is the job log (the three suites' PASS lines).
+# its evidence is the job log (the four suites' PASS lines).
 name: P0 CI
 
 on:
@@ -34,8 +34,14 @@ jobs:
           bash --version | head -1
           python3 --version
           git --version
-      - name: Install PyYAML (needed by scripts/validate-repo.py check 8 and tests/test_routing.py)
+      - name: Install PyYAML (needed by scripts/validate-repo.py check 8, tests/test_routing.py and scripts/generate-routing-catalog.py)
         run: python3 -m pip install --quiet pyyaml
+      - name: Check routing catalog is fresh
+        # CF-WO-P1-002: the compiled catalog (registry/routing-catalog.json)
+        # must match the canonical routing sources. This step fails the
+        # job when it is stale; tests/run-tests.sh runs the same check
+        # (CF-P1-002-CATALOG), so local and CI agree.
+        run: python3 scripts/generate-routing-catalog.py --check
       - name: Run P0 tests
         run: bash tests/run-tests.sh
       - name: Upload test results
@@ -51,6 +57,9 @@ jobs:
     # without os.fchmod (absent on Windows Python 3.10-3.12),
     # and the first-run race test must pass under the spawn
     # start method — spawn is the only start method on Windows.
+    # (CF-WO-P1-002-R1): the skill router suite runs here too —
+    # the router is platform-independent runtime code and gets
+    # native verification on both matrix versions.
     # Runs on pull_request (and the same push branches as
     # p0-validate); the P1 branch is deliberately NOT added to
     # the push list — the PR run is the CI evidence, as in
@@ -78,11 +87,21 @@ jobs:
         run: |
           python --version
           python -c "import multiprocessing, sys; print('start method:', multiprocessing.get_start_method()); print(sys.platform)"
+      - name: Install PyYAML (needed by tests/test_routing.py and scripts/generate-routing-catalog.py)
+        # CF-WO-P1-002-R1-R1: the router suite runs
+        # scripts/generate-routing-catalog.py --check, which needs
+        # PyYAML. p0-validate installs it; windows-compat never
+        # did, so the router step failed in PR run #237 with
+        # "generate-routing-catalog: PyYAML is required
+        # (pip install pyyaml)". `python` (not `python3`) is the
+        # interpreter on the Windows runner.
+        shell: bash
+        run: python -m pip install --quiet pyyaml
       - name: Run local session runtime suite
         # bash (Git Bash on the Windows runner) so a non-zero
         # exit fails the step immediately, the same as on Linux.
         # One step per suite (R2 follow-up): a failure in one
-        # suite must not hide the other two — the single-step
+        # suite must not hide the others — the single-step
         # form stopped at the first failure and left the other
         # suites unrun. The race test (FIRST-01..07) runs for
         # real here under spawn; its PASS lines must appear in
@@ -95,3 +114,10 @@ jobs:
       - name: Run private voice security suite
         shell: bash
         run: python tests/test_private_voice_security.py
+      - name: Run skill router suite
+        # CF-WO-P1-002-R1: the router is platform-independent
+        # runtime code; it gets native Windows verification like
+        # the other three runtime suites. One step per suite: a
+        # failure in one suite must not hide the others.
+        shell: bash
+        run: python tests/test_skill_router.py

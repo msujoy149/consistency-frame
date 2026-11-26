@@ -1,0 +1,2799 @@
+{
+  "agents": [
+    {
+      "agent_id": "agent-antigravity",
+      "knowledge_pack_path": "PACKAGED (.agents/skills/ + AGENTS.md/GEMINI.md) per adapter record \u2014 not tested.",
+      "name": "Antigravity",
+      "native_skill_install": "NOT_TESTED",
+      "native_skill_install_evidence": "registry/adapters.json adapter-antigravity (integration PACKAGED, .agents/skills/ + AGENTS.md/GEMINI.md); architecture/platform-capabilities.md",
+      "notes": "Packaged path claimed by the adapter record; no conformance test has been run.",
+      "status": "untested",
+      "verification_evidence": "none in this account",
+      "verification_status": "NOT_TESTED",
+      "verified": false
+    },
+    {
+      "agent_id": "agent-chatgpt",
+      "knowledge_pack_path": "PACKAGED (upload skills/ via Skills tab) per adapter record \u2014 not tested.",
+      "name": "ChatGPT",
+      "native_skill_install": "NOT_TESTED",
+      "native_skill_install_evidence": "registry/adapters.json adapter-chatgpt (integration PACKAGED, upload skills/ via Skills tab); architecture/platform-capabilities.md",
+      "notes": "ChatGPT is not an agent host with a native skill runtime in the Brain's sense; the packaged upload path is claimed by the adapter record only. Decisions only \u2014 never browser/UI work \u2014 per the user's standing rule for ChatGPT collaboration.",
+      "status": "untested",
+      "verification_evidence": "none in this account (a 2026-11-22 collaboration workflow with ChatGPT was stopped by the user; no skill-install conformance test was run)",
+      "verification_status": "NOT_TESTED",
+      "verified": false
+    },
+    {
+      "agent_id": "agent-claude",
+      "knowledge_pack_path": "Knowledge Pack (Brain Instructions + Skills + Project Context + Workflow Contracts) \u2014 the documented path for hosts without a native install; not tested.",
+      "name": "Claude",
+      "native_skill_install": "NOT_TESTED",
+      "native_skill_install_evidence": "none \u2014 no adapter record in registry/adapters.json for Claude (the app/API host, distinct from Claude Code)",
+      "notes": "No adapter record exists yet. A knowledge pack is the intended path; it has not been tried.",
+      "status": "untested",
+      "verification_evidence": "none in this account",
+      "verification_status": "NOT_TESTED",
+      "verified": false
+    },
+    {
+      "agent_id": "agent-claude-code",
+      "knowledge_pack_path": "NATIVE (plugin marketplace) per adapter record \u2014 not tested.",
+      "name": "Claude Code",
+      "native_skill_install": "NOT_TESTED",
+      "native_skill_install_evidence": "registry/adapters.json adapter-claude-code (integration NATIVE, plugin marketplace); architecture/platform-capabilities.md",
+      "notes": "Adapter record claims a native plugin-marketplace path; no conformance test has been run.",
+      "status": "untested",
+      "verification_evidence": "none in this account",
+      "verification_status": "NOT_TESTED",
+      "verified": false
+    },
+    {
+      "agent_id": "agent-codex",
+      "knowledge_pack_path": "NATIVE (plugin manifest) per adapter record \u2014 not tested.",
+      "name": "Codex",
+      "native_skill_install": "NOT_TESTED",
+      "native_skill_install_evidence": "registry/adapters.json adapter-codex (integration NATIVE, plugin manifest); architecture/platform-capabilities.md",
+      "notes": "Adapter record claims a native plugin-manifest path; no conformance test has been run.",
+      "status": "untested",
+      "verification_evidence": "none in this account",
+      "verification_status": "NOT_TESTED",
+      "verified": false
+    },
+    {
+      "agent_id": "agent-cursor",
+      "knowledge_pack_path": "Knowledge Pack (Brain Instructions + Skills + Project Context + Workflow Contracts) \u2014 the documented path for hosts without a native install; not tested.",
+      "name": "Cursor",
+      "native_skill_install": "NOT_TESTED",
+      "native_skill_install_evidence": "none \u2014 no adapter record in registry/adapters.json for Cursor",
+      "notes": "No adapter record exists yet. A knowledge pack is the intended path; it has not been tried.",
+      "status": "untested",
+      "verification_evidence": "none in this account",
+      "verification_status": "NOT_TESTED",
+      "verified": false
+    },
+    {
+      "agent_id": "agent-gemini-cli",
+      "knowledge_pack_path": "NATIVE (extension) per adapter record \u2014 not tested.",
+      "name": "Gemini CLI",
+      "native_skill_install": "NOT_TESTED",
+      "native_skill_install_evidence": "registry/adapters.json adapter-gemini-cli (integration NATIVE, extension); architecture/platform-capabilities.md",
+      "notes": "Adapter record claims a native extension path; no conformance test has been run.",
+      "status": "untested",
+      "verification_evidence": "none in this account",
+      "verification_status": "NOT_TESTED",
+      "verified": false
+    },
+    {
+      "agent_id": "agent-github-copilot",
+      "knowledge_pack_path": "Knowledge Pack (Brain Instructions + Skills + Project Context + Workflow Contracts) \u2014 the documented path for hosts without a native install; not tested.",
+      "name": "GitHub Copilot",
+      "native_skill_install": "NOT_TESTED",
+      "native_skill_install_evidence": "none \u2014 no adapter record in registry/adapters.json for GitHub Copilot",
+      "notes": "No adapter record exists yet. A knowledge pack is the intended path; it has not been tried.",
+      "status": "untested",
+      "verification_evidence": "none in this account",
+      "verification_status": "NOT_TESTED",
+      "verified": false
+    },
+    {
+      "agent_id": "agent-muse",
+      "knowledge_pack_path": "Clone the repo into the workspace and read skills/ from there; `bash setup.sh` syncs local .agents/skills/ copies and (opt-in) the bundled components. No native custom-SKILL.md install flow is documented by Meta.",
+      "name": "Muse",
+      "native_skill_install": "UNSUPPORTED",
+      "native_skill_install_evidence": "architecture/platform-capabilities.md (\"Muse correction (P0, F3)\"); registry/adapters.json adapter-muse",
+      "notes": "The Brain's home host. The repo is installed as a versioned knowledge pack, not as a native skill install.",
+      "status": "verified",
+      "verification_evidence": "Used daily in this account since 2026-11-12 (repo work, P0 v2.3 + v2.4 implementation, tests, blog). The knowledge-pack path is the path this account actually uses.",
+      "verification_status": "VERIFIED",
+      "verified": true
+    },
+    {
+      "agent_id": "agent-opencode",
+      "knowledge_pack_path": "NATIVE (.opencode/skills) per adapter record \u2014 not tested.",
+      "name": "OpenCode",
+      "native_skill_install": "NOT_TESTED",
+      "native_skill_install_evidence": "registry/adapters.json adapter-opencode (integration NATIVE, .opencode/skills); architecture/platform-capabilities.md",
+      "notes": "Adapter record claims a native path; no conformance test has been run.",
+      "status": "untested",
+      "verification_evidence": "none in this account",
+      "verification_status": "NOT_TESTED",
+      "verified": false
+    }
+  ],
+  "catalog_version": "2.4",
+  "companions": [
+    {
+      "capabilities": [
+        {
+          "capability": "Pipeline-based video production (script -> assets -> edit -> render)",
+          "evidence": "components/openmontage/AGENT_GUIDE.md (\"Rule Zero\"); lib/pipeline_loader.py; pipeline_defs/",
+          "evidence_level": "present_locally",
+          "notes": "The pipeline system is the production path. Individual pipelines were not executed in this P0."
+        },
+        {
+          "capability": "Reference-video analysis (transcript, scene detection, frame sampling)",
+          "evidence": "components/openmontage/AGENT_GUIDE.md (\"Reference Video Entry Point\"); lib/source_media_review.py, clip_embedder.py; skills/meta/video-reference-analyst.md (referenced by the guide)",
+          "evidence_level": "present_locally",
+          "notes": "Workflow documented in the agent contract; not exercised in this P0."
+        },
+        {
+          "capability": "Shot prompt building, scene pacing verification, playbook generation",
+          "evidence": "components/openmontage/lib/shot_prompt_builder.py, verify_scene_pacing.py, playbook_generator.py, scoring.py, variation_checker.py, slideshow_risk.py, delivery_promise.py",
+          "evidence_level": "present_locally",
+          "notes": "Library modules present; not exercised in this P0."
+        },
+        {
+          "capability": "Asset cache and checkpoints",
+          "evidence": "components/openmontage/lib/asset_cache.py, checkpoint.py; schemas/checkpoints/",
+          "evidence_level": "present_locally",
+          "notes": "Present on disk; not exercised in this P0."
+        },
+        {
+          "capability": "Editorial schemas (artifacts, pipelines, styles, tools)",
+          "evidence": "components/openmontage/schemas/{artifacts,checkpoints,pipelines,styles,tools}/",
+          "evidence_level": "present_locally",
+          "notes": "Schema directories present."
+        },
+        {
+          "capability": "Paid third-party provider routes (image/video/TTS/music generation via fal, Kling, Veo, Sora, OpenAI, Gemini, ElevenLabs, Lyria, LTX and others)",
+          "commercial_use_approved": false,
+          "commercial_use_note": "NOT commercially approved in this registry: no live paid call was made, and no provider's commercial terms were verified here. Each route is a separate paid commercial service \u2014 its own account, keys, pricing and terms apply, and the user's explicit approval is required per call. A named provider in this list is not a verified commercial provider; do not present any of them as approved until its terms are checked and recorded.",
+          "commercial_use_reason": "unverified",
+          "evidence": "components/openmontage/docs/PROVIDERS.md (provider guide, incl. \"No live paid O3 generation was validated\")",
+          "evidence_level": "present_locally",
+          "notes": "Documented in the companion's provider guide only. Every route needs its own API key and is a paid call. No live paid call was made in this account. The Brain must never claim these as free, local, or tested. A paid call needs the user's explicit approval and keys."
+        },
+        {
+          "capability": "Free stock media routes (Pexels, Pixabay) and free-tier TTS (Google TTS, Piper local TTS)",
+          "evidence": "components/openmontage/docs/PROVIDERS.md (\"Quick Start: What Should I Set Up?\")",
+          "evidence_level": "present_locally",
+          "notes": "Documented in the provider guide only; not exercised in this account."
+        },
+        {
+          "capability": "Local install / preflight",
+          "evidence": "components/openmontage/Makefile (setup, preflight, test, test-contracts targets)",
+          "evidence_level": "exercised_recorded_run",
+          "notes": "Recorded 2026-11-12: `make setup` / `make preflight` passed on this machine. Not re-run in the v2.4 P0; the record stands from 2026-11-12.",
+          "run_reference": "2026-11-12 \u2014 `make setup` / `make preflight` passed on this machine; recorded in the project record (2026-11-12). Not re-run in the v2.4 P0; the record stands from 2026-11-12."
+        }
+      ],
+      "commercial_use_approved": false,
+      "commercial_use_note": "The application code itself is AGPL-3.0, but no production path through OpenMontage is commercially approved in this registry: no paid provider route has been exercised or had its commercial terms verified here, and no rendered video from OpenMontage was produced in this account. A paid call needs the user's explicit approval and keys, and its provider's own terms must be checked at production time.",
+      "commercial_use_reason": "unverified",
+      "companion_id": "companion-openmontage",
+      "explicitly_not_claimed": [
+        "OpenMontage is not a voice engine and not a character registry.",
+        "No paid provider route is verified, free, or local.",
+        "No rendered video from OpenMontage was produced in this account.",
+        {
+          "No paid provider route is commercially approved in this registry": "each provider's commercial terms are unverified here and must be checked before any commercial production use."
+        }
+      ],
+      "interfaces": [
+        {
+          "evidence": "components/openmontage/AGENT_GUIDE.md, PROJECT_CONTEXT.md",
+          "evidence_level": "present_locally",
+          "name": "Agent contract (AGENT_GUIDE.md / PROJECT_CONTEXT.md)",
+          "notes": "Rule Zero - all production goes through a pipeline. Onboarding skill and reference-video-analyst workflow are first-class entry points. The Brain's instructions must follow this contract when directing OpenMontage."
+        },
+        {
+          "evidence": "components/openmontage/pipeline_defs/ (13 files)",
+          "evidence_level": "present_locally",
+          "name": "Pipeline definitions (YAML)",
+          "notes": "animated-explainer, animation, avatar-spokesperson, character-animation, cinematic, clip-factory, documentary-montage, framework-smoke, hybrid, localization-dub, podcast-repurpose, screen-demo, talking-head."
+        },
+        {
+          "evidence": "components/openmontage/requirements.txt (fastapi, uvicorn, watchfiles \u2014 \"Backlot - the living storyboard (local board server)\")",
+          "evidence_level": "present_locally",
+          "name": "Local board server (\"Backlot\")",
+          "notes": "Local-only server; not a hosted service."
+        },
+        {
+          "evidence": "components/openmontage/remotion-composer/ (package.json, src/, SCENE_TYPES.md)",
+          "evidence_level": "present_locally",
+          "name": "Remotion composer (code-based rendering)",
+          "notes": "Code-drawn video composition; present on disk, not exercised in this P0."
+        },
+        {
+          "evidence": "components/openmontage/render-demo.sh, render_demo.py",
+          "evidence_level": "present_locally",
+          "name": "Demo renderer",
+          "notes": "Present on disk; not exercised in this P0."
+        }
+      ],
+      "licence": "AGPL-3.0",
+      "licence_evidence": "components/openmontage/LICENSE (GNU AFFERO GENERAL PUBLIC LICENSE v3); README badge \"license-AGPLv3\"",
+      "licence_scope": "OpenMontage application code only (AGPL-3.0; commercial use of the application itself is permitted under AGPL terms \u2014 see components/openmontage/LICENSE). OpenMontage bundles no voice/video model weights, so it carries no model-weight noncommercial restriction of its own. Paid third-party provider routes are separate commercial services with their own terms, accounts and keys (see the paid-routes capability below).",
+      "local_path": "components/openmontage",
+      "name": "OpenMontage",
+      "pinned_commit": "fecb9a1e3cc23ef84de30b272059457a427f16f8",
+      "pinned_commit_evidence": "setup.sh (full SHA pin)",
+      "role": "Video Production/Editing Specialist",
+      "rules": [
+        "The Brain directs OpenMontage by instruction (pipeline + script + plan contracts); it never edits OpenMontage's internal code.",
+        "All production goes through a pipeline (Rule Zero); the Brain does not improvise outside the pipeline system.",
+        "No paid provider call without the user's explicit approval and keys.",
+        "Provider pricing, model availability and terms change; re-probe the provider guide before a production decision."
+      ],
+      "source": "https://github.com/OpenMontageInc/OpenMontage",
+      "version": "not_stated_in_local_copy"
+    },
+    {
+      "capabilities": [
+        {
+          "capability": "Text-to-speech generation (OmniVoice engine)",
+          "commercial_use_approved": false,
+          "commercial_use_note": "TECHNICALLY CAPABLE (exercised in recorded runs) but NOT COMMERCIALLY APPROVED: the OmniVoice weights it runs on are CC-BY-NC (see companion `models`). Must NOT be used for monetised/commercial YouTube production. Non-commercial / test use only until a verified commercial voice provider exists.",
+          "commercial_use_reason": "noncommercial_licence",
+          "evidence": "components/voicestudio/backend/engines/omnivoice_gguf/, omnivoice_subprocess/; backend/api/routers/generation.py, tts_stream.py",
+          "evidence_level": "exercised_recorded_run",
+          "notes": "OmniVoice model (3,267,470,260 B, CC-BY-NC, Hugging Face download, never bundled) generated Bengali, English and Hindi speech in the recorded 2026-11-12/13 runs; user verdict on Bengali output \"very beautiful, very natural\". Instruct tags are FIXED (gender + age + pitch); free-form instruct text is unsupported.",
+          "run_reference": "2026-11-12/13 \u2014 OmniVoice model (3,267,470,260 B, CC-BY-NC, Hugging Face download, never bundled) generated Bengali, English and Hindi speech in the recorded runs; user verdict on Bengali output 'very beautiful, very natural', recorded in the project record (2026-11-12/13)."
+        },
+        {
+          "capability": "Zero-shot voice cloning from reference audio",
+          "commercial_use_approved": false,
+          "commercial_use_note": "Technically capable (exercised in the recorded sound test) but NOT commercially approved: cloning runs on the CC-BY-NC OmniVoice weights. Same restriction as TTS above.",
+          "commercial_use_reason": "noncommercial_licence",
+          "evidence": "components/voicestudio/backend/mcp_server.py (clone_voice); backend/api/routers/voice_convert.py, profiles.py",
+          "evidence_level": "exercised_recorded_run",
+          "notes": "Three unnamed test voices (9-year-old girl, 30-year-old man, 70-year-old woman) cloned and used across Bengali/English/Hindi in the 2026-11-13 sound test; user verdict \"Good\". Cloning needs rights/consent for a real person's voice (see schemas/voice-profile.json).",
+          "run_reference": "2026-11-13 \u2014 sound test: three unnamed test voices (9-year-old girl, 30-year-old man, 70-year-old woman) cloned and used across Bengali/English/Hindi; user verdict 'Good', recorded in the project record (2026-11-13)."
+        },
+        {
+          "capability": "Voice design from a text description",
+          "evidence": "components/voicestudio/backend/mcp_server.py (describe_voice, design_voice); backend/api/routers/describe_voice.py, archetypes.py, personalities.py",
+          "evidence_level": "present_locally",
+          "notes": "Code and MCP tools present; no design-from-description run was recorded in this account."
+        },
+        {
+          "capability": "Dubbing (translate + regenerate speech)",
+          "evidence": "components/voicestudio/backend/api/routers/dub_core.py, dub_generate.py, dub_translate.py, dub_export.py, sonitranslate.py",
+          "evidence_level": "present_locally",
+          "notes": "Routers present; no dubbing run was recorded in this account."
+        },
+        {
+          "capability": "Transcription / dictation (speech to text)",
+          "evidence": "components/voicestudio/backend/mcp_server.py (transcribe); backend/api/routers/dictation.py, capture.py; backend/engines/whisper_cpp/",
+          "evidence_level": "present_locally",
+          "notes": "Code present; no transcription run was recorded in this account."
+        },
+        {
+          "capability": "Sound-effect generation",
+          "evidence": "components/voicestudio/backend/api/routers/sfx.py; backend/engines/moss_sfx/",
+          "evidence_level": "present_locally",
+          "notes": "Router + engine present; no SFX run was recorded in this account."
+        },
+        {
+          "capability": "Audiobook / long-form / batch jobs",
+          "evidence": "components/voicestudio/backend/api/routers/audiobook.py, longform_jobs.py, batch.py",
+          "evidence_level": "present_locally",
+          "notes": "Routers present; no long-form run was recorded in this account."
+        },
+        {
+          "capability": "Voice profiles and personas management",
+          "evidence": "components/voicestudio/backend/api/routers/profiles.py, personas.py, archetypes.py",
+          "evidence_level": "present_locally",
+          "notes": "Routers present. The Brain links a character to a voice profile by ID only (schemas/voice-profile.json); voice data is never embedded in a character record."
+        },
+        {
+          "capability": "Additional TTS engines (CosyVoice, IndexTTS, DotsTTS, MossTTS, PocketTTS, Supertonic, VoxCPM, Confucius4, MingTTS, Audiocpp)",
+          "commercial_use_approved": false,
+          "commercial_use_note": "NOT commercially approved: none of these engines has a reviewed commercial clearance in this registry. components/voicestudio/backend/config/model_licenses.json lists every model with commercial_use false and review_status unreviewed (metadata labels only, e.g. apache-2.0 / mit / cc-by-4.0) except the noncommercial ones (k2-fsa/OmniVoice, Serveurperso/OmniVoice-GGUF, facebook/nllb-200-distilled-600M, mlx-community/Llama-OuteTTS-1.0-1B-4bit, csukuangfj2/sherpa-onnx-pocket-tts-int8-2026-01-26); its scope note states 'No commercial clearance is asserted by the initial inventory'. A permissive-looking metadata label is NOT permission \u2014 each engine's weights, tokenizer and component chain must be reviewed per model before any commercial use. No commercially usable alternative was verified in this task.",
+          "commercial_use_reason": "unverified",
+          "evidence": "components/voicestudio/backend/engines/ (cosyvoice_gguf, cosyvoice_subprocess, indextts, dots_tts, moss_tts_nano_subprocess, moss_tts_v15, pockettts, supertonic3, voxcpm2_subprocess, confucius4, ming_tts, audiocpp)",
+          "evidence_level": "present_locally",
+          "notes": "Engine directories present. Only OmniVoice was exercised in recorded runs; the other engines are NOT run-verified here."
+        },
+        {
+          "capability": "Speech in 646 languages",
+          "evidence": "components/voicestudio/README.md headline (\"Clone, design, dub, dictate, transcribe and narrate in 646 languages\")",
+          "evidence_level": "upstream_inspected_pinned_commit",
+          "notes": "The README headline was inspected at the pinned commit (2f2f5a9b0e982c6147efc6baaeae62936f29b79b); the count itself (646) was NOT independently verified and is NOT an exercised claim. Verified by run: Bengali, English, Hindi only."
+        },
+        {
+          "capability": "Cloud sync",
+          "evidence": "components/voicestudio/backend/api/routers/cloud_sync.py",
+          "evidence_level": "present_locally",
+          "notes": "Router present; never used. The Brain keeps private voice data in the local private overlay, never in a cloud sync."
+        },
+        {
+          "capability": "Telephony (Twilio)",
+          "evidence": "components/voicestudio/backend/api/routers/telephony_twilio.py",
+          "evidence_level": "present_locally",
+          "notes": "Router present; never used; out of scope for video production."
+        }
+      ],
+      "commercial_use_approved": false,
+      "commercial_use_note": "No voice model in this companion is cleared for commercial production. The default model (k2-fsa/OmniVoice) has CC-BY-NC weights \u2014 non-commercial only \u2014 so monetised/commercial YouTube production MUST NOT use it. No commercially usable voice provider has been verified in this registry; the commercial voice adapter is unsupported until one is. See `models` below.",
+      "commercial_use_reason": "noncommercial_licence",
+      "companion_id": "companion-voicestudio",
+      "explicitly_not_claimed": [
+        "VoiceStudio is not a video generator and not a video editor.",
+        "No language count beyond Bengali/English/Hindi is verified here.",
+        "No cloud or hosted VoiceStudio service is used by the Brain.",
+        {
+          "VoiceStudio/OmniVoice is NOT approved for commercial production": "the bundled OmniVoice weights are CC-BY-NC (non-commercial only). Monetised/commercial YouTube production must NOT use OmniVoice-generated voices. Technical capability (recorded runs) is not commercial approval."
+        },
+        "No commercially usable voice provider is verified in this registry. The commercial voice adapter is unsupported until a provider with a verified commercial licence is recorded here.",
+        {
+          "No capability in this registry is production_verified": "no production run exists in this account."
+        }
+      ],
+      "interfaces": [
+        {
+          "evidence": "components/voicestudio/backend/main.py (routers in backend/api/routers/)",
+          "evidence_level": "exercised_recorded_run",
+          "name": "HTTP API (FastAPI)",
+          "notes": "Local API on 127.0.0.1:3900 in the recorded runs. `bun run setup:api` / `dev:api` per docs/06-installation.md.",
+          "run_reference": "2026-11-12/13 \u2014 OmniVoice TTS runs via the local API on 127.0.0.1:3900 (Bengali, English, Hindi speech generated); user verdict recorded in the project record (2026-11-12/13)."
+        },
+        {
+          "evidence": "components/voicestudio/backend/mcp_server.py (create_mcp_server; 11 tools)",
+          "evidence_level": "present_locally",
+          "name": "MCP server",
+          "notes": "Tools on disk \u2014 generate_speech, list_voices, list_personalities, list_languages, transcribe, check_health, get_voice, get_recent_history, clone_voice, describe_voice, design_voice."
+        },
+        {
+          "evidence": "components/voicestudio/cli/",
+          "evidence_level": "present_locally",
+          "name": "CLI",
+          "notes": "CLI directory present; individual commands not exercised in this P0."
+        },
+        {
+          "evidence": "components/voicestudio/electron/",
+          "evidence_level": "present_locally",
+          "name": "Electron app",
+          "notes": "Desktop app present; not used by the Brain (the Brain uses the local API/MCP)."
+        }
+      ],
+      "licence": "AGPL-3.0",
+      "licence_evidence": "components/voicestudio/LICENSE (GNU AFFERO GENERAL PUBLIC LICENSE v3)",
+      "licence_scope": "VoiceStudio application code ONLY (Electron app, FastAPI backend, CLI, build/packaging files). Commercial and internal business use of the application itself is permitted under AGPL-3.0 (see components/voicestudio/LICENSE-NOTICE.md). Model weights, tokenizers and other third-party assets keep their OWN terms; the application licence does not grant or summarise rights under those separate terms.",
+      "local_path": "components/voicestudio",
+      "models": [
+        {
+          "code_licence": "Apache-2.0",
+          "commercial_use_approved": false,
+          "commercial_use_evidence": "Model card licence section, https://huggingface.co/k2-fsa/OmniVoice \u2014 'Our code is released under the Apache 2.0 License. The pre-trained model is licensed under the CC-BY-NC due to constraints from its training data (e.g., Emilia).' (fetched 2026-11-22). Corroborated locally: components/voicestudio/LICENSE-NOTICE.md ('The default k2-fsa/OmniVoice model card identifies its code as Apache-2.0 and pretrained weights as CC-BY-NC'); components/voicestudio/backend/config/model_licenses.json entry k2-fsa/OmniVoice (license 'CC-BY-NC (version unspecified); Higgs Audio 2; Meta Llama 3', commercial_use false, review_status noncommercial, commercial_inference restricted, commercial_outputs unknown).",
+          "commercial_use_reason": "noncommercial_licence",
+          "model": "k2-fsa/OmniVoice",
+          "model_version": "pinned revision c5fdb5ccb189668d56333f77ba2629f4cd7535f4 (per components/voicestudio/backend/config/model_licenses.json; runtime pin in backend/services/hf_revisions.py)",
+          "role": "Default TTS model weights \u2014 downloaded from Hugging Face at install, never bundled in the repo",
+          "weights_licence": "CC-BY-NC (CC version unspecified on the model card)"
+        },
+        {
+          "code_licence": "Apache-2.0 (upstream OmniVoice code; GGUF runtime omnivoice.cpp is MIT)",
+          "commercial_use_approved": false,
+          "commercial_use_evidence": "components/voicestudio/backend/config/model_licenses.json entry Serveurperso/OmniVoice-GGUF (license 'CC-BY-NC-4.0; Higgs Audio 2; Meta Llama 3', commercial_use false, review_status noncommercial, commercial_inference restricted); components/voicestudio/docs/model-credits.md ('its metadata names CC BY-NC 4.0'); components/voicestudio/docs/engines/omnivoice-gguf.md (GPU prompt 'says that the GGUF model is licensed for noncommercial use only'). Live Hugging Face page https://huggingface.co/Serveurperso/OmniVoice-GGUF could NOT be fetched on 2026-11-22 (HTTP 429 after 3 attempts) \u2014 the CC-BY-NC-4.0 record rests on the three local sources above, not on a live fetch.",
+          "commercial_use_reason": "noncommercial_licence",
+          "licence_conflict_note": "CONFLICT, unresolved in favour of the restrictive record: components/voicestudio/backend/engines/omnivoice_gguf/README.md claims the GGUF weights are Apache-2.0 ('Same license as the upstream k2-fsa/OmniVoice it derives from'). That claim is contradicted by model_licenses.json, model-credits.md and docs/engines/omnivoice-gguf.md (all CC-BY-NC / noncommercial only), and the upstream VoiceStudio README now says only 'review the derivative model terms' for the GGUF engine. The Apache-2.0 claim for the GGUF weights is NOT adopted here; the noncommercial record governs until primary upstream evidence proves otherwise.",
+          "model": "Serveurperso/OmniVoice-GGUF",
+          "model_version": "pinned revision 361609388ae572a820d085185bbbe2a2aac4b30e (per quant_map.json _meta.source_commit_sha)",
+          "role": "GGUF quantised variant of k2-fsa/OmniVoice, used by the omnivoice_gguf engine (pinned revision 361609388ae572a820d085185bbbe2a2aac4b30e; runtime omnivoice.cpp 040c8b344d8c670ce1475194751d119b5ef82c78, per components/voicestudio/backend/engines/omnivoice_gguf/quant_map.json)",
+          "weights_licence": "CC-BY-NC-4.0"
+        },
+        {
+          "code_licence": "Apache-2.0",
+          "commercial_use_approved": false,
+          "commercial_use_evidence": "components/voicestudio/LICENSE-NOTICE.md ('The bundled omnivoice/ Python package \u2014 the underlying TTS model by Han Zhu \u2014 is separately licensed under Apache License 2.0'). The Apache-2.0 code licence does not clear the CC-BY-NC weights the code loads.",
+          "commercial_use_reason": "unverified",
+          "model": "bundled omnivoice Python package (Han Zhu)",
+          "role": "Underlying TTS model code bundled with VoiceStudio",
+          "weights_licence": "not_applicable \u2014 code package only; weights are the k2-fsa/OmniVoice weights above"
+        },
+        {
+          "commercial_use_approved": false,
+          "commercial_use_evidence": "components/voicestudio/LICENSE-NOTICE.md ('Its audio_tokenizer/LICENSE contains separate Boson Higgs Audio 2 and Meta Llama community terms'); components/voicestudio/backend/config/model_licenses.json (component_closure incomplete; commercial_outputs unknown; open question: 'Governing terms at installed revision and relevant required components'). No commercial clearance for the tokenizer chain exists in this registry.",
+          "commercial_use_reason": "unverified",
+          "model": "OmniVoice audio tokenizer (Higgs Audio 2 / Meta Llama 3)",
+          "role": "Tokenizer component of the OmniVoice weights",
+          "weights_licence": "Separate Boson Higgs Audio 2 and Meta Llama community terms (see the model's audio_tokenizer/LICENSE)"
+        }
+      ],
+      "name": "VoiceStudio",
+      "pinned_commit": "2f2f5a9b0e982c6147efc6baaeae62936f29b79b",
+      "pinned_commit_evidence": "setup.sh (full SHA pin)",
+      "role": "Voice/Speech Specialist",
+      "rules": [
+        "The Brain directs VoiceStudio by instruction (script, voice profile ID, language, fixed tags + seed); it never edits VoiceStudio's internal code.",
+        "Voice reference audio lives in the private overlay; only a relative pointer + optional SHA-256 goes in a schema record.",
+        "A real person's voice needs explicit rights/consent before cloning."
+      ],
+      "source": "https://github.com/debpalash/VoiceStudio",
+      "version": "0.5.8",
+      "version_evidence": "components/voicestudio/CHANGELOG.md (## [0.5.8] \u2014 2026-11-12); backend/core/version.py _FALLBACK_VERSION \"0.5.8\""
+    }
+  ],
+  "graph": {
+    "conditional_parallel_groups": [
+      {
+        "condition": "ONLY when the character is ALREADY registered: resolving the stored\nvisual record and loading the stored voice profile are independent\nreads. For a NEW character this group does NOT apply \u2014 the voice\nprofile is fixed per registered character (voice-consistency \u00a71), so\ncharacter registration runs first (edge character-consistency ->\nvoice-consistency).",
+        "name": "existing-character-prep",
+        "reason": "Independent registry reads for an already-registered character.",
+        "skills": [
+          "character-consistency",
+          "voice-consistency"
+        ]
+      }
+    ],
+    "cross_cutting": [
+      {
+        "note": "Consulted at every phase boundary (resource-management \u00a71-\u00a73): voice\nplugin only for voice work, video plugin only for video assembly,\nworking memory only for the current phase. Never a pipeline stage;\nnever used to cut quality or skip QC (\u00a78).",
+        "skill": "resource-management"
+      }
+    ],
+    "edges": [
+      {
+        "from": "character-consistency",
+        "reason": "The model is a registered character, created through the Character Generator (agency-advertising intro; character-consistency \u00a712.2).",
+        "to": "agency-advertising"
+      },
+      {
+        "from": "character-consistency",
+        "reason": "Builds on character-consistency (registry/skills.json; kids-family-animation intro).",
+        "to": "kids-family-animation"
+      },
+      {
+        "from": "character-consistency",
+        "reason": "The photo is used exactly as given, per the Character Generator user-supplied picture rule (realistic-person \u00a71; character-consistency \u00a712.1).",
+        "to": "realistic-person"
+      },
+      {
+        "from": "character-consistency",
+        "reason": "Characters in the regenerated video are registered characters (video-regeneration intro; registry/skills.json).",
+        "to": "video-regeneration"
+      },
+      {
+        "from": "character-consistency",
+        "reason": "A voice profile is fixed per registered character (voice-consistency \u00a71); cloning needs the character name plus ID (voice-consistency \u00a713).",
+        "to": "voice-consistency"
+      },
+      {
+        "from": "cinematic-power",
+        "reason": "Builds on cinematic-power \u2014 style lock, music-beat editing, scale and colour scripting (registry/skills.json; emotional-performance intro).",
+        "to": "emotional-performance"
+      },
+      {
+        "from": "cinematic-power",
+        "reason": "Builds on cinematic-power (registry/skills.json; kids-family-animation intro).",
+        "to": "kids-family-animation"
+      },
+      {
+        "from": "cinematic-power",
+        "reason": "Builds on cinematic-power \u2014 style lock, creature performance, trailer structure, scale and colour scripting (registry/skills.json; live-action-vfx intro).",
+        "to": "live-action-vfx"
+      },
+      {
+        "from": "command-authority",
+        "reason": "Router selects the advertising layer for agency campaigns (command-authority \u00a72 step 3).",
+        "to": "agency-advertising"
+      },
+      {
+        "from": "command-authority",
+        "reason": "Router selects the character skill first for any video with a registered character (command-authority \u00a72 step 2-3).",
+        "to": "character-consistency"
+      },
+      {
+        "from": "command-authority",
+        "reason": "Router selects the cinematic-power layer for trailer/music-video quality (command-authority \u00a72 step 3).",
+        "to": "cinematic-power"
+      },
+      {
+        "from": "command-authority",
+        "reason": "Router selects the emotional-performance layer for musical/intimate scenes (command-authority \u00a72 step 3).",
+        "to": "emotional-performance"
+      },
+      {
+        "from": "command-authority",
+        "reason": "Router selects the explainer skill for teaching/explainer animation (command-authority \u00a72 step 3).",
+        "to": "explainer-animation"
+      },
+      {
+        "from": "command-authority",
+        "reason": "Router selects the humanization layer, which applies to every project (command-authority \u00a72 step 3; humanized-production intro).",
+        "to": "humanized-production"
+      },
+      {
+        "from": "command-authority",
+        "reason": "Router selects this skill for kids/family animation, which also explicitly builds on command-authority (command-authority \u00a72; kids-family-animation intro; registry/skills.json).",
+        "to": "kids-family-animation"
+      },
+      {
+        "from": "command-authority",
+        "reason": "Router selects the language skill when dialogue spans languages (command-authority \u00a72 step 3).",
+        "to": "language-authenticity"
+      },
+      {
+        "from": "command-authority",
+        "reason": "Router selects the live-action/VFX layer for live-action hybrid footage (command-authority \u00a72 step 3).",
+        "to": "live-action-vfx"
+      },
+      {
+        "from": "command-authority",
+        "reason": "Router selects the production layer for every series/episode production (command-authority \u00a72 step 3).",
+        "to": "production-systems"
+      },
+      {
+        "from": "command-authority",
+        "reason": "Router selects the realistic-person skill for photo-to-person video (command-authority \u00a72 step 3).",
+        "to": "realistic-person"
+      },
+      {
+        "from": "command-authority",
+        "reason": "Router consults resource discipline at every phase (command-authority \u00a72; resource-management \u00a71).",
+        "to": "resource-management"
+      },
+      {
+        "from": "command-authority",
+        "reason": "Router selects the regeneration workflow when the user uploads a video to regenerate (command-authority \u00a72 step 3).",
+        "to": "video-regeneration"
+      },
+      {
+        "from": "command-authority",
+        "reason": "Router selects the voice skill for any video with speaking characters (command-authority \u00a72 step 3).",
+        "to": "voice-consistency"
+      },
+      {
+        "from": "humanized-production",
+        "reason": "Builds on humanized-production \u2014 performance, micro-motion, sound, editing (registry/skills.json; cinematic-power intro).",
+        "to": "cinematic-power"
+      },
+      {
+        "from": "humanized-production",
+        "reason": "Builds on humanized-production \u2014 performance, micro-motion, sound, editing (registry/skills.json; emotional-performance intro).",
+        "to": "emotional-performance"
+      },
+      {
+        "from": "humanized-production",
+        "reason": "Builds on humanized-production (registry/skills.json; kids-family-animation intro).",
+        "to": "kids-family-animation"
+      },
+      {
+        "from": "humanized-production",
+        "reason": "Builds on humanized-production \u2014 performance, physics, editing (registry/skills.json; live-action-vfx intro).",
+        "to": "live-action-vfx"
+      },
+      {
+        "from": "humanized-production",
+        "reason": "Backgrounds are detailed, deep, and alive per humanized-production (realistic-person \u00a75; humanized-production \u00a730.36).",
+        "to": "realistic-person"
+      },
+      {
+        "from": "humanized-production",
+        "reason": "Builds on humanized-production (registry/skills.json; video-regeneration intro).",
+        "to": "video-regeneration"
+      },
+      {
+        "from": "language-authenticity",
+        "reason": "Lip-sync follows the sounds of the language being spoken (realistic-person \u00a74; language-authenticity \u00a76).",
+        "to": "realistic-person"
+      },
+      {
+        "from": "production-systems",
+        "reason": "Builds on production-systems \u2014 style bible, camera language, shot list, angles (registry/skills.json; cinematic-power intro).",
+        "to": "cinematic-power"
+      },
+      {
+        "from": "production-systems",
+        "reason": "Builds on production-systems \u2014 style bible, camera language, shot list, angles (registry/skills.json; emotional-performance intro).",
+        "to": "emotional-performance"
+      },
+      {
+        "from": "production-systems",
+        "reason": "Defers-to \u2014 the episode QC checklist and script-driven colour grading live in production-systems (humanized-production \u00a730.11, \u00a730.15; production-systems A11, C7).",
+        "to": "humanized-production"
+      },
+      {
+        "from": "production-systems",
+        "reason": "Captions and dubbing packs per language (language-authenticity \u00a77; production-systems B15, D2).",
+        "to": "language-authenticity"
+      },
+      {
+        "from": "production-systems",
+        "reason": "Builds on production-systems \u2014 camera language, shot list, angles (registry/skills.json; live-action-vfx intro).",
+        "to": "live-action-vfx"
+      },
+      {
+        "from": "production-systems",
+        "reason": "Builds on production-systems (registry/skills.json; video-regeneration intro).",
+        "to": "video-regeneration"
+      },
+      {
+        "from": "voice-consistency",
+        "reason": "The ad voice tone is performance direction only; the model's base voice stays fixed per voice-consistency (agency-advertising \u00a71).",
+        "to": "agency-advertising"
+      },
+      {
+        "from": "voice-consistency",
+        "reason": "One voice per character, fixed across episodes (emotional-performance intro; registry/skills.json).",
+        "to": "emotional-performance"
+      },
+      {
+        "from": "voice-consistency",
+        "reason": "Defers-to \u2014 the full dialogue, non-verbal voice, drift, and mix rules live in voice-consistency (humanized-production \u00a730.2, \u00a730.6, \u00a730.12, \u00a730.32).",
+        "to": "humanized-production"
+      },
+      {
+        "from": "voice-consistency",
+        "reason": "Builds on voice-consistency (registry/skills.json; kids-family-animation intro; \u00a78).",
+        "to": "kids-family-animation"
+      },
+      {
+        "from": "voice-consistency",
+        "reason": "The same character voice profile speaks each language (language-authenticity \u00a75; voice-consistency \u00a79).",
+        "to": "language-authenticity"
+      },
+      {
+        "from": "voice-consistency",
+        "reason": "The voice belongs to that person via a supplied/cloned voice (realistic-person \u00a74; voice-consistency \u00a713).",
+        "to": "realistic-person"
+      },
+      {
+        "from": "voice-consistency",
+        "reason": "Voices in the regenerated video follow voice-consistency (video-regeneration intro; registry/skills.json).",
+        "to": "video-regeneration"
+      }
+    ],
+    "nodes": [
+      {
+        "id": "command-authority",
+        "precedence": 1,
+        "skill": "command-authority",
+        "stage": "route-and-orchestrate"
+      },
+      {
+        "id": "resource-management",
+        "precedence": 2,
+        "skill": "resource-management",
+        "stage": "resource-discipline-throughout"
+      },
+      {
+        "id": "character-consistency",
+        "precedence": 3,
+        "skill": "character-consistency",
+        "stage": "lock-character-identity"
+      },
+      {
+        "id": "voice-consistency",
+        "precedence": 4,
+        "skill": "voice-consistency",
+        "stage": "lock-character-voice"
+      },
+      {
+        "id": "production-systems",
+        "precedence": 5,
+        "skill": "production-systems",
+        "stage": "plan-production"
+      },
+      {
+        "id": "language-authenticity",
+        "precedence": 6,
+        "skill": "language-authenticity",
+        "stage": "localise-language-and-lip-sync"
+      },
+      {
+        "id": "humanized-production",
+        "precedence": 7,
+        "skill": "humanized-production",
+        "stage": "humanize-performance-and-finish"
+      },
+      {
+        "id": "cinematic-power",
+        "precedence": 8,
+        "skill": "cinematic-power",
+        "stage": "apply-cinematic-power-layer"
+      },
+      {
+        "id": "emotional-performance",
+        "precedence": 9,
+        "skill": "emotional-performance",
+        "stage": "direct-emotional-performance"
+      },
+      {
+        "id": "live-action-vfx",
+        "precedence": 10,
+        "skill": "live-action-vfx",
+        "stage": "direct-live-action-vfx"
+      },
+      {
+        "id": "kids-family-animation",
+        "precedence": 11,
+        "skill": "kids-family-animation",
+        "stage": "produce-kids-family-animation"
+      },
+      {
+        "id": "explainer-animation",
+        "precedence": 12,
+        "skill": "explainer-animation",
+        "stage": "produce-explainer-animation"
+      },
+      {
+        "id": "realistic-person",
+        "precedence": 13,
+        "skill": "realistic-person",
+        "stage": "produce-realistic-person-video"
+      },
+      {
+        "id": "agency-advertising",
+        "precedence": 14,
+        "skill": "agency-advertising",
+        "stage": "produce-advertising-campaign"
+      },
+      {
+        "id": "video-regeneration",
+        "precedence": 15,
+        "skill": "video-regeneration",
+        "stage": "analyse-and-regenerate"
+      }
+    ],
+    "parallel_groups": [
+      {
+        "name": "composable-pathways-different-shots",
+        "reason": "No dependency between them, and no true conflict between them at\nproduction level: the former video-type skills may run in parallel\nonly for DIFFERENT shots (or different subjects) of one video \u2014 a\nflat-2D explainer scene, an animated scene, a digital-human shot,\nand an ad cut-down in one production. True conflicts TC-2..TC-9\nstill apply to the SAME subject in the SAME shot.",
+        "skills": [
+          "kids-family-animation",
+          "explainer-animation",
+          "realistic-person",
+          "agency-advertising"
+        ]
+      },
+      {
+        "name": "foundation-planning",
+        "reason": "No dependency between them (production-systems lists no dependencies):\ncharacter identity can be locked while the style bible, shot list, and\nstory bible are planned; both read the script and the registry.",
+        "skills": [
+          "character-consistency",
+          "production-systems"
+        ]
+      },
+      {
+        "name": "language-and-humanization-prep",
+        "reason": "No dependency between them: both depend on voice-consistency and\nproduction-systems, which are already complete, and neither consumes\nthe other's output.",
+        "skills": [
+          "language-authenticity",
+          "humanized-production"
+        ]
+      },
+      {
+        "name": "performance-layers-different-scenes",
+        "reason": "No dependency between them: both depend on production-systems,\nhumanized-production, and cinematic-power. They may run in parallel\nonly for DIFFERENT scenes of one video (a musical/intimate scene vs a\nlive-action/VFX scene), never on the same shot.",
+        "skills": [
+          "emotional-performance",
+          "live-action-vfx"
+        ]
+      }
+    ],
+    "representation": {
+      "per_character": [
+        "character_id",
+        "subject_kind",
+        "visual_style",
+        "production_medium",
+        "source_media",
+        "motion_method",
+        "articulation_target",
+        "interaction_pattern"
+      ],
+      "per_shot": [
+        "shot_id",
+        {
+          "subjects": "per-subject representation (character_id plus the fields above)"
+        },
+        "visual_style per subject",
+        "source_media per element (captured vs generated, recorded honestly)",
+        "motion_method per subject",
+        "articulation_target per speaking subject",
+        "interaction_pattern"
+      ],
+      "rule": "Two subjects in one shot may carry different representations (e.g. a\nphotorealistic digital human talking with a stylized 3D creature);\ntwo shots in one production may carry different representations (e.g.\na flat-2D explainer scene followed by a live-action plate). A single\nsubject in a single shot carries exactly one value per dimension."
+    },
+    "router": "command-authority",
+    "routing_model": {
+      "compatible_layers": {
+        "description": "Layers that do not conflict combine freely: voice-consistency,\nhumanized-production, language-authenticity, production-systems,\nemotional-performance, and resource-management combine with any\nprimary pathway. A production routinely runs many layers at once."
+      },
+      "precedence_tie_breaking": {
+        "description": "Where two layers both speak to the same decision, the routing\nmatrix's precedence order decides which one speaks first; the\nother still applies where it does not contradict. Command\nauthority remains the router (precedence 1): it routes, it does\nnot generate."
+      },
+      "primary_pathway": {
+        "description": "One primary pathway per production, chosen from the production's\ndominant medium and purpose (e.g. kids-family-animation /\ncinematic-power for a stylized 3D short; realistic-person for a\nphotorealistic digital-human video; live-action-vfx for a\nlive-action-plus-creature video). The primary pathway supplies the\nproduction's main rules; it does not own the production exclusively.",
+        "source": "schemas/production-profile.json"
+      },
+      "style_profiles": {
+        "description": "One or more visual-style profiles layer onto the primary pathway\n(e.g. the flat-2D explainer profile, an anime profile). A profile\ncontributes its style lock, palette, and craft rules; it never\nvetoes an unrelated layer. A profile's style lock binds the shots\nit covers, per subject per shot \u2014 see true_conflicts TC-3/TC-4/TC-5.",
+        "values": "VISUAL_STYLE vocabulary (see SKILL_ROUTING_MATRIX.yaml header)"
+      },
+      "subject_capabilities": {
+        "description": "Subject capabilities layer per subject: animal and creature\nperformance, real-animal handling, age performance, instrument\nperformance, and similar capabilities apply to the subjects they\ndescribe, in the shots those subjects appear in. Articulation\nfollows the subject's own anatomy \u2014 see true_conflicts TC-1/TC-10."
+      },
+      "true_conflicts_only": {
+        "description": "A conflict exists only when two rules genuinely cannot both hold\nfor the same subject in the same shot. The absence of a stated\nconflict is not a conflict. A conflict is resolved by choosing\nper shot (or per subject), recording the choice, and never by\nsilently dropping a rule. See true_conflicts below."
+      }
+    },
+    "sequential_chains": [
+      {
+        "name": "advertising-campaign",
+        "note": "Model registered first (character-consistency \u00a712.2), brand kit locked, then campaign; client approval of the exact version precedes publish (agency-advertising \u00a77).",
+        "skills": [
+          "command-authority",
+          "character-consistency",
+          "voice-consistency",
+          "production-systems",
+          "agency-advertising"
+        ]
+      },
+      {
+        "name": "digital-human-dialogue-with-animal",
+        "note": "One scene, two representations: the human is directed by realistic-person (photorealistic-digital-human, human-mouth-lips) while the animal is directed per shot by cinematic-power (creature-articulation). Different subjects, so TC-1/TC-2 do not apply; each subject's articulation follows its own anatomy (TC-10).",
+        "skills": [
+          "command-authority",
+          "character-consistency",
+          "voice-consistency",
+          "production-systems",
+          "language-authenticity",
+          "humanized-production",
+          "cinematic-power",
+          "realistic-person"
+        ]
+      },
+      {
+        "name": "emotional-musical-scene",
+        "note": "Follows the registry builds-on chain for emotional-performance.",
+        "skills": [
+          "command-authority",
+          "character-consistency",
+          "voice-consistency",
+          "production-systems",
+          "humanized-production",
+          "cinematic-power",
+          "emotional-performance"
+        ]
+      },
+      {
+        "name": "explainer-animation",
+        "note": "Explainer-animation states no builds-on dependency; production-systems supplies the planning layer (shot list, format) and command-authority routes. Voice/language apply via command-authority routing if the explainer has dialogue \u2014 not stated in the skill (see NOTES.md).",
+        "skills": [
+          "command-authority",
+          "production-systems",
+          "explainer-animation"
+        ]
+      },
+      {
+        "name": "kids-family-animation",
+        "note": "Follows the registry builds-on chain for kids-family-animation; the user gives only the script (kids-family-animation \u00a715).",
+        "skills": [
+          "command-authority",
+          "character-consistency",
+          "voice-consistency",
+          "production-systems",
+          "humanized-production",
+          "cinematic-power",
+          "kids-family-animation"
+        ]
+      },
+      {
+        "name": "live-action-plate-with-creature-and-titles",
+        "note": "Captured plate plus CG creature (live-action-vfx) with scale/colour and title cards (cinematic-power). Source_media is recorded honestly per element \u2014 generated creature never passed off as captured.",
+        "skills": [
+          "command-authority",
+          "character-consistency",
+          "voice-consistency",
+          "production-systems",
+          "humanized-production",
+          "cinematic-power",
+          "live-action-vfx"
+        ]
+      },
+      {
+        "name": "live-action-vfx-scene",
+        "note": "Follows the registry builds-on chain for live-action-vfx.",
+        "skills": [
+          "command-authority",
+          "character-consistency",
+          "voice-consistency",
+          "production-systems",
+          "humanized-production",
+          "cinematic-power",
+          "live-action-vfx"
+        ]
+      },
+      {
+        "name": "realistic-person-video",
+        "note": "Follows realistic-person \u00a71/\u00a74/\u00a75 references; consent record required before generation (\u00a71).",
+        "skills": [
+          "command-authority",
+          "character-consistency",
+          "voice-consistency",
+          "language-authenticity",
+          "humanized-production",
+          "realistic-person"
+        ]
+      },
+      {
+        "name": "registration",
+        "note": "REGISTER_CHARACTER then REGISTER_VOICE_PROFILE; voice profile is fixed per registered character (voice-consistency \u00a71).",
+        "skills": [
+          "command-authority",
+          "character-consistency",
+          "voice-consistency"
+        ]
+      },
+      {
+        "name": "scripted-series-episode",
+        "note": "Core pipeline for a scripted episode; append the primary pathway and the layers the script requires \u2014 several may combine (e.g. kids-family-animation + emotional-performance + cinematic-power). True conflicts (TC-1..TC-10) are resolved per subject per shot, never by dropping a layer globally. Final QC is production-systems A11 plus each applied skill's own checks.",
+        "skills": [
+          "command-authority",
+          "character-consistency",
+          "voice-consistency",
+          "production-systems",
+          "language-authenticity",
+          "humanized-production",
+          "cinematic-power"
+        ]
+      },
+      {
+        "name": "video-regeneration",
+        "note": "video-regeneration BRACKETS the workflow rather than sitting only at\nthe end: its \u00a71 complete reference analysis runs FIRST (before any\ngeneration), the foundation skills then supply identity/voice/planning/\nhumanization, and its \u00a78 mandatory QC runs LAST. Working order,\nalways: analyse, plan, generate, inspect and correct (video-regeneration\nintro; \u00a79).",
+        "skills": [
+          "command-authority",
+          "character-consistency",
+          "voice-consistency",
+          "production-systems",
+          "humanized-production",
+          "video-regeneration"
+        ]
+      }
+    ],
+    "true_conflicts": [
+      {
+        "id": "TC-1",
+        "resolution": "choose per subject per shot \u2014 real behaviour OR anthropomorphic direction \u2014 and record the choice.",
+        "rule": "Real-animal non-speaking performance cut from real behaviour\n(live-action-vfx \u00a76) vs anthropomorphic speaking-animal/creature\ndirection (cinematic-power \u00a72). A real animal must not be directed\nto speak with human lips, and a real animal and a CG creature must\nnot be mixed into one animal (live-action-vfx \u00a76).",
+        "scope": "same animal/creature subject, same shot",
+        "skills": [
+          "live-action-vfx",
+          "cinematic-power"
+        ]
+      },
+      {
+        "id": "TC-2",
+        "resolution": "choose per subject per shot \u2014 captured footage OR generated digital human \u2014 and record the choice; record source_media honestly per element.",
+        "rule": "Captured live-action footage of a real shoot (live-action-vfx: real\nfootage is the input) vs a generated digital human from a still\nphoto (realistic-person \u00a76: neither animation nor live-action\nfootage). A generated element is never passed off as captured, and\ncaptured footage is never described as generated (source honesty).",
+        "scope": "same subject, same shot",
+        "skills": [
+          "live-action-vfx",
+          "realistic-person"
+        ]
+      },
+      {
+        "id": "TC-3",
+        "resolution": "choose the style per shot and record it; other cinematic-power layers (music-beat, title cards) may still apply to other shots.",
+        "rule": "Flat-2D-vector style lock (explainer-animation \u00a71, \u00a77) vs anime /\nstylized-3D / photorealistic styling (cinematic-power \u00a71 style-lock\nchoices). One shot cannot hold both style locks.",
+        "scope": "same shot, visual_style dimension",
+        "skills": [
+          "explainer-animation",
+          "cinematic-power"
+        ]
+      },
+      {
+        "id": "TC-4",
+        "resolution": "choose the representation per subject per shot and record it.",
+        "rule": "Flat-2D-vector explainer profile vs photorealistic-digital-human\n(realistic-person intro). One subject in one shot cannot be both a\nflat 2D vector figure and a photorealistic digital human.",
+        "scope": "same subject, same shot, visual_style dimension",
+        "skills": [
+          "explainer-animation",
+          "realistic-person"
+        ]
+      },
+      {
+        "id": "TC-5",
+        "resolution": "choose the style per shot and record it.",
+        "rule": "Flat-2D explainer profile (explainer-animation \u00a71: no anime\nstyling, no 3D look, no photorealism; the two character designs\nkept apart) vs an anime / 3D / photorealistic kids-family style in\nthe same shot. A flat-2D kids-family scene does NOT conflict \u2014 the\nconflict is only the style values in the same shot.",
+        "scope": "same shot, visual_style dimension",
+        "skills": [
+          "explainer-animation",
+          "kids-family-animation"
+        ]
+      },
+      {
+        "id": "TC-6",
+        "resolution": "choose the representation per subject per shot and record it.",
+        "rule": "Animated character (kids-family-animation \u00a72) vs photorealistic\ndigital human from a real person's photo (realistic-person \u00a71).\nOne subject in one shot cannot be both.",
+        "scope": "same subject, same shot, visual_style dimension",
+        "skills": [
+          "kids-family-animation",
+          "realistic-person"
+        ]
+      },
+      {
+        "id": "TC-7",
+        "resolution": "choose the representation per subject per shot and record it.",
+        "rule": "2D/3D-animation styling (cinematic-power \u00a71: 2D anime, 3D stylized\nCG) vs photorealistic digital human (realistic-person \u00a76: not\n2D/3D animation). One subject in one shot cannot be both.",
+        "scope": "same subject, same shot, visual_style dimension",
+        "skills": [
+          "cinematic-power",
+          "realistic-person"
+        ]
+      },
+      {
+        "id": "TC-8",
+        "resolution": "choose per subject \u2014 synthetic spokesperson OR real-person digital human \u2014 and record the choice; consent rules for the real-person path still apply.",
+        "rule": "Synthetic spokesperson who must never resemble a real person\n(agency-advertising \u00a75) vs a photorealistic digital human built\nfrom a real person's photo (realistic-person \u00a71). One subject\ncannot be both synthetic and a real person's likeness.",
+        "scope": "same subject",
+        "skills": [
+          "agency-advertising",
+          "realistic-person"
+        ]
+      },
+      {
+        "id": "TC-9",
+        "resolution": "choose the medium per shot and record it.",
+        "rule": "Flat-2D-vector explainer profile vs captured live-action footage\nin the same shot (explainer-animation intro: none of anime, 3D CG,\nlive-action, music video, or trailer; live-action-vfx: real\nfootage is the input). One shot cannot be both flat 2D vector and\ncaptured live-action footage.",
+        "scope": "same shot",
+        "skills": [
+          "explainer-animation",
+          "live-action-vfx"
+        ]
+      },
+      {
+        "id": "TC-10",
+        "resolution": "set articulation_target per subject from its anatomy (schemas/character.json, schemas/performance-plan.json); reject a line whose articulation target contradicts its subject.",
+        "rule": "Articulation target must match the subject's own anatomy:\nhuman-mouth-lips only for human/digital-human subjects, bird-beak\nfor birds, animal-muzzle for animals, creature-jaw-mandibles for\ncreatures. Human lip-sync on a bird (or beak articulation on a\nhuman) is invalid. This is a dimension rule, not a skill-vs-skill\nexclusion \u2014 the three skills constrain it jointly, so it is not\nmirrored in any single skill's `conflicts` list.",
+        "scope": "same subject, same shot (per dialogue line)",
+        "skills": [
+          "character-consistency",
+          "voice-consistency",
+          "language-authenticity"
+        ]
+      }
+    ]
+  },
+  "integrity": {
+    "algorithm": "sha256-canonical-json-v1",
+    "fingerprint": "b28be0dbd17ce61abb64ee7bf6065c7c75883161bb0a50241c20529a1eeafdfa"
+  },
+  "intent_modes": {
+    "EDIT_EXISTING_MEDIA": {
+      "allowed": [
+        "edit_via_verified_adapters_only"
+      ],
+      "creates_permanent_record": false,
+      "forbidden": [
+        "edit_via_untested_adapter"
+      ]
+    },
+    "GENERATE_FROM_SCRIPT": {
+      "allowed": [
+        "production_planning",
+        "shot_performance_audio_timeline_plan"
+      ],
+      "creates_permanent_record": false,
+      "dialogue_mode_default": "VERBATIM_SCRIPT",
+      "forbidden": [
+        "silent_dialogue_rewrite"
+      ]
+    },
+    "PROJECT_CONSISTENCY": {
+      "allowed": [
+        "load_private_project_records",
+        "reuse_by_stable_id"
+      ],
+      "creates_permanent_record": false,
+      "forbidden": [
+        "silent_create",
+        "silent_overwrite",
+        "silent_merge",
+        "global_registration"
+      ]
+    },
+    "REFERENCE_LEARN_AND_UPDATE": {
+      "allowed": [
+        "analyse",
+        "evidence_backed_candidate",
+        "reviewable_patch"
+      ],
+      "creates_permanent_record": false,
+      "forbidden": [
+        "direct_canonical_write",
+        "push_to_main",
+        "publish"
+      ],
+      "requires": [
+        "explicit_user_instruction"
+      ]
+    },
+    "REFERENCE_REVIEW": {
+      "allowed": [
+        "analyse",
+        "timecoded_report"
+      ],
+      "creates_permanent_record": false,
+      "forbidden": [
+        "skill_mutation",
+        "permanent_registry_change"
+      ]
+    },
+    "REGISTER_CHARACTER": {
+      "allowed": [
+        "permanent_character_registration"
+      ],
+      "creates_permanent_record": true,
+      "requires": [
+        "explicit_authorisation",
+        "name",
+        "unique_id",
+        "approved_reference"
+      ]
+    },
+    "REGISTER_SOUND_ASSET": {
+      "allowed": [
+        "permanent_sound_asset_registration"
+      ],
+      "creates_permanent_record": true,
+      "requires": [
+        "explicit_instruction",
+        "source",
+        "licence_or_permission",
+        "owner",
+        "project_scope"
+      ]
+    },
+    "REGISTER_VOICE_PROFILE": {
+      "allowed": [
+        "permanent_voice_profile_registration"
+      ],
+      "creates_permanent_record": true,
+      "requires": [
+        "explicit_authorisation",
+        "rights_consent",
+        "character_link",
+        "reference_audio"
+      ]
+    },
+    "REMAKE_OR_TRANSFORM": {
+      "allowed": [
+        "transform_as_expressly_requested"
+      ],
+      "creates_permanent_record": false,
+      "forbidden": [
+        "treat_as_skill_learning_by_default"
+      ],
+      "requires": [
+        "explicit_request",
+        "rights_provenance_check"
+      ]
+    },
+    "REPORT_UPDATE_ONLY": {
+      "allowed": [
+        "regenerate_reports_from_canonical_records"
+      ],
+      "creates_permanent_record": false,
+      "forbidden": [
+        "change_production_rules"
+      ]
+    },
+    "TEMPORARY_ASSET_USE": {
+      "allowed": [
+        "use_for_current_job_only"
+      ],
+      "creates_permanent_record": false,
+      "forbidden": [
+        "permanent_registration",
+        "cross_project_reuse",
+        "skill_mutation"
+      ]
+    },
+    "UPLOAD_ONLY": {
+      "allowed": [
+        "store_in_temporary_intake",
+        "show_available_commands"
+      ],
+      "creates_permanent_record": false,
+      "forbidden": [
+        "analyse",
+        "register",
+        "learn",
+        "edit",
+        "generate",
+        "report_mutation",
+        "commit",
+        "push",
+        "publish"
+      ]
+    },
+    "VIDEO_QC": {
+      "allowed": [
+        "inspect",
+        "report_defects"
+      ],
+      "creates_permanent_record": false,
+      "forbidden": [
+        "regenerate_without_repair_authorisation"
+      ]
+    }
+  },
+  "non_hosts": [
+    {
+      "is_agent_host": false,
+      "kind": "notebook environment",
+      "name": "Google Colab",
+      "notes": "Colab is a notebook environment, not an agent host. Using the Brain there needs an appropriate Notebook/Agent Runtime on top of Colab; no such runtime has been verified in this account."
+    },
+    {
+      "is_agent_host": false,
+      "kind": "model-routing layer",
+      "name": "OpenRouter",
+      "notes": "OpenRouter routes model calls; it is NOT an agent host and NOT a Brain host. Integrate via the actual Agent Runtime that hosts the Brain \u2014 never treat OpenRouter as a place where skills install or run."
+    }
+  ],
+  "note": "Generated by scripts/generate-routing-catalog.py \u2014 never edit by hand.",
+  "skills": [
+    {
+      "activation_trigger": "MUST run first for every video and task: the repo is the command master\nand every video is made by reading and using the repo's skills FIRST\n(command-authority \u00a71-\u00a72). It also runs whenever no skill covers the\nwork, to issue the generation command (\u00a75), the distilled common core\n(\u00a78), or \"do it yourself\" with quality commands and the main flow (\u00a77).",
+      "applicable_modes": [
+        "UPLOAD_ONLY",
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "REGISTER_CHARACTER",
+        "REGISTER_VOICE_PROFILE",
+        "REGISTER_SOUND_ASSET",
+        "GENERATE_FROM_SCRIPT",
+        "EDIT_EXISTING_MEDIA",
+        "REFERENCE_REVIEW",
+        "REFERENCE_LEARN_AND_UPDATE",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM",
+        "REPORT_UPDATE_ONLY"
+      ],
+      "approval_conditions": "User approval before anything is locked in (\u00a75 Verify; \u00a77 step 9), and\nbefore any draft becomes a permanent canonical skill (\u00a79B).",
+      "conflicts": [],
+      "dependencies": [],
+      "expected_outputs": [
+        "selected skill(s) and their order for the task (\u00a72)",
+        "OR a generation command for a missing system (\u00a75)",
+        "OR the distilled common core for a new task type (\u00a78)",
+        "OR \"do it yourself\" plus quality commands plus the main flow (\u00a77)",
+        "task-local draft of a missing skill, written BEFORE any video is made from it (\u00a79)",
+        "primary pathway, style profiles, subject capabilities, and compatible layers chosen, with the per-character / per-shot representation recorded"
+      ],
+      "non_trigger": "It never generates a video itself while a skill with the command exists\n\u2014 skill commands take priority whenever they exist (\u00a72 step 2). It is\nnot a substitute for a type skill.",
+      "path": "skills/command-authority/SKILL.md",
+      "precedence": 1,
+      "quality_gate": "The skill-first loop (\u00a79): no video is ever improvised, and no draft\nbecomes a permanent canonical skill without the user's explicit\nauthorisation (\u00a79B).",
+      "required_inputs": [
+        "user script and named video type (\u00a72 step 1)",
+        "repo skill inventory (skills/ plus registry/skills.json)",
+        "repo comments and notes on the topic (README, docs, AGENTS.md) (\u00a73)",
+        {
+          "production profile dimensions for the task": "visual_style, production_medium, source_media, motion_method, subject_kind per subject, interaction_pattern per scene, plus the per-character / per-shot representation (schemas/production-profile.json)"
+        }
+      ],
+      "routing_dimensions": {
+        "articulation_target": [
+          "human-mouth-lips",
+          "bird-beak",
+          "animal-muzzle",
+          "creature-jaw-mandibles",
+          "other"
+        ],
+        "interaction_pattern": [
+          "single-performance",
+          "two-person-conversation",
+          "multi-person-conversation",
+          "human-animal",
+          "human-creature",
+          "multiple-animals-creatures",
+          "group-scene",
+          "silent-reaction",
+          "physical-contact-object"
+        ],
+        "motion_method": [
+          "rig-2d-keyframe",
+          "rig-3d-keyframe",
+          "ai-image-to-video",
+          "ai-video-to-video",
+          "motion-capture",
+          "performance-transfer",
+          "face-animation",
+          "body-animation",
+          "pose-gesture-transfer",
+          "lip-sync-phoneme-viseme",
+          "creature-articulation",
+          "rotoscoping-compositing",
+          "captured-motion"
+        ],
+        "production_medium": [
+          "2d-drawn-vector",
+          "3d-cgi-rigged",
+          "ai-digital-human",
+          "ai-digital-creature",
+          "live-action-footage",
+          "hybrid-live-action-cgi"
+        ],
+        "source_media": [
+          "script-only",
+          "reference-image",
+          "reference-video",
+          "captured-footage",
+          "generated-image",
+          "generated-video",
+          "mixed"
+        ],
+        "subject_kind": [
+          "human",
+          "digital-human",
+          "real-animal",
+          "cgi-animal",
+          "fictional-creature",
+          "anthropomorphic",
+          "mixed",
+          "non-character"
+        ],
+        "visual_style": [
+          "flat-2d-vector",
+          "hand-drawn-2d",
+          "illustrated-2d",
+          "anime",
+          "cartoon-2d",
+          "stylized-3d",
+          "semi-realistic-3d",
+          "photorealistic-3d-cgi",
+          "photorealistic-digital-human",
+          "photorealistic-digital-animal-creature",
+          "mixed",
+          "captured-live-action"
+        ]
+      },
+      "sha256": "39ac0fcaf40aa89a92f19c4c067872b9c50fd578457ba782ae6e3c4298981e78",
+      "skill": "command-authority",
+      "skill_id": "skill-command-authority"
+    },
+    {
+      "activation_trigger": "Consulted at every phase of every job: each phase loads only what it\nneeds \u2014 the voice plugin only for voice work, the video plugin only\nfor video assembly, and working memory only for the current phase\n(resource-management \u00a71-\u00a73).",
+      "applicable_modes": [
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "REGISTER_CHARACTER",
+        "REGISTER_VOICE_PROFILE",
+        "GENERATE_FROM_SCRIPT",
+        "EDIT_EXISTING_MEDIA",
+        "REFERENCE_REVIEW",
+        "REFERENCE_LEARN_AND_UPDATE",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM"
+      ],
+      "approval_conditions": "none \u2014 not_stated_in_skill; it imposes no approval of its own and only\nsequences loads; approval is governed by the skills it serves.",
+      "conflicts": [],
+      "dependencies": [],
+      "expected_outputs": [
+        {
+          "phase load plan": "which plugin runs and which stays off (\u00a73)"
+        },
+        "stop actions at the end of each phase (\u00a77)",
+        "quality-guard decision when a step genuinely needs both plugins (\u00a78)"
+      ],
+      "non_trigger": "Must NOT run as a standalone production step, and must never be used\nto cut quality, skip checks, or degrade output (\u00a78). Never loads both\nplugins \"just in case\" (\u00a74).",
+      "path": "skills/resource-management/SKILL.md",
+      "precedence": 2,
+      "quality_gate": "Quality guard (\u00a78): resource discipline never degrades quality \u2014 the\nepisode QC checklist is never skipped to save resources.",
+      "required_inputs": [
+        "current phase (planning / voice generation / video assembly / QC and delivery) (\u00a73)",
+        "which plugin(s) that phase genuinely needs (\u00a73-\u00a74)"
+      ],
+      "sha256": "58bfffd7c2d97cd2d20d8e33b34be86921e7863da5271d8c175b1df5b7e43105",
+      "skill": "resource-management",
+      "skill_id": "skill-resource-management"
+    },
+    {
+      "activation_trigger": "MUST run whenever a registered character appears, is resolved from a\nscript name, or is registered: it keeps every registered character\nvisually identical across all videos and episodes\n(character-consistency intro; \u00a73).",
+      "applicable_modes": [
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "REGISTER_CHARACTER",
+        "GENERATE_FROM_SCRIPT",
+        "EDIT_EXISTING_MEDIA",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM"
+      ],
+      "approval_conditions": "Explicit authorisation required for permanent registration (\u00a72, all\nthree conditions), for any modification or deletion of a character\nrecord (\u00a71), and for a generated character to become permanent \u2014 the\nuser's explicit \"done\" (\u00a712.3).",
+      "conflicts": [],
+      "dependencies": [],
+      "expected_outputs": [
+        "resolved character record (ID, references, voice profile, fixed prompt block) per script name (\u00a73)",
+        "fixed prompt block and fixed seed injected into every generation (\u00a74)",
+        "expression library entries reused, or generated from the definitive reference and saved (\u00a716)",
+        "character QC result against the model sheet (\u00a710)",
+        "wardrobe/outfit record per character per scene (\u00a713)"
+      ],
+      "non_trigger": "Must NOT run to register a character when any of the three conditions\nis missing (reference image, name plus unique ID, explicit\nauthorisation) \u2014 ask instead (\u00a72). Must NOT treat a temporarily used\nimage as a permanent registration (\u00a72). Must NOT substitute, merge, or\nsilently replace one character with another (\u00a73, \u00a711).",
+      "path": "skills/character-consistency/SKILL.md",
+      "precedence": 3,
+      "quality_gate": "\u00a710/\u00a715: faces and heights verified against the model sheet and the\nmatching-angle/expression panels, with face-embedding similarity above\nthe project threshold, before delivery.",
+      "required_inputs": [
+        "character name and/or unique ID (\u00a73)",
+        {
+          "approved reference images, 3-4 minimum": "front view, three-quarter view, full body, expressions sheet (\u00a71)"
+        },
+        "character.yaml record including fixed prompt block and fixed seed (\u00a71, \u00a74)",
+        "model-sheet.jpg turnaround plus detail sheet (\u00a76)",
+        "script names to resolve (\u00a73)",
+        {
+          "per-character representation": "subject_kind, visual_style, production_medium, source_media, motion_method, articulation_target (schemas/character.json; production-profile per_subject_overrides)"
+        }
+      ],
+      "routing_dimensions": {
+        "articulation_target": [
+          "human-mouth-lips",
+          "bird-beak",
+          "animal-muzzle",
+          "creature-jaw-mandibles",
+          "other"
+        ],
+        "interaction_pattern": [
+          "single-performance",
+          "two-person-conversation",
+          "multi-person-conversation",
+          "human-animal",
+          "human-creature",
+          "multiple-animals-creatures",
+          "group-scene",
+          "silent-reaction",
+          "physical-contact-object"
+        ],
+        "production_medium": [
+          "2d-drawn-vector",
+          "3d-cgi-rigged",
+          "ai-digital-human",
+          "ai-digital-creature",
+          "live-action-footage",
+          "hybrid-live-action-cgi"
+        ],
+        "source_media": [
+          "script-only",
+          "reference-image",
+          "reference-video",
+          "captured-footage",
+          "generated-image",
+          "generated-video",
+          "mixed"
+        ],
+        "subject_kind": [
+          "human",
+          "digital-human",
+          "real-animal",
+          "cgi-animal",
+          "fictional-creature",
+          "anthropomorphic",
+          "mixed"
+        ],
+        "visual_style": [
+          "flat-2d-vector",
+          "hand-drawn-2d",
+          "illustrated-2d",
+          "anime",
+          "cartoon-2d",
+          "stylized-3d",
+          "semi-realistic-3d",
+          "photorealistic-3d-cgi",
+          "photorealistic-digital-human",
+          "photorealistic-digital-animal-creature",
+          "mixed",
+          "captured-live-action"
+        ]
+      },
+      "sha256": "1e3d587f2124350e1cb74d3fcdb1d089838330b580f1ce69bcabb74ea790d78c",
+      "skill": "character-consistency",
+      "skill_id": "skill-character-consistency"
+    },
+    {
+      "activation_trigger": "MUST run whenever a registered character speaks or a voice profile is\ncreated: it keeps every character's voice identical across all\nepisodes, like their visual identity (voice-consistency intro; \u00a71).",
+      "applicable_modes": [
+        "PROJECT_CONSISTENCY",
+        "REGISTER_VOICE_PROFILE",
+        "GENERATE_FROM_SCRIPT",
+        "EDIT_EXISTING_MEDIA",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM"
+      ],
+      "approval_conditions": "A voice clone is locked only on the user's explicit approval after a\ntest line (\u00a713); never swap voices between characters without the user\nexplicitly asking (\u00a71).",
+      "conflicts": [],
+      "dependencies": [
+        "character-consistency"
+      ],
+      "expected_outputs": [
+        "fixed per-character voice profile reused every episode (\u00a71)",
+        "generated lines built from the saved reference audio (\u00a72)",
+        "single-pass multi-speaker dialogue (\u00a75)",
+        "voice-drift scores recorded in the provenance log (\u00a77)",
+        "cloned voice locked only after user approval of a test line (\u00a713)"
+      ],
+      "non_trigger": "Must NOT swap voices between characters or assign one character's\ndialogue to another without the user explicitly asking (\u00a71). Must NOT\nregenerate a character's voice from scratch for every line \u2014 reuse the\nsaved reference audio (\u00a72). Must NOT use the bundled OmniVoice weights\nfor commercial voice work (CC-BY-NC, \u00a73).",
+      "path": "skills/voice-consistency/SKILL.md",
+      "precedence": 4,
+      "quality_gate": "\u00a77/\u00a712: speaker-embedding similarity and prosody fingerprint per line\nand per episode against the reference audio, confirmed by a human\nlistening check, before delivery.",
+      "required_inputs": [
+        "registered character (name plus ID) (\u00a71)",
+        {
+          "fixed voice profile": "voice ID, tags, seed, reference audio (\u00a71)"
+        },
+        "script dialogue per character, with emotion per line (\u00a74)",
+        "voice/video order decision for the project, voice-first or video-first (\u00a78)",
+        {
+          "for cloning": "clean recording, whose voice, character name plus ID, transcript/ref_text (\u00a713)"
+        },
+        "articulation_target per speaking subject, from the subject's anatomy (\u00a7C8; schemas/character.json)"
+      ],
+      "routing_dimensions": {
+        "articulation_target": [
+          "human-mouth-lips",
+          "bird-beak",
+          "animal-muzzle",
+          "creature-jaw-mandibles",
+          "other"
+        ],
+        "interaction_pattern": [
+          "single-performance",
+          "two-person-conversation",
+          "multi-person-conversation",
+          "human-animal",
+          "human-creature",
+          "multiple-animals-creatures",
+          "group-scene"
+        ],
+        "motion_method": [
+          "lip-sync-phoneme-viseme",
+          "creature-articulation",
+          "performance-transfer",
+          "face-animation"
+        ],
+        "source_media": [
+          "script-only",
+          "reference-video",
+          "captured-footage",
+          "generated-video",
+          "mixed"
+        ],
+        "subject_kind": [
+          "human",
+          "digital-human",
+          "cgi-animal",
+          "fictional-creature",
+          "anthropomorphic",
+          "mixed"
+        ]
+      },
+      "sha256": "9e604e1b568d6649ff3ac4a75a69ee1d26d85eae255512c8b5b742be031bbf71",
+      "skill": "voice-consistency",
+      "skill_id": "skill-voice-consistency"
+    },
+    {
+      "activation_trigger": "MUST run for every series/episode production: the professional\nproduction layer \u2014 style bible, camera language and shot list, sound,\nmusic, story bible, continuity tracker, dialogue rules, lip-sync\nworkflow, and the episode QC checklist\n(production-systems intro; A1-A12, B1-B18, C1-C7).",
+      "applicable_modes": [
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "REGISTER_CHARACTER",
+        "GENERATE_FROM_SCRIPT",
+        "EDIT_EXISTING_MEDIA",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM"
+      ],
+      "approval_conditions": "User approves the finished episode before lock-in (command-authority\n\u00a77 step 9); missing intake answers must be asked, not guessed (C3); no\nseparate per-system approval stated in skill.",
+      "conflicts": [],
+      "dependencies": [],
+      "expected_outputs": [
+        "visual style bible (A1)",
+        "camera language plus shot list with script-driven angles (A2, A12)",
+        "sound design and music plan (A4, A5)",
+        "story bible and continuity tracker updates (A6, A7)",
+        "dialogue in natural spoken language (A8)",
+        "episode QC checklist result (A11)",
+        "distribution package in the requested ratio (B16, D3)",
+        "production profile record with per-subject / per-shot overrides (schemas/production-profile.json)"
+      ],
+      "non_trigger": "Must NOT run as a replacement for character, voice, or humanization\nrules \u2014 it sits alongside them (intro). Must NOT treat character\nconsistency as a minor visual preference (Part E). Must NOT add\ncaptions automatically \u2014 captions are opt-in (D1). Must NOT assume\n\"Made for Kids\" (B16).",
+      "path": "skills/production-systems/SKILL.md",
+      "precedence": 5,
+      "quality_gate": "A11 episode QC checklist \u2014 faces, voices, emotions, dialogue exact, no\ndefects, clothing, sound, story-bible/continuity agreement \u2014 before\ndelivery; never deliver a failed check without telling the user.",
+      "required_inputs": [
+        "user script and video type",
+        {
+          "episode intake answers": "characters, per-character language, captions yes/no plus language, aspect ratio/platform, length, script (C3)"
+        },
+        "locked visual style (A1)",
+        "story bible and episode continuity tracker (A6, A7)",
+        "named audio delivery profile, or the destination video is for (B14)",
+        {
+          "production profile dimensions for the shots it covers": "visual_style, production_medium, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)"
+        }
+      ],
+      "routing_dimensions": {
+        "articulation_target": [
+          "human-mouth-lips",
+          "bird-beak",
+          "animal-muzzle",
+          "creature-jaw-mandibles",
+          "other"
+        ],
+        "interaction_pattern": [
+          "single-performance",
+          "two-person-conversation",
+          "multi-person-conversation",
+          "human-animal",
+          "human-creature",
+          "multiple-animals-creatures",
+          "group-scene",
+          "silent-reaction",
+          "physical-contact-object"
+        ],
+        "motion_method": [
+          "rig-2d-keyframe",
+          "rig-3d-keyframe",
+          "ai-image-to-video",
+          "ai-video-to-video",
+          "motion-capture",
+          "performance-transfer",
+          "face-animation",
+          "body-animation",
+          "pose-gesture-transfer",
+          "lip-sync-phoneme-viseme",
+          "creature-articulation",
+          "rotoscoping-compositing",
+          "captured-motion"
+        ],
+        "production_medium": [
+          "2d-drawn-vector",
+          "3d-cgi-rigged",
+          "ai-digital-human",
+          "ai-digital-creature",
+          "live-action-footage",
+          "hybrid-live-action-cgi"
+        ],
+        "source_media": [
+          "script-only",
+          "reference-image",
+          "reference-video",
+          "captured-footage",
+          "generated-image",
+          "generated-video",
+          "mixed"
+        ],
+        "subject_kind": [
+          "human",
+          "digital-human",
+          "real-animal",
+          "cgi-animal",
+          "fictional-creature",
+          "anthropomorphic",
+          "mixed",
+          "non-character"
+        ],
+        "visual_style": [
+          "flat-2d-vector",
+          "hand-drawn-2d",
+          "illustrated-2d",
+          "anime",
+          "cartoon-2d",
+          "stylized-3d",
+          "semi-realistic-3d",
+          "photorealistic-3d-cgi",
+          "photorealistic-digital-human",
+          "photorealistic-digital-animal-creature",
+          "mixed",
+          "captured-live-action"
+        ]
+      },
+      "sha256": "85958c281d391e172d40543be5d59a7473d1efc3d22c4a6ce307ca57f8acfc2c",
+      "skill": "production-systems",
+      "skill_id": "skill-production-systems"
+    },
+    {
+      "activation_trigger": "MUST run whenever dialogue is spoken in a language other than the\ndefault, a video is delivered in more than one language, or\nper-character languages differ: every language is spoken the way its\nnative speakers speak it, with lip-sync matched to that language's\nsounds (language-authenticity intro; \u00a71, \u00a74, \u00a76).",
+      "applicable_modes": [
+        "PROJECT_CONSISTENCY",
+        "GENERATE_FROM_SCRIPT",
+        "EDIT_EXISTING_MEDIA",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM"
+      ],
+      "approval_conditions": "User names the languages to deliver (\u00a74); no separate approval gate\nstated in skill \u2014 a version failing either \u00a78 check must not be\ndelivered without telling the user what failed.",
+      "conflicts": [],
+      "dependencies": [
+        "voice-consistency",
+        "production-systems"
+      ],
+      "expected_outputs": [
+        "dialogue performed in each language's native pattern (\u00a71-\u00a72)",
+        {
+          "one complete video version per requested language": "dialogue, voice, lip-sync, on-screen text, captions (\u00a74, \u00a77)"
+        },
+        "per-language QC result (\u00a78)"
+      ],
+      "non_trigger": "Must NOT force all characters into one language unless the user asks\n(\u00a73). Must NOT deliver a version in the wrong language or promise the\nremaining languages later without saying so (\u00a74). Must NOT burn one\nlanguage's text over another language's version (\u00a77).",
+      "path": "skills/language-authenticity/SKILL.md",
+      "precedence": 6,
+      "quality_gate": "\u00a78: native-plausibility listening test plus per-line lip-sync check\nfor every language version before delivery.",
+      "required_inputs": [
+        "per-character language(s) (production-systems D2)",
+        "script dialogue per character per language",
+        "fixed voice profile per character (voice-consistency \u00a71)",
+        "language version(s) requested by the user (\u00a74)",
+        "articulation_target per speaking subject, matched to the language's sounds (\u00a76)"
+      ],
+      "routing_dimensions": {
+        "articulation_target": [
+          "human-mouth-lips",
+          "bird-beak",
+          "animal-muzzle",
+          "creature-jaw-mandibles",
+          "other"
+        ],
+        "interaction_pattern": [
+          "single-performance",
+          "two-person-conversation",
+          "multi-person-conversation",
+          "human-animal",
+          "human-creature",
+          "multiple-animals-creatures",
+          "group-scene"
+        ],
+        "motion_method": [
+          "lip-sync-phoneme-viseme",
+          "creature-articulation"
+        ],
+        "subject_kind": [
+          "human",
+          "digital-human",
+          "cgi-animal",
+          "fictional-creature",
+          "anthropomorphic",
+          "mixed"
+        ]
+      },
+      "sha256": "a370ecc948b3ba5f6621f2cdc5caa8c01e2ed8827a9903f6b8c61ea14788a0ee",
+      "skill": "language-authenticity",
+      "skill_id": "skill-language-authenticity"
+    },
+    {
+      "activation_trigger": "MUST run on every project: the 36 systems that make every video feel\nhuman-made, not AI-made (humanized-production intro).",
+      "applicable_modes": [
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "GENERATE_FROM_SCRIPT",
+        "EDIT_EXISTING_MEDIA",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM"
+      ],
+      "approval_conditions": "Human review gate before release (\u00a730.28 blind-test; production-systems\nA11); no separate per-system approval stated in skill.",
+      "conflicts": [],
+      "dependencies": [
+        "production-systems",
+        "voice-consistency"
+      ],
+      "expected_outputs": [
+        "performance, micro-motion, and gaze specs per shot (\u00a730.1-\u00a730.7)",
+        "four-layer sound plan (\u00a730.5, \u00a730.19)",
+        "film-finish pipeline output (\u00a730.11)",
+        "drift and artifact QC findings (\u00a730.12-\u00a730.13, \u00a730.21, \u00a730.29)",
+        "blind-test \"felt off\" notes acted on (\u00a730.28)",
+        "imperfection budget and failure-playbook entries (\u00a730.31, \u00a730.33)"
+      ],
+      "non_trigger": "Must NOT be skipped for any video type. Must NOT patch temporal\nproblems in grading (\u00a730.11). Must NOT present a detector score as a\nverdict (\u00a730.21). Must NOT use a real person's photo or voice without\npermission (\u00a730.34).",
+      "path": "skills/humanized-production/SKILL.md",
+      "precedence": 7,
+      "quality_gate": "\u00a730.13/\u00a730.21/\u00a730.28: temporal-artifact scrub of every take and clip\njoin, detector self-QC as triage only, and the human blind-test gate\nbefore release.",
+      "required_inputs": [
+        "locked style and shot list (production-systems A1/A2/A12)",
+        "fixed character and voice references",
+        "script emotion per line",
+        "sound spotting plan per shot (\u00a730.19)",
+        "pinned model versions and golden set (\u00a730.25)",
+        {
+          "production profile dimensions for the shots it covers": "visual_style, production_medium, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)"
+        }
+      ],
+      "routing_dimensions": {
+        "articulation_target": [
+          "human-mouth-lips",
+          "bird-beak",
+          "animal-muzzle",
+          "creature-jaw-mandibles",
+          "other"
+        ],
+        "interaction_pattern": [
+          "single-performance",
+          "two-person-conversation",
+          "multi-person-conversation",
+          "human-animal",
+          "human-creature",
+          "multiple-animals-creatures",
+          "group-scene",
+          "silent-reaction",
+          "physical-contact-object"
+        ],
+        "motion_method": [
+          "rig-2d-keyframe",
+          "rig-3d-keyframe",
+          "ai-image-to-video",
+          "ai-video-to-video",
+          "motion-capture",
+          "performance-transfer",
+          "face-animation",
+          "body-animation",
+          "pose-gesture-transfer",
+          "lip-sync-phoneme-viseme",
+          "creature-articulation",
+          "rotoscoping-compositing",
+          "captured-motion"
+        ],
+        "production_medium": [
+          "2d-drawn-vector",
+          "3d-cgi-rigged",
+          "ai-digital-human",
+          "ai-digital-creature",
+          "live-action-footage",
+          "hybrid-live-action-cgi"
+        ],
+        "source_media": [
+          "script-only",
+          "reference-image",
+          "reference-video",
+          "captured-footage",
+          "generated-image",
+          "generated-video",
+          "mixed"
+        ],
+        "subject_kind": [
+          "human",
+          "digital-human",
+          "real-animal",
+          "cgi-animal",
+          "fictional-creature",
+          "anthropomorphic",
+          "mixed",
+          "non-character"
+        ],
+        "visual_style": [
+          "flat-2d-vector",
+          "hand-drawn-2d",
+          "illustrated-2d",
+          "anime",
+          "cartoon-2d",
+          "stylized-3d",
+          "semi-realistic-3d",
+          "photorealistic-3d-cgi",
+          "photorealistic-digital-human",
+          "photorealistic-digital-animal-creature",
+          "mixed",
+          "captured-live-action"
+        ]
+      },
+      "sha256": "2bdfdb6a958337c2f654295571b1c615d919e7833762cc9340d9b4be46b0aee2",
+      "skill": "humanized-production",
+      "skill_id": "skill-humanized-production"
+    },
+    {
+      "activation_trigger": "MUST run when the video needs feature-trailer or music-video quality:\nstyle locked first, animals/creatures performing, cuts on the musical\nbeat, trailer structure, or scripted scale and colour\n(cinematic-power intro; \u00a71-\u00a75).",
+      "applicable_modes": [
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "GENERATE_FROM_SCRIPT",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM"
+      ],
+      "approval_conditions": "A style change is a deliberate, recorded decision (\u00a71) \u2014 user-directed;\nno separate approval gate stated in skill.",
+      "conflicts": [],
+      "dependencies": [
+        "production-systems",
+        "humanized-production"
+      ],
+      "expected_outputs": [
+        "style lock held in every shot (\u00a71)",
+        "creature performance per record (\u00a72)",
+        "music-beat edit with one shared ensemble timing reference (\u00a73)",
+        "six-beat trailer/teaser structure with title and release cards (\u00a74)",
+        "scale and colour script for the whole piece (\u00a75)"
+      ],
+      "non_trigger": "Must NOT run as a standalone video type \u2014 a trailer/teaser belongs\nINSIDE a web-series/episode production (\u00a74). Must NOT drift between\nstyles inside one video (\u00a71). Its anime / 3D / photorealistic\nstyle-lock rules must NOT be applied inside a flat-2D explainer shot\n(true conflict TC-3, same shot) \u2014 anime/3D styles live here instead\n(explainer-animation \u00a71); its other layers (music-beat, title cards)\nmay still combine with an explainer profile in other shots.",
+      "path": "skills/cinematic-power/SKILL.md",
+      "precedence": 8,
+      "quality_gate": "\u00a71/\u00a73/\u00a74/\u00a75 Checks: style lock holds in every shot, cuts and ensemble\nmovements land on the musical beat, all six trailer beats in order\nwith the ending unrevealed, palettes change only at planned transitions.",
+      "required_inputs": [
+        {
+          "locked visual style choice": "2D anime, 3D stylized CG, or photorealistic (\u00a71)"
+        },
+        "style bible and shot list (production-systems A1/A2/A12)",
+        "song structure (verse, chorus, drop) for music-driven pieces (\u00a73)",
+        "creature records (<creature-id>) (\u00a72)",
+        {
+          "production profile dimensions for the shots it covers": "visual_style, production_medium, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)"
+        }
+      ],
+      "routing_dimensions": {
+        "articulation_target": [
+          "human-mouth-lips",
+          "animal-muzzle",
+          "creature-jaw-mandibles",
+          "other"
+        ],
+        "interaction_pattern": [
+          "single-performance",
+          "two-person-conversation",
+          "multi-person-conversation",
+          "human-animal",
+          "human-creature",
+          "multiple-animals-creatures",
+          "group-scene",
+          "physical-contact-object"
+        ],
+        "motion_method": [
+          "rig-2d-keyframe",
+          "rig-3d-keyframe",
+          "ai-image-to-video",
+          "ai-video-to-video",
+          "motion-capture",
+          "performance-transfer",
+          "creature-articulation"
+        ],
+        "production_medium": [
+          "2d-drawn-vector",
+          "3d-cgi-rigged",
+          "ai-digital-human",
+          "ai-digital-creature",
+          "hybrid-live-action-cgi"
+        ],
+        "source_media": [
+          "script-only",
+          "reference-image",
+          "reference-video",
+          "generated-image",
+          "generated-video",
+          "mixed"
+        ],
+        "subject_kind": [
+          "human",
+          "digital-human",
+          "cgi-animal",
+          "fictional-creature",
+          "anthropomorphic",
+          "mixed"
+        ],
+        "visual_style": [
+          "anime",
+          "stylized-3d",
+          "semi-realistic-3d",
+          "photorealistic-3d-cgi",
+          "photorealistic-digital-human",
+          "photorealistic-digital-animal-creature",
+          "cartoon-2d",
+          "illustrated-2d",
+          "mixed"
+        ]
+      },
+      "sha256": "db7f6fb3e34ceb3d2408cde57d45b408b241bd8861365ed4209567d4a482fba9",
+      "skill": "cinematic-power",
+      "skill_id": "skill-cinematic-power"
+    },
+    {
+      "activation_trigger": "MUST run for musical and intimate scenes: a live stage performance\nwith an arc, a crowd reacting in waves, a long two-person scene held on\nthe faces, age performed through movement/voice/face/memory, hands\nplaying the instrument heard, a song as the plot, or a culturally\nspecific world where objects carry history\n(emotional-performance intro; \u00a71-\u00a77).",
+      "applicable_modes": [
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "GENERATE_FROM_SCRIPT",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM"
+      ],
+      "approval_conditions": "not_stated_in_skill \u2014 no separate approval gate; user approves the\nfinished video before lock-in via the command-authority flow.",
+      "conflicts": [],
+      "dependencies": [
+        "production-systems",
+        "humanized-production",
+        "cinematic-power",
+        "voice-consistency"
+      ],
+      "expected_outputs": [
+        "stage arc, nervous start to groove to triumph, with lighting, body, and crowd rising (\u00a71)",
+        "distinct crowd individuals reacting in waves, with a mood arc per beat (\u00a72)",
+        "planned beat-by-beat intimate arc with real touch at the climax (\u00a73)",
+        "age-matched movement, voice, face, and memory (\u00a74)",
+        "instrument sync verified against the audio (\u00a75)",
+        "song-as-plot arc (\u00a76)",
+        "one-culture world with object state per shot (\u00a77)"
+      ],
+      "non_trigger": "Must NOT run for scenes with no musical or intimate-emotional content\n\u2014 it adds only the emotional-performance layer on top of the\nfoundation (intro). Must NOT let the crowd react as one block (\u00a72).\nMust NOT talk over the scene's own emotional turn (\u00a73).",
+      "path": "skills/emotional-performance/SKILL.md",
+      "precedence": 9,
+      "quality_gate": "\u00a71-\u00a77 Checks: visible stage arc, distinct crowd reacting in waves,\nfaces held close and still through a planned turn, age-matched\nperformance, instrument sync in every hand close-up, song turning\npoint equals scene turning point, one culture and fixed hero props.",
+      "required_inputs": [
+        "style bible and shot list with a beat-by-beat emotional arc (\u00a73)",
+        "fixed character voices including age/state variants (voice-consistency \u00a78)",
+        "song and its beats recorded alongside the story's beats (\u00a76)",
+        "hero prop/object state per shot (\u00a77)",
+        "instrument identity (\u00a75)",
+        {
+          "production profile dimensions for the shots it covers": "visual_style, production_medium, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)"
+        }
+      ],
+      "routing_dimensions": {
+        "articulation_target": [
+          "human-mouth-lips"
+        ],
+        "interaction_pattern": [
+          "single-performance",
+          "two-person-conversation",
+          "multi-person-conversation",
+          "group-scene",
+          "silent-reaction",
+          "physical-contact-object"
+        ],
+        "motion_method": [
+          "rig-2d-keyframe",
+          "rig-3d-keyframe",
+          "motion-capture",
+          "performance-transfer",
+          "face-animation",
+          "body-animation",
+          "pose-gesture-transfer",
+          "lip-sync-phoneme-viseme"
+        ],
+        "production_medium": [
+          "2d-drawn-vector",
+          "3d-cgi-rigged",
+          "ai-digital-human",
+          "ai-digital-creature",
+          "live-action-footage",
+          "hybrid-live-action-cgi"
+        ],
+        "source_media": [
+          "script-only",
+          "reference-video",
+          "captured-footage",
+          "generated-video",
+          "mixed"
+        ],
+        "subject_kind": [
+          "human",
+          "digital-human",
+          "anthropomorphic",
+          "mixed"
+        ],
+        "visual_style": [
+          "anime",
+          "stylized-3d",
+          "semi-realistic-3d",
+          "photorealistic-3d-cgi",
+          "photorealistic-digital-human",
+          "cartoon-2d",
+          "illustrated-2d",
+          "mixed"
+        ]
+      },
+      "sha256": "2f2cd2a5d403c9e6c86e40571c8dbbcb84a5f1676e0e5cbd421dad1a28e839a0",
+      "skill": "emotional-performance",
+      "skill_id": "skill-emotional-performance"
+    },
+    {
+      "activation_trigger": "MUST run for live-action and VFX hybrid footage: real humans\nperforming with CG creatures, water/wetness continuity, real locations\nextended with CG, stunts, or real animals (live-action-vfx intro; \u00a71-\u00a76).",
+      "applicable_modes": [
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "GENERATE_FROM_SCRIPT",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM"
+      ],
+      "approval_conditions": "not_stated_in_skill \u2014 no separate approval gate; user approves the\nfinished video before lock-in via the command-authority flow.",
+      "conflict_scope": "TC-2 (same subject, same shot, source_media)",
+      "conflicts": [
+        "realistic-person"
+      ],
+      "dependencies": [
+        "production-systems",
+        "humanized-production",
+        "cinematic-power"
+      ],
+      "expected_outputs": [
+        "physically possible human performance with visible effort (\u00a71)",
+        "CG creatures sharing the plate's light, shadow, reflections, eyelines, scale, and contact (\u00a72)",
+        "wet-state continuity per shot (\u00a73)",
+        "seamless set extension with no visible join (\u00a74)",
+        "choreographed stunts with invisible safety and readable characters (\u00a75)",
+        "real-animal performance cut from real behaviour (\u00a76)"
+      ],
+      "non_trigger": "Must NOT run on a shot whose subject is a generated digital human\nfrom a still photo (true conflict TC-2, same subject same shot) or\non an animated shot with no captured plate \u2014 real footage is the\ninput (realistic-person \u00a76). Must NOT mix a real animal and a CG\ncreature in one animal (\u00a76), and must NOT give a real animal\nanthropomorphic speaking direction in the same shot (TC-1). Must NOT\nfake an impact the body cannot survive (\u00a75).",
+      "path": "skills/live-action-vfx/SKILL.md",
+      "precedence": 10,
+      "quality_gate": "\u00a71-\u00a76 Checks: physically possible performance, CG creatures sharing\nthe plate's light, shadow, scale, and eyelines, wet-state continuity,\ninvisible set-extension seams, choreographed stunts, real-animal\nbodies preserved.",
+      "required_inputs": [
+        "live plate / real footage",
+        "shot list with beat-by-beat stunt choreography (\u00a75)",
+        "CG creature records with fixed scale against the actor (\u00a72)",
+        "wet-state record per shot (\u00a73)",
+        "real location and CG extension plan (\u00a74)",
+        {
+          "production profile dimensions for the shots it covers": "visual_style, production_medium, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)"
+        }
+      ],
+      "routing_dimensions": {
+        "articulation_target": [
+          "human-mouth-lips",
+          "animal-muzzle",
+          "creature-jaw-mandibles",
+          "other"
+        ],
+        "interaction_pattern": [
+          "single-performance",
+          "two-person-conversation",
+          "multi-person-conversation",
+          "human-animal",
+          "human-creature",
+          "multiple-animals-creatures",
+          "group-scene",
+          "physical-contact-object"
+        ],
+        "motion_method": [
+          "motion-capture",
+          "performance-transfer",
+          "ai-video-to-video",
+          "rotoscoping-compositing",
+          "creature-articulation",
+          "captured-motion"
+        ],
+        "production_medium": [
+          "live-action-footage",
+          "hybrid-live-action-cgi"
+        ],
+        "source_media": [
+          "captured-footage",
+          "reference-video",
+          "mixed"
+        ],
+        "subject_kind": [
+          "human",
+          "real-animal",
+          "cgi-animal",
+          "fictional-creature",
+          "anthropomorphic",
+          "mixed"
+        ],
+        "visual_style": [
+          "photorealistic-3d-cgi",
+          "photorealistic-digital-animal-creature",
+          "mixed",
+          "captured-live-action"
+        ]
+      },
+      "sha256": "32acf307dc86f2e3ef06331668f371e73457f15ecc9700d828575a82eccd0a8b",
+      "skill": "live-action-vfx",
+      "skill_id": "skill-live-action-vfx"
+    },
+    {
+      "activation_trigger": "MUST run for professional kids and family animation: short-form videos\nfor children and young audiences across the 14 animation methods, with\none locked visual style, the camera decision system, 3D/2D craft,\nstory templates, and animation QC (kids-family-animation intro; \u00a72-\u00a712).",
+      "applicable_modes": [
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "GENERATE_FROM_SCRIPT",
+        "REFERENCE_REVIEW",
+        "REFERENCE_LEARN_AND_UPDATE",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM"
+      ],
+      "approval_conditions": "User gives only the script (\u00a715) \u2014 ask only the smallest necessary\nclarification; Made for Kids applies to kids content (\u00a71); Part 2 /\nvote-prompt endings only when the next part genuinely exists or the\nvote genuinely decides something (\u00a717.3); no separate approval gate\nstated in skill.",
+      "conflicts": [],
+      "dependencies": [
+        "command-authority",
+        "character-consistency",
+        "voice-consistency",
+        "humanized-production",
+        "cinematic-power"
+      ],
+      "expected_outputs": [
+        "storyboard and shot list with camera angles per \u00a75",
+        "animated video per the chosen method (\u00a73-\u00a74)",
+        "shot-level sound plan (\u00a79)",
+        "short-form structure with a first-second hook (\u00a710)",
+        "animation QC result across six groups (\u00a712)",
+        "production summary (\u00a715 step 15)"
+      ],
+      "non_trigger": "Must NOT run for a real person's photo turned into a realistic moving\nperson for the SAME subject in the SAME shot \u2014 that is a different\nrepresentation (true conflict TC-6; realistic-person, \u00a72). A production\nmay still combine kids animation with a realistic-person shot for a\ndifferent subject or shot. Must NOT copy\na reference creator's characters, scripts, dialogue, music, logos, or\nprotected assets (\u00a71). Must NOT guarantee virality or monetisation\n(\u00a71). Must NOT use frightening, crude, or age-inappropriate content (\u00a71).",
+      "path": "skills/kids-family-animation/SKILL.md",
+      "precedence": 11,
+      "quality_gate": "\u00a712 QC checklist \u2014 character, camera, animation, visual, audio, and\nstory groups \u2014 before delivery; never claim a pass unless the actual\noutput was inspected.",
+      "required_inputs": [
+        "script \u2014 the user gives only the script (\u00a715)",
+        "chosen animation method, 1 of 14, plus locked visual style (\u00a72)",
+        "registered characters and voices",
+        "camera decision answers, 8 questions (\u00a75.6)",
+        "story template, 1 of 10 (\u00a77)",
+        "reference library records where applicable (\u00a713-\u00a714)",
+        {
+          "production profile dimensions for the shots it covers": "visual_style, production_medium, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)"
+        }
+      ],
+      "routing_dimensions": {
+        "articulation_target": [
+          "human-mouth-lips",
+          "bird-beak",
+          "animal-muzzle",
+          "creature-jaw-mandibles",
+          "other"
+        ],
+        "interaction_pattern": [
+          "single-performance",
+          "two-person-conversation",
+          "multi-person-conversation",
+          "human-animal",
+          "human-creature",
+          "multiple-animals-creatures",
+          "group-scene",
+          "silent-reaction",
+          "physical-contact-object"
+        ],
+        "motion_method": [
+          "rig-2d-keyframe",
+          "rig-3d-keyframe",
+          "ai-image-to-video",
+          "ai-video-to-video",
+          "performance-transfer",
+          "face-animation",
+          "body-animation",
+          "pose-gesture-transfer",
+          "lip-sync-phoneme-viseme",
+          "creature-articulation"
+        ],
+        "production_medium": [
+          "2d-drawn-vector",
+          "3d-cgi-rigged",
+          "ai-digital-creature"
+        ],
+        "source_media": [
+          "script-only",
+          "reference-image",
+          "reference-video",
+          "captured-footage",
+          "generated-image",
+          "generated-video",
+          "mixed"
+        ],
+        "subject_kind": [
+          "human",
+          "digital-human",
+          "cgi-animal",
+          "fictional-creature",
+          "anthropomorphic",
+          "mixed"
+        ],
+        "visual_style": [
+          "flat-2d-vector",
+          "hand-drawn-2d",
+          "illustrated-2d",
+          "anime",
+          "cartoon-2d",
+          "stylized-3d",
+          "semi-realistic-3d",
+          "photorealistic-3d-cgi",
+          "mixed"
+        ]
+      },
+      "sha256": "5f5c74760b90257f0463e33afb2cf6bb7346da0ab7b35a3ccb2b54008967fd87",
+      "skill": "kids-family-animation",
+      "skill_id": "skill-kids-family-animation"
+    },
+    {
+      "activation_trigger": "MUST run when the user asks for a teaching/explainer animation: one\nidea told through 2D flat cartoon / stick-figure animation, vertical\nshort-form (explainer-animation intro; \u00a71-\u00a73).",
+      "applicable_modes": [
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "GENERATE_FROM_SCRIPT",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM"
+      ],
+      "approval_conditions": "not_stated_in_skill \u2014 no separate approval gate; user approves the\nfinished video before lock-in via the command-authority flow.",
+      "conflict_scope": "TC-4 (same subject, same shot, visual_style)",
+      "conflicts": [
+        "realistic-person"
+      ],
+      "dependencies": [],
+      "expected_outputs": [
+        "flat 2D vector video with thick black outlines, small palette, two character designs kept apart (\u00a71)",
+        "visual metaphors readable with the sound off (\u00a72)",
+        "slow push-ins/pans with few hard cuts (\u00a74)",
+        "expression-driven meaning (\u00a75)",
+        "QC result (\u00a77)"
+      ],
+      "non_trigger": "The flat-2D profile must NOT be applied to a shot whose visual_style\nis anime / 3D CG / photorealistic or whose source is captured\nlive-action footage (true conflicts TC-3, TC-4, TC-5, TC-9, same\nshot) \u2014 it is none of those (intro). Other shots in the same\nproduction may use those styles. Must NOT mix the two character\ndesigns, fuller figure versus stick figures (\u00a71). Must NOT use anime\nstyling, a 3D look, or photorealism (\u00a71, \u00a77).",
+      "path": "skills/explainer-animation/SKILL.md",
+      "precedence": 12,
+      "quality_gate": "\u00a77: style lock holds across every scene, metaphor stays readable with\nthe sound off, no anime styling, 3D look, or photorealism leaking in.",
+      "required_inputs": [
+        "the one idea to teach",
+        {
+          "script/story beats": "one idea per scene, about 10 s per scene, 4-6 scenes (\u00a73)"
+        },
+        "metaphor per abstract idea (\u00a72)",
+        {
+          "production profile dimensions for the shots it covers": "visual_style flat-2d-vector, production_medium 2d-drawn-vector, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)"
+        }
+      ],
+      "routing_dimensions": {
+        "articulation_target": [
+          "human-mouth-lips",
+          "other"
+        ],
+        "interaction_pattern": [
+          "single-performance",
+          "two-person-conversation",
+          "silent-reaction"
+        ],
+        "motion_method": [
+          "rig-2d-keyframe",
+          "face-animation",
+          "body-animation",
+          "pose-gesture-transfer",
+          "lip-sync-phoneme-viseme"
+        ],
+        "production_medium": [
+          "2d-drawn-vector"
+        ],
+        "source_media": [
+          "script-only",
+          "reference-image",
+          "generated-image",
+          "mixed"
+        ],
+        "subject_kind": [
+          "human",
+          "anthropomorphic",
+          "non-character"
+        ],
+        "visual_style": [
+          "flat-2d-vector"
+        ]
+      },
+      "sha256": "4b5067959f622ceeb46f1697aaa16e1bd9478b0a0f7faa6856c1e3866c2bb7ce",
+      "skill": "explainer-animation",
+      "skill_id": "skill-explainer-animation"
+    },
+    {
+      "activation_trigger": "MUST run when a real person's photo is to become a realistic video of\nperson moving and speaking naturally \u2014 the face never changes,\nonly movement and speech are added (realistic-person intro; \u00a71-\u00a75).\nThis IS animation (a generated digital human, not live-action footage\nof a real shoot) \u2014 P0-006.",
+      "applicable_modes": [
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "GENERATE_FROM_SCRIPT",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM"
+      ],
+      "approval_conditions": "Consent required: animate a real person only with that person's\npermission, for the agreed use, with a consent record (\u00a71); user\napproves the finished video before lock-in.",
+      "conflict_scope": "TC-2 (same subject, same shot, source_media), TC-4 (same subject, same shot, visual_style)",
+      "conflicts": [
+        "explainer-animation",
+        "live-action-vfx"
+      ],
+      "dependencies": [
+        "character-consistency",
+        "voice-consistency",
+        "language-authenticity",
+        "humanized-production"
+      ],
+      "expected_outputs": [
+        "realistic moving/speaking video of the person in the photo (intro)",
+        "natural movement with weight (\u00a73)",
+        "speech in the person's own language with lip-sync matched to its sounds (\u00a74)",
+        "QC result across face, movement, lip-sync, and defects (\u00a77)"
+      ],
+      "non_trigger": "Must NOT direct the same subject in the same shot with 2D/3D-animation\nstyling \u2014 use the cinematic-power style lock instead (\u00a76) (true\nconflict TC-7). Must NOT run on captured live-action footage of a real\nshoot for the same subject in the same shot \u2014 use live-action-vfx\ninstead (\u00a76) (TC-2). Must NOT animate a real person\nwithout permission (\u00a71). Must NOT beautify, reshape, slim, age, or\nredesign the face (\u00a72).",
+      "path": "skills/realistic-person/SKILL.md",
+      "precedence": 13,
+      "quality_gate": "\u00a77: face versus the supplied photo, natural movement, per-line\nlip-sync, no defects \u2014 all four checks before delivery.",
+      "required_inputs": [
+        {
+          "real person's photo": "clear, well-lit, face to camera; several angles more reliable (\u00a71)"
+        },
+        "consent record for photo and voice (\u00a71)",
+        "the person's own language and approved voice (\u00a74)",
+        "script/dialogue",
+        {
+          "production profile dimensions for the shots it covers": "visual_style photorealistic-digital-human, production_medium ai-digital-human, source_media, motion_method, subject_kind digital-human, interaction_pattern (schemas/production-profile.json)"
+        }
+      ],
+      "routing_dimensions": {
+        "articulation_target": [
+          "human-mouth-lips"
+        ],
+        "interaction_pattern": [
+          "single-performance",
+          "two-person-conversation",
+          "multi-person-conversation",
+          "silent-reaction",
+          "physical-contact-object"
+        ],
+        "motion_method": [
+          "ai-image-to-video",
+          "face-animation",
+          "body-animation",
+          "pose-gesture-transfer",
+          "lip-sync-phoneme-viseme",
+          "performance-transfer"
+        ],
+        "production_medium": [
+          "ai-digital-human"
+        ],
+        "source_media": [
+          "reference-image",
+          "generated-image",
+          "generated-video",
+          "mixed"
+        ],
+        "subject_kind": [
+          "digital-human"
+        ],
+        "visual_style": [
+          "photorealistic-digital-human"
+        ]
+      },
+      "sha256": "5fc7f7fb69bfce8159ad6c7399b071b56b075f47114099fdecfb13c44b35664e",
+      "skill": "realistic-person",
+      "skill_id": "skill-realistic-person"
+    },
+    {
+      "activation_trigger": "MUST run when a registered AI-generated model is used as an agency\nspokesperson across advertising campaigns for a business's services\n(agency-advertising intro; \u00a71-\u00a77).",
+      "applicable_modes": [
+        "PROJECT_CONSISTENCY",
+        "REGISTER_CHARACTER",
+        "GENERATE_FROM_SCRIPT",
+        "VIDEO_QC"
+      ],
+      "approval_conditions": "Client approval of the exact version before publish (\u00a77) \u2014 approval\ncovers exactly one version; every revision is a new draft requiring\nre-approval; the client must be told the spokesperson is AI-generated\nbefore approving (\u00a75).",
+      "conflicts": [],
+      "dependencies": [
+        "character-consistency",
+        "voice-consistency"
+      ],
+      "expected_outputs": [
+        "ads composed for the platform format, with hook in the first 3 s, service shown, and CTA (\u00a72)",
+        "campaign cut-downs (6/15/30 s) and A/B variants with variant IDs (\u00a73)",
+        "disclosure set on the platform (\u00a75)",
+        "client approval record per version (\u00a77)",
+        "published approved version only (\u00a77)"
+      ],
+      "non_trigger": "Must NOT run for a real person's face \u2014 the spokesperson is synthetic\nand must never resemble a real person (\u00a75). The same subject cannot be\nboth a synthetic spokesperson and a real-person digital human (true\nconflict TC-8). Must NOT run with assets\nfrom another client \u2014 stop and ask if any asset belongs to another\nclient's workspace (\u00a74). Must NOT publish any ad before client\napproval (\u00a77). Must NOT remove AI watermarks or provenance (\u00a75).",
+      "path": "skills/agency-advertising/SKILL.md",
+      "precedence": 14,
+      "quality_gate": "\u00a71-\u00a77 Checks: brand-kit match, platform format with hook/CTA/safe\nzones, variant tracking, client isolation, disclosure and likeness,\ncampaign lock, and client approval of the exact published version.",
+      "required_inputs": [
+        "registered model (character ID) created via the Character Generator, \u00a712.2 (character-consistency)",
+        {
+          "brand kit, brand-kit.yaml": "logo, exact hex colours, tagline, fonts, voice tone profile (\u00a71)"
+        },
+        "client workspace ID (\u00a74)",
+        {
+          "campaign record": "master ad, CTA, locked product shots/wording/prices/claims (\u00a73, \u00a76)"
+        },
+        {
+          "platform and format": "9:16, 1:1, or 16:9 (\u00a72)"
+        },
+        {
+          "production profile dimensions for the shots it covers": "visual_style, production_medium, source_media, motion_method, subject_kind, interaction_pattern (schemas/production-profile.json)"
+        }
+      ],
+      "routing_dimensions": {
+        "articulation_target": [
+          "human-mouth-lips"
+        ],
+        "interaction_pattern": [
+          "single-performance",
+          "two-person-conversation",
+          "silent-reaction"
+        ],
+        "motion_method": [
+          "ai-image-to-video",
+          "face-animation",
+          "body-animation",
+          "pose-gesture-transfer",
+          "lip-sync-phoneme-viseme",
+          "performance-transfer"
+        ],
+        "production_medium": [
+          "ai-digital-human",
+          "3d-cgi-rigged",
+          "2d-drawn-vector"
+        ],
+        "source_media": [
+          "script-only",
+          "reference-image",
+          "generated-image",
+          "generated-video",
+          "mixed"
+        ],
+        "subject_kind": [
+          "digital-human",
+          "anthropomorphic"
+        ],
+        "visual_style": [
+          "photorealistic-digital-human",
+          "stylized-3d",
+          "semi-realistic-3d",
+          "photorealistic-3d-cgi",
+          "cartoon-2d",
+          "illustrated-2d",
+          "mixed"
+        ]
+      },
+      "sha256": "c3ee45ac2cd769270204a8d38fd4517d1d43dc168b9c33e45b918a558c5fa184",
+      "skill": "agency-advertising",
+      "skill_id": "skill-agency-advertising"
+    },
+    {
+      "activation_trigger": "MUST run when the user uploads a video and asks for it to be\nregenerated: first analyse the reference in full, then create a NEW\noriginal video preserving its core story, emotional impact, narrative\nstructure, and creative direction (video-regeneration intro; \u00a71-\u00a72).",
+      "applicable_modes": [
+        "TEMPORARY_ASSET_USE",
+        "PROJECT_CONSISTENCY",
+        "REFERENCE_REVIEW",
+        "VIDEO_QC",
+        "REMAKE_OR_TRANSFORM"
+      ],
+      "approval_conditions": "User approves before lock-in; any change the user explicitly requests\nwins (\u00a72); defects must be corrected, regenerated, or reported, never\nsilently accepted (\u00a78).",
+      "conflicts": [],
+      "dependencies": [
+        "character-consistency",
+        "voice-consistency",
+        "humanized-production",
+        "production-systems"
+      ],
+      "expected_outputs": [
+        "complete reference analysis covering every scene in order (\u00a71)",
+        "chronological storyboard with all eight items per shot (\u00a76)",
+        {
+          "NEW original video": "same story and emotional journey, not a copy, in the reference's aspect ratio, pacing, and platform (\u00a72, \u00a79)"
+        },
+        "\u00a78 QC result, with defects corrected, regenerated, or reported"
+      ],
+      "non_trigger": "Must NOT reproduce the reference frame for frame or reproduce\ncopyrighted footage, songs, or exact recordings (\u00a72, \u00a77). Must NOT\ninvent visual details that cannot be verified from the reference (\u00a71).\nMust NOT treat a remake as skill learning by default (intro;\nREMAKE_OR_TRANSFORM mode rule).",
+      "path": "skills/video-regeneration/SKILL.md",
+      "precedence": 15,
+      "quality_gate": "\u00a78: mandatory final QC pass \u2014 identity, hands, object transfers,\nbackgrounds, lighting, audio sync, transitions, story order \u2014 no\ndefective shot silently accepted.",
+      "required_inputs": [
+        "user's uploaded reference video",
+        "regeneration request, including any explicitly requested changes (\u00a72)",
+        "registered characters and voices for the new video (intro)",
+        "storyboard plan per \u00a76",
+        "production profile dimensions for the new video, including per-subject / per-shot overrides where the remake changes representation (schemas/production-profile.json)"
+      ],
+      "routing_dimensions": {
+        "articulation_target": [
+          "human-mouth-lips",
+          "bird-beak",
+          "animal-muzzle",
+          "creature-jaw-mandibles",
+          "other"
+        ],
+        "interaction_pattern": [
+          "single-performance",
+          "two-person-conversation",
+          "multi-person-conversation",
+          "human-animal",
+          "human-creature",
+          "multiple-animals-creatures",
+          "group-scene",
+          "silent-reaction",
+          "physical-contact-object"
+        ],
+        "motion_method": [
+          "rig-2d-keyframe",
+          "rig-3d-keyframe",
+          "ai-image-to-video",
+          "ai-video-to-video",
+          "motion-capture",
+          "performance-transfer",
+          "face-animation",
+          "body-animation",
+          "pose-gesture-transfer",
+          "lip-sync-phoneme-viseme",
+          "creature-articulation",
+          "rotoscoping-compositing",
+          "captured-motion"
+        ],
+        "production_medium": [
+          "2d-drawn-vector",
+          "3d-cgi-rigged",
+          "ai-digital-human",
+          "ai-digital-creature",
+          "live-action-footage",
+          "hybrid-live-action-cgi"
+        ],
+        "source_media": [
+          "reference-video",
+          "captured-footage",
+          "generated-image",
+          "generated-video",
+          "mixed"
+        ],
+        "subject_kind": [
+          "human",
+          "digital-human",
+          "real-animal",
+          "cgi-animal",
+          "fictional-creature",
+          "anthropomorphic",
+          "mixed",
+          "non-character"
+        ],
+        "visual_style": [
+          "flat-2d-vector",
+          "hand-drawn-2d",
+          "illustrated-2d",
+          "anime",
+          "cartoon-2d",
+          "stylized-3d",
+          "semi-realistic-3d",
+          "photorealistic-3d-cgi",
+          "photorealistic-digital-human",
+          "photorealistic-digital-animal-creature",
+          "mixed",
+          "captured-live-action"
+        ]
+      },
+      "sha256": "ea47ad9ec1a96661b52180f1512aa4f72cc815d20c38d99e57d76481f36bdc92",
+      "skill": "video-regeneration",
+      "skill_id": "skill-video-regeneration"
+    }
+  ],
+  "sources": {
+    "architecture/AGENT_COMPATIBILITY_MATRIX.yaml": {
+      "sha256": "48f62000f49829bb246d080c53e0d28ff28879069284419e1ea8092f12300f36",
+      "version": "2.4"
+    },
+    "architecture/COMPANION_CAPABILITY_REGISTRY.yaml": {
+      "sha256": "d1520145cd55b14961c9dd6d71d7b07d04777b0687abacc4df94bc19ef6057ea",
+      "version": "2.4"
+    },
+    "architecture/SKILL_ROUTING_MATRIX.yaml": {
+      "sha256": "0481794d7de12b939f757c9a35c57f46043e90c314dd934013c3f9ae62942ef2",
+      "version": "2.4"
+    },
+    "architecture/WORKFLOW_GRAPH.yaml": {
+      "sha256": "dca1503e0f766ad3ffa7afbc428004a5c150200c0b8130012e5240aef01f5561",
+      "version": "2.4"
+    },
+    "architecture/intent-modes.yaml": {
+      "sha256": "7e459b6236bba20ac927ff0129e8a5047ecf441c0f57cced58477da501fe748b",
+      "version": "2.3"
+    }
+  },
+  "vocabularies": {
+    "animation_styles": [
+      "anime",
+      "cartoon-2d",
+      "photorealistic-3d-cgi",
+      "semi-realistic-3d",
+      "stylized-3d"
+    ],
+    "articulation_target": [
+      "animal-muzzle",
+      "bird-beak",
+      "creature-jaw-mandibles",
+      "human-mouth-lips",
+      "other"
+    ],
+    "cinematic_styles": [
+      "anime",
+      "cartoon-2d",
+      "photorealistic-3d-cgi",
+      "semi-realistic-3d",
+      "stylized-3d"
+    ],
+    "generated_media": [
+      "2d-drawn-vector",
+      "3d-cgi-rigged",
+      "ai-digital-creature",
+      "ai-digital-human"
+    ],
+    "generated_subjects": [
+      "anthropomorphic",
+      "cgi-animal",
+      "digital-human",
+      "fictional-creature"
+    ],
+    "intent_modes": [
+      "EDIT_EXISTING_MEDIA",
+      "GENERATE_FROM_SCRIPT",
+      "PROJECT_CONSISTENCY",
+      "REFERENCE_LEARN_AND_UPDATE",
+      "REFERENCE_REVIEW",
+      "REGISTER_CHARACTER",
+      "REGISTER_SOUND_ASSET",
+      "REGISTER_VOICE_PROFILE",
+      "REMAKE_OR_TRANSFORM",
+      "REPORT_UPDATE_ONLY",
+      "TEMPORARY_ASSET_USE",
+      "UPLOAD_ONLY",
+      "VIDEO_QC"
+    ],
+    "interaction_pattern": [
+      "group-scene",
+      "human-animal",
+      "human-creature",
+      "multi-person-conversation",
+      "multiple-animals-creatures",
+      "physical-contact-object",
+      "silent-reaction",
+      "single-performance",
+      "two-person-conversation"
+    ],
+    "motion_method": [
+      "ai-image-to-video",
+      "ai-video-to-video",
+      "body-animation",
+      "captured-motion",
+      "creature-articulation",
+      "face-animation",
+      "lip-sync-phoneme-viseme",
+      "motion-capture",
+      "performance-transfer",
+      "pose-gesture-transfer",
+      "rig-2d-keyframe",
+      "rig-3d-keyframe",
+      "rotoscoping-compositing"
+    ],
+    "production_medium": [
+      "2d-drawn-vector",
+      "3d-cgi-rigged",
+      "ai-digital-creature",
+      "ai-digital-human",
+      "hybrid-live-action-cgi",
+      "live-action-footage"
+    ],
+    "source_media": [
+      "captured-footage",
+      "generated-image",
+      "generated-video",
+      "mixed",
+      "reference-image",
+      "reference-video",
+      "script-only"
+    ],
+    "subject_kind": [
+      "anthropomorphic",
+      "cgi-animal",
+      "digital-human",
+      "fictional-creature",
+      "human",
+      "mixed",
+      "non-character",
+      "real-animal"
+    ],
+    "visual_style": [
+      "anime",
+      "captured-live-action",
+      "cartoon-2d",
+      "flat-2d-vector",
+      "hand-drawn-2d",
+      "illustrated-2d",
+      "mixed",
+      "photorealistic-3d-cgi",
+      "photorealistic-digital-animal-creature",
+      "photorealistic-digital-human",
+      "semi-realistic-3d",
+      "stylized-3d"
+    ]
+  }
+}
