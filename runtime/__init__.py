@@ -34,6 +34,25 @@ boundary. It is deliberately small and standard-library only:
   consistency and deterministic assembly. See
   ``docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md`` for the
   contract.
+- :mod:`runtime.task_compiler` — the deterministic provider-neutral
+  task compiler (CF-WO-P1-004): converts a validated production
+  bundle and the AI host's production analysis into actionable
+  task packets, matched against the compiled provider capability
+  registry only on evidenced capabilities. Standard-library only;
+  it never calls a provider, never generates media, never persists
+  anything, and never claims a packet executed — unmatched tasks
+  compile as complete provider-neutral handoffs.
+- :mod:`runtime.production_orchestrator` — the production
+  orchestration runtime (CF-WO-P1-004): owns the production job
+  lifecycle (intake, analysis validation, production-bundle
+  assembly, provider-task compilation, G1–G6 gate evaluation,
+  execution-result recording, QC correction tasks) and the
+  explicit job state machine. Standard-library only; it never
+  performs creative reasoning (the AI host fills the analysis
+  draft), never calls a provider, never generates media, and
+  never persists anything. See
+  ``docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md`` for the
+  contract.
 
 This is a local application runtime, not a cryptographic identity
 provider and not a server: it operates inside the security boundary
@@ -44,4 +63,5 @@ for exactly what the boundary guarantees and what it does not.
 """
 
 __all__ = ["local_session", "authorization", "skill_router",
-           "script_to_performance"]
+           "script_to_performance", "task_compiler",
+           "production_orchestrator"]

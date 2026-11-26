@@ -1,5 +1,5 @@
 {
-  "status": "PASS",
+  "status": "FAIL",
   "tests": [
     {
       "id": "P0-SHELL",
@@ -464,6 +464,24 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-004-ANALYSIS",
+      "command": "python3 tests/test_production_analysis.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-ORCHESTRATOR",
+      "command": "python3 tests/test_production_orchestrator.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-COMPILER",
+      "command": "python3 tests/test_task_compiler.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "command": "git diff --check",
       "exit_code": 0,
@@ -472,38 +490,38 @@
     {
       "id": "CF-P0-REPORT-001",
       "command": "python3 tests/test_reports.py",
-      "exit_code": 0,
-      "result": "PASS"
+      "exit_code": 1,
+      "result": "FAIL"
     },
     {
       "id": "CF-P0-REPORT-002",
       "command": "python3 tests/test_reports.py",
-      "exit_code": 0,
-      "result": "PASS"
+      "exit_code": 1,
+      "result": "FAIL"
     },
     {
       "id": "CF-P0-REPORT-003",
       "command": "python3 tests/test_reports.py",
-      "exit_code": 0,
-      "result": "PASS"
+      "exit_code": 1,
+      "result": "FAIL"
     },
     {
       "id": "CF-P0-REPORT-004",
       "command": "python3 tests/test_reports.py",
-      "exit_code": 0,
-      "result": "PASS"
+      "exit_code": 1,
+      "result": "FAIL"
     },
     {
       "id": "CF-P0-REPORT-005",
       "command": "python3 tests/test_reports.py",
-      "exit_code": 0,
-      "result": "PASS"
+      "exit_code": 1,
+      "result": "FAIL"
     },
     {
       "id": "CF-P1-003-R2-MANIFEST",
       "command": "python3 tests/test_reports.py",
-      "exit_code": 0,
-      "result": "PASS"
+      "exit_code": 1,
+      "result": "FAIL"
     },
     {
       "id": "CF-INT-023",

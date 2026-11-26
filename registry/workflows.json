@@ -12,7 +12,9 @@
       "required_inputs": [
         "uploaded file"
       ],
-      "skills_invoked": [],
+      "skills_invoked": [
+        "skill-command-authority"
+      ],
       "status": "SCHEMA_DEFINED",
       "tests": [
         "CF-P0-ASSET-001",
@@ -33,7 +35,20 @@
         "uploaded media",
         "task"
       ],
-      "skills_invoked": [],
+      "skills_invoked": [
+        "skill-command-authority",
+        "skill-resource-management",
+        "skill-character-consistency",
+        "skill-production-systems",
+        "skill-humanized-production",
+        "skill-cinematic-power",
+        "skill-emotional-performance",
+        "skill-live-action-vfx",
+        "skill-kids-family-animation",
+        "skill-explainer-animation",
+        "skill-realistic-person",
+        "skill-video-regeneration"
+      ],
       "status": "SCHEMA_DEFINED",
       "tests": [
         "CF-P0-ASSET-001",
@@ -55,7 +70,23 @@
         "project_id",
         "task"
       ],
-      "skills_invoked": [],
+      "skills_invoked": [
+        "skill-command-authority",
+        "skill-resource-management",
+        "skill-character-consistency",
+        "skill-voice-consistency",
+        "skill-production-systems",
+        "skill-language-authenticity",
+        "skill-humanized-production",
+        "skill-cinematic-power",
+        "skill-emotional-performance",
+        "skill-live-action-vfx",
+        "skill-kids-family-animation",
+        "skill-explainer-animation",
+        "skill-realistic-person",
+        "skill-agency-advertising",
+        "skill-video-regeneration"
+      ],
       "status": "SCHEMA_DEFINED",
       "tests": [],
       "trigger": "Maintain consistency across a named project/series.",
@@ -75,7 +106,13 @@
         "approved reference(s)",
         "explicit authorisation"
       ],
-      "skills_invoked": [],
+      "skills_invoked": [
+        "skill-command-authority",
+        "skill-resource-management",
+        "skill-character-consistency",
+        "skill-production-systems",
+        "skill-agency-advertising"
+      ],
       "status": "SCHEMA_DEFINED",
       "tests": [
         "CF-P0-ASSET-001",
@@ -98,7 +135,11 @@
         "explicit authorisation",
         "consent"
       ],
-      "skills_invoked": [],
+      "skills_invoked": [
+        "skill-command-authority",
+        "skill-resource-management",
+        "skill-voice-consistency"
+      ],
       "status": "SCHEMA_DEFINED",
       "tests": [
         "CF-P0-ASSET-001",
@@ -121,7 +162,9 @@
         "licence",
         "explicit instruction"
       ],
-      "skills_invoked": [],
+      "skills_invoked": [
+        "skill-command-authority"
+      ],
       "status": "SCHEMA_DEFINED",
       "tests": [
         "CF-P0-ASSET-001",
@@ -142,7 +185,22 @@
         "script",
         "project_id (if recurring)"
       ],
-      "skills_invoked": [],
+      "skills_invoked": [
+        "skill-command-authority",
+        "skill-resource-management",
+        "skill-character-consistency",
+        "skill-voice-consistency",
+        "skill-production-systems",
+        "skill-language-authenticity",
+        "skill-humanized-production",
+        "skill-cinematic-power",
+        "skill-emotional-performance",
+        "skill-live-action-vfx",
+        "skill-kids-family-animation",
+        "skill-explainer-animation",
+        "skill-realistic-person",
+        "skill-agency-advertising"
+      ],
       "status": "SCHEMA_DEFINED",
       "tests": [],
       "trigger": "Convert a script/brief into a production plan.",
@@ -161,7 +219,15 @@
         "media",
         "edit brief"
       ],
-      "skills_invoked": [],
+      "skills_invoked": [
+        "skill-command-authority",
+        "skill-resource-management",
+        "skill-character-consistency",
+        "skill-voice-consistency",
+        "skill-production-systems",
+        "skill-language-authenticity",
+        "skill-humanized-production"
+      ],
       "status": "SCHEMA_DEFINED",
       "tests": [],
       "trigger": "Edit supplied footage/assets.",
@@ -178,7 +244,12 @@
       "required_inputs": [
         "reference media"
       ],
-      "skills_invoked": [],
+      "skills_invoked": [
+        "skill-command-authority",
+        "skill-resource-management",
+        "skill-kids-family-animation",
+        "skill-video-regeneration"
+      ],
       "status": "SCHEMA_DEFINED",
       "tests": [],
       "trigger": "Analyse a reference and report findings.",
@@ -196,7 +267,11 @@
         "reference media",
         "explicit user instruction"
       ],
-      "skills_invoked": [],
+      "skills_invoked": [
+        "skill-command-authority",
+        "skill-resource-management",
+        "skill-kids-family-animation"
+      ],
       "status": "SCHEMA_DEFINED",
       "tests": [],
       "trigger": "Analyse a reference and propose reusable learnings.",
@@ -214,7 +289,23 @@
         "output media",
         "brief"
       ],
-      "skills_invoked": [],
+      "skills_invoked": [
+        "skill-command-authority",
+        "skill-resource-management",
+        "skill-character-consistency",
+        "skill-voice-consistency",
+        "skill-production-systems",
+        "skill-language-authenticity",
+        "skill-humanized-production",
+        "skill-cinematic-power",
+        "skill-emotional-performance",
+        "skill-live-action-vfx",
+        "skill-kids-family-animation",
+        "skill-explainer-animation",
+        "skill-realistic-person",
+        "skill-agency-advertising",
+        "skill-video-regeneration"
+      ],
       "status": "SCHEMA_DEFINED",
       "tests": [],
       "trigger": "Inspect an existing output and report defects.",
@@ -233,7 +324,22 @@
         "explicit request",
         "rights check"
       ],
-      "skills_invoked": [],
+      "skills_invoked": [
+        "skill-command-authority",
+        "skill-resource-management",
+        "skill-character-consistency",
+        "skill-voice-consistency",
+        "skill-production-systems",
+        "skill-language-authenticity",
+        "skill-humanized-production",
+        "skill-cinematic-power",
+        "skill-emotional-performance",
+        "skill-live-action-vfx",
+        "skill-kids-family-animation",
+        "skill-explainer-animation",
+        "skill-realistic-person",
+        "skill-video-regeneration"
+      ],
       "status": "SCHEMA_DEFINED",
       "tests": [],
       "trigger": "Transform/remake a reference as expressly requested.",
@@ -250,7 +356,9 @@
       "required_inputs": [
         "registry/schema records"
       ],
-      "skills_invoked": [],
+      "skills_invoked": [
+        "skill-command-authority"
+      ],
       "status": "SCHEMA_DEFINED",
       "tests": [],
       "trigger": "Regenerate reports from canonical records.",
@@ -258,5 +366,5 @@
     }
   ],
   "registry": "workflows",
-  "version": "2.3"
+  "version": "2.4"
 }

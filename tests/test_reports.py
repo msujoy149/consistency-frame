@@ -100,7 +100,16 @@ def errors_for(schema, value):
 # docs/04-additional-systems.md, docs/05-humanization-systems.md, and
 # skills/kids-family-animation/SKILL.md). No new tracked file was added;
 # the four added entries are exactly those four files. 182 before.
-MANIFEST_EXPECTED_COUNT = 186
+# 206 since CF-WO-P1-004 (2026-11-26): twenty genuinely new files —
+# five schemas (production-analysis, character-design-proposal,
+# task-packet, gate-state, provider-capability), two runtime modules
+# (production_orchestrator, task_compiler), three test files
+# (test_production_analysis, test_production_orchestrator,
+# test_task_compiler), seven fixtures, registry/providers.json,
+# docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md, and
+# docs/implementation/CF-WO-P1-004-corrections.md. Every other file
+# this round touched was already in the manifest from an earlier round.
+MANIFEST_EXPECTED_COUNT = 206
 MANIFEST_EXCLUDED = ("release-manifest.json",
                      "docs/implementation/CHECKSUMS.txt")
 

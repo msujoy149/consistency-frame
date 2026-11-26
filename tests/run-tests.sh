@@ -127,6 +127,9 @@ run_one "CF-P1-003-R2-PERFORMANCE" python3 tests/test_script_to_performance_runt
 run_one "CF-P1-003-R2-EDITING" python3 tests/test_script_to_performance_runtime.py
 run_one "CF-P1-003-R2-BINDINGS" python3 tests/test_script_to_performance_runtime.py
 run_one "CF-P1-003-R2-BUNDLE" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-004-ANALYSIS" python3 tests/test_production_analysis.py
+run_one "CF-P1-004-ORCHESTRATOR" python3 tests/test_production_orchestrator.py
+run_one "CF-P1-004-COMPILER" python3 tests/test_task_compiler.py
 
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check

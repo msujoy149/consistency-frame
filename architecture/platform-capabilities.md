@@ -20,15 +20,27 @@ regenerated/corrected.
 
 ## Hosts
 
-| Host | Integration | Native skill install | Conformance |
-|---|---|---|---|
-| Muse (Meta) | PACKAGED (knowledge pack / uploaded workspace files) | UNSUPPORTED — no documented native custom-SKILL.md install flow (Meta Help Centre) | NOT_TESTED |
-| Claude Code | NATIVE (plugin marketplace) | NOT_TESTED | NOT_TESTED |
-| Codex | NATIVE (plugin manifest) | NOT_TESTED | NOT_TESTED |
-| Gemini CLI | NATIVE (extension) | NOT_TESTED | NOT_TESTED |
-| Antigravity | PACKAGED (`.agents/skills/` + `AGENTS.md`/`GEMINI.md`) | NOT_TESTED | NOT_TESTED |
-| ChatGPT | PACKAGED (upload `skills/` via Skills tab) | NOT_TESTED | NOT_TESTED |
-| OpenCode | NATIVE (`.opencode/skills`) | NOT_TESTED | NOT_TESTED (planned) |
+| Host | Integration | Native skill install | Usage in this account | Formal conformance | Media execution |
+|---|---|---|---|---|---|
+| Muse (Meta) | PACKAGED (knowledge pack / uploaded workspace files) | UNSUPPORTED — no documented native custom-SKILL.md install flow (Meta Help Centre) | USED DAILY since 2026-11-12 (repo work, P0/P1 implementation, tests, blog) | NOT_TESTED (CF-P0-ADAPTER-001) | none — directs companions/providers only |
+| Claude Code | NATIVE (plugin marketplace) | NOT_TESTED | none recorded | NOT_TESTED | none evidenced |
+| Codex | NATIVE (plugin manifest) | NOT_TESTED | none recorded | NOT_TESTED | none evidenced |
+| Gemini CLI | NATIVE (extension) | NOT_TESTED | none recorded | NOT_TESTED | none evidenced |
+| Antigravity | PACKAGED (`.agents/skills/` + `AGENTS.md`/`GEMINI.md`) | NOT_TESTED | none recorded | NOT_TESTED | none evidenced |
+| ChatGPT | PACKAGED (upload `skills/` via Skills tab) | NOT_TESTED | none recorded | NOT_TESTED | none evidenced |
+| OpenCode | NATIVE (`.opencode/skills`) | NOT_TESTED | none recorded | NOT_TESTED (planned) | none evidenced |
+
+**Usage vs formal conformance (P1-004):** the compatibility matrix
+records Muse as VERIFIED because the knowledge-pack path is exercised
+daily in this account — that is usage, not a formal conformance test.
+Formal conformance stays NOT_TESTED until a CF-P0-ADAPTER-001 test
+runs. The two are tracked as separate fields
+(`verification_status` vs `formal_conformance_status`) in
+`architecture/AGENT_COMPATIBILITY_MATRIX.yaml` and in
+`registry/adapters.json`; do not read one as the other. No host
+generates media itself: media execution lives only in the providers
+recorded in `architecture/COMPANION_CAPABILITY_REGISTRY.yaml`
+(providers section) and `registry/providers.json`.
 
 **Muse correction (P0, F3):** the pre-P0 README table row said "Clone into
 the workspace and run `bash setup.sh`" for Muse, and `docs/06` said

@@ -1,0 +1,444 @@
+{
+  "count": 13,
+  "note": "Providers are media executors, not reasoning hosts. A provider is matched only on capabilities this record evidences; NOT_TESTED and FAILED providers are never matched. Commercial use is approved only where a route was independently cleared; the default OmniVoice weights are CC-BY-NC and are never routed for commercial production.",
+  "records": [
+    {
+      "adapter_version": "",
+      "audio_capability": true,
+      "authorization_required": true,
+      "character_reference_capability": false,
+      "commercial_use_approved": false,
+      "commercial_use_reason": "unverified",
+      "conformance": {
+        "evidence": "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made",
+        "last_verified": "never",
+        "status": "NOT_TESTED",
+        "test_id": ""
+      },
+      "cost_model": "paid-per-call",
+      "evidence": "documented-only; no live paid call made in this account",
+      "input_constraints": [
+        "text plus a voice id; reference audio for cloning"
+      ],
+      "licence": "proprietary-paid",
+      "native_camera_controls": [],
+      "native_motion_controls": [],
+      "operations": [
+        "generate-speech",
+        "clone-voice"
+      ],
+      "output_constraints": [
+        "wav audio; single speaker per call"
+      ],
+      "privacy_transmission": "transmission-to-provider-requires-authorization",
+      "provider_id": "provider-elevenlabs-voice",
+      "provider_type": "voice-tts",
+      "reference_image_capability": false,
+      "schema_version": "2.5"
+    },
+    {
+      "adapter_version": "",
+      "audio_capability": false,
+      "authorization_required": true,
+      "character_reference_capability": true,
+      "commercial_use_approved": false,
+      "commercial_use_reason": "unverified",
+      "conformance": {
+        "evidence": "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made",
+        "last_verified": "never",
+        "status": "NOT_TESTED",
+        "test_id": ""
+      },
+      "cost_model": "paid-per-call",
+      "evidence": "documented-only; no live paid call made in this account",
+      "input_constraints": [
+        "text prompt; optional reference image"
+      ],
+      "licence": "proprietary-paid",
+      "native_camera_controls": [],
+      "native_motion_controls": [],
+      "operations": [
+        "generate-image"
+      ],
+      "output_constraints": [
+        "image; resolution and limits unverified here"
+      ],
+      "privacy_transmission": "transmission-to-provider-requires-authorization",
+      "provider_id": "provider-fal-image",
+      "provider_type": "image-generation",
+      "reference_image_capability": true,
+      "schema_version": "2.5"
+    },
+    {
+      "adapter_version": "8.1.2",
+      "audio_capability": true,
+      "authorization_required": false,
+      "character_reference_capability": false,
+      "commercial_use_approved": true,
+      "commercial_use_reason": "local tool; production use permitted; output commercial status depends on the input assets",
+      "conformance": {
+        "evidence": "ffmpeg 8.1.2 used for demo renders 2026-11-12/13 (Ken Burns demo, code-cartoon demo)",
+        "last_verified": "2026-11-13",
+        "status": "EXERCISED",
+        "test_id": ""
+      },
+      "cost_model": "local-free",
+      "evidence": "ffmpeg 8.1.2 on this machine; demo renders in ~/workspace/demo-video",
+      "input_constraints": [
+        "media files on local disk"
+      ],
+      "licence": "LGPL/GPL (system binary)",
+      "native_camera_controls": [],
+      "native_motion_controls": [],
+      "operations": [
+        "probe-media",
+        "transcode-media",
+        "assemble-timeline"
+      ],
+      "output_constraints": [
+        "probed metadata; transcoded or concatenated media"
+      ],
+      "privacy_transmission": "local-only; no transmission to any provider",
+      "provider_id": "provider-ffmpeg",
+      "provider_type": "local-tool",
+      "reference_image_capability": false,
+      "schema_version": "2.5"
+    },
+    {
+      "adapter_version": "",
+      "audio_capability": false,
+      "authorization_required": true,
+      "character_reference_capability": true,
+      "commercial_use_approved": false,
+      "commercial_use_reason": "unverified",
+      "conformance": {
+        "evidence": "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made",
+        "last_verified": "never",
+        "status": "NOT_TESTED",
+        "test_id": ""
+      },
+      "cost_model": "paid-per-call",
+      "evidence": "documented-only; no live paid call made in this account",
+      "input_constraints": [
+        "text prompt; optional reference image"
+      ],
+      "licence": "proprietary-paid",
+      "native_camera_controls": [],
+      "native_motion_controls": [],
+      "operations": [
+        "generate-image"
+      ],
+      "output_constraints": [
+        "image; resolution and limits unverified here"
+      ],
+      "privacy_transmission": "transmission-to-provider-requires-authorization",
+      "provider_id": "provider-gemini-image",
+      "provider_type": "image-generation",
+      "reference_image_capability": true,
+      "schema_version": "2.5"
+    },
+    {
+      "adapter_version": "",
+      "audio_capability": false,
+      "authorization_required": true,
+      "character_reference_capability": true,
+      "commercial_use_approved": false,
+      "commercial_use_reason": "unverified",
+      "conformance": {
+        "evidence": "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made",
+        "last_verified": "never",
+        "status": "NOT_TESTED",
+        "test_id": ""
+      },
+      "cost_model": "paid-per-call",
+      "evidence": "documented-only; no live paid call made in this account",
+      "input_constraints": [
+        "text prompt; optional starting reference image"
+      ],
+      "licence": "proprietary-paid",
+      "native_camera_controls": [],
+      "native_motion_controls": [],
+      "operations": [
+        "generate-video"
+      ],
+      "output_constraints": [
+        "video; duration and resolution limits unverified here"
+      ],
+      "privacy_transmission": "transmission-to-provider-requires-authorization",
+      "provider_id": "provider-kling-video",
+      "provider_type": "video-generation",
+      "reference_image_capability": true,
+      "schema_version": "2.5"
+    },
+    {
+      "adapter_version": "",
+      "audio_capability": false,
+      "authorization_required": true,
+      "character_reference_capability": true,
+      "commercial_use_approved": false,
+      "commercial_use_reason": "unverified",
+      "conformance": {
+        "evidence": "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made",
+        "last_verified": "never",
+        "status": "NOT_TESTED",
+        "test_id": ""
+      },
+      "cost_model": "paid-per-call",
+      "evidence": "documented-only; no live paid call made in this account",
+      "input_constraints": [
+        "text prompt; optional starting reference image"
+      ],
+      "licence": "proprietary-paid",
+      "native_camera_controls": [],
+      "native_motion_controls": [],
+      "operations": [
+        "generate-video"
+      ],
+      "output_constraints": [
+        "video; duration and resolution limits unverified here"
+      ],
+      "privacy_transmission": "transmission-to-provider-requires-authorization",
+      "provider_id": "provider-ltx-video",
+      "provider_type": "video-generation",
+      "reference_image_capability": true,
+      "schema_version": "2.5"
+    },
+    {
+      "adapter_version": "",
+      "audio_capability": true,
+      "authorization_required": true,
+      "character_reference_capability": false,
+      "commercial_use_approved": false,
+      "commercial_use_reason": "unverified",
+      "conformance": {
+        "evidence": "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made",
+        "last_verified": "never",
+        "status": "NOT_TESTED",
+        "test_id": ""
+      },
+      "cost_model": "paid-per-call",
+      "evidence": "documented-only; no live paid call made in this account",
+      "input_constraints": [
+        "text prompt describing the music"
+      ],
+      "licence": "proprietary-paid",
+      "native_camera_controls": [],
+      "native_motion_controls": [],
+      "operations": [
+        "generate-sound"
+      ],
+      "output_constraints": [
+        "audio; duration and limits unverified here"
+      ],
+      "privacy_transmission": "transmission-to-provider-requires-authorization",
+      "provider_id": "provider-lyria-music",
+      "provider_type": "music",
+      "reference_image_capability": false,
+      "schema_version": "2.5"
+    },
+    {
+      "adapter_version": "",
+      "audio_capability": false,
+      "authorization_required": true,
+      "character_reference_capability": true,
+      "commercial_use_approved": false,
+      "commercial_use_reason": "unverified",
+      "conformance": {
+        "evidence": "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made",
+        "last_verified": "never",
+        "status": "NOT_TESTED",
+        "test_id": ""
+      },
+      "cost_model": "paid-per-call",
+      "evidence": "documented-only; no live paid call made in this account",
+      "input_constraints": [
+        "text prompt; optional reference image"
+      ],
+      "licence": "proprietary-paid",
+      "native_camera_controls": [],
+      "native_motion_controls": [],
+      "operations": [
+        "generate-image"
+      ],
+      "output_constraints": [
+        "image; resolution and limits unverified here"
+      ],
+      "privacy_transmission": "transmission-to-provider-requires-authorization",
+      "provider_id": "provider-openai-image",
+      "provider_type": "image-generation",
+      "reference_image_capability": true,
+      "schema_version": "2.5"
+    },
+    {
+      "adapter_version": "0.5.8",
+      "audio_capability": true,
+      "authorization_required": false,
+      "character_reference_capability": false,
+      "commercial_use_approved": true,
+      "commercial_use_reason": "local AGPL-3.0 tool; commercial use of the application is permitted; output commercial status depends on the asset providers",
+      "conformance": {
+        "evidence": "make preflight passed 2026-11-12; no production assembly run recorded in this account",
+        "last_verified": "2026-11-12",
+        "status": "NOT_TESTED",
+        "test_id": ""
+      },
+      "cost_model": "local-free",
+      "evidence": "components/openmontage/Makefile (setup, preflight); no rendered video produced in this account",
+      "input_constraints": [
+        "pipeline definition plus approved assets"
+      ],
+      "licence": "AGPL-3.0",
+      "native_camera_controls": [],
+      "native_motion_controls": [],
+      "operations": [
+        "assemble-timeline"
+      ],
+      "output_constraints": [
+        "rendered video per the pipeline"
+      ],
+      "privacy_transmission": "local-only; no transmission to any provider",
+      "provider_id": "provider-openmontage-assembly",
+      "provider_type": "editing-rendering",
+      "reference_image_capability": false,
+      "schema_version": "2.5"
+    },
+    {
+      "adapter_version": "",
+      "audio_capability": false,
+      "authorization_required": false,
+      "character_reference_capability": false,
+      "commercial_use_approved": false,
+      "commercial_use_reason": "unverified",
+      "conformance": {
+        "evidence": "planned; not installed or tested in this account",
+        "last_verified": "never",
+        "status": "NOT_TESTED",
+        "test_id": ""
+      },
+      "cost_model": "local-free",
+      "evidence": "adapter-opentimelineio record; candidate for editorial interchange only",
+      "input_constraints": [
+        "timeline data (clips, timing, tracks, transitions, markers)"
+      ],
+      "licence": "Apache-2.0",
+      "native_camera_controls": [],
+      "native_motion_controls": [],
+      "operations": [
+        "interchange-timeline"
+      ],
+      "output_constraints": [
+        "editorial interchange data; not a render"
+      ],
+      "privacy_transmission": "local-only; no transmission to any provider",
+      "provider_id": "provider-opentimelineio",
+      "provider_type": "local-tool",
+      "reference_image_capability": false,
+      "schema_version": "2.5"
+    },
+    {
+      "adapter_version": "",
+      "audio_capability": false,
+      "authorization_required": true,
+      "character_reference_capability": true,
+      "commercial_use_approved": false,
+      "commercial_use_reason": "unverified",
+      "conformance": {
+        "evidence": "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made",
+        "last_verified": "never",
+        "status": "NOT_TESTED",
+        "test_id": ""
+      },
+      "cost_model": "paid-per-call",
+      "evidence": "documented-only; no live paid call made in this account",
+      "input_constraints": [
+        "text prompt; optional starting reference image"
+      ],
+      "licence": "proprietary-paid",
+      "native_camera_controls": [],
+      "native_motion_controls": [],
+      "operations": [
+        "generate-video"
+      ],
+      "output_constraints": [
+        "video; duration and resolution limits unverified here"
+      ],
+      "privacy_transmission": "transmission-to-provider-requires-authorization",
+      "provider_id": "provider-sora-video",
+      "provider_type": "video-generation",
+      "reference_image_capability": true,
+      "schema_version": "2.5"
+    },
+    {
+      "adapter_version": "",
+      "audio_capability": false,
+      "authorization_required": true,
+      "character_reference_capability": true,
+      "commercial_use_approved": false,
+      "commercial_use_reason": "unverified",
+      "conformance": {
+        "evidence": "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made",
+        "last_verified": "never",
+        "status": "NOT_TESTED",
+        "test_id": ""
+      },
+      "cost_model": "paid-per-call",
+      "evidence": "documented-only; no live paid call made in this account",
+      "input_constraints": [
+        "text prompt; optional starting reference image"
+      ],
+      "licence": "proprietary-paid",
+      "native_camera_controls": [],
+      "native_motion_controls": [],
+      "operations": [
+        "generate-video"
+      ],
+      "output_constraints": [
+        "video; duration and resolution limits unverified here"
+      ],
+      "privacy_transmission": "transmission-to-provider-requires-authorization",
+      "provider_id": "provider-veo-video",
+      "provider_type": "video-generation",
+      "reference_image_capability": true,
+      "schema_version": "2.5"
+    },
+    {
+      "adapter_version": "0.5.8",
+      "audio_capability": true,
+      "authorization_required": false,
+      "character_reference_capability": false,
+      "commercial_use_approved": false,
+      "commercial_use_reason": "noncommercial_licence",
+      "conformance": {
+        "evidence": "OmniVoice TTS runs via the local API on 127.0.0.1:3900 (Bengali, English, Hindi speech generated 2026-11-12/13); user verdict recorded in the project record.",
+        "last_verified": "2026-11-13",
+        "status": "EXERCISED",
+        "test_id": ""
+      },
+      "cost_model": "local-free",
+      "evidence": "components/voicestudio/backend/main.py; recorded runs 2026-11-12/13",
+      "input_constraints": [
+        "text plus a voice profile id",
+        "reference audio for cloning"
+      ],
+      "licence": "CC-BY-NC weights (noncommercial); application AGPL-3.0",
+      "native_camera_controls": [],
+      "native_motion_controls": [],
+      "operations": [
+        "generate-speech",
+        "clone-voice",
+        "transcribe"
+      ],
+      "output_constraints": [
+        "wav audio",
+        "single speaker per call"
+      ],
+      "privacy_transmission": "local-only; no transmission to any provider",
+      "provider_id": "provider-voicestudio-omnivoice",
+      "provider_type": "voice-tts",
+      "reference_image_capability": false,
+      "schema_version": "2.5"
+    }
+  ],
+  "registry": "providers",
+  "version": "2.4"
+}

@@ -41,11 +41,47 @@ moving at once.
 
 Consistency Frame fixes that with a system, not a hope: a character
 registry, fixed prompt blocks and voice profiles, a production pipeline,
-and 120 numbered entries (109 distinct systems, each named and checkable). The machine-readable inventory is in `registry/` — 15 skills and 165 features derived from the skill files by `scripts/generate-registries.py`; that count uses a different unit (one feature per skill section) and is not the same as the historical 109/120 claim (see `registry/features.json`, `legacy_counts`)
+and 120 numbered entries (109 distinct systems, each named and checkable). The machine-readable inventory is in `registry/` — 15 skills and 173 features derived from the skill files by `scripts/generate-registries.py`; that count uses a different unit (one feature per skill section) and is not the same as the historical 109/120 claim (see `registry/features.json`, `legacy_counts`)
 covering identity, voice, performance, camera direction,
 sound, editing, grading, disclosure, and quality control. Nothing is left
 to chance, and nothing is left vague — every rule is a rule an AI can
 follow and a human can check.
+
+## The Brain, the host, and the providers
+
+Consistency Frame is the **Central Brain** of a video production
+system, not a video generator. It keeps five roles separate:
+
+- **Consistency Frame — Central Brain.** Production instructions,
+  skill selection, script-to-production contracts, canonical plans,
+  character and voice identity references, workflow authority,
+  production task compilation, QC policies, and project continuity
+  and provenance. The deterministic orchestration runtime is in
+  `runtime/production_orchestrator.py` and `runtime/task_compiler.py`
+  (see [`docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md`](docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md)).
+- **AI Reasoning Host.** The connected AI model (ChatGPT, Claude,
+  Gemini, Muse, or another compatible host) does the creative and
+  semantic reasoning — it reads the Brain's skills and contracts,
+  analyses the script, and fills the production-analysis draft.
+  The Brain validates that draft; it is never trusted unvalidated.
+- **Implementation Agent.** The coding agent that modifies this
+  repository only when assigned a Work Order.
+- **Media Execution Providers.** Image, video, voice, music, sound,
+  lip-sync and editing providers generate the requested assets.
+  The Brain matches a task to a provider only on evidenced
+  capabilities (`registry/providers.json`); an unmatched task
+  compiles as a complete provider-neutral handoff, never as a
+  pretended execution.
+- **Production and Editing Tools.** VoiceStudio, OpenMontage,
+  FFmpeg, OpenTimelineIO and compatible editors, directed by the
+  Brain through verified interfaces.
+
+The repository contains no LLM and no rendering engine, and needs
+no central server, cloud database, or hosting platform. Three
+numbering systems in this repo must never be confused:
+**Production Complexity P0–P3** is a video-quality scope
+classification; **Engineering milestones P0/P1/P2/P3** are project
+phases; **G1–G6** are production approval gates.
 
 ## Install — one command
 
@@ -88,7 +124,7 @@ Per-platform install details are in
 | ChatGPT | Upload the `skills/` folder via the Skills tab |
 | Gemini CLI | Extension: `gemini-extension.json` |
 | Antigravity | Skills in `.agents/skills/`, rules in `AGENTS.md` / `GEMINI.md` |
-| Muse (Meta) | Knowledge pack: clone into the workspace and read the skills from there (no native custom-skill install is documented by Meta); `bash setup.sh` only syncs local `.agents/skills/` copies |
+| Muse (Meta) | Knowledge pack: clone into the workspace and read the skills from there (no native custom-skill install is documented by Meta); `bash setup.sh` only syncs local `.agents/skills/` copies. Used daily in this account since 2026-11-12; formal conformance is still NOT_TESTED (test `CF-P0-ADAPTER-001` to be run) — see `docs/implementation/CF-WO-P1-004-corrections.md` §2. Muse directs providers and tools; it does not generate media itself. |
 | Any other tool | `npx skills add msujoy149/consistency-frame` or `gh skill install msujoy149/consistency-frame` |
 
 ## Local install — Mac, Windows, Linux

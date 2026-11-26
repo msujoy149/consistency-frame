@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-26 17:10 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-26 17:36 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -21,10 +21,10 @@ video production/editing). See
 `docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md`.
 
 **Repository:** https://github.com/msujoy149/consistency-frame
-**Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
-**Feature branch:** `feat/cf-p1-003-script-to-performance-runtime`
-**Head commit:** `5a3ab7fafc73297bd77425179f48b8cbb0a4983f`
-**GitHub branch head:** `bc9850031d347a9982fd6c05e5693c110d7f7338` (remote head of `feat/cf-p1-003-script-to-performance-runtime` at
+**Base branch/commit:** `main` / `8fc11feec232102c2a3dfaa90c3452d2186c472e`
+**Feature branch:** `feat/cf-p1-004-universal-production-brain`
+**Head commit:** `b32a4df4d0a703614924f1ad00b871ed8c0218b0`
+**GitHub branch head:** `b32a4df4d0a703614924f1ad00b871ed8c0218b0` (remote head of `feat/cf-p1-004-universal-production-brain` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -37,8 +37,8 @@ head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §
 | Skills (`registry/skills.json`) | 15 |
 | Features (`registry/features.json`) | 173 |
 | Workflows / intent modes (`registry/workflows.json`) | 13 |
-| Adapters (`registry/adapters.json`) | 12 |
-| JSON Schemas (`schemas/*.json`) | 28 |
+| Adapters (`registry/adapters.json`) | 15 |
+| JSON Schemas (`schemas/*.json`) | 33 |
 | Routing matrix entries (`architecture/SKILL_ROUTING_MATRIX.yaml`) | 15 |
 | Workflow graph nodes / edges (`architecture/WORKFLOW_GRAPH.yaml`) | 15 / 42 |
 | Companion capabilities (`architecture/COMPANION_CAPABILITY_REGISTRY.yaml`) | 20 (3 exercised_recorded_run, 16 present_locally, 1 upstream_inspected_pinned_commit, 0 production_verified) |
@@ -103,6 +103,9 @@ deferred P1 work.
 | Gemini CLI | NATIVE | NOT_TESTED | NOT_TESTED | untested |
 | Antigravity | PACKAGED | NOT_TESTED | NOT_TESTED | untested |
 | ChatGPT | PACKAGED | NOT_TESTED | NOT_TESTED | untested |
+| Claude | PACKAGED | NOT_TESTED | NOT_TESTED | untested |
+| Cursor | PACKAGED | NOT_TESTED | NOT_TESTED | untested |
+| GitHub Copilot | PACKAGED | NOT_TESTED | NOT_TESTED | untested |
 | OpenCode | NATIVE | NOT_TESTED | NOT_TESTED | untested |
 | VoiceStudio (bundled component) | HOST_RUNTIME | NOT_TESTED | NOT_TESTED | untested |
 | OpenMontage (bundled component) | HOST_RUNTIME | NOT_TESTED | NOT_TESTED | untested |
@@ -117,7 +120,7 @@ Muse is a knowledge pack, not a native skill install; OpenTimelineIO
 is an editorial-interchange candidate, not a renderer; FFmpeg binary
 presence is not a conformance test.
 
-## Changes in P0 (since base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`)
+## Changes in P0 (since base `8fc11feec232102c2a3dfaa90c3452d2186c472e`)
 
 - Non-destructive installer: `scripts/sync-skills.sh` replaces
   `rm -rf .agents/skills`; `setup.sh` is core-only by default with
@@ -166,192 +169,49 @@ Changed files in this branch (vs base):
 ```
 .gitattributes
 .github/workflows/p0-ci.yml
-.gitignore
 AGENTS.md
 CHANGELOG.md
-README.md
-architecture/AGENT_COMPATIBILITY_MATRIX.yaml
-architecture/COMPANION_CAPABILITY_REGISTRY.yaml
-architecture/SKILL_ROUTING_MATRIX.yaml
-architecture/WORKFLOW_GRAPH.yaml
-architecture/audio-delivery-profiles.json
-architecture/intent-modes.yaml
-architecture/platform-capabilities.md
-characters/README.md
 docs/01-production-systems.md
-docs/02-extended-systems.md
 docs/04-additional-systems.md
 docs/05-humanization-systems.md
-docs/06-installation.md
 docs/07-character-registry.md
-docs/08-agency-advertising.md
-docs/09-video-regeneration.md
-docs/15-realistic-person.md
-docs/17-command-authority.md
-docs/19-audio-delivery-profiles.md
-docs/architecture/ANIMATION_SCOPE_AND_PRODUCTION_MODES.md
-docs/architecture/living-architecture-report-v2.3-p0.md
 docs/architecture/living-architecture-report-v2.4-p0.md
-docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md
 docs/implementation/BUILD_REPORT_P0.md
-docs/implementation/CF-WO-P0-001-plan.md
-docs/implementation/CF-WO-P0-002-corrections.md
-docs/implementation/CF-WO-P0-003-corrections.md
-docs/implementation/CF-WO-P0-004-corrections.md
-docs/implementation/CF-WO-P0-005-corrections.md
-docs/implementation/CF-WO-P0-006-corrections.md
-docs/implementation/CF-WO-P0-007-corrections.md
-docs/implementation/CF-WO-P0-008-corrections.md
-docs/implementation/CF-WO-P0-009-corrections.md
-docs/implementation/CF-WO-P0-010-corrections.md
-docs/implementation/CF-WO-P0-011-corrections.md
-docs/implementation/CF-WO-P0-012-corrections.md
-docs/implementation/CF-WO-P0-014-corrections.md
-docs/implementation/CF-WO-P0-015-corrections.md
 docs/implementation/CF-WO-P1-001-corrections.md
 docs/implementation/CF-WO-P1-002-corrections.md
 docs/implementation/CF-WO-P1-003-corrections.md
 docs/implementation/CHECKSUMS.txt
-docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
 docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md
 docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md
 docs/runtime/SKILL_ROUTING_RUNTIME.md
-registry/adapters.json
 registry/features.json
 registry/routing-catalog.json
 registry/skills.json
-registry/workflows.json
 release-manifest.json
 runtime/__init__.py
 runtime/authorization.py
 runtime/local_session.py
 runtime/script_to_performance.py
 runtime/skill_router.py
-schemas/README.md
-schemas/approval.json
-schemas/build-report.json
-schemas/character-registration.json
-schemas/character.json
-schemas/episode-state.json
-schemas/evidence.json
-schemas/installer-result.json
-schemas/intake-job.json
-schemas/location.json
-schemas/performance-plan.json
-schemas/production-profile.json
-schemas/project.json
-schemas/prop.json
-schemas/reference-learning.json
-schemas/reference-review.json
-schemas/release-manifest.json
-schemas/scene-plan.json
-schemas/script-contract.json
-schemas/script-to-performance.json
-schemas/shot-plan.json
 schemas/skill-routing-plan.json
 schemas/skill-routing-request.json
-schemas/sound-asset.json
-schemas/story-bible.json
-schemas/timeline-manifest.json
-schemas/visual-style-profile.json
-schemas/voice-profile.json
-schemas/wardrobe.json
-scripts/asset_policy.py
-scripts/atomic_write.py
 scripts/generate-build-report.py
-scripts/generate-registries.py
 scripts/generate-report.py
 scripts/generate-routing-catalog.py
-scripts/sync-skills.sh
-scripts/timeline_policy.py
-scripts/validate-repo.py
-setup.sh
-skills/agency-advertising/SKILL.md
-skills/character-consistency/SKILL.md
-skills/cinematic-power/SKILL.md
 skills/command-authority/SKILL.md
-skills/emotional-performance/SKILL.md
-skills/explainer-animation/SKILL.md
 skills/humanized-production/SKILL.md
 skills/kids-family-animation/SKILL.md
-skills/language-authenticity/SKILL.md
 skills/live-action-vfx/SKILL.md
 skills/production-systems/SKILL.md
-skills/realistic-person/SKILL.md
-skills/video-regeneration/SKILL.md
-skills/voice-consistency/SKILL.md
-tests/fixtures/character-extended-valid.json
-tests/fixtures/character-registration-bird-valid.json
-tests/fixtures/character-registration-invalid-duplicate-id.json
-tests/fixtures/character-registration-invalid-missing-id.json
-tests/fixtures/character-registration-valid-bird.json
-tests/fixtures/character-registration-valid-human.json
-tests/fixtures/character-registration-valid.json
-tests/fixtures/character-valid-v25-animal.json
-tests/fixtures/character-valid.json
-tests/fixtures/intake-temporary.json
-tests/fixtures/performance-plan-bird.json
-tests/fixtures/performance-plan-human.json
-tests/fixtures/performance-plan-invalid-bird-human-lips.json
-tests/fixtures/performance-plan-two-person.json
-tests/fixtures/performance-plan-valid-bird.json
-tests/fixtures/performance-plan-valid.json
-tests/fixtures/production-profile-invalid-animation-type.json
-tests/fixtures/production-profile-invalid-digital-human-live-action.json
-tests/fixtures/production-profile-reference-video.json
-tests/fixtures/production-profile-script-only.json
-tests/fixtures/production-profile-valid-digital-human.json
-tests/fixtures/registration-invitation.json
-tests/fixtures/routing-profile-s1-explainer-2d.json
-tests/fixtures/routing-profile-s2-stylized-3d.json
-tests/fixtures/routing-profile-s4-human-bird.json
-tests/fixtures/routing-profile-s5-live-action-creature.json
-tests/fixtures/routing-profile-s6-real-animal.json
-tests/fixtures/routing-profile-s7-video-to-video.json
-tests/fixtures/routing-profile-s8-photorealistic-explainer.json
-tests/fixtures/scene-plan-two-person.json
-tests/fixtures/scene-plan-valid-human-bird.json
-tests/fixtures/scene-plan-valid.json
-tests/fixtures/script-to-performance-binding.json
-tests/fixtures/script-to-performance-valid-bindings.json
-tests/fixtures/script-to-performance-valid.json
-tests/fixtures/shot-plan-directed.json
-tests/fixtures/shot-plan-valid-human-bird.json
-tests/fixtures/shot-plan-valid.json
-tests/fixtures/sound-asset-valid.json
-tests/fixtures/temporary-asset-use.json
-tests/fixtures/timeline-valid-v23.json
-tests/fixtures/timeline-valid-v25-multicharacter.json
-tests/fixtures/visual-style-profile-valid.json
-tests/fixtures/voice-profile-ai-generated.json
-tests/fixtures/voice-profile-user-recording.json
-tests/fixtures/voice-profile-valid-ai-generated.json
-tests/fixtures/voice-profile-valid-user-recorded.json
-tests/fixtures/voice-profile-valid.json
 tests/last-run.json
 tests/run-tests.sh
-tests/test_atomic_write.py
-tests/test_character_registration.py
-tests/test_installer.sh
-tests/test_installer_manifest_security.sh
-tests/test_installer_metadata_failure.sh
-tests/test_installer_security.sh
-tests/test_installer_status.sh
 tests/test_local_session_runtime.py
-tests/test_modes.py
-tests/test_performance_semantics.py
-tests/test_private_overlay.py
-tests/test_private_voice_security.py
-tests/test_production_direction.py
-tests/test_registries.py
 tests/test_reports.py
 tests/test_routing.py
-tests/test_schemas.py
 tests/test_script_to_performance_runtime.py
 tests/test_session_authorization.py
 tests/test_skill_router.py
-tests/test_timeline_manifest.py
 ```
 
 ## Tests and CI evidence — status: PASS
@@ -525,7 +385,7 @@ this branch.
 
 ## Evidence dates
 
-- Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
+- Live repo verified: 2026-11-22 (base `8fc11feec232102c2a3dfaa90c3452d2186c472e`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-26 17:10 UTC.
+- Report generated: 2026-11-26 17:36 UTC.

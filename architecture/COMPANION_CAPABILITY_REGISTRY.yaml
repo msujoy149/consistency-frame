@@ -273,3 +273,340 @@ companions:
       - All production goes through a pipeline (Rule Zero); the Brain does not improvise outside the pipeline system.
       - No paid provider call without the user's explicit approval and keys.
       - Provider pricing, model availability and terms change; re-probe the provider guide before a production decision.
+
+# ---------------------------------------------------------------------------
+# Providers (P1-004): generic media provider capability records.
+# Separate from reasoning hosts (see architecture/AGENT_COMPATIBILITY_MATRIX.yaml)
+# and from the two companions above (VoiceStudio / OpenMontage), which are
+# also listed here as providers where they execute media work.
+#
+# Conformance vocabulary (matches schemas/provider-capability.json):
+#   VERIFIED   — a formal conformance test passed.
+#   EXERCISED  — the capability was exercised in a recorded run, but no
+#                formal conformance test exists.
+#   NOT_TESTED — no evidence.
+#   FAILED     — a conformance test failed.
+# Matching prefers VERIFIED, then EXERCISED; NOT_TESTED and FAILED are
+# never matched — tasks for them compile as provider-neutral handoffs.
+#
+# Commercial rule: commercial_use_approved is false unless a commercial
+# route was independently cleared. The default OmniVoice weights are
+# CC-BY-NC and must never be routed for monetised or commercial
+# production. A named external provider is not a verified commercial
+# provider until its terms are checked and recorded here.
+# Paid routes: no live paid call was made in this account; every paid
+# route needs the user's explicit approval and keys per call.
+# ---------------------------------------------------------------------------
+providers:
+  - provider_id: provider-voicestudio-omnivoice
+    schema_version: "2.5"
+    provider_type: voice-tts
+    operations: [generate-speech, clone-voice, transcribe]
+    input_constraints: ["text plus a voice profile id", "reference audio for cloning"]
+    output_constraints: ["wav audio", "single speaker per call"]
+    reference_image_capability: false
+    character_reference_capability: false
+    audio_capability: true
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: local-free
+    authorization_required: false
+    privacy_transmission: local-only; no transmission to any provider
+    licence: "CC-BY-NC weights (noncommercial); application AGPL-3.0"
+    commercial_use_approved: false
+    commercial_use_reason: noncommercial_licence
+    adapter_version: "0.5.8"
+    conformance:
+      status: EXERCISED
+      test_id: ""
+      evidence: "OmniVoice TTS runs via the local API on 127.0.0.1:3900 (Bengali, English, Hindi speech generated 2026-11-12/13); user verdict recorded in the project record."
+      last_verified: "2026-11-13"
+    evidence: "components/voicestudio/backend/main.py; recorded runs 2026-11-12/13"
+  - provider_id: provider-openmontage-assembly
+    schema_version: "2.5"
+    provider_type: editing-rendering
+    operations: [assemble-timeline]
+    input_constraints: ["pipeline definition plus approved assets"]
+    output_constraints: ["rendered video per the pipeline"]
+    reference_image_capability: false
+    character_reference_capability: false
+    audio_capability: true
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: local-free
+    authorization_required: false
+    privacy_transmission: local-only; no transmission to any provider
+    licence: "AGPL-3.0"
+    commercial_use_approved: true
+    commercial_use_reason: "local AGPL-3.0 tool; commercial use of the application is permitted; output commercial status depends on the asset providers"
+    adapter_version: "0.5.8"
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "make preflight passed 2026-11-12; no production assembly run recorded in this account"
+      last_verified: "2026-11-12"
+    evidence: "components/openmontage/Makefile (setup, preflight); no rendered video produced in this account"
+  - provider_id: provider-ffmpeg
+    schema_version: "2.5"
+    provider_type: local-tool
+    operations: [probe-media, transcode-media, assemble-timeline]
+    input_constraints: ["media files on local disk"]
+    output_constraints: ["probed metadata; transcoded or concatenated media"]
+    reference_image_capability: false
+    character_reference_capability: false
+    audio_capability: true
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: local-free
+    authorization_required: false
+    privacy_transmission: local-only; no transmission to any provider
+    licence: "LGPL/GPL (system binary)"
+    commercial_use_approved: true
+    commercial_use_reason: "local tool; production use permitted; output commercial status depends on the input assets"
+    adapter_version: "8.1.2"
+    conformance:
+      status: EXERCISED
+      test_id: ""
+      evidence: "ffmpeg 8.1.2 used for demo renders 2026-11-12/13 (Ken Burns demo, code-cartoon demo)"
+      last_verified: "2026-11-13"
+    evidence: "ffmpeg 8.1.2 on this machine; demo renders in ~/workspace/demo-video"
+  - provider_id: provider-opentimelineio
+    schema_version: "2.5"
+    provider_type: local-tool
+    operations: [interchange-timeline]
+    input_constraints: ["timeline data (clips, timing, tracks, transitions, markers)"]
+    output_constraints: ["editorial interchange data; not a render"]
+    reference_image_capability: false
+    character_reference_capability: false
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: local-free
+    authorization_required: false
+    privacy_transmission: local-only; no transmission to any provider
+    licence: "Apache-2.0"
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: ""
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "planned; not installed or tested in this account"
+      last_verified: "never"
+    evidence: "adapter-opentimelineio record; candidate for editorial interchange only"
+  - provider_id: provider-fal-image
+    schema_version: "2.5"
+    provider_type: image-generation
+    operations: [generate-image]
+    input_constraints: ["text prompt; optional reference image"]
+    output_constraints: ["image; resolution and limits unverified here"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: ""
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
+      last_verified: "never"
+    evidence: "documented-only; no live paid call made in this account"
+  - provider_id: provider-openai-image
+    schema_version: "2.5"
+    provider_type: image-generation
+    operations: [generate-image]
+    input_constraints: ["text prompt; optional reference image"]
+    output_constraints: ["image; resolution and limits unverified here"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: ""
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
+      last_verified: "never"
+    evidence: "documented-only; no live paid call made in this account"
+  - provider_id: provider-gemini-image
+    schema_version: "2.5"
+    provider_type: image-generation
+    operations: [generate-image]
+    input_constraints: ["text prompt; optional reference image"]
+    output_constraints: ["image; resolution and limits unverified here"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: ""
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
+      last_verified: "never"
+    evidence: "documented-only; no live paid call made in this account"
+  - provider_id: provider-veo-video
+    schema_version: "2.5"
+    provider_type: video-generation
+    operations: [generate-video]
+    input_constraints: ["text prompt; optional starting reference image"]
+    output_constraints: ["video; duration and resolution limits unverified here"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: ""
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
+      last_verified: "never"
+    evidence: "documented-only; no live paid call made in this account"
+  - provider_id: provider-kling-video
+    schema_version: "2.5"
+    provider_type: video-generation
+    operations: [generate-video]
+    input_constraints: ["text prompt; optional starting reference image"]
+    output_constraints: ["video; duration and resolution limits unverified here"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: ""
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
+      last_verified: "never"
+    evidence: "documented-only; no live paid call made in this account"
+  - provider_id: provider-sora-video
+    schema_version: "2.5"
+    provider_type: video-generation
+    operations: [generate-video]
+    input_constraints: ["text prompt; optional starting reference image"]
+    output_constraints: ["video; duration and resolution limits unverified here"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: ""
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
+      last_verified: "never"
+    evidence: "documented-only; no live paid call made in this account"
+  - provider_id: provider-ltx-video
+    schema_version: "2.5"
+    provider_type: video-generation
+    operations: [generate-video]
+    input_constraints: ["text prompt; optional starting reference image"]
+    output_constraints: ["video; duration and resolution limits unverified here"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: ""
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
+      last_verified: "never"
+    evidence: "documented-only; no live paid call made in this account"
+  - provider_id: provider-elevenlabs-voice
+    schema_version: "2.5"
+    provider_type: voice-tts
+    operations: [generate-speech, clone-voice]
+    input_constraints: ["text plus a voice id; reference audio for cloning"]
+    output_constraints: ["wav audio; single speaker per call"]
+    reference_image_capability: false
+    character_reference_capability: false
+    audio_capability: true
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: ""
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
+      last_verified: "never"
+    evidence: "documented-only; no live paid call made in this account"
+  - provider_id: provider-lyria-music
+    schema_version: "2.5"
+    provider_type: music
+    operations: [generate-sound]
+    input_constraints: ["text prompt describing the music"]
+    output_constraints: ["audio; duration and limits unverified here"]
+    reference_image_capability: false
+    character_reference_capability: false
+    audio_capability: true
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: ""
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
+      last_verified: "never"
+    evidence: "documented-only; no live paid call made in this account"

@@ -1,5 +1,5 @@
 {
-  "count": 12,
+  "count": 15,
   "note": "No adapter is marked 'supported' in P0: a capability is supported only after a real conformance test passes. All adapters here are 'untested' (conformance NOT_TESTED) or 'planned'.",
   "records": [
     {
@@ -18,10 +18,12 @@
       "limitations": [
         "No documented native custom-SKILL.md install flow (Meta Help Centre). Use the versioned knowledge pack / uploaded workspace files instead. Knowledge-pack availability in a Muse workspace has not been conformance-tested here."
       ],
+      "media_execution": "none \u2014 directs companions/providers only; generates no video or audio itself",
       "name": "Muse (Meta)",
       "native_skill_install": "UNSUPPORTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested"
+      "status": "untested",
+      "usage": "Used daily in this account since 2026-11-12 (repo work, P0 v2.3 + v2.4 implementation, tests, blog). The knowledge-pack path is the path this account actually uses."
     },
     {
       "adapter_id": "adapter-claude-code",
@@ -39,10 +41,12 @@
       "limitations": [
         "Plugin marketplace files exist (.claude-plugin/marketplace.json). Loaded skill version, precedence and permissions have not been conformance-tested here."
       ],
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "Claude Code",
       "native_skill_install": "NOT_TESTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested"
+      "status": "untested",
+      "usage": "none recorded in this account"
     },
     {
       "adapter_id": "adapter-codex",
@@ -60,10 +64,12 @@
       "limitations": [
         "Plugin manifest exists (plugin.json, .codex-plugin/plugin.json). Loading behaviour has not been conformance-tested here."
       ],
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "Codex",
       "native_skill_install": "NOT_TESTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested"
+      "status": "untested",
+      "usage": "none recorded in this account"
     },
     {
       "adapter_id": "adapter-gemini-cli",
@@ -81,10 +87,12 @@
       "limitations": [
         "Extension manifest exists (gemini-extension.json). Workspace/user/extension precedence has not been conformance-tested here."
       ],
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "Gemini CLI",
       "native_skill_install": "NOT_TESTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested"
+      "status": "untested",
+      "usage": "none recorded in this account"
     },
     {
       "adapter_id": "adapter-antigravity",
@@ -102,10 +110,12 @@
       "limitations": [
         "Skills in .agents/skills/, rules in AGENTS.md / GEMINI.md. Actual discovery in the installed Antigravity version has not been tested here."
       ],
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "Antigravity",
       "native_skill_install": "NOT_TESTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested"
+      "status": "untested",
+      "usage": "none recorded in this account"
     },
     {
       "adapter_id": "adapter-chatgpt",
@@ -123,10 +133,81 @@
       "limitations": [
         "Skills uploaded via the Skills tab (per docs/06). Upload/loading behaviour has not been conformance-tested here."
       ],
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "ChatGPT",
       "native_skill_install": "NOT_TESTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested"
+      "status": "untested",
+      "usage": "none recorded in this account"
+    },
+    {
+      "adapter_id": "adapter-claude",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "PACKAGED",
+      "kind": "host",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "Knowledge pack (Brain Instructions + Skills + Project Context + Workflow Contracts) is the intended path for hosts without a native install; it has not been tried in this account."
+      ],
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
+      "name": "Claude",
+      "native_skill_install": "NOT_TESTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested",
+      "usage": "none recorded in this account"
+    },
+    {
+      "adapter_id": "adapter-cursor",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "PACKAGED",
+      "kind": "host",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "Knowledge pack is the intended path; it has not been tried in this account."
+      ],
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
+      "name": "Cursor",
+      "native_skill_install": "NOT_TESTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested",
+      "usage": "none recorded in this account"
+    },
+    {
+      "adapter_id": "adapter-copilot",
+      "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
+      "capabilities": [],
+      "conformance": {
+        "evidence": "none in P0",
+        "last_verified": "2026-11-22",
+        "status": "NOT_TESTED",
+        "test_id": "CF-P0-ADAPTER-001"
+      },
+      "integration": "PACKAGED",
+      "kind": "host",
+      "licence_notes": "component licences intact (see LICENSE and component licences)",
+      "limitations": [
+        "Knowledge pack is the intended path; it has not been tried in this account."
+      ],
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
+      "name": "GitHub Copilot",
+      "native_skill_install": "NOT_TESTED",
+      "privacy": "private assets stay in the private overlay; never committed",
+      "status": "untested",
+      "usage": "none recorded in this account"
     },
     {
       "adapter_id": "adapter-opencode",
@@ -144,10 +225,12 @@
       "limitations": [
         "Documented .opencode/skills path exists in OpenCode docs; no manifest or conformance test exists in this repo. Planned, not tested."
       ],
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "OpenCode",
       "native_skill_install": "NOT_TESTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested"
+      "status": "untested",
+      "usage": "none recorded in this account"
     },
     {
       "adapter_id": "adapter-voicestudio",
@@ -165,10 +248,12 @@
       "limitations": [
         "Local voice engine (AGPL-3.0). OmniVoice weights are CC-BY-NC (noncommercial) and are never downloaded by setup.sh. Voice generation was exercised manually in Nov 2026, but no automated conformance test exists in P0."
       ],
+      "media_execution": "voice generation (local TTS; cloning only with explicit consent)",
       "name": "VoiceStudio (bundled component)",
       "native_skill_install": "NOT_TESTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested"
+      "status": "untested",
+      "usage": "Voice generation exercised manually in Nov 2026 (Bengali, English, Hindi speech via the local API); no automated conformance test."
     },
     {
       "adapter_id": "adapter-openmontage",
@@ -186,10 +271,12 @@
       "limitations": [
         "Long-form video assembly component (AGPL-3.0). No automated conformance test exists in P0."
       ],
+      "media_execution": "long-form video assembly (pipeline render)",
       "name": "OpenMontage (bundled component)",
       "native_skill_install": "NOT_TESTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested"
+      "status": "untested",
+      "usage": "make setup / make preflight passed 2026-11-12; no production assembly run recorded in this account."
     },
     {
       "adapter_id": "adapter-ffmpeg",
@@ -207,10 +294,12 @@
       "limitations": [
         "Deterministic media probing/transcoding. Binary presence on a machine is not a conformance test; no P0 test invokes it."
       ],
+      "media_execution": "media probing, transcoding, concatenation",
       "name": "FFmpeg / ffprobe",
       "native_skill_install": "NOT_TESTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested"
+      "status": "untested",
+      "usage": "Used for demo renders 2026-11-12/13 (Ken Burns demo, code-cartoon demo)."
     },
     {
       "adapter_id": "adapter-opentimelineio",
@@ -228,10 +317,12 @@
       "limitations": [
         "Candidate for editorial interchange only: clips, timing, tracks, transitions, markers, external media references. NOT a renderer or media container. Not installed or tested in P0 \u2014 planned."
       ],
+      "media_execution": "none \u2014 editorial interchange only, not a renderer",
       "name": "OpenTimelineIO",
       "native_skill_install": "NOT_TESTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested"
+      "status": "untested",
+      "usage": "none recorded in this account"
     },
     {
       "adapter_id": "adapter-premiere-uxp",
@@ -249,12 +340,14 @@
       "limitations": [
         "Application-specific editing integration requires a version-tested API. No adapter code or test exists in P0 \u2014 planned."
       ],
+      "media_execution": "editing/rendering inside Adobe Premiere Pro (application)",
       "name": "Adobe Premiere Pro (UXP)",
       "native_skill_install": "NOT_TESTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested"
+      "status": "untested",
+      "usage": "none recorded in this account"
     }
   ],
   "registry": "adapters",
-  "version": "2.3"
+  "version": "2.4"
 }

@@ -3,7 +3,9 @@
 
 Reads skills/*/SKILL.md (frontmatter + headings) and writes:
   registry/skills.json, registry/features.json,
-  registry/workflows.json, registry/adapters.json
+  registry/workflows.json, registry/adapters.json,
+  registry/providers.json (from the providers section of
+  architecture/COMPANION_CAPABILITY_REGISTRY.yaml).
 
 Counts are DERIVED from the files, never typed by hand. The historical
 claim of "109 distinct systems / 120 numbered entries" (README, docs/01)
@@ -24,6 +26,13 @@ import json
 import os
 import re
 import sys
+
+try:
+    import yaml
+except ImportError:  # pragma: no cover - PyYAML is installed in CI
+    print("generate-registries: PyYAML is required "
+          "(pip install pyyaml)")
+    sys.exit(1)
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 REG = os.path.join(ROOT, "registry")
@@ -169,7 +178,40 @@ WORKFLOWS = [
 ]
 
 
+def _mode_skills() -> dict:
+    """Map each intent mode to the skill ids the routing matrix
+    lists for it, in precedence order.
+
+    This is routing data, not a progress claim: it says which
+    skills the matrix routes for a mode, not that the workflow is
+    executed anywhere.
+    """
+    matrix_path = os.path.join(
+        ROOT, "architecture", "SKILL_ROUTING_MATRIX.yaml")
+    with open(matrix_path, encoding="utf-8") as f:
+        matrix = yaml.safe_load(f)
+    mapping: dict[str, list] = {}
+    for entry in sorted(matrix.get("skills") or [],
+                        key=lambda e: e.get("precedence", 99)):
+        skill_id = entry.get("skill_id")
+        for mode in entry.get("applicable_modes") or []:
+            mapping.setdefault(mode, []).append(skill_id)
+    return mapping
+
+
+# Workflow status vocabulary (P1-004):
+#   SCHEMA_DEFINED — the record exists; the workflow is a schema
+#     record only, not executed by any runtime.
+#   EXERCISED — a runtime plus tests exercise the workflow
+#     end-to-end and the record's `tests` field names those tests.
+# No workflow is EXERCISED until its stated outputs are all
+# produced by a runtime: wf-generate-from-script stays
+# SCHEMA_DEFINED because its stated outputs include a timeline
+# plan, which no runtime builds yet (the orchestrator produces
+# shot/performance/audio plans and task packets, not a timeline
+# manifest). Promoting it before then would over-claim.
 def build_workflows() -> dict:
+    mode_skills = _mode_skills()
     records = []
     for mode, trigger, inputs, outputs, mutation, gate, recovery in WORKFLOWS:
         records.append({
@@ -181,86 +223,143 @@ def build_workflows() -> dict:
             "mutation_policy": mutation,
             "approval_gate": gate,
             "recovery": recovery,
-            "skills_invoked": [],
+            "skills_invoked": mode_skills.get(mode, []),
             "tests": ["CF-P0-ASSET-001", "CF-P0-ASSET-002"] if mode.startswith("REGISTER") or mode in ("UPLOAD_ONLY", "TEMPORARY_ASSET_USE") else [],
             "status": "SCHEMA_DEFINED",
         })
-    return {"registry": "workflows", "version": "2.3", "count": len(records),
+    return {"registry": "workflows", "version": "2.4", "count": len(records),
             "records": records}
 
 
 ADAPTERS = [
-    # adapter_id, name, kind, integration, native_skill_install, conformance, limitations
+    # adapter_id, name, kind, integration, native_skill_install,
+    # conformance, limitations, usage, media_execution.
+    # `usage` is what this account actually did with the host;
+    # `conformance` is whether a formal test (CF-P0-ADAPTER-001)
+    # ran. They are separate fields on purpose (P1-004): Muse is
+    # used daily here, but its formal conformance is NOT_TESTED.
+    # `media_execution` states whether the host itself generates
+    # media; hosts direct companions/providers, they do not render.
     ("adapter-muse", "Muse (Meta)", "host",
      "PACKAGED", "UNSUPPORTED",
      "NOT_TESTED",
      "No documented native custom-SKILL.md install flow (Meta Help Centre). "
      "Use the versioned knowledge pack / uploaded workspace files instead. "
-     "Knowledge-pack availability in a Muse workspace has not been conformance-tested here."),
+     "Knowledge-pack availability in a Muse workspace has not been conformance-tested here.",
+     "Used daily in this account since 2026-11-12 (repo work, P0 v2.3 + "
+     "v2.4 implementation, tests, blog). The knowledge-pack path is the "
+     "path this account actually uses.",
+     "none — directs companions/providers only; generates no video or audio itself"),
     ("adapter-claude-code", "Claude Code", "host",
      "NATIVE", "NOT_TESTED",
      "NOT_TESTED",
      "Plugin marketplace files exist (.claude-plugin/marketplace.json). "
-     "Loaded skill version, precedence and permissions have not been conformance-tested here."),
+     "Loaded skill version, precedence and permissions have not been conformance-tested here.",
+     "none recorded in this account",
+     "none evidenced — no record of this host generating media in this account"),
     ("adapter-codex", "Codex", "host",
      "NATIVE", "NOT_TESTED",
      "NOT_TESTED",
      "Plugin manifest exists (plugin.json, .codex-plugin/plugin.json). "
-     "Loading behaviour has not been conformance-tested here."),
+     "Loading behaviour has not been conformance-tested here.",
+     "none recorded in this account",
+     "none evidenced — no record of this host generating media in this account"),
     ("adapter-gemini-cli", "Gemini CLI", "host",
      "NATIVE", "NOT_TESTED",
      "NOT_TESTED",
      "Extension manifest exists (gemini-extension.json). "
-     "Workspace/user/extension precedence has not been conformance-tested here."),
+     "Workspace/user/extension precedence has not been conformance-tested here.",
+     "none recorded in this account",
+     "none evidenced — no record of this host generating media in this account"),
     ("adapter-antigravity", "Antigravity", "host",
      "PACKAGED", "NOT_TESTED",
      "NOT_TESTED",
      "Skills in .agents/skills/, rules in AGENTS.md / GEMINI.md. "
-     "Actual discovery in the installed Antigravity version has not been tested here."),
+     "Actual discovery in the installed Antigravity version has not been tested here.",
+     "none recorded in this account",
+     "none evidenced — no record of this host generating media in this account"),
     ("adapter-chatgpt", "ChatGPT", "host",
      "PACKAGED", "NOT_TESTED",
      "NOT_TESTED",
      "Skills uploaded via the Skills tab (per docs/06). "
-     "Upload/loading behaviour has not been conformance-tested here."),
+     "Upload/loading behaviour has not been conformance-tested here.",
+     "none recorded in this account",
+     "none evidenced — no record of this host generating media in this account"),
+    ("adapter-claude", "Claude", "host",
+     "PACKAGED", "NOT_TESTED",
+     "NOT_TESTED",
+     "Knowledge pack (Brain Instructions + Skills + Project Context + "
+     "Workflow Contracts) is the intended path for hosts without a native "
+     "install; it has not been tried in this account.",
+     "none recorded in this account",
+     "none evidenced — no record of this host generating media in this account"),
+    ("adapter-cursor", "Cursor", "host",
+     "PACKAGED", "NOT_TESTED",
+     "NOT_TESTED",
+     "Knowledge pack is the intended path; it has not been tried in this "
+     "account.",
+     "none recorded in this account",
+     "none evidenced — no record of this host generating media in this account"),
+    ("adapter-copilot", "GitHub Copilot", "host",
+     "PACKAGED", "NOT_TESTED",
+     "NOT_TESTED",
+     "Knowledge pack is the intended path; it has not been tried in this "
+     "account.",
+     "none recorded in this account",
+     "none evidenced — no record of this host generating media in this account"),
     ("adapter-opencode", "OpenCode", "host",
      "NATIVE", "NOT_TESTED",
      "NOT_TESTED",
      "Documented .opencode/skills path exists in OpenCode docs; no manifest "
-     "or conformance test exists in this repo. Planned, not tested."),
+     "or conformance test exists in this repo. Planned, not tested.",
+     "none recorded in this account",
+     "none evidenced — no record of this host generating media in this account"),
     ("adapter-voicestudio", "VoiceStudio (bundled component)", "provider",
      "HOST_RUNTIME", "NOT_TESTED",
      "NOT_TESTED",
      "Local voice engine (AGPL-3.0). OmniVoice weights are CC-BY-NC "
      "(noncommercial) and are never downloaded by setup.sh. Voice generation "
      "was exercised manually in Nov 2026, but no automated conformance test "
-     "exists in P0."),
+     "exists in P0.",
+     "Voice generation exercised manually in Nov 2026 (Bengali, English, "
+     "Hindi speech via the local API); no automated conformance test.",
+     "voice generation (local TTS; cloning only with explicit consent)"),
     ("adapter-openmontage", "OpenMontage (bundled component)", "provider",
      "HOST_RUNTIME", "NOT_TESTED",
      "NOT_TESTED",
      "Long-form video assembly component (AGPL-3.0). No automated "
-     "conformance test exists in P0."),
+     "conformance test exists in P0.",
+     "make setup / make preflight passed 2026-11-12; no production assembly "
+     "run recorded in this account.",
+     "long-form video assembly (pipeline render)"),
     ("adapter-ffmpeg", "FFmpeg / ffprobe", "tool",
      "HOST_RUNTIME", "NOT_TESTED",
      "NOT_TESTED",
      "Deterministic media probing/transcoding. Binary presence on a machine "
-     "is not a conformance test; no P0 test invokes it."),
+     "is not a conformance test; no P0 test invokes it.",
+     "Used for demo renders 2026-11-12/13 (Ken Burns demo, code-cartoon demo).",
+     "media probing, transcoding, concatenation"),
     ("adapter-opentimelineio", "OpenTimelineIO", "tool",
      "LIMITED", "NOT_TESTED",
      "NOT_TESTED",
      "Candidate for editorial interchange only: clips, timing, tracks, "
      "transitions, markers, external media references. NOT a renderer or "
-     "media container. Not installed or tested in P0 — planned."),
+     "media container. Not installed or tested in P0 — planned.",
+     "none recorded in this account",
+     "none — editorial interchange only, not a renderer"),
     ("adapter-premiere-uxp", "Adobe Premiere Pro (UXP)", "editor",
      "LIMITED", "NOT_TESTED",
      "NOT_TESTED",
      "Application-specific editing integration requires a version-tested "
-     "API. No adapter code or test exists in P0 — planned."),
+     "API. No adapter code or test exists in P0 — planned.",
+     "none recorded in this account",
+     "editing/rendering inside Adobe Premiere Pro (application)"),
 ]
 
 
 def build_adapters() -> dict:
     records = []
-    for aid, name, kind, integration, native_install, conformance, limits in ADAPTERS:
+    for aid, name, kind, integration, native_install, conformance, limits, usage, media in ADAPTERS:
         records.append({
             "adapter_id": aid,
             "name": name,
@@ -269,6 +368,8 @@ def build_adapters() -> dict:
             "native_skill_install": native_install,
             "capabilities": [],
             "limitations": [limits],
+            "usage": usage,
+            "media_execution": media,
             "authentication": "none (local files) — provider keys, where needed, are never set by setup.sh",
             "privacy": "private assets stay in the private overlay; never committed",
             "licence_notes": "component licences intact (see LICENSE and component licences)",
@@ -276,12 +377,60 @@ def build_adapters() -> dict:
                             "last_verified": "2026-11-22", "evidence": "none in P0"},
             "status": "untested",
         })
-    return {"registry": "adapters", "version": "2.3", "count": len(records),
+    return {"registry": "adapters", "version": "2.4", "count": len(records),
             "records": records,
             "note": ("No adapter is marked 'supported' in P0: a capability is "
                      "supported only after a real conformance test passes. "
                      "All adapters here are 'untested' (conformance NOT_TESTED) "
                      "or 'planned'.")}
+
+
+def build_providers() -> dict:
+    """Compile registry/providers.json from the providers section of
+    architecture/COMPANION_CAPABILITY_REGISTRY.yaml.
+
+    Providers are media executors, not reasoning hosts: a host
+    reasons, a provider executes. The YAML is the canonical
+    source; this file only copies it (sorted by provider_id) and
+    checks the required fields. Full schema validation of every
+    record lives in tests/test_task_compiler.py, which validates
+    the generated registry against schemas/provider-capability.json.
+    """
+    companions_path = os.path.join(
+        ROOT, "architecture", "COMPANION_CAPABILITY_REGISTRY.yaml")
+    with open(companions_path, encoding="utf-8") as f:
+        doc = yaml.safe_load(f)
+    raw = doc.get("providers") or []
+    required = ("provider_id", "schema_version", "provider_type",
+                "operations", "commercial_use_approved", "conformance",
+                "evidence")
+    records = []
+    for provider in raw:
+        for field in required:
+            if field not in provider:
+                raise ValueError(
+                    "provider record "
+                    f"{provider.get('provider_id')!r} is missing "
+                    f"required field '{field}'")
+        conformance = provider.get("conformance") or {}
+        for field in ("status", "evidence", "last_verified"):
+            if field not in conformance:
+                raise ValueError(
+                    "provider record "
+                    f"{provider.get('provider_id')!r} conformance is "
+                    f"missing '{field}'")
+        records.append(provider)
+    records.sort(key=lambda r: r.get("provider_id", ""))
+    return {"registry": "providers", "version": "2.4",
+            "count": len(records), "records": records,
+            "note": ("Providers are media executors, not reasoning "
+                     "hosts. A provider is matched only on capabilities "
+                     "this record evidences; NOT_TESTED and FAILED "
+                     "providers are never matched. Commercial use is "
+                     "approved only where a route was independently "
+                     "cleared; the default OmniVoice weights are "
+                     "CC-BY-NC and are never routed for commercial "
+                     "production.")}
 
 
 def write(name: str, data: dict) -> bool:
@@ -302,9 +451,11 @@ def main() -> int:
     features = build_features(skills)
     workflows = build_workflows()
     adapters = build_adapters()
+    providers = build_providers()
     changed = []
     for name, data in (("skills.json", skills), ("features.json", features),
-                       ("workflows.json", workflows), ("adapters.json", adapters)):
+                       ("workflows.json", workflows), ("adapters.json", adapters),
+                       ("providers.json", providers)):
         if write(name, data):
             changed.append(name)
     if CHECK:
@@ -316,6 +467,7 @@ def main() -> int:
         return 0
     print(f"skills={skills['count']} features={features['count']} "
           f"workflows={workflows['count']} adapters={adapters['count']} "
+          f"providers={providers['count']} "
           f"changed={changed or 'none'}")
     return 0
 

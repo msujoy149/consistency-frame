@@ -73,6 +73,41 @@ The guarantee: with this loop, no video is ever improvised — every video is ma
 
 What this loop is NOT: it does not change "do it yourself". Small work with no repo instruction at all still takes that path — quality commands plus the main flow. The loop is only for a genuinely missing SYSTEM — a skill the repo does not have.
 
+## Orchestration — the Brain directs, the runtime enforces
+
+Command authority does not stop at skill selection. Once the
+skills are chosen, the production itself is orchestrated by the
+deterministic runtime (`runtime/production_orchestrator.py` and
+`runtime/task_compiler.py`, documented in
+`docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md`). The Brain
+directs; the runtime enforces. The runtime never performs
+creative reasoning — the AI reasoning host analyses the script
+and fills the production-analysis draft; the runtime validates
+that draft against its contract and the source script, binds it
+to a Script-to-Performance bundle, compiles deterministic
+provider-neutral task packets, and enforces the G1–G6 gates in
+order. No LLM API lives inside the runtime, and no task is ever
+claimed executed when it was only compiled.
+
+The same task-local gate as the skill-first loop applies to
+production assets: a character design proposed for one job, a
+voice profile used for one job, or a sound asset generated for
+one job stays task-local unless the user explicitly authorises
+permanent registration. Approved identities always win over
+proposals, and a proposal never registers anything by itself.
+
+Three numbering systems in this repo must never be confused:
+
+- **Production Complexity P0–P3** is a video-quality scope
+  classification — how much production machinery a project uses
+  (Essential / Strongly Recommended / Advanced / Specialized).
+- **Engineering milestones P0/P1/P2/P3** are project phases —
+  P0 safe foundations, P1 runtimes, P2/P3 future work.
+- **G1–G6** are production approval gates — the stage-gate
+  workflow a job must pass through (Visual Planning, Test
+  Production, Editorial Review, Picture Lock, Finishing,
+  Delivery).
+
 ## Scope
 
 This rule applies to every skill in the repo, including future ones, and to every platform the repo is installed on. The user's explicit instructions and script still outrank everything else.

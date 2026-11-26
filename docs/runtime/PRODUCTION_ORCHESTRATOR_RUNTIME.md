@@ -1,0 +1,265 @@
+# Production orchestrator runtime (CF-WO-P1-004)
+
+The deterministic production orchestration runtime — the fifth
+production runtime component of Consistency Frame, built on the
+P1-001 trusted local session, the P1-002 deterministic skill
+router, the P1-003 Script-to-Performance runtime and the P1-004
+task compiler. It owns the production job lifecycle: intake,
+production-analysis validation, production-bundle assembly,
+provider-task compilation, G1–G6 gate evaluation, execution-result
+recording, and QC correction tasks — under one exact active local
+session, with an explicit job state machine.
+
+## What it is
+
+- **An orchestrator, not a creator.** It receives the AI host's
+  structured production-analysis draft, validates it against its
+  contract and the source script, binds it to a validated
+  Script-to-Performance bundle, compiles deterministic
+  provider-neutral task packets, and enforces the G1–G6 gates in
+  order. It never performs creative analysis, never invents a
+  scene, beat, shot, line, character, location or asset, never
+  rewrites dialogue, never registers a character or voice profile,
+  and never claims a task executed.
+- **Standard-library only.** The runtime reads its five canonical
+  schemas with `json` only and validates them with the restricted
+  JSON-Schema-subset validator shared with the task compiler
+  (mirroring `scripts/validate-repo.py::check_schema` semantics).
+  No third-party dependency enters the installed runtime, and no
+  LLM API lives inside it.
+- **Deterministic.** The same validated job, analysis, bundle and
+  provider registry always produce the same packets. Jobs, packets
+  and packages carry no timestamps and no random identifiers; each
+  hash is the SHA-256 of the canonical JSON of the record without
+  the hash field itself.
+- **Fail-closed.** Any invalid input — session, job state, gate
+  order, analysis, bundle, task id, QC report, voice consent, or
+  commercial routing — raises `ProductionOrchestratorError` with a
+  list of structured, actionable errors. A partially valid job or
+  package is never returned as successful.
+
+## Architecture boundary: five roles, kept separate
+
+The Universal AI Production Brain separates five roles. This
+runtime is the Brain's orchestration layer; it is none of the
+other four.
+
+- **Consistency Frame — Central Brain.** Owns production
+  instructions, skill selection, script-to-production contracts,
+  canonical plans, character and voice identity references,
+  workflow authority, production task compilation, QC policies,
+  and project continuity and provenance. This runtime is the
+  Brain's executable orchestration half.
+- **AI Reasoning Host.** The connected AI model (ChatGPT, Claude,
+  Gemini, Muse, or another compatible host) performs creative and
+  semantic reasoning: it reads the Brain's skills and contracts,
+  analyses the script, proposes missing production details, and
+  fills the production-analysis draft. The Brain validates and
+  directs this work; the host's draft is never trusted until the
+  runtime validates it.
+- **Implementation Agent.** Muse or another coding agent modifies
+  the repository only when explicitly assigned a Work Order. It is
+  not a media-generation provider.
+- **Media Execution Providers.** Image, video, voice, music,
+  sound, lip-sync and editing providers generate the requested
+  assets. The Brain matches tasks to providers only on evidenced
+  capabilities (`registry/providers.json`); an unmatched task
+  compiles as a complete provider-neutral handoff.
+- **Production and Editing Tools.** VoiceStudio, OpenMontage,
+  FFmpeg, OpenTimelineIO and compatible editors. The Brain directs
+  them through verified interfaces and task instructions; it never
+  modifies their internal code.
+
+The repository contains no LLM and no rendering engine, and this
+runtime must never pretend otherwise. No central web server, cloud
+database or hosting platform is required or built.
+
+## Job state machine
+
+```
+INTAKE -> ANALYZING -> PLAN_READY -> AWAITING_G1_APPROVAL
+  -> TEST_READY -> AWAITING_G2_APPROVAL -> BATCH_PRODUCTION
+  -> EDITORIAL_REVIEW -> PICTURE_LOCK -> FINISHING -> FINAL_QC
+  -> DELIVERED
+```
+
+`BLOCKED` is reachable from any state; a blocked job resumes only
+to the state it came from, and only while no gate is BLOCKED.
+Three transitions are operation-gated and can never be reached by
+a bare transition:
+
+- `ANALYZING -> PLAN_READY` happens only inside
+  `build_production_bundle` (the analysis validates and the S2P
+  bundle builds).
+- `AWAITING_G1_APPROVAL -> TEST_READY` and
+  `AWAITING_G2_APPROVAL -> BATCH_PRODUCTION` happen only inside
+  `evaluate_production_gate` when G1 / G2 passes (or is waived by
+  the user with a recorded reason).
+
+The one exception is resuming from BLOCKED: it returns to the
+state the job came from even when that state is operation-gated,
+because the operation that put the job there already passed the
+gate.
+
+Stage-gated transitions check their gate: `PICTURE_LOCK` needs G3,
+`FINISHING` needs G4, `FINAL_QC` needs G5, `DELIVERED` needs G6 —
+each PASS or WAIVED, never merely attempted.
+
+## G1–G6 gates
+
+The six Addendum-01 stage gates (G1 Visual Planning, G2 Test
+Production, G3 Editorial Review, G4 Picture Lock, G5 Finishing,
+G6 Delivery) are enforced in order: a gate cannot pass or be
+waived while an earlier gate is unresolved. A `BLOCKED` decision
+moves the job to `BLOCKED`. A `WAIVED` decision needs a non-empty
+waiver reason and the user as authoriser — only the user waives a
+gate — and is recorded on the gate, never silent. Passing G1
+after a block advances the job past the gate in one step; other
+gates restore the state the job came from.
+
+## Production analysis (Layer A contract)
+
+The analysis draft (`schemas/production-analysis.json`) is the
+contract the reasoning host fills: premise, narrative structure,
+scene-by-scene breakdown (purpose, beats, characters, location,
+time of day, transitions), character resolutions, emotional
+progression, pacing, shot direction, sound direction, and the
+open questions that need a user decision.
+
+- **Story preservation.** The user's story, events, meaning and
+  dialogue are authoritative. The analysis must not invent events,
+  change relationships or the ending, rewrite dialogue without
+  explicit permission, add scenes or subplots, or remove important
+  events. The runtime checks dialogue counts against the source
+  script and refuses a bundle when they disagree.
+- **Provenance.** Every material decision carries one of
+  `EXPLICIT_FROM_USER`, `FROM_APPROVED_PROJECT_CANON`,
+  `INFERRED_FOR_PRODUCTION`, `NEEDS_USER_DECISION`. An inference is
+  never presented as fact. Ordinary missing creative details are
+  inferred and labelled inferred; the user is asked only when a
+  detail would materially change the story, identity, rights,
+  privacy, safety, budget or production outcome.
+- **Unresolved decisions block planning.** An analysis with open
+  questions or needs-decision characters cannot build a production
+  bundle. The host (or user) resolves them first.
+
+## Character resolution
+
+Approved identities always win. A character the analysis resolves
+as `approved` binds the registered character id, and the registry
+must actually contain it. A character with no approved identity
+gets a task-local design proposal
+(`schemas/character-design-proposal.json`): a design brief, fixed
+structure, reference-preparation requirements and a job-scoped
+status. Proposals never register anything permanently — permanent
+registration still requires the existing explicit-authorisation
+flow — and the resolver is pure: it never creates, edits or
+registers anything.
+
+## Task compilation
+
+`compile_provider_tasks` delegates to the task compiler
+(`runtime/task_compiler.py`), which converts the validated bundle
+and analysis into deterministic task packets: character/reference
+preparation, image generation, video generation, voice generation
+(exact dialogue text, character and voice profile ids, language,
+emotion, delivery, pauses, timing, consent and provider
+eligibility), sound generation (timecoded cues from the analysis
+or the bundle audio plan; intentional silence is a creative
+decision, never a defect), editing/finishing, and QC review.
+Provider matching uses only evidenced capabilities; commercial
+jobs never match a provider whose commercial use is not approved
+(the default OmniVoice weights are CC-BY-NC). Unmatched tasks
+compile as complete provider-neutral handoffs.
+
+## QC and regeneration
+
+`build_qc_correction_tasks` takes a QC report (defects with
+severity Critical / Major / Minor / Polish, shot and task
+references) and compiles correction packets only for the shots
+that failed: Critical and Major always, Minor only with repair
+authorisation, Polish never. Only the defective shots get
+packets — approved neighbours are preserved — and each packet
+re-matches as its original task type, so a failed video shot is
+never silently re-typed. Execution results are recorded as facts
+(`record_execution_result`); a failed result does not auto-block
+the job — the QC loop decides what gets corrected.
+
+## Short-form and long-form
+
+The same contracts and orchestration serve every delivery
+profile (`short-form-15-60s`, `short-explainer-1-3min`,
+`story-5-15min`, `documentary-20-60min`, `long-form`, `episodic`),
+carried on the job as `format_profile`. Short-form prioritises an
+immediate hook, clear visuals, efficient coverage, faster pacing
+and compact sound; long-form uses chapters, narrative arcs,
+slower development, breathing space, detailed continuity and
+long-range character, voice and environment tracking. The user's
+aspect ratio, resolution, frame rate and platform remain
+authoritative and live in the production profile.
+
+## Numbering systems (do not confuse them)
+
+- **Production Complexity P0–P3** is a video-quality scope
+  classification (Essential / Strongly Recommended / Advanced /
+  Specialized) — how much production machinery a project uses.
+- **Engineering milestones P0/P1/P2/P3** are separate project
+  phases (P0 safe foundations, P1 runtimes, P2/P3 future work).
+- **G1–G6** are production approval gates — the stage-gate
+  workflow a job must pass through.
+- The three numbering systems must never be confused.
+
+## Public API
+
+`runtime/production_orchestrator.py`:
+
+- `create_production_job(session, job_id, project_id,
+  format_profile, *, commercial_use=False, stills_first=False,
+  script_contract_id=None)` — job in `INTAKE`.
+- `transition_job(session, job, new_state)` — explicit state
+  machine, operation-gated targets refused.
+- `resolve_character(session, job, resolution, *,
+  approved_registry=None, proposals=None)` — pure resolution.
+- `build_production_bundle(session, job, routing_plan, script,
+  profile, draft, analysis, bundle_id,
+  dialogue_rewrite_authorised=False)` — `(production_bundle, job)`.
+- `compile_provider_tasks(session, job, production_bundle,
+  analysis=None, proposals=None, providers=None, *,
+  voice_consent=False, voice_kinds=None, providers_path=None)` —
+  `(task_package, job)`.
+- `evaluate_production_gate(session, job, gate_id, decision, *,
+  note=None, waiver_reason=None, authoriser=None)` — job.
+- `record_execution_result(session, job, task_id, result)` — job.
+- `build_qc_correction_tasks(session, job, qc_report,
+  providers=None, *, providers_path=None)` —
+  `(correction_package, job)`.
+- Validators: `validate_format_profile`,
+  `validate_production_analysis`, `validate_character_design_proposal`,
+  `validate_gate_state`, `validate_job`, `job_hash`.
+
+`runtime/task_compiler.py`:
+
+- `compile_task_package(session, job, bundle, analysis=None,
+  proposals=None, providers=None, *, voice_consent=False,
+  voice_kinds=None, providers_path=None)` — package.
+- `compile_regeneration_packets(session, job, qc_report,
+  providers=None, *, providers_path=None)` — package.
+- `match_provider_for_task(task_type, providers, *,
+  commercial_use=False, needs_clone=False)` —
+  `(provider_id | None, reason)`.
+- `load_provider_registry(providers_path=None)` — validated list.
+- Validators: `validate_task_packet`, `validate_task_package`,
+  `validate_provider_record`, `task_packet_hash`.
+
+## What this runtime does not do
+
+- No creative reasoning, no LLM API, no heuristic that guesses
+  meaning from natural language.
+- No media generation, no provider calls, no paid calls, no
+  credentials in the repo.
+- No permanent registration of characters, voice profiles, sound
+  assets or canonical rules.
+- No server, API backend, cloud database or hosting platform.
+- No silent fallback: an unmatched provider, an unresolved user
+  decision, a failed gate, or a missing voice profile is an
+  explicit error or an explicit handoff, never a quiet substitute.

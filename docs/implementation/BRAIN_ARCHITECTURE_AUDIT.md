@@ -1,3 +1,60 @@
+# Status addendum — 2026-11-26 (CF-WO-P1-004)
+
+This addendum records what changed after the audit below was
+written. It does not rewrite the audit's history: the original
+text stands as written on 2026-11-22, and this section is the
+only place that reports later status.
+
+- **Runtime skill-routing engine — DONE (P1-002).**
+  `runtime/skill_router.py` now executes the routing matrix and
+  workflow graph as deterministic workflow plans. Record:
+  `docs/implementation/CF-WO-P1-002-corrections.md`.
+- **Script-to-performance runtime — DONE (P1-003).**
+  `runtime/script_to_performance.py` now produces Scene, Shot and
+  Performance Plans plus the binding record from a script. Record:
+  `docs/implementation/CF-WO-P1-003-corrections.md`. The
+  Addendum-01 stage gates (G1–G6) and P0–P3 complexity tiers were
+  integrated as documentation in the same round.
+- **Production orchestration runtime — DONE (P1-004).**
+  `runtime/production_orchestrator.py` (job state machine,
+  production-analysis validation, G1–G6 gate enforcement, QC
+  correction tasks) and `runtime/task_compiler.py`
+  (deterministic provider-neutral task packets, provider matching
+  on evidenced capabilities) now sit on top of the P1-001/002/003
+  runtimes. Five new schemas (v2.5): `production-analysis.json`,
+  `character-design-proposal.json`, `task-packet.json`,
+  `gate-state.json`, `provider-capability.json`. The provider
+  registry (`registry/providers.json`) is compiled from the
+  `providers:` section of
+  `architecture/COMPANION_CAPABILITY_REGISTRY.yaml`. Record:
+  `docs/implementation/CF-WO-P1-004-corrections.md`; runtime
+  contract: `docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md`.
+- **Adapter conformance tests — STILL OPEN.** All adapters
+  remain NOT_TESTED for formal conformance. One clarification:
+  Muse's knowledge-pack path is USED DAILY in this account since
+  2026-11-12 (usage-exercised), which is not the same as a formal
+  conformance test — the formal test (`CF-P0-ADAPTER-001`) is
+  still to be run. Native Muse custom-skill installation remains
+  UNSUPPORTED, and Muse has no media execution capability (it
+  directs providers and tools only). All other hosts remain
+  NOT_TESTED. See the P1-004 corrections record §2.
+- **Registry count reconciliation — UNCHANGED.** The derived
+  feature count is now 173 (was 165 at audit time); the
+  historical 109/120 claim is a different counting unit and is
+  unchanged.
+- **Private-overlay runtime adapter — STILL DEFERRED to P2.**
+- **OpenMontage paid provider routes — STILL NOT VALIDATED
+  LIVE.** Paid third-party routes are recorded as NOT_TESTED in
+  the provider registry. No live paid call is made without the
+  user's explicit approval and keys.
+- **Timeline manifest — DONE (P0-007, contract) and consumed by
+  P1-003/004 as a contract; no timeline manifest is produced by
+  the P1-004 orchestrator.** The `wf-generate-from-script`
+  workflow's stated outputs include a timeline plan, so all
+  workflows remain `SCHEMA_DEFINED` until a runtime builds one.
+
+---
+
 # Brain Architecture Audit — v2.4 Amendment (P0-A)
 
 **Date:** 2026-11-22 · **Branch:** `feat/cf-p0-safe-foundations` ·
