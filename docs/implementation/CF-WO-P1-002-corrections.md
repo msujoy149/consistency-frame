@@ -829,3 +829,156 @@ and the suite reports 2 failures; restored, the suite passes.
   the re-run; Windows success is not claimed before that run.
 - Script-to-performance runtime remains P1-003 territory; no
   executor or scheduler for plans was added.
+
+## 14. CF-WO-P1-002-R1-R2 — Reject explicit nulls in non-nullable optional fields (2026-11-26)
+
+Independent schema-parity testing found 22 cases where the JSON
+Schema rejects an explicit `null` but `validate_routing_request()`
+accepted it as if the field were absent. This section records the
+reproduction, the fix and the regression group. Nothing here
+redesigns the router, changes intent-mode permission or selection
+logic, or changes the P1-001 session runtime. Same branch
+(`feat/cf-p1-002-skill-routing-runtime`), same PR #3 (Draft,
+unmerged); no merge, no P1-003.
+
+### 14.1 The gap — 22 cases, all reproduced pre-fix
+
+Every case was reproduced on pre-fix code with a probe that built
+a valid schema-conforming request, set the optional property to
+explicit `None`, and asked both validators: the restricted schema
+validator (`scripts/validate-repo.py:validate_instance`) rejected
+all 22; the production runtime validator accepted all 22. The
+pattern was the same in each place: `request.get(key) or []` /
+`or {}` defaults and `if value is not None` guards treated an
+explicit `None` exactly like an omitted key.
+
+- **Task A — request level (10):** `additional_layers`,
+  `dialogue_lines`, `hints`, `primary_pathway`,
+  `production_profile` (in a mode where the profile is otherwise
+  optional), `registration_evidence`, `requested_skills`,
+  `subjects`, `shots`, `requested_skills[i].scope`.
+- **Task B — production profile (5):** `name`,
+  `per_shot_overrides`, `per_subject_overrides`, `project_id`,
+  `skill_profiles`.
+- **Task C — registration evidence (7):** `character_link`,
+  `licence_or_permission`, `name`, `owner`, `project_scope`,
+  `source`, `unique_id`.
+
+### 14.2 The fix — key-presence checks, no architecture change
+
+All fixes are in `runtime/skill_router.py`, in the two existing
+validators, and follow one rule: **presence decides, not
+truthiness.** A key that is present with `None` is a type error
+naming the field; a key that is absent stays valid wherever the
+schema permits omission.
+
+- `validate_routing_request()`: `production_profile` — an
+  explicit null now reports "must be an object, got None" in
+  every mode, while a missing profile in a production mode still
+  reports the existing "is required in {mode} mode" error (the
+  two cases are now distinct branches). `hints`,
+  `additional_layers`, `requested_skills`, `subjects`, `shots`,
+  `dialogue_lines` — the `or []` / `or {}` defaults are replaced
+  by a presence check that reports "must be a list/object, got
+  None" and then validates the value normally. `primary_pathway`
+  — explicit null reports "must be a skill slug, got None".
+  `requested_skills[i].scope` — explicit null reports "must be
+  an object, got None". `registration_evidence` — the key's
+  presence now decides whether the shape validator runs, and
+  that validator already reports a non-object (including `None`)
+  as "is not an object".
+- `_validate_profile_fields()`: `name`, `project_id`,
+  `skill_profiles`, `per_shot_overrides`,
+  `per_subject_overrides` — explicit nulls are now rejected with
+  a field-naming error, mirroring the existing
+  `production_profile_id` null check. All existing type, enum,
+  pattern, minItems and additionalProperties checks are
+  untouched; omission of any of the five stays valid.
+- `_validate_registration_evidence()`: the seven string fields
+  now reject a present `None` with "must be a non-empty string,
+  got None". Boolean approval validation is unchanged: only the
+  actual boolean `True` is affirmative evidence; strings,
+  integers and other truthy values still fail the type check.
+- No change to `_validate_referential_integrity()`: it already
+  guards every table read with `isinstance` and treats a null
+  table as empty — the null itself is now reported by the
+  structural validation that runs first. Both public entry
+  points (`resolve_skills`, `build_workflow_plan`) validate
+  first, so a null can never reach selection or planning through
+  them; the second `primary_pathway` read inside `resolve_skills`
+  is downstream of validation and needed no change.
+
+### 14.3 Regression group — CF-P1-002-R1-R2-NULL
+
+A parameterized group in `tests/test_skill_router.py` covers all
+22 cases. Each case: (1) starts from a valid schema-conforming
+request/profile, (2) adds the optional property with explicit
+`None`, (3) verifies the restricted schema validator rejects it,
+(4) verifies production `validate_routing_request()` also rejects
+it, (5) verifies the runtime error names the field/path, (6)
+deletes the property and verifies the request is valid again
+(schema AND runtime, wherever omission is permitted). The
+declared list is the contract: a summary check asserts
+`len(null_cases) == 22` and that the exercised labels equal the
+declared labels. Demonstrated failing on purpose: with one case
+(`evidence source`) removed from the declared list, the summary
+check fails ("declared=21 exercised=21") and the suite reports
+1 failure; restored, the suite passes. `tests/test_skill_router.py`
+is now **430 checks, 0 failures** (was 341; +89 = 22 cases × 4
+checks + 1 summary check). No existing positive fixture or test
+was weakened; all R1 groups (SCOPE, SCHEMA, HANDOFF, CATALOG)
+still pass unchanged.
+
+### 14.4 Tests executed — exact counts
+
+- `python3 scripts/generate-routing-catalog.py --check` — CHECK OK.
+- `python3 tests/test_skill_router.py` — **430 checks, 0 failures**.
+- `python3 tests/test_routing.py` — **305/0**.
+- `python3 tests/test_local_session_runtime.py` — **67/0** (Linux).
+- `python3 tests/test_session_authorization.py` — **47/0**.
+- `python3 tests/test_private_voice_security.py` — **158/0**
+  (unmodified).
+- `bash tests/run-tests.sh` — **PASS, 68 entries / 54 distinct IDs /
+  36 distinct commands, 0 failures** (unchanged entry counts —
+  no new test file; `tests/last-run.json` byte-identical to the
+  R1-R1 run, SHA `a24736d6…`, as the suite records entry-level
+  results only).
+- `python3 scripts/validate-repo.py` — PASS (8/8).
+- `python3 scripts/generate-registries.py --check` — OK.
+- `python3 scripts/generate-report.py --check` — OK (after the
+  provenance regen below; the check fails right after a suite run
+  because the suite rewrites the living report — known behaviour,
+  same as R1/R1-R1).
+- `python3 tests/test_reports.py` — PASS (0 failures).
+- `git diff --check` — clean.
+- The 22-case probe was re-run after the fix: schema and runtime
+  both reject all 22.
+
+### 14.5 Files changed
+
+- `runtime/skill_router.py` — key-presence null checks in
+  `validate_routing_request()`, `_validate_profile_fields()` and
+  `_validate_registration_evidence()` (Tasks A–C).
+- `tests/test_skill_router.py` — CF-P1-002-R1-R2-NULL regression
+  group (22 cases × 4 checks + summary) + test-ID header.
+- `docs/runtime/SKILL_ROUTING_RUNTIME.md` — explicit-null
+  paragraph in the schema-parity section.
+- `docs/implementation/CF-WO-P1-002-corrections.md` — this §14.
+- `CHANGELOG.md` — R1-R2 entry under [Unreleased].
+- `AGENTS.md` — one-line nullability note in the P1-002 section.
+- Regenerated provenance (manifest, living report, build report)
+  in the repo's required order; the manifest and CHECKSUMS values
+  live in the delivery report, not here (hash-chain rule §7).
+
+### 14.6 Remaining limitations + unresolved decisions
+
+- The fix covers the 22 declared cases — the optional fields
+  named in the work order. Other optional fields with the same
+  `or []` / `or {}` shape (for example `motion_methods` and
+  `subject_types` inside a profile, or `hints.languages`) are
+  required fields or already reject `None` through their existing
+  checks; they were not in scope and were not changed.
+- A receipt is still reported completion state, not proof of
+  external work (R1 §12 boundary, unchanged).
+- Script-to-performance runtime remains P1-003 territory; no
+  executor or scheduler for plans was added.

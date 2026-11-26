@@ -14,7 +14,7 @@ Exit 0 = PASS, 1 = FAIL. Test IDs: CF-P1-002-CATALOG,
 CF-P1-002-SCHEMA, CF-P1-002-ROUTING, CF-P1-002-CONFLICTS,
 CF-P1-002-MODES, CF-P1-002-PLAN, CF-P1-002-SECURITY,
 CF-P1-002-R1-SCOPE, CF-P1-002-R1-SCHEMA, CF-P1-002-R1-HANDOFF,
-CF-P1-002-R1-CATALOG.
+CF-P1-002-R1-CATALOG, CF-P1-002-R1-R2-NULL.
 """
 import copy
 import fnmatch
@@ -1716,6 +1716,173 @@ def main():
           "builds a plan-only plan",
           reg_plan["status"] == "ready" and reg_plan["plan_only"] is True,
           f"status={reg_plan['status']}")
+
+    # --- CF-P1-002-R1-R2-NULL: explicit nulls in non-nullable
+    # optional fields -------------------------------------------
+    # Independent schema-parity testing found 22 cases where the
+    # JSON Schema rejects an explicit null but the runtime accepted
+    # it as if the field were absent. Every case: start from a
+    # valid schema-conforming request, add the optional property
+    # with explicit None, verify BOTH the restricted schema
+    # validator and production validate_routing_request() reject
+    # it, verify the runtime error names the field/path, then
+    # delete the property and verify the request is valid again.
+    # The declared list is the contract: the summary check below
+    # fails if any case is silently dropped from it.
+    def _null_req_base():
+        return clone(parity_base)
+
+    def _null_reg_base():
+        return clone(valid_reg)
+
+    def _null_scope_base():
+        return request(
+            "r1r2-null-scope", "GENERATE_FROM_SCRIPT",
+            clone(PROFILES["s3"]), {"dialogue": True, "consent": True},
+            requested_skills=[{"skill": "cinematic-power",
+                               "source": "user-request"}])
+
+    def _null_profile_base():
+        return request("r1r2-null-profile", "REFERENCE_REVIEW")
+
+    null_cases = [
+        # (label, runtime-error path fragment, base, set null, delete)
+        ("request additional_layers", "additional_layers",
+         _null_req_base,
+         lambda r: r.update({"additional_layers": None}),
+         lambda r: r.__delitem__("additional_layers")),
+        ("request dialogue_lines", "dialogue_lines",
+         _null_req_base,
+         lambda r: r.update({"dialogue_lines": None}),
+         lambda r: r.__delitem__("dialogue_lines")),
+        ("request hints", "hints",
+         _null_req_base,
+         lambda r: r.update({"hints": None}),
+         lambda r: r.__delitem__("hints")),
+        ("request primary_pathway", "primary_pathway",
+         _null_req_base,
+         lambda r: r.update({"primary_pathway": None}),
+         lambda r: r.__delitem__("primary_pathway")),
+        ("request production_profile in optional mode",
+         "production_profile",
+         _null_profile_base,
+         lambda r: r.update({"production_profile": None}),
+         lambda r: r.__delitem__("production_profile")),
+        ("request registration_evidence", "registration_evidence",
+         _null_req_base,
+         lambda r: r.update({"registration_evidence": None}),
+         lambda r: r.__delitem__("registration_evidence")),
+        ("request requested_skills", "requested_skills",
+         _null_req_base,
+         lambda r: r.update({"requested_skills": None}),
+         lambda r: r.__delitem__("requested_skills")),
+        ("request subjects", "subjects",
+         _null_req_base,
+         lambda r: r.update({"subjects": None}),
+         lambda r: r.__delitem__("subjects")),
+        ("request shots", "shots",
+         _null_req_base,
+         lambda r: r.update({"shots": None}),
+         lambda r: r.__delitem__("shots")),
+        ("requested_skills[0].scope", "requested_skills[0].scope",
+         _null_scope_base,
+         lambda r: r["requested_skills"][0].update({"scope": None}),
+         lambda r: r["requested_skills"][0].__delitem__("scope")),
+        ("profile name", "production_profile.name",
+         _null_req_base,
+         lambda r: r["production_profile"].update({"name": None}),
+         lambda r: r["production_profile"].__delitem__("name")),
+        ("profile per_shot_overrides",
+         "production_profile.per_shot_overrides",
+         _null_req_base,
+         lambda r: r["production_profile"].update(
+             {"per_shot_overrides": None}),
+         lambda r: r["production_profile"].__delitem__(
+             "per_shot_overrides")),
+        ("profile per_subject_overrides",
+         "production_profile.per_subject_overrides",
+         _null_req_base,
+         lambda r: r["production_profile"].update(
+             {"per_subject_overrides": None}),
+         lambda r: r["production_profile"].__delitem__(
+             "per_subject_overrides")),
+        ("profile project_id", "production_profile.project_id",
+         _null_req_base,
+         lambda r: r["production_profile"].update({"project_id": None}),
+         lambda r: r["production_profile"].__delitem__("project_id")),
+        ("profile skill_profiles", "production_profile.skill_profiles",
+         _null_req_base,
+         lambda r: r["production_profile"].update(
+             {"skill_profiles": None}),
+         lambda r: r["production_profile"].__delitem__("skill_profiles")),
+        ("evidence character_link", "registration_evidence.character_link",
+         _null_reg_base,
+         lambda r: r["registration_evidence"].update(
+             {"character_link": None}),
+         lambda r: r["registration_evidence"].__delitem__(
+             "character_link")),
+        ("evidence licence_or_permission",
+         "registration_evidence.licence_or_permission",
+         _null_reg_base,
+         lambda r: r["registration_evidence"].update(
+             {"licence_or_permission": None}),
+         lambda r: r["registration_evidence"].__delitem__(
+             "licence_or_permission")),
+        ("evidence name", "registration_evidence.name",
+         _null_reg_base,
+         lambda r: r["registration_evidence"].update({"name": None}),
+         lambda r: r["registration_evidence"].__delitem__("name")),
+        ("evidence owner", "registration_evidence.owner",
+         _null_reg_base,
+         lambda r: r["registration_evidence"].update({"owner": None}),
+         lambda r: r["registration_evidence"].__delitem__("owner")),
+        ("evidence project_scope", "registration_evidence.project_scope",
+         _null_reg_base,
+         lambda r: r["registration_evidence"].update(
+             {"project_scope": None}),
+         lambda r: r["registration_evidence"].__delitem__(
+             "project_scope")),
+        ("evidence source", "registration_evidence.source",
+         _null_reg_base,
+         lambda r: r["registration_evidence"].update({"source": None}),
+         lambda r: r["registration_evidence"].__delitem__("source")),
+        ("evidence unique_id", "registration_evidence.unique_id",
+         _null_reg_base,
+         lambda r: r["registration_evidence"].update(
+             {"unique_id": None}),
+         lambda r: r["registration_evidence"].__delitem__("unique_id")),
+    ]
+    exercised = []
+    for label, path, make_base, set_null, delete_key in null_cases:
+        req = make_base()
+        check(f"CF-P1-002-R1-R2-NULL: {label} base request is valid",
+              not errors_for(req_schema, req)
+              and not validate_routing_request(req, CATALOG),
+              f"schema={errors_for(req_schema, req)} "
+              f"router={validate_routing_request(req, CATALOG)}")
+        set_null(req)
+        schema_errs = errors_for(req_schema, req)
+        router_errs = validate_routing_request(req, CATALOG)
+        check(f"CF-P1-002-R1-R2-NULL: {label} null is rejected by "
+              "schema and runtime",
+              bool(schema_errs) and bool(router_errs),
+              f"schema_errs={schema_errs} router_errs={router_errs}")
+        check(f"CF-P1-002-R1-R2-NULL: {label} runtime error names "
+              f"the field ({path})",
+              any(path in e for e in router_errs),
+              "; ".join(router_errs))
+        delete_key(req)
+        check(f"CF-P1-002-R1-R2-NULL: {label} omission is valid again",
+              not errors_for(req_schema, req)
+              and not validate_routing_request(req, CATALOG),
+              f"schema={errors_for(req_schema, req)} "
+              f"router={validate_routing_request(req, CATALOG)}")
+        exercised.append(label)
+    check("CF-P1-002-R1-R2-NULL: all 22 declared nullability cases "
+          "exercised",
+          len(null_cases) == 22 and len(exercised) == 22
+          and set(exercised) == {c[0] for c in null_cases},
+          f"declared={len(null_cases)} exercised={len(exercised)}")
 
     # --- CF-P1-002-R1-HANDOFF: dependency-safe handoff packets -------
     s1_session = fresh_session()

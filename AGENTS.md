@@ -507,6 +507,16 @@ step-by-step order for every video, in §7).
   checks (PR run #237); the router suite also needs PyYAML
   installed in `windows-compat`, mirroring `p0-validate`. Record:
   corrections doc §13.
+- **Explicit nulls (R1-R2, 2026-11-26, same branch and PR #3).**
+  An optional field that is present with an explicit `null` is a
+  type error naming the field — never treated as if the field
+  were absent — while an omitted field stays valid wherever the
+  schema permits omission. Covers 22 cases (10 request-level, 5
+  profile, 7 evidence strings); boolean approval evidence is
+  unchanged (only the actual boolean `True` counts). Regression
+  group CF-P1-002-R1-R2-NULL in `tests/test_skill_router.py`
+  (22 cases × 4 checks + a summary check that fails if any
+  declared case is dropped). Record: corrections doc §14.
 
 ## Rules that always apply
 

@@ -172,6 +172,25 @@ and then fails the policy check. Registration and permanent
 mutation modes stay plan-only; a valid plan never means
 registration was authorised or executed.
 
+**Explicit nulls (R1-R2).** An omitted optional field stays
+valid wherever the schema permits omission, but a field that is
+present with an explicit `null` is a type error, never an absent
+field. The validator uses key-presence checks, not truthiness:
+`additional_layers`, `dialogue_lines`, `hints`,
+`primary_pathway`, `production_profile` (even in a mode where the
+profile is otherwise optional), `registration_evidence`,
+`requested_skills`, `subjects`, `shots` and
+`requested_skills[i].scope` at request level; `name`,
+`per_shot_overrides`, `per_subject_overrides`, `project_id` and
+`skill_profiles` in the profile; and the seven optional evidence
+string fields (`character_link`, `licence_or_permission`, `name`,
+`owner`, `project_scope`, `source`, `unique_id`). Each rejection
+names the field or path (for example, "production_profile must be
+an object, got None"). A missing profile in a production mode is
+still the existing "is required in {mode} mode" error — the two
+cases are distinct. Boolean approval evidence is unchanged: only
+the actual boolean `True` counts.
+
 ## Resolution
 
 `resolve_skills(request, catalog)` returns the selected skills, the

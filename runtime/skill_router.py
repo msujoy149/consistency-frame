@@ -764,13 +764,24 @@ def validate_routing_request(request, catalog: dict) -> list:
         return errors  # mode-dependent checks cannot run without a mode
 
     profile = request.get("production_profile")
-    if mode in _PRODUCTION_MODES and profile is None:
+    if "production_profile" in request and profile is None:
+        # R1-R2: an explicit null is not an omitted profile. The
+        # schema types production_profile as object, so a null is
+        # invalid even in a mode where the profile is optional.
+        errors.append("production_profile must be an object, got None")
+    elif mode in _PRODUCTION_MODES and profile is None:
         errors.append(
             f"production_profile is required in {mode} mode")
     if profile is not None:
         errors.extend(_validate_profile_fields(profile, catalog))
 
-    hints = request.get("hints") or {}
+    hints = request.get("hints")
+    if hints is None:
+        if "hints" in request:
+            # R1-R2: explicit null, not omission — the schema types
+            # hints as object.
+            errors.append("hints must be an object, got None")
+        hints = {}
     if not isinstance(hints, dict):
         errors.append("hints is not an object")
     else:
@@ -790,6 +801,10 @@ def validate_routing_request(request, catalog: dict) -> list:
                 errors.append(f"hints.{flag} must be a boolean")
 
     pathway = request.get("primary_pathway")
+    if "primary_pathway" in request and pathway is None:
+        # R1-R2: explicit null, not omission — the schema types
+        # primary_pathway as a string enum.
+        errors.append("primary_pathway must be a skill slug, got None")
     if pathway is not None:
         if not isinstance(pathway, str) or pathway not in skills_by_slug:
             errors.append(f"primary_pathway {pathway!r} is not a known skill")
@@ -799,7 +814,13 @@ def validate_routing_request(request, catalog: dict) -> list:
         elif pathway == "command-authority":
             errors.append("command-authority is the router itself, never a "
                           "primary pathway")
-    layers = request.get("additional_layers") or []
+    layers = request.get("additional_layers")
+    if layers is None:
+        if "additional_layers" in request:
+            # R1-R2: explicit null, not omission — the schema types
+            # additional_layers as an array.
+            errors.append("additional_layers must be a list, got None")
+        layers = []
     if not isinstance(layers, list):
         errors.append("additional_layers is not a list")
     else:
@@ -814,7 +835,13 @@ def validate_routing_request(request, catalog: dict) -> list:
         if pathway is not None and pathway in layers:
             errors.append("primary_pathway is also listed in additional_layers")
 
-    requested = request.get("requested_skills") or []
+    requested = request.get("requested_skills")
+    if requested is None:
+        if "requested_skills" in request:
+            # R1-R2: explicit null, not omission — the schema types
+            # requested_skills as an array.
+            errors.append("requested_skills must be a list, got None")
+        requested = []
     if not isinstance(requested, list):
         errors.append("requested_skills is not a list")
     else:
@@ -842,7 +869,12 @@ def validate_routing_request(request, catalog: dict) -> list:
                     f"requested_skills[{i}].source "
                     f"{source!r} is not a known selection source")
             scope = item.get("scope")
-            if scope is not None:
+            if "scope" in item and scope is None:
+                # R1-R2: explicit null, not omission — the schema
+                # types scope as an object.
+                errors.append(f"requested_skills[{i}].scope must be an "
+                              "object, got None")
+            elif scope is not None:
                 if not isinstance(scope, dict):
                     errors.append(f"requested_skills[{i}].scope is not an object")
                 else:
@@ -865,7 +897,13 @@ def validate_routing_request(request, catalog: dict) -> list:
                   "is_live_action_footage"},
     }
     for table, id_key in (("subjects", "subject_id"), ("shots", "shot_id")):
-        items = request.get(table) or []
+        items = request.get(table)
+        if items is None:
+            if table in request:
+                # R1-R2: explicit null, not omission — the schema types
+                # the table as an array.
+                errors.append(f"{table} must be a list, got None")
+            items = []
         if not isinstance(items, list):
             errors.append(f"{table} is not a list")
             continue
@@ -934,7 +972,13 @@ def validate_routing_request(request, catalog: dict) -> list:
                 errors.append(f"shots[{i}].is_live_action_footage must be a "
                               "boolean")
 
-    lines = request.get("dialogue_lines") or []
+    lines = request.get("dialogue_lines")
+    if lines is None:
+        if "dialogue_lines" in request:
+            # R1-R2: explicit null, not omission — the schema types
+            # dialogue_lines as an array.
+            errors.append("dialogue_lines must be a list, got None")
+        lines = []
     if not isinstance(lines, list):
         errors.append("dialogue_lines is not a list")
     else:
@@ -966,7 +1010,9 @@ def validate_routing_request(request, catalog: dict) -> list:
         if flag in request and not isinstance(request[flag], bool):
             errors.append(f"{flag} must be a boolean")
     evidence = request.get("registration_evidence")
-    if evidence is not None:
+    if "registration_evidence" in request:
+        # R1-R2: the shape validator reports an explicit null as
+        # "not an object"; omission (key absent) stays valid.
         errors.extend(_validate_registration_evidence(evidence))
     errors.extend(_validate_referential_integrity(request))
     return errors
@@ -1002,7 +1048,13 @@ def _validate_registration_evidence(evidence) -> list:
                 "boolean authorisation evidence")
     for field in sorted(_EVIDENCE_STRING_FIELDS):
         value = evidence.get(field)
-        if value is not None \
+        if field in evidence and value is None:
+            # R1-R2: explicit null, not omission — the schema types
+            # the field as a string.
+            errors.append(
+                f"registration_evidence.{field} must be a non-empty "
+                "string, got None")
+        elif value is not None \
                 and (not isinstance(value, str) or not value):
             errors.append(
                 f"registration_evidence.{field} must be a non-empty string")
@@ -1144,6 +1196,11 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
         errors.append(
             "production_profile.production_profile_id must be a valid id, "
             "got None")
+    if "project_id" in profile and profile.get("project_id") is None:
+        # R1-R2: explicit null, not omission — the schema types
+        # project_id as a string.
+        errors.append(
+            "production_profile.project_id must be a valid id, got None")
     version = profile.get("version")
     if not isinstance(version, int) or isinstance(version, bool) \
             or version < 1:
@@ -1154,9 +1211,21 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
             f"production_profile.status {status!r} is not draft, approved "
             "or deprecated")
     name = profile.get("name")
-    if name is not None and (not isinstance(name, str) or not name):
+    if "name" in profile and name is None:
+        # R1-R2: explicit null, not omission — the schema types name
+        # as a non-empty string.
+        errors.append(
+            "production_profile.name must be a non-empty string, got None")
+    elif name is not None and (not isinstance(name, str) or not name):
         errors.append("production_profile.name must be a non-empty string")
-    skill_profiles = profile.get("skill_profiles") or []
+    skill_profiles = profile.get("skill_profiles")
+    if skill_profiles is None:
+        if "skill_profiles" in profile:
+            # R1-R2: explicit null, not omission — the schema types
+            # skill_profiles as an array.
+            errors.append("production_profile.skill_profiles must be a "
+                          "list, got None")
+        skill_profiles = []
     if not isinstance(skill_profiles, list):
         errors.append("production_profile.skill_profiles is not a list")
     else:
@@ -1198,7 +1267,14 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
             and not isinstance(profile["is_live_action_footage"], bool):
         errors.append("production_profile.is_live_action_footage must be a "
                       "boolean")
-    overrides = profile.get("per_subject_overrides") or []
+    overrides = profile.get("per_subject_overrides")
+    if overrides is None:
+        if "per_subject_overrides" in profile:
+            # R1-R2: explicit null, not omission — the schema types
+            # per_subject_overrides as an array.
+            errors.append("production_profile.per_subject_overrides must "
+                          "be a list, got None")
+        overrides = []
     if not isinstance(overrides, list):
         errors.append("production_profile.per_subject_overrides is not a list")
     else:
@@ -1240,7 +1316,14 @@ def _validate_profile_fields(profile, catalog: dict) -> list:
                         errors.append(f"per_subject_overrides[{i}].motion_methods "
                                       f"value {value!r} is not in the fixed "
                                       "vocabulary")
-    shot_overrides = profile.get("per_shot_overrides") or []
+    shot_overrides = profile.get("per_shot_overrides")
+    if shot_overrides is None:
+        if "per_shot_overrides" in profile:
+            # R1-R2: explicit null, not omission — the schema types
+            # per_shot_overrides as an array.
+            errors.append("production_profile.per_shot_overrides must be "
+                          "a list, got None")
+        shot_overrides = []
     if not isinstance(shot_overrides, list):
         errors.append("production_profile.per_shot_overrides is not a list")
     else:
