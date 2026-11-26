@@ -98,3 +98,22 @@ Rules:
 - **A real animal is not a CG creature.** A real animal (subject_kind `real-animal`) follows this system; a CG creature follows the `cinematic-power` skill, system 2. Never mix the two in one animal: the audience can tell. A real captured animal is never an anthropomorphic speaking character by default (see the `emotional-performance` and `voice-consistency` skills): it does not speak, and human lip movement is never applied to it — its articulation, if it speaks as a fictional character at all, follows its own articulation_target (`bird-beak`, `animal-muzzle`, `creature-jaw-mandibles`, or `other`), never `human-mouth-lips`.
 
 **Check:** every real animal in the delivered video keeps its real body, weight, and gait in every shot, the comic timing is made in the edit, and any CG touch-up preserves the animal's real body.
+
+## 7. VFX Believability Checklist — Shot-Level Review
+
+Every shot that carries a visual effect is reviewed against this checklist before it is accepted. A shot that fails a check is fixed or the effect is removed — an unbelievable effect is worse than no effect. Do not add unnecessary VFX to a project that does not require it: an effect must serve the story, and a shot with no effect needs no VFX review.
+
+- **Perspective and scale** — the effect sits in the shot's perspective: a CG object is the right size for its distance, and its vanishing point matches the plate.
+- **Light direction** — the effect is lit from the same direction as the scene (see §2); a creature lit from the left in a scene lit from the right is a defect.
+- **Shadow direction** — shadows cast by the effect fall in the same direction as the scene's shadows, and with the same hardness.
+- **Contact shadows** — where the effect touches a surface, there is a contact shadow: a creature standing on the ground touches the ground, and the ground darkens where it stands.
+- **Reflections** — the effect reflects in water, glass, and polished surfaces where the real thing would (see §2), and the reflection matches the effect's position and movement.
+- **Depth of field** — the effect is in focus to the same degree as the real objects at the same distance; a sharp creature in a soft-focus background is a defect.
+- **Motion blur matching** — the effect's motion blur matches the plate's shutter feel: a fast-moving effect blurs as much as a fast-moving real object in the same shot.
+- **Grain and sharpness** — the effect carries the same grain and the same sharpness as the plate; a clean CG element on a grainy plate floats.
+- **Matte edges** — no visible matte line, no halo, no fringing around the effect.
+- **Compositing seams** — no visible seam where the effect meets the plate (see §4 for set extension); the join is invisible at full playback, not only in a still frame.
+- **Atmospheric integration** — the effect sits in the same air as the plate: haze, fog, dust, and distance softening apply to it exactly as they apply to the real objects at the same depth.
+- **Temporal continuity** — the effect is stable across the whole shot: no flicker, no swimming texture, no shape that changes between frames without a story reason; the first and last frames of the effect match the frames around them.
+
+**Check:** every VFX shot in the delivered video passes all twelve checks, or the failing check is recorded with its severity (`production-systems` A11.1) and the reason it was accepted.

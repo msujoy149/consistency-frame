@@ -61,7 +61,7 @@
       "purpose": "The repo is the command master \u2014 after install, every video is made by reading and using the repo's skills first. A skill that exists is used, never reinvented; a missing system is generated from the repo's own generation command and saved as a new skill; light details are delegated with direction from the repo; a new task type starts from the distilled common core; and when the repo has no instruction at all it says 'do it yourself' \u2014 never bare, always with the quality commands and the main flow attached. When a skill is missing, the skill is written and saved first, and the video is then made by following that new skill \u2014 the skill-first loop.",
       "scope": "global",
       "section_count": 9,
-      "sha256": "39ac0fcaf40aa89a92f19c4c067872b9c50fd578457ba782ae6e3c4298981e78",
+      "sha256": "764991ca61a95265d3a9953103f4459174a13501c60a408179c2649d6fb68c0a",
       "skill_id": "skill-command-authority",
       "status": "DOCUMENTED",
       "tests": [
@@ -112,7 +112,7 @@
       "purpose": "Makes every video feel human-made, not AI-made. Covers all 36 humanization systems \u2014 performance-driven acting, single-pass dialogue, micro-motion, listener reactions, never-silence sound, non-verbal voice, gaze continuity, hands and physics, anti-plastic skin, editing rhythm, the film-finish pipeline, drift and artifact QC, camera and lighting imperfection, background life, cloth and hair physics, sound spotting, disclosure and provenance, detector self-QC, audio description, voice variants, code-switching, model pinning, re-anchoring, reference strategy, the human blind-test gate, distance and space in voice, mouth-interior QC, wardrobe wear, imperfection budget, music-ducking, failure playbook, real-person safeguards, cinematic backgrounds, and the realism budget.",
       "scope": "global",
       "section_count": 37,
-      "sha256": "2bdfdb6a958337c2f654295571b1c615d919e7833762cc9340d9b4be46b0aee2",
+      "sha256": "85683eb75816c3b0765c7b8bb5a6cb57eb6b9f5dd4f2f9e7a5f89ddd35fa0dbe",
       "skill_id": "skill-humanized-production",
       "status": "DOCUMENTED",
       "tests": [
@@ -129,7 +129,7 @@
       "purpose": "Professional kids & family animation \u2014 short-form videos for children and young audiences across 14 animation methods, with one locked visual style, a full camera decision system, 3D and 2D craft, story templates, and animation QC. Builds on character-consistency, voice-consistency, humanized-production, cinematic-power, and command-authority \u2014 it adds only the kids & family animation layer on top.",
       "scope": "global",
       "section_count": 17,
-      "sha256": "5f5c74760b90257f0463e33afb2cf6bb7346da0ab7b35a3ccb2b54008967fd87",
+      "sha256": "48f9e4efe9349d3afdad25379695a5a42e10875af8664cc096698f961c90ce89",
       "skill_id": "skill-kids-family-animation",
       "status": "DOCUMENTED",
       "tests": [
@@ -162,8 +162,8 @@
       "path": "skills/live-action-vfx/SKILL.md",
       "purpose": "Live-action and VFX hybrid quality for real humans with CG creatures: a real body performs with micro-expressions, breath, fatigue and weight; CG creatures share the live plate's light, shadow and eyelines; water and wetness stay continuous across cuts; real locations are extended with CG without a visible seam; stunts are choreographed and shot to look unplanned; real animals perform on their own terms. Builds on the production-systems skill (camera language, shot list, angles), the humanized-production skill (performance, physics, editing), and the cinematic-power skill (style lock, creature performance, trailer structure, scale and colour scripting) \u2014 it adds only the live-action and VFX layer on top.",
       "scope": "global",
-      "section_count": 6,
-      "sha256": "32acf307dc86f2e3ef06331668f371e73457f15ecc9700d828575a82eccd0a8b",
+      "section_count": 7,
+      "sha256": "e073e9d46215fe29320a65747ea66576180076f6e4da49b3afa9dfe81d874784",
       "skill_id": "skill-live-action-vfx",
       "status": "DOCUMENTED",
       "tests": [
@@ -179,8 +179,8 @@
       "path": "skills/production-systems/SKILL.md",
       "purpose": "The professional production layer for series video-making. Covers the 12 professional production systems, the 18 extended systems, the 7 additional systems, the language, captions and format rules, and the production priority hierarchy \u2014 described in enough detail that an AI following this skill alone can apply them.",
       "scope": "global",
-      "section_count": 5,
-      "sha256": "85958c281d391e172d40543be5d59a7473d1efc3d22c4a6ce307ca57f8acfc2c",
+      "section_count": 12,
+      "sha256": "c5dd411e2d2f42bf116e19d751ff424cbc3ed9e6f0baad30718beb9c00f0ca2b",
       "skill_id": "skill-production-systems",
       "status": "DOCUMENTED",
       "tests": [

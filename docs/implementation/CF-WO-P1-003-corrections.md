@@ -1038,3 +1038,396 @@ validation error:
   `docs/implementation/build-report.json`,
   `docs/implementation/CHECKSUMS.txt`, `release-manifest.json`,
   `tests/last-run.json`
+
+## 13. Production Addendum 01 — Professional Filmmaking Workflow & Production Quality Integration (2026-11-26)
+
+### 13.1 Reference PDF — not received
+
+The work order cites `Professional_Filmmaking_AI_Production_Handbook_BN.pdf`
+(28 pages, "supplied by the user"). The file was NOT found in the
+workspace: searched `~/workspace/user/files/`,
+`~/workspace/user/media_library/`,
+`~/workspace/consistency-frame-p1-delivery/`, and the repo itself (only
+unrelated PDFs inside the VoiceStudio venv and a base-ui docs folder
+matched). No such file arrived with the work order. The implementation
+below is therefore derived from the work-order specification itself
+(Tasks A–O spell out field lists, gate definitions, tier definitions,
+coverage lists, and templates in full). Nothing in this section claims
+to quote the handbook. The implementation must be cross-checked against
+the PDF if/when the user supplies it.
+
+### 13.2 Audit — existing vs missing (per task)
+
+Audited before implementing anything: `skills/production-systems`,
+`skills/command-authority`, `skills/humanized-production`,
+`skills/kids-family-animation`, `skills/live-action-vfx`, plus the
+docs mirrors `docs/01`, `docs/04`, `docs/05` and the audited-only
+skills `skills/emotional-performance`, `skills/voice-consistency`,
+`skills/cinematic-power`, `skills/explainer-animation`,
+`skills/agency-advertising`, `skills/video-regeneration`. Full audit
+notes (existing-vs-missing per task, duplicates avoided) are in the
+delivery evidence folder (`evidence/p1003-addendum-01/audit-notes.md`).
+
+- **A — Stage gates G1–G6: MISSING.** A11 was a single pre-delivery
+  checklist; no formal staged workflow, no gate statuses, no waiver
+  rule, no complexity-aware operation.
+- **B — P0–P3 tiers: MISSING.** Part E is an instruction-precedence
+  hierarchy (a different thing); no production scope hierarchy existed.
+- **C — Breakdown / blocking / coverage: PARTIAL.** Shot-size
+  vocabulary existed (A2, A12, kids §5.2); the 180-degree rule,
+  eyeline matching, match on action, screen-direction consistency
+  existed (A12, humanized-production 30.7). Missing: visual-literacy
+  method; per-scene breakdown template; blocking records; the 12-type
+  coverage system with purposes used selectively; the 30-degree
+  guideline; spatial-continuity rule; playable-action performance
+  direction.
+- **D — Lighting design: PARTIAL.** Key/fill/rim (kids §4.4),
+  lighting-continuity lock (30.15), script-driven grading (C7)
+  existed. Missing: Lighting Plan Template (20 fields); the 7 lighting
+  scenarios; three-point as available-not-universal.
+- **E — Camera technical profile: PARTIAL.** Lens/perspective tools
+  existed (kids §5.4, "estimated visual equivalents only"). Missing:
+  captured-footage technical profile fields; the AI 3-way distinction
+  (creative intent / native provider controls / post-production
+  controls).
+- **F — Emotional visual storytelling: PARTIAL.** Beat-by-beat arc
+  existed (emotional-performance §3); beat-to-angle mapping covered
+  power, fear, intimacy, loneliness (A12). Missing: the 6-step
+  progression Baseline → Stimulus → Recognition → Reaction → Peak →
+  Aftermath; cross-system coordination per beat; the 7 emotions
+  systematized (loneliness, fear, shock, intimacy, power, confusion,
+  awe).
+- **G — Editing workflow + picture lock: PARTIAL.** J-cut, L-cut, cut
+  on action, hard cut existed (30.10); film-finish existed (30.11).
+  Missing: the 8-step editorial workflow; picture lock + revision
+  rule; match cut, cross-cut, insert, dissolve.
+- **H — Colour science: PARTIAL.** Script-driven grading (C7),
+  film-finish order (30.11), lighting lock (30.15) existed. Missing:
+  the 9-step workflow; correction-vs-grading separation;
+  no-invented-log-profile rule; no-LUT-hiding rule.
+- **I — Sound spotting: PARTIAL.** 4-layer sound (A4, 30.5), 4-field
+  spotting sheet (30.19), dialogue-first mix, voice profiles, lip-sync
+  rules, delivery profiles existed. Missing: the 16-field Sound
+  Spotting Template; the intentional-silence clarification (existing
+  text said "silence is a defect" as a blanket rule — the work order
+  refines it: intentional silence is a creative decision;
+  missing/accidentally muted audio is a defect).
+- **J — Animation principles: 6 of 12 covered** in kids §4.3
+  (squash & stretch, anticipation, timing, follow-through +
+  overlapping, secondary motion, plus weight/cycles/performance).
+  Missing: staging, straight-ahead action, arcs, exaggeration, solid
+  form / solid drawing, appeal.
+- **K — VFX believability: PARTIAL.** Light direction, shadow
+  direction, reflections, scale, contact, eyelines, wetness,
+  set-extension seams existed (live-action-vfx §§2–4). Missing as
+  explicit checks: perspective, contact shadows, depth of field,
+  motion blur matching, grain and sharpness, matte edges, compositing
+  seams (general), atmospheric integration, temporal continuity.
+- **L — Production management: PARTIAL.** B9/B10/B11/B12/B17 existed
+  (provenance, cost, backup, namespaces, rights). Missing: unified
+  Master Shot Tracker template (18 fields); workspace folder template;
+  naming convention.
+- **M — QC severity: MISSING.** A11 was one flat checklist with no
+  severity; video-regeneration QC reuses A11.
+- **N — Genre matrix: MISSING.** No genre-selection matrix existed.
+- **O — Command authority: PARTIAL.** The 10-step main flow (§7)
+  existed but had no G1–G6 gates, no tier establishment, no
+  test-production step.
+
+### 13.3 What was added / changed (per task)
+
+- **A** — New Part F in `skills/production-systems/SKILL.md`:
+  G1–G6 stage-gate workflow with gate status model (NOT STARTED /
+  IN PROGRESS / PASS / BLOCKED / WAIVED), waiver requiring explicit
+  user authorisation + recorded reason, failed stage must not silently
+  advance, complexity-aware operation (simple shorts = compact
+  checklist; regular episodes = full plan + test shots; complex
+  cinematic = detailed planning + multiple tests + editorial +
+  finishing). Mirrored in `docs/01-production-systems.md` §12.
+- **B** — New Part G in `skills/production-systems/SKILL.md`:
+  P0–P3 complexity tiers, explicitly stated as a production scope
+  hierarchy and NOT a replacement for the Part E
+  instruction-precedence hierarchy. Mirrored in `docs/01` §13.
+- **C** — A2 extended in place (`skills/production-systems`): A2.1
+  visual literacy (Observe → Describe → Infer → Recreate → Compare;
+  visible / inferred / hypothesis / needs-verification kept separate);
+  A2.2 scene breakdown; A2.3 blocking records; A2.4 12-type coverage
+  system with purposes, used selectively; A2.5 continuity additions
+  (30-degree guideline, spatial continuity; eyeline, screen-direction,
+  action matching, shot-reverse-shot preserved from A12); A2.6
+  performance direction as playable actions (keeps the "angry"
+  example pattern). The 180-degree rule is preserved; both rules are
+  creative guidelines, not absolute restrictions. Mirrored in
+  `docs/01` §2.
+- **D** — New Part H in `skills/production-systems/SKILL.md`:
+  Lighting Plan Template (all 20 fields) + the 7 lighting scenarios
+  (natural daylight, window light, night interior, practical,
+  thriller, documentary, stylized animation); three-point lighting
+  stated as an available setup, not a universal requirement;
+  lighting-continuity rules preserved; no photographic equipment
+  settings forced into AI models that cannot control them. Cross-
+  referenced from `humanized-production` 30.15. Mirrored in
+  `docs/01` §14 and `docs/05` §30.15.
+- **E** — New Part I in `skills/production-systems/SKILL.md`:
+  camera technical profile, capability-aware. Captured-footage
+  optional technical fields; AI-generated footage split into (1)
+  creative camera intent, (2) native provider controls, (3)
+  post-production controls; never pretend unsupported AI model
+  parameters are real controls. Camera-language, lens and
+  motivated-movement rules preserved. Mirrored in `docs/01` §15.
+- **F** — New Part J in `skills/production-systems/SKILL.md`:
+  emotional beat progression (Baseline → Stimulus → Recognition →
+  Reaction → Peak → Aftermath, optional, never a rigid formula) with
+  cross-system coordination (camera, movement, lighting, expression,
+  body, duration, sound, music, editing rhythm) for important beats;
+  the 7 emotions systematized (loneliness, fear, shock, intimacy,
+  power, confusion, awe). Script and explicit user direction remain
+  authoritative. Cross-references `emotional-performance` §3; that
+  skill file itself was not modified (not in the work-order file
+  list).
+- **G** — `skills/humanized-production/SKILL.md` §§30.10–30.11
+  extended: 8-step editorial workflow (ingest → review/select →
+  assembly → rough cut → fine cut → picture lock → finishing →
+  final master QC); match cut, cross-cut, insert, dissolve added
+  with storytelling purpose (J-cut, L-cut, cut on action, hard cut
+  already existed and were not rewritten); picture lock + revision
+  record rule. Mirrored in `docs/05` §§30.10–30.11.
+- **H** — 9-step colour workflow added to `humanized-production`
+  §30.11 and `docs/04` §7 (C7 mirror), with the correction-vs-
+  grading separation, the no-invented-log-profile rule for
+  AI-generated sources, and the no-LUT-hiding rule (LUTs do not hide
+  identity drift, temporal flicker, physical distortion, incorrect
+  shadows, bad exposure). LUT strengths and looks stay
+  project-dependent. Script-driven grading and lighting continuity
+  preserved.
+- **I** — `skills/humanized-production/SKILL.md` §30.19 extended
+  to the 16-field Sound Spotting Template; the blanket "silence is
+  a defect" rule refined in three places (`production-systems` A4,
+  `humanized-production` §30.5, `docs/05` §30.5) to: intentional
+  silence is a creative decision; missing/accidentally muted audio
+  is a defect. The four-layer sound system, dialogue-first mixing,
+  voice profiles, lip-sync rules, and audio delivery profiles are
+  preserved. No new sound system was built. Mirrored in `docs/05`
+  §30.19.
+- **J** — `skills/kids-family-animation/SKILL.md` §4.3 extended
+  with the 6 genuinely missing principles only (staging,
+  straight-ahead action, arcs, exaggeration, solid form / solid
+  drawing, appeal), each with an actionable explanation and
+  example, plus the realism constraints paragraph (no exaggerated
+  deformation on photorealistic humans; face/character identity
+  preserved; weight/balance respected; style-specific consistency;
+  no claim that AI video models perform actual rigging/geometry
+  operations). The 6 already-covered principles were not rewritten.
+- **K** — New §7 in `skills/live-action-vfx/SKILL.md`: shot-level
+  VFX believability checklist (perspective and scale, light
+  direction, shadow direction, contact shadows, reflections, depth
+  of field, motion blur matching, grain and sharpness, matte edges,
+  compositing seams, atmospheric integration, temporal continuity),
+  plus the rule not to add unnecessary VFX to a project that does
+  not require it.
+- **L** — New Part K in `skills/production-systems/SKILL.md`:
+  unified Master Shot Tracker template (all 18 fields) connecting
+  the existing records (B9 provenance, B10 cost, B11 backup, B12
+  namespaces, B17 rights), status vocabulary PLANNED, TEST,
+  APPROVED, GENERATING, SELECTED, REJECTED, LOCKED; project
+  workspace folder template (explicitly NOT a mandatory public Git
+  folder structure); naming convention
+  `PROJECT_S03_SH012_TK02_V003_YYYYMMDD.ext`. Private-data
+  separation preserved — no private character photographs, voice
+  references, consent documents, or user-private assets are
+  committed to the public repo. Mirrored in `docs/01` §16.
+- **M** — A11 extended in `skills/production-systems/SKILL.md`:
+  A11.1 QC severity (Critical / Major / Minor / Polish, with the
+  release-blocker rules — Critical always blocks, Major blocks
+  unless explicitly waived); A11.2 final delivery checklist (all
+  11 items); A11.3 short post-mortem template. Applies to Episode
+  QC and, by reference, to Video Regeneration QC, which reuses
+  A11. Mirrored in `docs/01` §11.
+- **N** — New Part L in `skills/production-systems/SKILL.md`:
+  optional skill-selection matrix for documentary, geopolitics /
+  investigative explainer, informative explainer, drama, thriller,
+  action, 2D animation, 3D animation, commercial — using
+  explainer-animation, cinematic-power, emotional-performance,
+  live-action-vfx, agency-advertising and other existing skills.
+  User's chosen style and script always take precedence. No genre
+  skill file was modified. Mirrored in `docs/01` §17.
+- **O** — `skills/command-authority/SKILL.md` §2 and §7 updated
+  to the work order's 10-step operational sequence (read
+  instructions/script → select relevant skills → establish project
+  quality tier → prepare visual plan → G1 review → generate
+  representative tests → G2 review → continue through G3–G5
+  editorial/lock/finishing → G6 delivery QC → report any failed
+  gate, limitation, or waiver). The skill-first loop (§9), user
+  authorization rules, and production authority are preserved. The
+  workflow explicitly states the P1-003 runtime
+  (`runtime/script_to_performance.py`) builds and validates
+  Script→Performance plans and does NOT execute video generation,
+  rendering, or provider orchestration.
+
+### 13.4 Duplicates intentionally avoided
+
+- No new skill (skill count stays 15). No production-systems-2. No
+  duplicate sound or cinematography skill. No new schemas or runtime
+  modules. No separate template files — templates are embedded in
+  the skills (Lighting Plan in production-systems Part H, Sound
+  Spotting in humanized-production §30.19, Master Shot Tracker in
+  production-systems Part K) and mirrored by reference in the docs.
+- `skills/emotional-performance/SKILL.md`,
+  `skills/explainer-animation/SKILL.md`,
+  `skills/cinematic-power/SKILL.md`,
+  `skills/agency-advertising/SKILL.md`,
+  `skills/video-regeneration/SKILL.md`, and
+  `skills/voice-consistency/SKILL.md` were NOT modified (not in the
+  work-order §18 file list; audited only, cross-referenced, or —
+  for video-regeneration QC — extended by reference through A11).
+- `docs/10`, `docs/11`, `docs/12`, `docs/17` were NOT modified
+  (not in §18).
+- No runtime or schema change. No new tracked file: the 182-file
+  manifest scope is preserved.
+- Counting note: the addendum deepens existing systems as workflow
+  and template extensions; it adds no new numbered entries, so the
+  production-systems 40-entry count and the repo's 109 distinct
+  systems / 120 numbered entries are unchanged. A note to this
+  effect was added in `skills/production-systems/SKILL.md` and in
+  `docs/01-production-systems.md`.
+
+### 13.5 Capability classification
+
+- **Existing capability:** everything listed as existing in §13.2
+  (A1–A12, B1–B18, C1–C7, humanized-production 30.1–30.36,
+  cinematic-power, live-action-vfx §§1–6, emotional-performance,
+  voice-consistency, kids §4.3 six covered principles, §5 camera
+  system, command-authority skill-first loop and main flow).
+- **Improved capability:** A2 (director's extension), A4/30.5
+  (intentional-silence refinement), A11 (severity + delivery +
+  post-mortem), 30.10/30.11 (editorial workflow, picture lock,
+  four cut techniques), 30.15 (lighting-plan cross-reference),
+  30.19 (16-field spotting template), C7/30.11 (9-step colour
+  workflow), kids §4.3 (six added principles),
+  command-authority §2/§7 (gate + tier integration).
+- **Newly added instruction:** Parts F–L in production-systems
+  (stage gates, tiers, lighting template, camera profile,
+  emotional progression, shot tracker, genre matrix),
+  live-action-vfx §7 (VFX believability checklist).
+- **Actual executable functionality:** none added by this round.
+  The addendum is documentation and workflow instruction only;
+  no runtime module, schema, or generator was added or changed.
+  The P1-003 runtime still builds and validates Script→Performance
+  plans only; it does not execute video generation, rendering, or
+  provider orchestration.
+- **Provider-dependent functionality:** the camera technical
+  profile (Part I) and the lighting plan (Part H) record only
+  controls the provider/tool actually exposes; nothing in this
+  round claims a provider supports a control it does not.
+- **Not yet implemented functionality:** cross-checking the
+  implementation against the handbook PDF itself (the PDF was not
+  received — see §13.1); any capability the handbook describes
+  that the work-order specification did not spell out.
+
+### 13.6 Files changed (addendum content)
+
+- `skills/production-systems/SKILL.md` (Parts F–L; A2.1–A2.6; A11.1–A11.3; A4 silence refinement; counting note)
+- `skills/command-authority/SKILL.md` (§2, §7)
+- `skills/humanized-production/SKILL.md` (§§30.5, 30.10, 30.11, 30.15, 30.19)
+- `skills/kids-family-animation/SKILL.md` (§4.3)
+- `skills/live-action-vfx/SKILL.md` (§7)
+- `docs/01-production-systems.md` (§2, §4 silence refinement, §11, §§12–17)
+- `docs/04-additional-systems.md` (§7)
+- `docs/05-humanization-systems.md` (§§30.5, 30.10, 30.11, 30.15, 30.19)
+- `docs/implementation/CF-WO-P1-003-corrections.md` (this §13)
+- `AGENTS.md`, `CHANGELOG.md`
+- Generated (regen only): routing catalog, registries (only if the
+  canonical generators report a change), `docs/architecture/living-architecture-report-v2.4-p0.md`,
+  `docs/implementation/BUILD_REPORT_P0.md`,
+  `docs/implementation/build-report.json`,
+  `docs/implementation/CHECKSUMS.txt`, `release-manifest.json`,
+  `tests/last-run.json`
+
+### 13.7 Verification
+
+All counts below were measured from the actual runs in this round
+(never copied from an earlier regen or report).
+
+- `tests/test_reports.py`: 83 checks (82 PASS + 1 FAIL before the
+  provenance regen; the single failure is the MANIFEST group — the
+  manifest still listed the pre-addendum hashes for the changed
+  files, which the provenance regen corrects; re-run after the regen
+  — see the delivery report for the final count).
+- `tests/test_script_to_performance_runtime.py`: exactly 1,787 checks,
+  0 failures — unchanged (the runtime was not modified).
+- `tests/test_skill_router.py`: 766 checks, 0 failures (after the
+  routing catalog was regenerated with its canonical generator).
+- `tests/test_routing.py`: 305 checks, 0 failures.
+- `tests/test_local_session_runtime.py`: 67 checks, 0 failures.
+- `tests/test_session_authorization.py`: 47 checks, 0 failures.
+- `tests/test_private_voice_security.py`: 158 checks, 0 failures.
+- `tests/test_performance_semantics.py`: 32 checks, 0 failures.
+- `scripts/validate-repo.py`: PASS.
+- `scripts/generate-registries.py --check`: OK after regeneration
+  with the canonical generator (skills 15, features 165 → 173 — the
+  8 new features are the 8 new `##` sections: production-systems
+  Parts F–L and live-action-vfx §7; the registry's own note states
+  this is a different counting unit from the historical 109/120
+  claim, which is unchanged).
+- `scripts/generate-routing-catalog.py --check`: OK after
+  regeneration with the canonical generator (catalog v2.4, 15 skills,
+  42 edges, 10 true conflicts; only the skill fingerprint hashes
+  changed).
+- `bash tests/run-tests.sh` (pre-regen run): 87 entries / 73 distinct
+  IDs / 37 distinct commands; 81 PASS + 6 FAIL. All six failures are
+  the six `test_reports.py` entries, and all six trace to the single
+  stale-manifest failure above (the manifest had not yet been
+  regenerated at suite time); every other entry passed, including
+  all S2P groups, the diff check, and the living-report generation
+  check. The post-regen re-run is recorded in the delivery report.
+- `git diff --check`: clean.
+- Protected-paths diff: 0 for `runtime/`, P0 schemas, canonical
+  YAML, `local_session` / `authorization` / `skill_router`,
+  `asset_policy` / `timeline_policy` / `atomic_write`, and
+  `components/` — the only changed files are the work-order §18
+  skill/doc files, this corrections document, `AGENTS.md`,
+  `CHANGELOG.md`, and the regenerated catalog/registries.
+- Forbidden strings in added lines: 0 occurrences of the reviewer /
+  platform names in the credit sense (verified by grep over the
+  added diff lines).
+- Skill count unchanged at 15. No file over the 100 MiB limit. No
+  media files added. Manifest scope preserved at 182 entries
+  (verified after the provenance regen — see the delivery report).
+
+### 13.8 Manifest scope 182 → 186 (discovered at provenance-regen time)
+
+The manifest lists every file changed vs the pinned base (the
+generator runs `git diff --name-only <base>...HEAD`; the manifest
+entries are that set minus the two excluded files). The addendum's
+work-order file list required modifying four files that had not
+changed vs the base before: `docs/01-production-systems.md`,
+`docs/04-additional-systems.md`,
+`docs/05-humanization-systems.md`, and
+`skills/kids-family-animation/SKILL.md`. Those four files therefore
+entered the manifest for the first time, and the manifest grew from
+182 entries to 186 (changed_files 188 = 186 + the two excluded
+files). No new tracked file was added; the four added entries are
+exactly those four files, and every other entry is unchanged.
+
+This was discovered only when the provenance regen produced the
+186-entry manifest and `test_reports.py` failed its scope check.
+The scope check itself was NOT weakened: `MANIFEST_EXPECTED_COUNT`
+in `tests/test_reports.py` was updated 182 → 186 with a comment
+recording the reason, and the entry-by-entry verification, the
+tamper negatives, the unsafe-path checks, and the exact-count
+enforcement are all unchanged — the check still enforces the exact
+scope, now the correct one. The work order anticipated a scope
+change only for a newly added tracked file; here the change comes
+from the work order's own file list touching four previously
+unchanged files, which is reported explicitly here as the
+justification.
+
+Because the fix (test constant + this section) changes content after
+the first content commit, it went in as its own content commit
+rather than an amendment — amending would rewrite commit history,
+which the work order forbids. The provenance regen was then re-run
+with the new content head, so the delivered manifest and checksums
+describe the final content head. The work order's two-commit model
+therefore became three commits for this round (content, manifest-
+scope fix, docs/provenance); the deviation is recorded here and in
+the delivery report.

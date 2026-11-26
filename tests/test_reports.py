@@ -93,7 +93,14 @@ def errors_for(schema, value):
 # manifest dict (files are read from `root` only to recompute hashes
 # and byte counts), so the negative tests can tamper in-memory copies
 # without touching the committed manifest on disk.
-MANIFEST_EXPECTED_COUNT = 182
+# 186 since the P1-003 Production Addendum 01 (2026-11-26): the manifest
+# lists every file changed vs the pinned base, and the addendum's
+# work-order file list required modifying four files that had not
+# changed vs the base before (docs/01-production-systems.md,
+# docs/04-additional-systems.md, docs/05-humanization-systems.md, and
+# skills/kids-family-animation/SKILL.md). No new tracked file was added;
+# the four added entries are exactly those four files. 182 before.
+MANIFEST_EXPECTED_COUNT = 186
 MANIFEST_EXCLUDED = ("release-manifest.json",
                      "docs/implementation/CHECKSUMS.txt")
 
@@ -386,12 +393,12 @@ def main():
     # the negative cases tamper in-memory copies without touching the
     # committed manifest on disk.
     manifest_errors = verify_manifest_entries(manifest, ROOT)
-    check("CF-P1-003-R2-MANIFEST: all 182 entries verify "
+    check("CF-P1-003-R2-MANIFEST: all 186 entries verify "
           "(existence + SHA-256 + byte count)",
           not manifest_errors, "; ".join(manifest_errors[:5]))
     manifest_paths = [f["path"] for f in manifest.get("files", [])]
     check("CF-P1-003-R2-MANIFEST: manifest scope is exactly the "
-          "182 managed files",
+          "186 managed files",
           len(manifest_paths) == MANIFEST_EXPECTED_COUNT
           and len(set(manifest_paths)) == MANIFEST_EXPECTED_COUNT,
           f"entries={len(manifest_paths)}")

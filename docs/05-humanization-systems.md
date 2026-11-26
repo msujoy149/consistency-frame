@@ -76,7 +76,9 @@ When one character speaks, the other character must be visibly listening
 ## 30.5 Room Tone / Never-Silence + 4-Layer Sound
 
 Continuous ambience under every scene; room tone in every interior.
-Silence is a defect — even a quiet room has a low hum.
+Unplanned silence is a defect — even a quiet room has a low hum — but
+intentional silence is a creative decision (see §30.19); missing or
+accidentally muted audio is a defect, a deliberate silence is not.
 
 Four sound layers, in this order:
 
@@ -154,6 +156,19 @@ cut on the phrase not on every beat, hard cut as the default.
   follows the movement across the cut instead of noticing the cut.
 - Cut on the phrase, not on every beat: cutting on every beat is
   metronomic and mechanical.
+- The editorial workflow, in order: ingest and organise; review and
+  select takes; assembly; rough cut; fine cut; picture lock; finishing;
+  final master QC. A rough cut built on unreviewed takes is built on
+  guesses.
+- More cut techniques, each with a storytelling purpose: match cut
+  (link two moments by shape, movement, or idea); cross-cut (two
+  actions at the same time, to build tension or show a parallel story);
+  insert (a close detail the story needs the audience to see); dissolve
+  (passage of time or change of place only, never a default).
+- No gratuitous transitions or cuts — a cut always changes the
+  information the audience has. Preserve editing rhythm, reaction holds,
+  dialogue intelligibility, music synchronisation, continuity, and the
+  film-finish principles of §30.11.
 
 ## 30.11 Film-Finish Pipeline
 
@@ -174,6 +189,31 @@ adjustable ingredients.
   the finish.
 - The LUT strength and the 8–15% grain range are ranges to test per
   project, not fixed values.
+
+### Picture lock
+
+Picture lock comes before finishing: final shot order, final duration,
+dialogue timing, scene transitions, and the final timeline version. Once
+the picture is locked, the picture does not change — a change after lock
+requires a revision record and another review of the affected stage.
+Finishing never re-opens the edit.
+
+### Colour workflow — correction first, grading second
+
+Technical correction and creative grading are two different jobs, done
+in order: (1) input transform / source interpretation; (2) exposure
+correction; (3) white-balance correction; (4) primary contrast; (5)
+shot-to-shot matching; (6) secondary correction; (7) creative grading;
+(8) output transform; (9) final export verification. Correction fixes
+what is wrong; grading decides what it should feel like — never grade on
+top of an uncorrected shot. Preserve scene lighting and colour continuity
+(§30.15 and `docs/04-additional-systems.md` §7): the grade follows the
+script's time of day and light source, and never changes randomly inside
+a scene. If the source is AI-generated with no meaningful camera-log
+profile, do not invent one — grade the footage as it is. Do not use LUTs
+to hide identity drift, temporal flicker, physical distortion, incorrect
+shadows, or bad exposure: a LUT is a look, not a repair. LUT strengths
+and looks stay project-dependent.
 
 ## 30.12 Voice-Drift Measurement
 
@@ -229,6 +269,11 @@ per scene and locked across every shot in that scene.
 - A shadow that points left in one shot and right in the next is a
   continuity failure, however good each shot looks alone.
 - The lock is recorded in the scene plan and checked in QC.
+- Where a scene needs deliberate light, write a lighting plan first —
+  the Lighting Plan Template in `docs/01-production-systems.md` §14
+  records the motivated source, direction, key, fill, backlight,
+  quality, colour temperature, and continuity notes for the scene, so
+  the light stays the same light in every shot.
 
 ## 30.16 Background Life
 
@@ -268,14 +313,23 @@ voices are muffled.
 
 ## 30.19 Sound Spotting Sheet
 
-Before generating sound, write a spotting sheet per shot — timecode,
-sound class, sync or not, distance.
+Before generating sound, write a spotting sheet per shot. The reusable
+Sound Spotting Template carries: timecode; scene ID; shot ID; sound
+layer; source; visible action; distance and perspective; dialogue; room
+tone; ambience; foley; hand SFX; designed sound; music; intentional
+silence; mixing notes.
 
 - Ambience loops crossfade 0.5–1 s and change only at cuts.
 - Ad-hoc sound-effect generation produces mismatched, unsynced sound;
   the spotting sheet is what keeps every sound deliberate and placed.
 - The sheet is written before sound generation, and the generated sound
   is checked against it in QC.
+- Intentional silence is a creative decision — a silence marked in the
+  spotting sheet and held for a reason. Missing or accidentally muted
+  audio is a defect. Preserve the four-layer sound system,
+  dialogue-first mixing, voice profiles, lip-sync rules, and audio
+  delivery profiles (see `docs/01-production-systems.md` §§4, 11 and
+  the `voice-consistency` skill).
 
 ## 30.20 AI Disclosure and Provenance Pack
 

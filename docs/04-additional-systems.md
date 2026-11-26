@@ -141,3 +141,23 @@ Rules that hold for every scene:
 - The grading rule works together with the lighting-continuity lock in
   "Humanization Systems": grading sets the look of the light, the lock
   fixes where the light comes from in every shot.
+
+### Colour workflow — correction first, grading second
+
+Technical correction and creative grading are two different jobs, done
+in order: (1) input transform / source interpretation; (2) exposure
+correction; (3) white-balance correction; (4) primary contrast; (5)
+shot-to-shot matching; (6) secondary correction; (7) creative grading;
+(8) output transform; (9) final export verification. Correction fixes
+what is wrong; grading decides what it should feel like — never grade on
+top of an uncorrected shot. The same workflow is stated in
+"Humanization Systems" §30.11, which also carries the picture-lock rule
+and the LUT rules: LUT strengths and looks stay project-dependent, and a
+LUT is a look, not a repair.
+
+Two rules that hold for every grade:
+
+- If the source is AI-generated with no meaningful camera-log profile,
+  do not invent one — grade the footage as it is.
+- Do not use LUTs to hide identity drift, temporal flicker, physical
+  distortion, incorrect shadows, or bad exposure.
