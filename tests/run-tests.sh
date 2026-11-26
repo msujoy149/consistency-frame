@@ -109,22 +109,48 @@ run_one "CF-P1-002-R1-SCOPE" python3 tests/test_skill_router.py
 run_one "CF-P1-002-R1-SCHEMA" python3 tests/test_skill_router.py
 run_one "CF-P1-002-R1-HANDOFF" python3 tests/test_skill_router.py
 run_one "CF-P1-002-R1-CATALOG" python3 tests/test_skill_router.py
+run_one "CF-P1-003-SESSION-ROUTING" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-SCRIPT" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-PLANS" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-DIALOGUE" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-XREF" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-DETERMINISM" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-NULL156" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-R1-BUNDLE-SHAPE" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-R1-FAIL-CLOSED" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-R1-DIALOGUE-META" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-R2-SCRIPT" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-R2-PROFILE" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-R2-SCENE" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-R2-SHOT" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-R2-PERFORMANCE" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-R2-EDITING" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-R2-BINDINGS" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-R2-BUNDLE" python3 tests/test_script_to_performance_runtime.py
 
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check
 
-# Living report: regenerate from canonical records, then verify it matches.
-run_one "CF-INT-023" python3 scripts/generate-report.py
-run_one "CF-INT-023" python3 scripts/generate-report.py --check
-
-# Companion evidence + report provenance (P0-002 §§6-7). These run after
-# the living report is regenerated so they check the fresh artifacts.
-run_one "CF-P0-ROUTING-004" python3 tests/test_routing.py
+# Report provenance (P0-002 §§6-7) BEFORE the living-report regen:
+# the manifest-integrity group (CF-P1-003-R2-MANIFEST) verifies the
+# committed manifest against the committed tree, and the regen below
+# rewrites the living report (a manifest-listed file) — so the
+# report tests must run before it, not after. (R2: the suite's own
+# regen step used to run first and invalidated the manifest check
+# on every full-suite run; see corrections doc §12.2.)
 run_one "CF-P0-REPORT-001" python3 tests/test_reports.py
 run_one "CF-P0-REPORT-002" python3 tests/test_reports.py
 run_one "CF-P0-REPORT-003" python3 tests/test_reports.py
 run_one "CF-P0-REPORT-004" python3 tests/test_reports.py
 run_one "CF-P0-REPORT-005" python3 tests/test_reports.py
+run_one "CF-P1-003-R2-MANIFEST" python3 tests/test_reports.py
+
+# Living report: regenerate from canonical records, then verify it matches.
+run_one "CF-INT-023" python3 scripts/generate-report.py
+run_one "CF-INT-023" python3 scripts/generate-report.py --check
+
+# Companion evidence (P0-002 §6).
+run_one "CF-P0-ROUTING-004" python3 tests/test_routing.py
 
 python3 - "$TMP_RESULTS" "$RESULTS_JSON" "$OVERALL" <<'PYEOF'
 import json, sys

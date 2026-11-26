@@ -356,26 +356,116 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-003-SESSION-ROUTING",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-SCRIPT",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-PLANS",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-DIALOGUE",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-XREF",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-DETERMINISM",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-NULL156",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R1-BUNDLE-SHAPE",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R1-FAIL-CLOSED",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R1-DIALOGUE-META",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-SCRIPT",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-PROFILE",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-SCENE",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-SHOT",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-PERFORMANCE",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-EDITING",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-BINDINGS",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-BUNDLE",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "command": "git diff --check",
-      "exit_code": 0,
-      "result": "PASS"
-    },
-    {
-      "id": "CF-INT-023",
-      "command": "python3 scripts/generate-report.py",
-      "exit_code": 0,
-      "result": "PASS"
-    },
-    {
-      "id": "CF-INT-023",
-      "command": "python3 scripts/generate-report.py --check",
-      "exit_code": 0,
-      "result": "PASS"
-    },
-    {
-      "id": "CF-P0-ROUTING-004",
-      "command": "python3 tests/test_routing.py",
       "exit_code": 0,
       "result": "PASS"
     },
@@ -406,6 +496,30 @@
     {
       "id": "CF-P0-REPORT-005",
       "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-MANIFEST",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-INT-023",
+      "command": "python3 scripts/generate-report.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-INT-023",
+      "command": "python3 scripts/generate-report.py --check",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P0-ROUTING-004",
+      "command": "python3 tests/test_routing.py",
       "exit_code": 0,
       "result": "PASS"
     }

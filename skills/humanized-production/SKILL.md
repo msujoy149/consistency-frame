@@ -27,7 +27,7 @@ When one character speaks, the other character must be visibly listening — mic
 
 ## 30.5 Room Tone / Never-Silence + 4-Layer Sound
 
-Continuous ambience under every scene; room tone in every interior. Four sound layers, in order: (1) ambience / room tone, (2) foley on visible beats matched to the surface (stone, wood, grass), (3) dialogue, (4) music. Silence is a defect — even a quiet room has a low hum. Reverb matches the room; a studio-clean voice outdoors is an instant tell. Sound effects must match the action on screen in timing and in character; a silent action scene or a mismatched sound breaks the human feeling immediately.
+Continuous ambience under every scene; room tone in every interior. Four sound layers, in order: (1) ambience / room tone, (2) foley on visible beats matched to the surface (stone, wood, grass), (3) dialogue, (4) music. Unplanned silence is a defect — even a quiet room has a low hum — but intentional silence is a creative decision (see §30.19); missing or accidentally muted audio is a defect, a deliberate silence is not. Reverb matches the room; a studio-clean voice outdoors is an instant tell. Sound effects must match the action on screen in timing and in character; a silent action scene or a mismatched sound breaks the human feeling immediately.
 
 ## 30.6 Non-Verbal Voice Layer
 
@@ -65,11 +65,32 @@ Edit like a human editor, not like a clip-stitcher:
 
 Stitched clips with simultaneous audio and video cuts feel stitched; J/L cuts are what make an edit feel continuous and human. Do not compress multiple complicated physical actions into one visually confusing shot, and do not use unnecessary cuts.
 
+### The editorial workflow
+
+Editing runs in order: ingest and organise → review and select takes → assembly → rough cut → fine cut → picture lock → finishing → final master QC. Do not skip a step to save time: a rough cut built on unreviewed takes is a rough cut built on guesses.
+
+### More cut techniques — each with a storytelling purpose
+
+- **Match cut** — cut between two shots that match in shape, movement, or idea, to link two moments across time or place.
+- **Cross-cut** — cut between two actions happening at the same time, to build tension or show a parallel story.
+- **Insert** — cut to a close detail (a hand, a letter, a key) that the story needs the audience to see.
+- **Dissolve** — one shot fades into the next; use it only for a passage of time or a change of place, never as a default.
+
+No gratuitous transitions or cuts — a cut is never a "nothing happened" beat: it always changes the information the audience has. Preserve the editing rhythm above, the reaction holds, dialogue intelligibility, music synchronisation, continuity, and the film-finish principles of §30.11.
+
 ## 30.11 Film-Finish Pipeline
 
 After grading, apply the finish in this fixed order: correct, then creative LUT at reduced strength, then 35 mm grain (8–15%), then light blur. Highlight rolloff, halation, bloom, and gate weave are separate adjustable ingredients.
 
 Caveat — LUT strength is a range to test, not a fixed value: sources disagree (a creative LUT at 20–40% mix per one guide, versus 50–70% for print emulations per another). Treat the strength as a per-project test range. Generated footage is too clean — ultra-sharp, plasticky, baked contrast — and a LUT alone on unstable footage makes drift more visible, so foundations (exposure, skin hue, shot-to-shot continuity) come first; never patch temporal problems in grading.
+
+### Picture lock
+
+Picture lock comes before finishing: final shot order, final duration, dialogue timing, scene transitions, and the final timeline version. Once the picture is locked, the picture does not change — a change after lock requires a revision record and another review of the affected stage. Finishing never re-opens the edit.
+
+### Colour workflow — correction first, grading second
+
+Technical correction and creative grading are two different jobs, done in order. The workflow: (1) input transform / source interpretation; (2) exposure correction; (3) white-balance correction; (4) primary contrast; (5) shot-to-shot matching; (6) secondary correction; (7) creative grading; (8) output transform; (9) final export verification. Correction fixes what is wrong; grading decides what it should feel like — never grade on top of an uncorrected shot. Preserve scene lighting and colour continuity (see §30.15 and `production-systems` C7): the grade follows the script's time of day and light source, and never changes randomly inside a scene. If the source is AI-generated with no meaningful camera-log profile, do not invent one — grade the footage as it is. Do not use LUTs to hide identity drift, temporal flicker, physical distortion, incorrect shadows, or bad exposure: a LUT is a look, not a repair. LUT strengths and looks stay project-dependent — the test range in the caveat above applies per project.
 
 ## 30.12 Voice-Drift Measurement
 
@@ -87,7 +108,7 @@ A perfectly locked, perfectly smooth camera reads as CGI. Real cameras breathe a
 
 ## 30.15 Lighting-Continuity Lock
 
-Shadow direction, colour temperature, and light-source position are fixed per scene and locked across every shot in that scene. Colour grading follows the script's time of day and light source (see the `production-systems` skill: full-moon night is cool blue moonlight, bright sunlight is warm daylight, evening is soft warm, morning is fresh morning light, dusk is orange-purple twilight, midnight is deep dark, and torch or flashlight light at night is warm torch light with real shadows). This system locks where the light comes from in every shot, so the grade and the light position never contradict each other across cuts. The grade never changes randomly from one shot to the next inside the same scene, and the character's skin and clothes always match the light of the scene they are in.
+Shadow direction, colour temperature, and light-source position are fixed per scene and locked across every shot in that scene. Colour grading follows the script's time of day and light source (see the `production-systems` skill: full-moon night is cool blue moonlight, bright sunlight is warm daylight, evening is soft warm, morning is fresh morning light, dusk is orange-purple twilight, midnight is deep dark, and torch or flashlight light at night is warm torch light with real shadows). This system locks where the light comes from in every shot, so the grade and the light position never contradict each other across cuts. The grade never changes randomly from one shot to the next inside the same scene, and the character's skin and clothes always match the light of the scene they are in. Where a scene needs deliberate light, write a lighting plan first — the Lighting Plan Template in `production-systems` Part H records the motivated source, direction, key, fill, backlight, quality, colour temperature, and continuity notes for the scene, so the light stays the same light in every shot.
 
 ## 30.16 Background Life
 
@@ -103,7 +124,7 @@ Voice level, reverb, and muffling change with camera distance and room — close
 
 ## 30.19 Sound Spotting Sheet
 
-Before generating sound, write a spotting sheet per shot: timecode, sound class, whether it is in sync or not, and distance. Ambience loops crossfade 0.5–1 s and change only at cuts. Ad-hoc sound-effect generation produces mismatched, unsynced sound — plan the sound first, then generate to the plan. Sound is half of realism: footsteps, water, birds, wind, room tone, doors, crowd sounds — whatever the place would really sound like.
+Before generating sound, write a spotting sheet per shot. The reusable Sound Spotting Template carries: timecode; scene ID; shot ID; sound layer; source; visible action; distance and perspective; dialogue; room tone; ambience; foley; hand SFX; designed sound; music; intentional silence; mixing notes. Ambience loops crossfade 0.5–1 s and change only at cuts. Ad-hoc sound-effect generation produces mismatched, unsynced sound — plan the sound first, then generate to the plan. Sound is half of realism: footsteps, water, birds, wind, room tone, doors, crowd sounds — whatever the place would really sound like. Intentional silence is a creative decision — a silence marked in the spotting sheet and held for a reason. Missing or accidentally muted audio is a defect. Preserve the four-layer sound system, dialogue-first mixing, voice profiles, lip-sync rules, and audio delivery profiles (see `production-systems` A4, B14 and `voice-consistency`).
 
 ## 30.20 AI Disclosure & Provenance Pack
 

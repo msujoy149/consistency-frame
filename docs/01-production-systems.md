@@ -90,6 +90,49 @@ as beats, then directs the angles from those beats, so the angle
 decision is mandatory whether the script is supplied or generated —
 never skipped, never left to chance, never decided after generation.
 
+### Director's breakdown, blocking and coverage
+
+Before choosing any shot, read the scene in five steps — Observe →
+Describe → Infer → Recreate → Compare — and keep four things separate:
+what is objectively visible, what is inferred, what is a creative
+hypothesis, and what still needs verification. A hypothesis is never
+written into the shot list as a fact.
+
+For each scene, record a breakdown before shooting: scene purpose;
+one-line summary; emotional tone; each character's objective; character
+relationships; scene geography; main actions; important props;
+environment; required coverage; sound requirements; transition into the
+next scene. Record the blocking too: character positions; screen
+direction; foreground, midground, and background; entry and exit points;
+movement paths; marks and interactions; camera relationship. Characters
+and objects must not drift between shots without a story reason.
+
+Coverage is selective, never exhaustive. The twelve types are extreme
+wide / establishing, wide shot, full shot, medium wide, medium shot,
+medium close-up, close-up, extreme close-up, two-shot, over-the-shoulder,
+insert, and cutaway — each with its purpose (master wide for geography;
+two-shot for relationship; over-the-shoulder for conversation and eyeline;
+single / medium close-up for dialogue and performance; close-up for
+emotional reaction; insert / cutaway for important action or detail).
+The scene breakdown decides which types the scene needs; do not force
+every type into every scene.
+
+Continuity holds, in addition to the 180-degree rule: the 30-degree
+guideline (a cut between two shots of the same subject should change the
+camera angle by at least 30 degrees, or it reads as a jump); eyeline
+matching; screen-direction consistency; action matching; spatial
+continuity; shot-reverse-shot consistency. The 180-degree rule and the
+30-degree guideline are creative guidelines, not absolute restrictions —
+an intentional violation is permitted when the reason is clear and
+recorded; an accidental violation is a defect.
+
+Direct performance with playable actions, not emotion labels alone.
+Instead of just `angry`, direct: tightened jaw, shorter breathing,
+delayed response, avoided eye contact, restrained hand movement. The
+playable action is written into the shot list next to the line. The
+words stay the user's, the face stays the character's, and the body
+plays what the words mean.
+
 ## 3. Negative Prompt Library
 
 Maintain a standing list of defects to prevent in every generation:
@@ -230,3 +273,225 @@ deliver an episode that fails a check without telling the user what failed.
 
 Every failed check is either fixed before delivery or reported to the user
 with the failure named plainly.
+
+### QC severity
+
+Every defect is graded on four levels, which decide whether the video
+can be delivered:
+
+- **Critical — release blocker.** Missing scene; corrupted video; wrong
+  dialogue; wrong person or character; wrong action; broken export.
+- **Major — release blocker unless explicitly waived.** Face morphing;
+  broken physics; serious continuity defect; unusable lip-sync; serious
+  VFX integration problem. A Major defect blocks delivery unless the
+  authorised user explicitly waives it, with the waiver recorded (what
+  was waived, why, and who authorised it).
+- **Minor — repair where practical or document.** Small shot-matching
+  issue; small graphic-alignment defect; minor colour inconsistency.
+- **Polish — optional finishing enhancement.** Small timing improvement;
+  minor typography refinement; optional finishing enhancement.
+
+A defect with no severity assigned is a defect that has not been
+triaged. The severity system applies here and, by reference, to the
+video-regeneration QC pass, which reuses this checklist.
+
+### Final delivery checklist
+
+Before the master is handed over, verify every item: story completeness;
+character consistency; action and physical realism; camera and lighting
+continuity; dialogue and lip-sync; sound and music; colour consistency;
+frame rate and resolution; codec and file integrity; full playback (the
+whole video watched through, not sampled); backup and archive. A delivery
+that has not had a full playback is not a delivery — it is a hope.
+
+### Post-mortem
+
+After a project with repeated generation failures, write a short
+post-mortem and keep it with the project: what failed repeatedly; which
+model or tool performed how; the common defects and their causes as far
+as they could be determined; what was tried and what worked; what to do
+differently next time. The next project should not pay for the same
+failure twice.
+
+## 12. Production Stage-Gate Workflow (G1–G6)
+
+Every project runs through six stages in order. A stage is not finished
+until its acceptance is met, and a failed stage must not silently advance
+to the next one — the failure is fixed at that stage, or the stage is
+explicitly waived, never quietly skipped.
+
+- **G1 — Visual Planning.** Creative and technical brief; script and
+  story breakdown; scene and shot list; Visual Style Bible; character
+  and environment references; camera and composition plan; lighting
+  plan where applicable; sound plan where applicable; continuity
+  requirements; production restrictions. Acceptance: the production plan
+  is sufficiently complete to start representative test shots.
+- **G2 — Test Production.** Generate representative test shots; test
+  character identity, camera framing and movement, lighting and
+  composition, physical interactions, performance and lip-sync where
+  applicable, visual quality and consistency. Acceptance: representative
+  outputs are reviewed and approved. If a representative test fails,
+  correct the production instructions before batch generation.
+- **G3 — Editorial Review.** Select usable takes; build scene assembly;
+  create rough cut; evaluate narrative clarity, pacing and shot coverage;
+  check visual and audio continuity. Acceptance: the scene and story
+  communicate the intended meaning.
+- **G4 — Picture Lock.** Final shot order; final duration; dialogue
+  timing; scene transitions; approved editorial changes; final timeline
+  version. Acceptance: the picture is locked. Changes after picture
+  lock require a revision record and another affected-stage review.
+- **G5 — Finishing.** VFX and repair; colour correction; creative
+  grading; sound design; audio mixing; graphics and typography; final
+  audiovisual review. Acceptance: the master is ready for delivery QC.
+- **G6 — Delivery.** Full playback; visual QC; audio QC; technical
+  export verification; file integrity; project backup; archive; delivery
+  approval. Acceptance: all Critical and Major defects are resolved or
+  explicitly waived by the authorised user.
+
+Every stage carries one status: NOT STARTED, IN PROGRESS, PASS, BLOCKED,
+or WAIVED. A BLOCKED stage names what blocks it; a WAIVED stage names
+the reason and who authorised it. A waiver requires explicit user
+authorisation and a recorded reason — a waiver without a recorded reason
+is not a waiver, it is a skipped stage, and it is not permitted.
+
+Complexity-aware operation: simple shorts run a compact G1–G6 checklist
+(one line per gate, no separate documents); regular episodes run the
+complete production plan and test shots; complex cinematic projects run
+detailed planning, multiple test shots, editorial review and finishing in
+full. The gates are the same at every scale — only the paperwork shrinks.
+Never omit essential quality checks merely to save time.
+
+## 13. Production Complexity Tiers (P0–P3)
+
+This is a production scope hierarchy — how much production craft a
+project carries. It is NOT a replacement for the instruction-precedence
+hierarchy in the "Production Priority Hierarchy" section above (user >
+identity > story > realism > cinematography > quality), which still
+governs whenever instructions compete. The tiers decide scope; the
+hierarchy decides precedence.
+
+- **P0 — Essential (required for every project).** Story clarity;
+  correct scene and action; visual readability; character and object
+  continuity; dialogue correctness; basic exposure and focus quality,
+  where applicable; file integrity; backup; final QC.
+- **P1 — Strongly Recommended (normal professional productions).**
+  Composition; deliberate lighting; character performance; editing
+  rhythm; shot matching; colour consistency; sound design; professional
+  audio mixing.
+- **P2 — Advanced (when the project requires and tools support them).**
+  Advanced colour grading; complex VFX; simulation; detailed
+  compositing; advanced motion control; complex camera setups.
+- **P3 — Specialized (only appropriate productions).** Drone
+  photography; specialty lenses; high-speed camera work; virtual
+  production; advanced motion-control rigs; specialized compositing and
+  simulation.
+
+The tier is selected from the project scope, quality target, tools,
+budget, and user requirements, and recorded in the project record. Do
+not force P2/P3 work into every ordinary project. Never claim a
+capability exists merely because it appears in a production plan — a
+capability is claimed only when it has been verified.
+
+## 14. Lighting Plan Template
+
+Every scene that needs deliberate light carries a lighting plan, written
+before generation and checked at every cut. Required fields: project ID;
+scene ID; shot IDs; scene location; time of day; motivated light source;
+light direction; key light; fill or negative fill; backlight / rim light;
+hard or soft quality; intensity; colour temperature; contrast; shadow
+depth; practical light sources; exposure intent; background separation;
+visual reference; continuity notes.
+
+Cover these situations with the template, each with its motivated source
+and its look: natural daylight; window light; night interior; practical
+lighting; thriller lighting; documentary lighting; stylized animation
+lighting. Three-point lighting (key + fill + rim) is an available setup,
+not a universal requirement. The lighting-continuity lock still applies
+(see `docs/05-humanization-systems.md` §30.15): shadow direction, colour
+temperature, and light-source position are fixed per scene and locked
+across every shot. Do not force photographic equipment settings into AI
+models that cannot control them: the plan records creative intent, and
+only records a camera or light setting where the tool actually exposes
+that control (see §15).
+
+## 15. Camera Technical Profile
+
+The camera system (§2) decides what the camera does creatively. The
+technical profile records HOW it is done, and it is capability-aware: a
+setting is recorded only where the tool that produces the footage actually
+exposes it.
+
+For footage captured with a real camera, the profile may record any of
+these optional fields: camera; lens; focal length; aperture; shutter
+speed or shutter angle; ISO or gain; white balance; focus; frame rate;
+resolution; codec; colour profile; bit depth; exposure settings; backup
+camera settings. Optional means optional — never invent a value after
+the fact.
+
+For AI-generated footage, keep three things strictly separate: (1)
+creative camera intent — what the shot should look like; (2) native
+provider controls — the controls the provider actually exposes for this
+model; (3) post-production controls — what is done after generation
+(crop, reframing, stabilisation, speed ramping, colour work). Never
+pretend unsupported AI model parameters are real controls: a focal
+length, an aperture value, or a shutter speed written into a prompt for
+a model that does not expose it is a wish, not a setting.
+
+## 16. Master Shot Tracker
+
+One row per shot, all shots in the project, kept current through every
+stage gate (§12). Required fields: project; scene; shot ID; shot purpose;
+story beat; shot size and angle; camera movement; character references;
+environment and prop references; lighting; audio requirements; prompt or
+reference version; AI model and version; generation take; continuity
+notes; production status; QC status; approval.
+
+Production status vocabulary: PLANNED, TEST, APPROVED, GENERATING,
+SELECTED, REJECTED, LOCKED. A shot is LOCKED only after picture lock
+(G4); a REJECTED take stays in the tracker with its reason recorded.
+
+A project workspace uses this folder template, adapted to the project —
+it is a working-folder template, NOT a mandatory public Git folder
+structure, and it never carries private data into the public repo:
+`01_script/` (script, breakdown, shot list); `02_references/` (style,
+environment and prop references); `03_characters/` (character reference
+material — private data stays private, never committed to the public
+repo); `04_tests/` (test shots and G2 results); `05_shots/` (generated
+takes); `06_edit/` (assembly, rough cut, fine cut, picture lock);
+`07_finish/` (colour, sound, graphics, masters); `08_delivery/` (final
+exports, delivery checklist, post-mortem); `99_records/` (Master Shot
+Tracker, cost log, provenance log, backup log).
+
+Generated files and takes are named
+`PROJECT_S03_SH012_TK02_V003_YYYYMMDD.ext` — project code, season, shot
+number, take number, version, date.
+
+## 17. Genre-Specific Skill Selection
+
+Do not create duplicate genre skills — there is one skill per craft, and
+the genre decides which crafts are brought in. This matrix is optional:
+it suggests which existing skills a genre normally needs. The user's
+chosen style and script always take precedence over the matrix.
+
+| Genre | Skills usually brought in |
+|---|---|
+| Documentary | cinematic-power, production-systems, voice-consistency |
+| Geopolitics / investigative explainer | explainer-animation, cinematic-power, production-systems |
+| Informative explainer | explainer-animation, production-systems, voice-consistency |
+| Drama | emotional-performance, production-systems, humanized-production |
+| Thriller | cinematic-power, emotional-performance, production-systems, live-action-vfx |
+| Action | live-action-vfx, cinematic-power, production-systems |
+| 2D animation | kids-family-animation, explainer-animation, production-systems |
+| 3D animation | kids-family-animation, cinematic-power, production-systems |
+| Commercial | agency-advertising, production-systems, cinematic-power |
+
+Do not force a thriller visual style into a documentary, and do not
+force cartoon exaggeration into photorealistic footage: the genre sets
+the palette, but the script and the locked style set the rules. When
+the matrix and the user's instruction disagree, the user's instruction
+wins.
+
+Production Addendum 01 (2026-11-26) deepens the systems above with
+workflow and template extensions (§§12–17, the §2 director's extension,
+the §11 severity extension); it adds no new numbered entries, so the
+repo's 109 distinct systems / 120 numbered entries are unchanged.

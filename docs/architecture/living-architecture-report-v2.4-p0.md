@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-26 11:59 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-26 17:10 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -22,9 +22,9 @@ video production/editing). See
 
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
-**Feature branch:** `feat/cf-p1-002-skill-routing-runtime`
-**Head commit:** `e541b0e695c3220c948caea297e58a6b30fd765c`
-**GitHub branch head:** `d8ae1150b2026980400211f702adc7f281fe31f4` (remote head of `feat/cf-p1-002-skill-routing-runtime` at
+**Feature branch:** `feat/cf-p1-003-script-to-performance-runtime`
+**Head commit:** `5a3ab7fafc73297bd77425179f48b8cbb0a4983f`
+**GitHub branch head:** `bc9850031d347a9982fd6c05e5693c110d7f7338` (remote head of `feat/cf-p1-003-script-to-performance-runtime` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -35,7 +35,7 @@ head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §
 | Registry | Count |
 |---|---|
 | Skills (`registry/skills.json`) | 15 |
-| Features (`registry/features.json`) | 165 |
+| Features (`registry/features.json`) | 173 |
 | Workflows / intent modes (`registry/workflows.json`) | 13 |
 | Adapters (`registry/adapters.json`) | 12 |
 | JSON Schemas (`schemas/*.json`) | 28 |
@@ -58,8 +58,8 @@ head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §
 | `skill-humanized-production` | humanized-production | skills/humanized-production/SKILL.md | DOCUMENTED | 37 |
 | `skill-kids-family-animation` | kids-family-animation | skills/kids-family-animation/SKILL.md | DOCUMENTED | 17 |
 | `skill-language-authenticity` | language-authenticity | skills/language-authenticity/SKILL.md | DOCUMENTED | 9 |
-| `skill-live-action-vfx` | live-action-vfx | skills/live-action-vfx/SKILL.md | DOCUMENTED | 6 |
-| `skill-production-systems` | production-systems | skills/production-systems/SKILL.md | DOCUMENTED | 5 |
+| `skill-live-action-vfx` | live-action-vfx | skills/live-action-vfx/SKILL.md | DOCUMENTED | 7 |
+| `skill-production-systems` | production-systems | skills/production-systems/SKILL.md | DOCUMENTED | 12 |
 | `skill-realistic-person` | realistic-person | skills/realistic-person/SKILL.md | DOCUMENTED | 8 |
 | `skill-resource-management` | resource-management | skills/resource-management/SKILL.md | DOCUMENTED | 9 |
 | `skill-video-regeneration` | video-regeneration | skills/video-regeneration/SKILL.md | DOCUMENTED | 9 |
@@ -72,7 +72,7 @@ not the creative content of each skill.
 
 ### Features
 
-`165` features, one per `##` section of each canonical
+`173` features, one per `##` section of each canonical
 skill file, derived by `scripts/generate-registries.py`.
 
 **Reconciliation note (open):** the historical claim in the README and
@@ -178,7 +178,10 @@ architecture/audio-delivery-profiles.json
 architecture/intent-modes.yaml
 architecture/platform-capabilities.md
 characters/README.md
+docs/01-production-systems.md
 docs/02-extended-systems.md
+docs/04-additional-systems.md
+docs/05-humanization-systems.md
 docs/06-installation.md
 docs/07-character-registry.md
 docs/08-agency-advertising.md
@@ -207,10 +210,12 @@ docs/implementation/CF-WO-P0-014-corrections.md
 docs/implementation/CF-WO-P0-015-corrections.md
 docs/implementation/CF-WO-P1-001-corrections.md
 docs/implementation/CF-WO-P1-002-corrections.md
+docs/implementation/CF-WO-P1-003-corrections.md
 docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
 docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md
+docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md
 docs/runtime/SKILL_ROUTING_RUNTIME.md
 registry/adapters.json
 registry/features.json
@@ -221,6 +226,7 @@ release-manifest.json
 runtime/__init__.py
 runtime/authorization.py
 runtime/local_session.py
+runtime/script_to_performance.py
 runtime/skill_router.py
 schemas/README.md
 schemas/approval.json
@@ -268,6 +274,7 @@ skills/command-authority/SKILL.md
 skills/emotional-performance/SKILL.md
 skills/explainer-animation/SKILL.md
 skills/humanized-production/SKILL.md
+skills/kids-family-animation/SKILL.md
 skills/language-authenticity/SKILL.md
 skills/live-action-vfx/SKILL.md
 skills/production-systems/SKILL.md
@@ -341,6 +348,7 @@ tests/test_registries.py
 tests/test_reports.py
 tests/test_routing.py
 tests/test_schemas.py
+tests/test_script_to_performance_runtime.py
 tests/test_session_authorization.py
 tests/test_skill_router.py
 tests/test_timeline_manifest.py
@@ -407,15 +415,34 @@ tests/test_timeline_manifest.py
 - `CF-P1-002-R1-SCHEMA` — python3 tests/test_skill_router.py — **PASS** (exit 0)
 - `CF-P1-002-R1-HANDOFF` — python3 tests/test_skill_router.py — **PASS** (exit 0)
 - `CF-P1-002-R1-CATALOG` — python3 tests/test_skill_router.py — **PASS** (exit 0)
+- `CF-P1-003-SESSION-ROUTING` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-SCRIPT` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-PLANS` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-DIALOGUE` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-XREF` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-DETERMINISM` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-NULL156` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R1-BUNDLE-SHAPE` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R1-FAIL-CLOSED` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R1-DIALOGUE-META` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-SCRIPT` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-PROFILE` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-SCENE` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-SHOT` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-PERFORMANCE` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-EDITING` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-BINDINGS` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-BUNDLE` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
-- `CF-INT-023` — python3 scripts/generate-report.py — **PASS** (exit 0)
-- `CF-INT-023` — python3 scripts/generate-report.py --check — **PASS** (exit 0)
-- `CF-P0-ROUTING-004` — python3 tests/test_routing.py — **PASS** (exit 0)
 - `CF-P0-REPORT-001` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-002` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-003` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-004` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-005` — python3 tests/test_reports.py — **PASS** (exit 0)
+- `CF-P1-003-R2-MANIFEST` — python3 tests/test_reports.py — **PASS** (exit 0)
+- `CF-INT-023` — python3 scripts/generate-report.py — **PASS** (exit 0)
+- `CF-INT-023` — python3 scripts/generate-report.py --check — **PASS** (exit 0)
+- `CF-P0-ROUTING-004` — python3 tests/test_routing.py — **PASS** (exit 0)
 
 CI workflow: `.github/workflows/p0-ci.yml` (runs on pull requests and
 pushes to the feature branch). Remote CI PASSED on
@@ -501,4 +528,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-26 11:59 UTC.
+- Report generated: 2026-11-26 17:10 UTC.

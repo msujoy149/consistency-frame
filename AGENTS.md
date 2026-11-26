@@ -530,6 +530,120 @@ step-by-step order for every video, in §7).
   schema, so a new optional schema property without a test fails
   the suite). Record: corrections doc §15.
 
+## P1-003 Script-to-Performance runtime (2026-11-26)
+
+- **The runtime validates and assembles; it never creates.**
+  `runtime/script_to_performance.py` is the third P1 runtime
+  component: it validates, binds and assembles a structured source
+  ScriptContract, an approved production profile and the AI layer's
+  analysis drafts into final schema-valid Scene, Shot and
+  Performance Plans plus the Script-to-Performance binding record,
+  under one exact active P1-001 session and one valid, ready
+  P1-002 routing plan (`intent_mode == GENERATE_FROM_SCRIPT`,
+  plan session == exact active session). Standard-library only; it
+  never generates media, never calls a provider, never persists
+  anything, and never performs creative analysis — the AI reasoning
+  layer supplies the drafts, this runtime guarantees contract
+  integrity, verbatim dialogue preservation, cross-plan
+  consistency and deterministic assembly. Full record:
+  `docs/implementation/CF-WO-P1-003-corrections.md`, and the
+  runtime contract in
+  `docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md`.
+- **Dialogue is verbatim unless five conditions all hold.** Every
+  source dialogue line maps to exactly one Performance Plan line,
+  by `line_id`, in order, byte-for-byte. A rewrite is valid only
+  when (1) the caller supplies an actual boolean `True`, (2) the
+  plan uses `SCRIPT_EDIT_REQUESTED`, (3) the exact line has
+  `rewrite_permitted: true`, (4) the original stays in
+  `dialogue.text`, (5) the change lives only in `rewritten_text`.
+  A plan-level request alone never authorises a rewrite.
+- **Two layers, kept separate.** Layer A (AI reasoning / script
+  analysis, canonical skills) is not implemented in the runtime;
+  Layer B (this deterministic runtime) validates, binds and
+  assembles. No LLM API, no heuristics pretending to understand
+  natural language.
+- **Cross-plan integrity is explicit.** Root IDs, project
+  agreement, schema-version agreement, scene/beat/shot/line
+  resolution, character resolution into the known set, voice
+  bindings (either ID namespace), reaction holds, and contradictory
+  subject dimensions across scene/shot/profile records are all
+  checked; human lip articulation is never applied to an animal or
+  creature, and an unestablishable kind fails closed only in the
+  cross-reference phase, after kinds are resolved from all
+  sources.
+- **Determinism and output.** Canonical JSON + SHA-256 bundle hash
+  (same pattern as the router's `plan_hash`); the hash lives only
+  on the bundle and is recomputed by the bundle validator. Inputs
+  are never modified in place; no partial bundle is ever returned.
+  `tests/test_script_to_performance_runtime.py` (606 checks:
+  session/routing, script, plans, dialogue, cross-refs,
+  determinism, and the NULL156 nullability matrix over all 156
+  optional paths in the six consumed schemas, with a coverage
+  assertion). The `windows-compat` CI job runs the new suite on
+  both matrix versions; the workflow file goes up via the GitHub
+  website (API push 403s it), so no CI coverage is claimed until
+  the actual run proves it.
+- **Known canonical tension (recorded, not fixed).** A script with
+  zero dialogue lines has no valid performance plan — the
+  performance-plan schema requires at least one line (minItems 1)
+  while the dialogue mapping forbids inventing one — so the
+  builder fails closed. A non-verbal performance line omits
+  `dialogue.text` (minLength 1); an explicit `""` is
+  schema-invalid.
+- **R1 hardening (2026-11-26, same branch and PR #4).** Bundle
+  shape integrity (every required bundle field validated for
+  presence AND type — a `None`, list or scalar record no longer
+  passes with a recomputed hash), fail-closed input validation
+  (malformed identifiers, project IDs, schema versions, subject
+  dimensions, articulation/species values and live-action
+  provenance fields return structured errors; the builder raises
+  `ScriptToPerformanceError`, never a raw `TypeError` /
+  `AttributeError`), and source dialogue metadata preservation
+  (a source-supplied `character_id` or `language` must match
+  exactly in the Performance Plan line — omitted or different
+  fails closed; nothing invented, nothing translated). The two
+  report generators take an explicit `--base <sha>` (default:
+  the local `origin/main` ref) so the manifest base no longer
+  depends on a ref any fetch can move. Regression groups
+  `CF-P1-003-R1-BUNDLE-SHAPE` (35), `CF-P1-003-R1-FAIL-CLOSED`
+  (41), `CF-P1-003-R1-DIALOGUE-META` (9) in
+  `tests/test_script_to_performance_runtime.py` (691 checks
+  total; baseline 606 intact). Record: corrections doc §11.
+- **R2 hardening (2026-11-26, same branch and PR #4).** Manifest
+  integrity (the R1 manifest carried one stale entry — the
+  corrections document was edited after generation — so the
+  document is now finalized before the manifest is generated and
+  quotes no generated value; a new automated group
+  `CF-P1-003-R2-MANIFEST` in `tests/test_reports.py` verifies
+  all 182 entries entry-by-entry against the tree and rejects
+  tampered copies) and adversarial nested JSON validation (eight
+  table-driven groups over all eight boundaries — script,
+  profile, scene, shot, performance, editing, bindings, bundle —
+  with malformed types at every required object/array boundary
+  and identifier field; 1,096 new checks, suite total 1,787,
+  baseline 691 intact). Twenty production defects were
+  reproduced pre-fix and fixed: a raw `TypeError` crash class
+  from truthy non-iterable scalars where arrays are required
+  (new `_as_list()` helper), a non-serialisable bundle hash,
+  empty-string identifiers that silently passed, and dangling
+  per-shot overrides that silently built. Record: corrections
+  doc §12.
+- **R2-F1 cross-platform manifest path safety (2026-11-26,
+  same branch and PR #4).** The R2 validator accepted Windows
+  absolute paths (`C:/Windows/win.ini`) because POSIX
+  `os.path.isabs()` says False for them; the validator now uses
+  host-independent `ntpath.splitdrive()` / `ntpath.isabs()`
+  checks plus a realpath containment check, so drive-absolute,
+  drive-relative and UNC paths, and symlinks escaping the
+  repository root, are all rejected before any file is opened.
+  Regression tests cover eight unsafe paths with explicit
+  unsafe-path errors, the reviewer's decoy-file case, and a
+  symlink-escape case (explicitly skipped where the platform
+  cannot create symlinks). Only `tests/test_reports.py` and
+  docs changed; the S2P runtime is untouched (1,787 checks).
+  Record: corrections doc §12.7.
+- **P1-003 Production Addendum 01 — professional filmmaking workflow (2026-11-26, same branch and PR #4).** Documentation-only integration of the genuinely missing professional filmmaking systems, derived from the work-order specification (the cited 28-page handbook PDF was not received in the workspace — see corrections doc §13.1; cross-check against the PDF is still open): six-stage stage-gate workflow G1–G6 with gate statuses (NOT STARTED / IN PROGRESS / PASS / BLOCKED / WAIVED) and explicit-authorisation waivers; P0–P3 production complexity tiers (a scope hierarchy, explicitly not a replacement for the Part E instruction-precedence hierarchy); director's breakdown, blocking, and selective 12-type coverage plus the 30-degree guideline and playable-action performance direction; Lighting Plan Template (20 fields) and 7 lighting scenarios; capability-aware camera technical profile; 6-step emotional beat progression; 8-step editorial workflow with picture lock and four added cut techniques; 9-step colour workflow with the no-invented-log-profile and no-LUT-hiding rules; 16-field Sound Spotting Template with the intentional-silence clarification; six missing animation principles in kids §4.3; shot-level VFX believability checklist; unified Master Shot Tracker (18 fields) with workspace template and naming convention; QC severity levels (Critical / Major / Minor / Polish) with delivery checklist and post-mortem; genre skill-selection matrix; command-authority integration (10-step operational sequence with G1–G6 gates). No new skill (15 stays 15), no new numbered entries (109/120 unchanged), no runtime or schema change, no new tracked file — the 182-file manifest scope is preserved. Record: corrections doc §13.
+
 ## Rules that always apply
 
 - A character's identity (face, eyes, nose, mouth, hands, feet) is

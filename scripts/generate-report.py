@@ -9,10 +9,15 @@ is absent, tests are reported as NOT RUN — never as passed.
 
 Usage:
   python3 scripts/generate-report.py [--check] [--github-head <sha>]
+    [--base <sha>]
   --check exits 1 if the committed report differs from a fresh
   generation (used by CI).
   --github-head records the GitHub branch head this report describes
   (default: the CF_GITHUB_HEAD env var, else the current git HEAD).
+  --base pins the manifest base commit this report describes
+  (default: the local origin/main ref). An explicit --base keeps the
+  manifest scope stable when a fetch moves the local origin/main
+  ref (P1-003-R1); the base is the P0 merge commit on main.
   The remote head advances by one docs-only commit when the regenerated
   report is pushed; the delivery message states that final head.
 """
@@ -65,6 +70,19 @@ def resolve_github_head(argv, environ, default_head: str) -> str:
     return environ.get("CF_GITHUB_HEAD") or default_head
 
 
+def resolve_base(argv) -> str:
+    """Manifest base commit: --base wins, else the local
+    origin/main ref (the historical default). An explicit --base
+    keeps the manifest scope stable when a fetch moves the local
+    origin/main ref — a fetch moved it in P1-003 and the manifest
+    silently shrank from 182 entries to 30 (P1-003-R1)."""
+    if "--base" in argv:
+        i = argv.index("--base")
+        if i + 1 < len(argv) and argv[i + 1]:
+            return argv[i + 1]
+    return git("rev-parse", "origin/main")
+
+
 def main() -> int:
     skills = load("skills.json")
     features = load("features.json")
@@ -74,7 +92,7 @@ def main() -> int:
                           if f.endswith(".json"))
     branch = git("rev-parse", "--abbrev-ref", "HEAD")
     head = git("rev-parse", "HEAD")
-    base = git("rev-parse", "origin/main")
+    base = resolve_base(sys.argv)
     github_head = resolve_github_head(sys.argv, os.environ, head)
     changed = git("diff", "--name-only", f"{base}...HEAD")
     if not changed:

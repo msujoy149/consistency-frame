@@ -28,6 +28,13 @@ generated (before commit). The ZIP hash lives in the delivery message
 (the ZIP is built from the final head after commit).
 
 Usage: python3 scripts/generate-build-report.py [--github-head <sha>]
+    [--base <sha>]
+  --base pins the manifest base commit (default: the local
+  origin/main ref). An explicit --base keeps the manifest scope
+  stable when a fetch moves the local origin/main ref — a fetch
+  moved it in P1-003 and the manifest silently shrank from 182
+  entries to 30 (P1-003-R1); the base is the P0 merge commit on
+  main.
 """
 from __future__ import annotations
 
@@ -126,8 +133,20 @@ def resolve_github_head(argv, environ, default_head: str) -> str:
     return environ.get("CF_GITHUB_HEAD") or default_head
 
 
+def resolve_base(argv) -> str:
+    """Manifest base commit: --base wins, else the local
+    origin/main ref (the historical default). See the module
+    docstring: an explicit --base keeps the manifest scope stable
+    when a fetch moves the local origin/main ref (P1-003-R1)."""
+    if "--base" in argv:
+        i = argv.index("--base")
+        if i + 1 < len(argv) and argv[i + 1]:
+            return argv[i + 1]
+    return git("rev-parse", "origin/main")
+
+
 def main() -> int:
-    base = git("rev-parse", "origin/main")
+    base = resolve_base(sys.argv)
     head = git("rev-parse", "HEAD")
     branch = git("rev-parse", "--abbrev-ref", "HEAD")
     github_head = resolve_github_head(sys.argv, os.environ, head)
