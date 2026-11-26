@@ -87,6 +87,16 @@ jobs:
         run: |
           python --version
           python -c "import multiprocessing, sys; print('start method:', multiprocessing.get_start_method()); print(sys.platform)"
+      - name: Install PyYAML (needed by tests/test_routing.py and scripts/generate-routing-catalog.py)
+        # CF-WO-P1-002-R1-R1: the router suite runs
+        # scripts/generate-routing-catalog.py --check, which needs
+        # PyYAML. p0-validate installs it; windows-compat never
+        # did, so the router step failed in PR run #237 with
+        # "generate-routing-catalog: PyYAML is required
+        # (pip install pyyaml)". `python` (not `python3`) is the
+        # interpreter on the Windows runner.
+        shell: bash
+        run: python -m pip install --quiet pyyaml
       - name: Run local session runtime suite
         # bash (Git Bash on the Windows runner) so a non-zero
         # exit fails the step immediately, the same as on Linux.
