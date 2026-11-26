@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-26 08:14 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-26 08:21 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-002-skill-routing-runtime`
-**Head commit:** `614c25130cd0aeae4458a41943d896c436b55aef`
-**GitHub branch head:** `900a7e0ba8d55106e7b9131897d3ca07bd17c981` (remote head of `feat/cf-p1-002-skill-routing-runtime` at
+**Head commit:** `412c54b9bd153de38db688efa8929a9c105e455a`
+**GitHub branch head:** `d1f54b6a3fc93c943a26fd985b070b95091baaa7` (remote head of `feat/cf-p1-002-skill-routing-runtime` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -500,4 +500,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-26 08:14 UTC.
+- Report generated: 2026-11-26 08:21 UTC.

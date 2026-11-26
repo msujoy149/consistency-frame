@@ -661,6 +661,10 @@ the new categories (`CF-P1-002-R1-SCOPE`, `CF-P1-002-R1-SCHEMA`,
 - Regenerated provenance (manifest, living report, build report)
   in the repo's required order; the manifest and CHECKSUMS values
   live in the delivery report, not here (hash-chain rule §7).
+  Post-push regen (parent): provenance regenerated with the full
+  GitHub head `d1f54b6a3fc93c943a26fd985b070b95091baaa7` (workflow
+  file committed via the website); the new manifest SHA is recorded
+  in the delivery report, not here.
 
 ### 12.5 Remaining limitations + unresolved decisions
 
