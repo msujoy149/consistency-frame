@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p1-003-script-to-performance-runtime",
-  "head_commit": "d021a382b8db4324f66b4d876b3e13b7f5f001e3",
-  "github_branch_head": "6547893db8a8cb34eb47fa9f47f3e41a7116699f",
+  "head_commit": "32a96a93e1ada673b1958c37a9fb8afc74a75dd3",
+  "github_branch_head": "32a96a93e1ada673b1958c37a9fb8afc74a75dd3",
   "status": "PASS",
   "changed_files": [
     ".gitattributes",
@@ -572,6 +572,27 @@
     },
     {
       "id": "CF-P1-003-PLANS",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-R1-BUNDLE-SHAPE",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-R1-DIALOGUE-META",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-R1-FAIL-CLOSED",
       "command": "python3 tests/test_script_to_performance_runtime.py",
       "exit_code": 0,
       "result": "PASS",

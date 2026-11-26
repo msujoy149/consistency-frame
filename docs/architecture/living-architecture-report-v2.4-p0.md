@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-26 12:47 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-26 13:29 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-003-script-to-performance-runtime`
-**Head commit:** `d021a382b8db4324f66b4d876b3e13b7f5f001e3`
-**GitHub branch head:** `6547893db8a8cb34eb47fa9f47f3e41a7116699f` (remote head of `feat/cf-p1-003-script-to-performance-runtime` at
+**Head commit:** `32a96a93e1ada673b1958c37a9fb8afc74a75dd3`
+**GitHub branch head:** `32a96a93e1ada673b1958c37a9fb8afc74a75dd3` (remote head of `feat/cf-p1-003-script-to-performance-runtime` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -418,6 +418,9 @@ tests/test_timeline_manifest.py
 - `CF-P1-003-XREF` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
 - `CF-P1-003-DETERMINISM` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
 - `CF-P1-003-NULL156` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R1-BUNDLE-SHAPE` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R1-FAIL-CLOSED` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R1-DIALOGUE-META` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-report.py — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-report.py --check — **PASS** (exit 0)
@@ -512,4 +515,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-26 12:47 UTC.
+- Report generated: 2026-11-26 13:29 UTC.
