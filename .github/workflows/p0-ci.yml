@@ -34,8 +34,14 @@ jobs:
           bash --version | head -1
           python3 --version
           git --version
-      - name: Install PyYAML (needed by scripts/validate-repo.py check 8 and tests/test_routing.py)
+      - name: Install PyYAML (needed by scripts/validate-repo.py check 8, tests/test_routing.py and scripts/generate-routing-catalog.py)
         run: python3 -m pip install --quiet pyyaml
+      - name: Check routing catalog is fresh
+        # CF-WO-P1-002: the compiled catalog (registry/routing-catalog.json)
+        # must match the canonical routing sources. This step fails the
+        # job when it is stale; tests/run-tests.sh runs the same check
+        # (CF-P1-002-CATALOG), so local and CI agree.
+        run: python3 scripts/generate-routing-catalog.py --check
       - name: Run P0 tests
         run: bash tests/run-tests.sh
       - name: Upload test results
