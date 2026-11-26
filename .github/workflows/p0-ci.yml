@@ -121,3 +121,11 @@ jobs:
         # failure in one suite must not hide the others.
         shell: bash
         run: python tests/test_skill_router.py
+      - name: Run script-to-performance suite
+        # CF-WO-P1-003: the script-to-performance runtime is
+        # platform-independent runtime code; it gets native
+        # Windows verification like the other runtime suites.
+        # One step per suite: a failure in one suite must not
+        # hide the others.
+        shell: bash
+        run: python tests/test_script_to_performance_runtime.py
