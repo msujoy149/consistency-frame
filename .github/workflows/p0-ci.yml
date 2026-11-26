@@ -13,7 +13,7 @@
 # natively on Windows (Python 3.10 and 3.12), including the real
 # multiprocessing first-run race test under the spawn start
 # method. The Windows job produces no last-run.json artefact —
-# its evidence is the job log (the three suites' PASS lines).
+# its evidence is the job log (the four suites' PASS lines).
 name: P0 CI
 
 on:
@@ -57,6 +57,9 @@ jobs:
     # without os.fchmod (absent on Windows Python 3.10-3.12),
     # and the first-run race test must pass under the spawn
     # start method — spawn is the only start method on Windows.
+    # (CF-WO-P1-002-R1): the skill router suite runs here too —
+    # the router is platform-independent runtime code and gets
+    # native verification on both matrix versions.
     # Runs on pull_request (and the same push branches as
     # p0-validate); the P1 branch is deliberately NOT added to
     # the push list — the PR run is the CI evidence, as in
@@ -88,7 +91,7 @@ jobs:
         # bash (Git Bash on the Windows runner) so a non-zero
         # exit fails the step immediately, the same as on Linux.
         # One step per suite (R2 follow-up): a failure in one
-        # suite must not hide the other two — the single-step
+        # suite must not hide the others — the single-step
         # form stopped at the first failure and left the other
         # suites unrun. The race test (FIRST-01..07) runs for
         # real here under spawn; its PASS lines must appear in
@@ -101,3 +104,10 @@ jobs:
       - name: Run private voice security suite
         shell: bash
         run: python tests/test_private_voice_security.py
+      - name: Run skill router suite
+        # CF-WO-P1-002-R1: the router is platform-independent
+        # runtime code; it gets native Windows verification like
+        # the other three runtime suites. One step per suite: a
+        # failure in one suite must not hide the others.
+        shell: bash
+        run: python tests/test_skill_router.py
