@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-26 15:41 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-26 17:10 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-003-script-to-performance-runtime`
-**Head commit:** `8f6383ba64cb9d15ae5d5c6a48983c51e5267d52`
-**GitHub branch head:** `05b1c92c9d7baefd58ed718f8d7a19ccda17b778` (remote head of `feat/cf-p1-003-script-to-performance-runtime` at
+**Head commit:** `5a3ab7fafc73297bd77425179f48b8cbb0a4983f`
+**GitHub branch head:** `bc9850031d347a9982fd6c05e5693c110d7f7338` (remote head of `feat/cf-p1-003-script-to-performance-runtime` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -35,7 +35,7 @@ head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §
 | Registry | Count |
 |---|---|
 | Skills (`registry/skills.json`) | 15 |
-| Features (`registry/features.json`) | 165 |
+| Features (`registry/features.json`) | 173 |
 | Workflows / intent modes (`registry/workflows.json`) | 13 |
 | Adapters (`registry/adapters.json`) | 12 |
 | JSON Schemas (`schemas/*.json`) | 28 |
@@ -58,8 +58,8 @@ head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §
 | `skill-humanized-production` | humanized-production | skills/humanized-production/SKILL.md | DOCUMENTED | 37 |
 | `skill-kids-family-animation` | kids-family-animation | skills/kids-family-animation/SKILL.md | DOCUMENTED | 17 |
 | `skill-language-authenticity` | language-authenticity | skills/language-authenticity/SKILL.md | DOCUMENTED | 9 |
-| `skill-live-action-vfx` | live-action-vfx | skills/live-action-vfx/SKILL.md | DOCUMENTED | 6 |
-| `skill-production-systems` | production-systems | skills/production-systems/SKILL.md | DOCUMENTED | 5 |
+| `skill-live-action-vfx` | live-action-vfx | skills/live-action-vfx/SKILL.md | DOCUMENTED | 7 |
+| `skill-production-systems` | production-systems | skills/production-systems/SKILL.md | DOCUMENTED | 12 |
 | `skill-realistic-person` | realistic-person | skills/realistic-person/SKILL.md | DOCUMENTED | 8 |
 | `skill-resource-management` | resource-management | skills/resource-management/SKILL.md | DOCUMENTED | 9 |
 | `skill-video-regeneration` | video-regeneration | skills/video-regeneration/SKILL.md | DOCUMENTED | 9 |
@@ -72,7 +72,7 @@ not the creative content of each skill.
 
 ### Features
 
-`165` features, one per `##` section of each canonical
+`173` features, one per `##` section of each canonical
 skill file, derived by `scripts/generate-registries.py`.
 
 **Reconciliation note (open):** the historical claim in the README and
@@ -178,7 +178,10 @@ architecture/audio-delivery-profiles.json
 architecture/intent-modes.yaml
 architecture/platform-capabilities.md
 characters/README.md
+docs/01-production-systems.md
 docs/02-extended-systems.md
+docs/04-additional-systems.md
+docs/05-humanization-systems.md
 docs/06-installation.md
 docs/07-character-registry.md
 docs/08-agency-advertising.md
@@ -271,6 +274,7 @@ skills/command-authority/SKILL.md
 skills/emotional-performance/SKILL.md
 skills/explainer-animation/SKILL.md
 skills/humanized-production/SKILL.md
+skills/kids-family-animation/SKILL.md
 skills/language-authenticity/SKILL.md
 skills/live-action-vfx/SKILL.md
 skills/production-systems/SKILL.md
@@ -524,4 +528,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-26 15:41 UTC.
+- Report generated: 2026-11-26 17:10 UTC.
