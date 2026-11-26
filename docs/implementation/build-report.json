@@ -7,10 +7,11 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p1-002-skill-routing-runtime",
-  "head_commit": "412c54b9bd153de38db688efa8929a9c105e455a",
-  "github_branch_head": "d1f54b6a3fc93c943a26fd985b070b95091baaa7",
+  "head_commit": "ab81054a30adcdd97360720a8c41aefc8b5b2240",
+  "github_branch_head": "bcd24f3305639a541dd6f0032cf6829a3e9c0084",
   "status": "PASS",
   "changed_files": [
+    ".gitattributes",
     ".github/workflows/p0-ci.yml",
     ".gitignore",
     "AGENTS.md",

@@ -499,6 +499,14 @@ step-by-step order for every video, in §7).
   process. `tests/test_skill_router.py` also runs natively on
   Windows now (both `windows-compat` matrix versions). Record:
   corrections doc §12.
+- **Checkout contract (R1-R1, 2026-11-26, same branch and PR #3).**
+  `.gitattributes` pins `eol=lf` on every file the routing catalog
+  hashes (the five canonical YAML sources, every
+  `skills/*/SKILL.md`, and the catalog itself) — a Windows LF→CRLF
+  checkout changes their raw-byte SHA-256 and fails the catalog
+  checks (PR run #237); the router suite also needs PyYAML
+  installed in `windows-compat`, mirroring `p0-validate`. Record:
+  corrections doc §13.
 
 ## Rules that always apply
 

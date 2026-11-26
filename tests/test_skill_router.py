@@ -17,6 +17,7 @@ CF-P1-002-R1-SCOPE, CF-P1-002-R1-SCHEMA, CF-P1-002-R1-HANDOFF,
 CF-P1-002-R1-CATALOG.
 """
 import copy
+import fnmatch
 import hashlib
 import importlib.util
 import json
@@ -188,6 +189,69 @@ def main():
         cwd=ROOT_ABS, capture_output=True, text=True)
     check("CF-P1-002-CATALOG: generate-routing-catalog.py --check passes",
           proc.returncode == 0, proc.stdout.strip() + proc.stderr.strip())
+    # CF-WO-P1-002-R1-R1: the catalog hashes raw file bytes, so every
+    # catalog-hashed file must check out with LF on every platform.
+    # A Windows checkout converting LF to CRLF changes the SHA-256
+    # and fails the two checks above — PR run #237 proved it (both
+    # windows-compat jobs failed exactly those two checks plus the
+    # PyYAML-missing --check failure). The checkout contract lives
+    # in .gitattributes; these checks prove every hashed file is
+    # covered by an eol=lf rule, so the defect class cannot silently
+    # return when a new hashed file is added. The count pin (5 YAML
+    # sources + 15 SKILL.md files + the catalog itself = 21) forces
+    # the contract to be revisited if the hashed set ever changes.
+    def _gitattributes_eol_lf_patterns():
+        path = os.path.join(ROOT, ".gitattributes")
+        patterns = []
+        if not os.path.exists(path):
+            return patterns
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                parts = line.split()
+                if len(parts) >= 2 and "eol=lf" in parts[1:]:
+                    patterns.append(parts[0])
+        return patterns
+
+    def _pattern_matches(pattern, rel):
+        # Git attributes patterns, segment by segment: '*' matches
+        # within one path segment, '**' across segments, '?' one
+        # character. (No '**' is used in .gitattributes today.)
+        pat_segs = pattern.strip("/").split("/")
+        rel_segs = rel.strip("/").split("/")
+
+        def match(p, r):
+            if not p:
+                return not r
+            if p[0] == "**":
+                return any(match(p[1:], r[i:])
+                           for i in range(len(r) + 1))
+            if not r:
+                return False
+            if not fnmatch.fnmatchcase(r[0], p[0]):
+                return False
+            return match(p[1:], r[1:])
+
+        return match(pat_segs, rel_segs)
+
+    hashed = sorted(
+        list((CATALOG.get("sources") or {}).keys())
+        + [e["path"] for e in CATALOG["skills"]]
+        + ["registry/routing-catalog.json"])
+    lf_patterns = _gitattributes_eol_lf_patterns()
+    uncovered = [rel for rel in hashed
+                 if not any(_pattern_matches(p, rel)
+                            for p in lf_patterns)]
+    check("CF-P1-002-R1-CATALOG: every catalog-hashed file is covered "
+          "by an eol=lf rule in .gitattributes",
+          not uncovered and len(hashed) == 21,
+          f"hashed={len(hashed)} uncovered={uncovered}")
+    check("CF-P1-002-R1-CATALOG: .gitattributes covers the catalog "
+          "file itself",
+          any(_pattern_matches(p, "registry/routing-catalog.json")
+              for p in lf_patterns))
     # A tampered catalog is refused at load.
     tampered = clone(CATALOG)
     tampered["catalog_version"] = "9.9"

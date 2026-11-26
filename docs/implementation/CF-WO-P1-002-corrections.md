@@ -679,3 +679,153 @@ the new categories (`CF-P1-002-R1-SCOPE`, `CF-P1-002-R1-SCHEMA`,
   after the PR run; Windows success is not claimed before that run.
 - Script-to-performance runtime remains P1-003 territory; no
   executor or scheduler for plans was added.
+
+## 13. CF-WO-P1-002-R1-R1 — Windows CI follow-up fix: PyYAML install + LF checkout contract (2026-11-26)
+
+The first R1 CI run failed on Windows only. This section records
+the failure, the two proven causes with their evidence, and the
+two fixes. Nothing here redesigns the router or changes the P1-001
+session runtime. Same branch (`feat/cf-p1-002-skill-routing-runtime`),
+same PR #3 (Draft, unmerged); no merge, no P1-003.
+
+### 13.1 The failure — PR run #237
+
+- Run: **#237**, run ID `45788632035`,
+  https://github.com/msujoy149/consistency-frame/actions/runs/45788632035
+- Head: `bcd24f3305639a541dd6f0032cf6829a3e9c0084` (exact; the R1
+  docs push), event pull_request (PR #3).
+- Overall: **Failure**.
+- `p0-validate` (Linux): **Success, 1m 21s** — "Check routing
+  catalog is fresh" step CHECK OK; full suite PASS, 68 entries /
+  54 IDs / 36 commands. Its `p0-test-results` artifact (ID
+  `15100973200`, 1017 B, digest
+  `sha256:188647a23cd022914958be8a9910965b70cff1649d007b732ea78ae2d28c1a2c`)
+  holds a `last-run.json` byte-identical to the committed one
+  (SHA `a24736d6…`, 68 entries, status PASS).
+- `windows-compat` (Python 3.10.11): **Failure**; `windows-compat`
+  (Python 3.12.10): **Failure** — both only in the new "Run skill
+  router suite" step. The other three suites PASS in both jobs
+  (runtime 65, authorization 47, security 158 checks; 66/48/159
+  "PASS " lines including the summary line).
+- Exactly **3 failures** in the router step, identical in both
+  jobs (raw logs, `evidence/p1002-r1/`):
+  1. `FAIL CF-P1-002-CATALOG: source SHA-256 values match the live
+     YAML files` — sources are the 5 canonical YAML files.
+  2. `FAIL CF-P1-002-CATALOG: skill fingerprints match the live
+     SKILL.md files`.
+  3. `FAIL CF-P1-002-CATALOG: generate-routing-catalog.py --check
+     passes — generate-routing-catalog: PyYAML is required
+     (pip install pyyaml)`.
+- Per-job logs: `windows-compat-3.10-run237.log` (859 lines,
+  SHA-256 `8a06c5de0f3f2b68c2d414a9940d98f889015f8af0823fc8d24c34b286f5f34c`),
+  `windows-compat-3.12-run237.log` (809 lines, SHA-256
+  `7069b12f2d6501553386932fc80ada9ab012299149604c59b0aff3d5303a9e53`).
+  Reconstructed by concatenating the run-level archive's per-step
+  files for that job in step-number order (the P1-002 run #234
+  method); the archive's `system.txt` files are not part of a job
+  log and were excluded. Evidence staged in
+  `ci-evidence-p1-002-r1/` (artifact + README) and
+  `evidence/p1002-r1/` (both Windows logs). Run #237 is recorded
+  as FAILED; it is not claimed as passed anywhere.
+
+### 13.2 Cause 1 — windows-compat has no PyYAML install step
+
+`p0-validate` installs PyYAML before running the suite; the
+`windows-compat` job never did. The router suite runs
+`scripts/generate-routing-catalog.py --check`, which imports
+`yaml` at module load and exits with "PyYAML is required (pip
+install pyyaml)" when it is absent. That is failure 3 above.
+The other three Windows suites are stdlib-only, so only the
+router step tripped over it.
+
+Fix: a pip-install-PyYAML step in the `windows-compat` job, after
+"Show versions" and before the suite steps (mirroring the
+`p0-validate` install step's wording and purpose), using
+`python -m pip install --quiet pyyaml` — `python`, not `python3`,
+is the interpreter on the Windows runner. The workflow file
+cannot be pushed via API; the parent uploads it via the browser.
+
+### 13.3 Cause 2 — Windows checkout converts LF to CRLF
+
+The catalog records raw-byte SHA-256 values of the 5 canonical
+YAML sources and the 15 `SKILL.md` files; the compiler was run on
+Linux, so the recorded hashes are LF hashes. A Windows checkout
+converts LF to CRLF, which changes the bytes and therefore the
+hashes — failures 1 and 2 above. Proven by simulation on Linux:
+for `architecture/SKILL_ROUTING_MATRIX.yaml` and a sampled
+`skills/character-consistency/SKILL.md`, the LF hash matches the
+catalogued value and the CRLF-converted hash does not (all 5 YAML
+files and the sampled SKILL.md behave the same way).
+
+Fix: a new `.gitattributes` file forcing `eol=lf` for every file
+the catalog hashes — the 5 `architecture/*.yaml` sources,
+`skills/*/SKILL.md`, and `registry/routing-catalog.json` itself.
+The fix is the checkout contract, not hash normalisation: the
+fingerprint semantics are unchanged, the compiler still hashes
+raw bytes, and no canonical YAML or skill was rewritten. The
+`.gitattributes` rule is targeted to the hashed files only.
+
+### 13.4 Regression test
+
+Two new checks in `tests/test_skill_router.py`
+(CF-P1-002-R1-CATALOG), placed in the catalog section next to the
+`--check passes` check:
+
+- Every catalog-hashed file is covered by an `eol=lf` rule in
+  `.gitattributes` — the hashed set is taken from the live
+  catalog (5 sources + 15 skill paths + the catalog itself = 21
+  files, count pinned), and coverage is decided by a
+  segment-aware gitattributes pattern matcher (`*` within one
+  segment, `**` across segments). Uncovered files are named in
+  the failure detail.
+- `.gitattributes` covers the catalog file itself.
+
+Demonstrated failing on pre-fix code: with `.gitattributes`
+temporarily removed, both checks fail (all 21 files uncovered)
+and the suite reports 2 failures; restored, the suite passes.
+`tests/test_skill_router.py` is now **341 checks, 0 failures**
+(was 339; +2).
+
+### 13.5 Tests executed — exact counts
+
+- `tests/test_skill_router.py` — **341 checks, 0 failures**.
+- Full suite `bash tests/run-tests.sh` — counts recalculated from
+  the final run (see the delivery report; the suite entries are
+  unchanged — no new test file was added).
+- The other suites were re-run unchanged as part of the full suite
+  (`test_routing`, `test_local_session_runtime`,
+  `test_session_authorization`, `test_private_voice_security`).
+- The new checks fail on pre-fix code (see §13.4); the Windows
+  re-run after the two fixes is a separate CI event, recorded
+  after the PR run — Windows success is not claimed before it.
+
+### 13.6 Files changed
+
+- `.gitattributes` — new; `eol=lf` on every catalog-hashed file.
+- `.github/workflows/p0-ci.yml` — PyYAML install step in
+  `windows-compat` (browser upload by the parent; not API-pushed).
+- `tests/test_skill_router.py` — two `.gitattributes` coverage
+  checks + `fnmatch` import.
+- `docs/runtime/SKILL_ROUTING_RUNTIME.md` — checkout-contract
+  paragraph in "The catalog".
+- `docs/implementation/CF-WO-P1-002-corrections.md` — this §13.
+- `CHANGELOG.md` — R1-R1 entry under [Unreleased].
+- `AGENTS.md` — one-line checkout-contract note in the P1-002
+  section.
+- Regenerated provenance (manifest, living report, build report)
+  in the repo's required order; the manifest and CHECKSUMS values
+  live in the delivery report, not here (hash-chain rule §7).
+
+### 13.7 Remaining limitations + unresolved decisions
+
+- The `.gitattributes` contract pins line endings for the hashed
+  files only. Any future file the catalog hashes must be added
+  here too — the regression test fails loudly if it is not (the
+  coverage check names the uncovered file).
+- The fingerprint still proves the catalog file is the
+  compiler's output, not who ran the compiler; it does not stop
+  a malicious same-OS-user process.
+- The Windows CI evidence for the two fixes exists only after
+  the re-run; Windows success is not claimed before that run.
+- Script-to-performance runtime remains P1-003 territory; no
+  executor or scheduler for plans was added.

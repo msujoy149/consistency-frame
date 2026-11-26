@@ -81,6 +81,20 @@ is computed by that run. `--check` fails if the committed file
 differs from a fresh build, which covers fingerprint freshness as
 well.
 
+**Checkout contract (R1-R1).** The catalog hashes raw file bytes,
+so every catalog-hashed file must check out with LF on every
+platform: `.gitattributes` pins `eol=lf` on the five canonical
+YAML sources, every `skills/*/SKILL.md`, and the catalog itself.
+A Windows checkout converting LF to CRLF changes the recorded
+SHA-256 values and fails the catalog checks — PR run #237 proved
+it (both `windows-compat` jobs failed exactly the source-SHA-256
+and skill-fingerprint checks). The fix is the checkout contract,
+not hash normalisation: the fingerprint semantics are unchanged,
+and the compiler still hashes raw bytes. A regression test in
+`tests/test_skill_router.py` (CF-P1-002-R1-CATALOG) proves every
+catalog-hashed file is covered by an `eol=lf` rule, so the defect
+class cannot silently return when a new hashed file is added.
+
 Scope of the claim, stated plainly: this is integrity against
 accidental / unsupported mutation and malformed catalogs. It is
 not cryptographic protection against a malicious process with the
