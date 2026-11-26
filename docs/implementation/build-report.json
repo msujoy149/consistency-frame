@@ -6,9 +6,9 @@
   "repository_url": "https://github.com/msujoy149/consistency-frame",
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
-  "branch": "feat/cf-p1-002-skill-routing-runtime",
-  "head_commit": "e541b0e695c3220c948caea297e58a6b30fd765c",
-  "github_branch_head": "d8ae1150b2026980400211f702adc7f281fe31f4",
+  "branch": "feat/cf-p1-003-script-to-performance-runtime",
+  "head_commit": "d8f07c72f2304d365afcb03f6a2e6cf10180229a",
+  "github_branch_head": "b9072f07910b77621e3f5bdad1fd7546f5fc09c2",
   "status": "PASS",
   "changed_files": [
     ".gitattributes",
@@ -54,10 +54,12 @@
     "docs/implementation/CF-WO-P0-015-corrections.md",
     "docs/implementation/CF-WO-P1-001-corrections.md",
     "docs/implementation/CF-WO-P1-002-corrections.md",
+    "docs/implementation/CF-WO-P1-003-corrections.md",
     "docs/implementation/CHECKSUMS.txt",
     "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
     "docs/implementation/build-report.json",
     "docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md",
+    "docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md",
     "docs/runtime/SKILL_ROUTING_RUNTIME.md",
     "registry/adapters.json",
     "registry/features.json",
@@ -68,6 +70,7 @@
     "runtime/__init__.py",
     "runtime/authorization.py",
     "runtime/local_session.py",
+    "runtime/script_to_performance.py",
     "runtime/skill_router.py",
     "schemas/README.md",
     "schemas/approval.json",
@@ -188,6 +191,7 @@
     "tests/test_reports.py",
     "tests/test_routing.py",
     "tests/test_schemas.py",
+    "tests/test_script_to_performance_runtime.py",
     "tests/test_session_authorization.py",
     "tests/test_skill_router.py",
     "tests/test_timeline_manifest.py"
@@ -541,6 +545,55 @@
     {
       "id": "CF-P1-002-SECURITY",
       "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-DETERMINISM",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-DIALOGUE",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-NULL156",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-PLANS",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-SCRIPT",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-SESSION-ROUTING",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-XREF",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"

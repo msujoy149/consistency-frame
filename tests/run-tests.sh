@@ -109,6 +109,13 @@ run_one "CF-P1-002-R1-SCOPE" python3 tests/test_skill_router.py
 run_one "CF-P1-002-R1-SCHEMA" python3 tests/test_skill_router.py
 run_one "CF-P1-002-R1-HANDOFF" python3 tests/test_skill_router.py
 run_one "CF-P1-002-R1-CATALOG" python3 tests/test_skill_router.py
+run_one "CF-P1-003-SESSION-ROUTING" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-SCRIPT" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-PLANS" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-DIALOGUE" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-XREF" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-DETERMINISM" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-003-NULL156" python3 tests/test_script_to_performance_runtime.py
 
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check

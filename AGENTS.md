@@ -530,6 +530,67 @@ step-by-step order for every video, in §7).
   schema, so a new optional schema property without a test fails
   the suite). Record: corrections doc §15.
 
+## P1-003 Script-to-Performance runtime (2026-11-26)
+
+- **The runtime validates and assembles; it never creates.**
+  `runtime/script_to_performance.py` is the third P1 runtime
+  component: it validates, binds and assembles a structured source
+  ScriptContract, an approved production profile and the AI layer's
+  analysis drafts into final schema-valid Scene, Shot and
+  Performance Plans plus the Script-to-Performance binding record,
+  under one exact active P1-001 session and one valid, ready
+  P1-002 routing plan (`intent_mode == GENERATE_FROM_SCRIPT`,
+  plan session == exact active session). Standard-library only; it
+  never generates media, never calls a provider, never persists
+  anything, and never performs creative analysis — the AI reasoning
+  layer supplies the drafts, this runtime guarantees contract
+  integrity, verbatim dialogue preservation, cross-plan
+  consistency and deterministic assembly. Full record:
+  `docs/implementation/CF-WO-P1-003-corrections.md`, and the
+  runtime contract in
+  `docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md`.
+- **Dialogue is verbatim unless five conditions all hold.** Every
+  source dialogue line maps to exactly one Performance Plan line,
+  by `line_id`, in order, byte-for-byte. A rewrite is valid only
+  when (1) the caller supplies an actual boolean `True`, (2) the
+  plan uses `SCRIPT_EDIT_REQUESTED`, (3) the exact line has
+  `rewrite_permitted: true`, (4) the original stays in
+  `dialogue.text`, (5) the change lives only in `rewritten_text`.
+  A plan-level request alone never authorises a rewrite.
+- **Two layers, kept separate.** Layer A (AI reasoning / script
+  analysis, canonical skills) is not implemented in the runtime;
+  Layer B (this deterministic runtime) validates, binds and
+  assembles. No LLM API, no heuristics pretending to understand
+  natural language.
+- **Cross-plan integrity is explicit.** Root IDs, project
+  agreement, schema-version agreement, scene/beat/shot/line
+  resolution, character resolution into the known set, voice
+  bindings (either ID namespace), reaction holds, and contradictory
+  subject dimensions across scene/shot/profile records are all
+  checked; human lip articulation is never applied to an animal or
+  creature, and an unestablishable kind fails closed only in the
+  cross-reference phase, after kinds are resolved from all
+  sources.
+- **Determinism and output.** Canonical JSON + SHA-256 bundle hash
+  (same pattern as the router's `plan_hash`); the hash lives only
+  on the bundle and is recomputed by the bundle validator. Inputs
+  are never modified in place; no partial bundle is ever returned.
+  `tests/test_script_to_performance_runtime.py` (606 checks:
+  session/routing, script, plans, dialogue, cross-refs,
+  determinism, and the NULL156 nullability matrix over all 156
+  optional paths in the six consumed schemas, with a coverage
+  assertion). The `windows-compat` CI job runs the new suite on
+  both matrix versions; the workflow file goes up via the GitHub
+  website (API push 403s it), so no CI coverage is claimed until
+  the actual run proves it.
+- **Known canonical tension (recorded, not fixed).** A script with
+  zero dialogue lines has no valid performance plan — the
+  performance-plan schema requires at least one line (minItems 1)
+  while the dialogue mapping forbids inventing one — so the
+  builder fails closed. A non-verbal performance line omits
+  `dialogue.text` (minLength 1); an explicit `""` is
+  schema-invalid.
+
 ## Rules that always apply
 
 - A character's identity (face, eyes, nose, mouth, hands, feet) is
