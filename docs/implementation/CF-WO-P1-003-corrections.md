@@ -355,3 +355,70 @@ hash-chain rule).
   `feat/cf-p1-002-skill-routing-runtime`) is created by the parent
   after the push; it is Draft and unmerged. PR #2 and PR #3 are
   untouched.
+
+## 10. Wrong-base incident on the first push (parent repair, 2026-11-26)
+
+- The first content push (`push_files`, 14 files, message "P1-003:
+  deterministic Script-to-Performance runtime...") created the
+  remote branch `feat/cf-p1-003-script-to-performance-runtime`
+  from the repo DEFAULT branch instead of from the accepted
+  P1-002 head: the new commit `f4adad254f970f02879a2d21b83392736acecf32`
+  had parent `8fc11feec232102c2a3dfaa90c3452d2186c472e` (main), so
+  the branch tree was main + the 14 pushed files only — all of
+  P1-001 / P1-002 / R1 / R1-R1 / R1-R2 / R1-R3 was missing
+  (18 files, +16,243/−201 vs the local head). The browser task
+  uploading the workflow file caught it first: the branch's
+  `.github/workflows/p0-ci.yml` was the 38-line P0 version with
+  no `windows-compat` job and no router step, so appending the
+  new step there would have put it in the Ubuntu `p0-validate`
+  job. The parent verified the parent SHA and the tree diff
+  with `git fetch` + `git log`/`git diff` (the API's
+  `get_file_contents` reads right after branch creation were
+  inconsistent — one read briefly reported `skill_router.py`
+  missing, a later read reported it present; only the `git`
+  fetch gives ground truth) and told the browser to stop
+  without editing.
+- Repair, in order: (1) the wrong branch was deleted via the
+  GitHub website (browser, verified on the Branches page; no
+  other branch touched); the deletion was confirmed with
+  `git fetch --prune` (no remote p1-003 branch). (2) The branch
+  was re-created with the MCP `create_branch` tool from
+  `from_branch: feat/cf-p1-002-skill-routing-runtime`, landing
+  at exactly `b9072f07910b77621e3f5bdad1fd7546f5fc09c2`.
+  (3) The same 14 content files were re-pushed with
+  `push_files` (head `749fa62077105066312bacb7e6d7bcb32bd12ee3`,
+  parent verified `b9072f07`; remote tree then differed from
+  the local head only in the workflow file, +8 lines).
+  (4) The workflow file was uploaded via the GitHub website
+  (browser, verified the 123-line file with `windows-compat`
+  and the router step before editing), head
+  `6547893db8a8cb34eb47fa9f47f3e41a7116699f`; the remote tree
+  was then verified byte-identical to the local head
+  (empty `git diff`, including modes). PR #4 was created only
+  after that verification.
+- Standing lesson: `push_files` creates a NEW branch from the
+  repo default branch — it takes no base. Always `create_branch`
+  from the correct base branch FIRST, then `push_files` onto
+  the existing branch. Verify the new branch's parent SHA and
+  tree diff with `git fetch` before any further step (PR,
+  workflow upload, CI claim).
+- **Provenance trap found during the post-push regen (same
+  round):** `scripts/generate-report.py` takes its base from
+  the LOCAL `origin/main` ref (`rev-parse origin/main`) — it
+  has no base parameter. In every round so far that ref was
+  STALE at the P0 base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
+  (nobody had fetched `main` locally since the PR #1 merge),
+  so the manifest covered the cumulative diff vs the P0 base
+  (182 files at R1-R3). This round the parent's
+  `git fetch origin --prune` (run to confirm the wrong-branch
+  deletion) updated the local `origin/main` to the real main
+  head `8fc11fee`, and the regen then produced base `8fc11fee`,
+  32 changed files and a 30-file manifest — a silent loss of
+  152 manifest entries. The parent restored the ref with
+  `git update-ref refs/remotes/origin/main e1571db…` and
+  re-ran the regen, restoring the 182-file cumulative manifest.
+  Standing rule: never refresh the local `origin/main` ref
+  before a provenance regen; the generator's base is
+  effectively the P0 base commit, and a future round should
+  give the generator an explicit `--base` instead of reading
+  a ref that any fetch can move.

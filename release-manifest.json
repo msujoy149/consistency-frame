@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-003-script-to-performance-runtime",
-  "commit": "d8f07c72f2304d365afcb03f6a2e6cf10180229a",
-  "github_branch_head": "b9072f07910b77621e3f5bdad1fd7546f5fc09c2",
+  "commit": "d021a382b8db4324f66b4d876b3e13b7f5f001e3",
+  "github_branch_head": "6547893db8a8cb34eb47fa9f47f3e41a7116699f",
   "files": [
     {
       "path": ".gitattributes",
@@ -127,7 +127,7 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "95cc0160f51c9e7f5097f37059008ed88b421d82d5c95930c35bfedb39923ee6",
+      "sha256": "587bd88210c86030c14f5ce2b8d3f246b57b0e3360fc8050fdb59bf407978890",
       "bytes": 27073
     },
     {
@@ -137,7 +137,7 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "90374281fc29225206ccb4c33d7f1175af0f09352619666899f67214aac053cb",
+      "sha256": "32abcdf495570fd0eac8b0c990e55c833ed9cbe89c5dae3c1ca49ecdebb8338e",
       "bytes": 58667
     },
     {
@@ -222,8 +222,8 @@
     },
     {
       "path": "docs/implementation/CF-WO-P1-003-corrections.md",
-      "sha256": "4ee86508317a3dbcfe3bab19c823e45091cd133175d102da0f1e06b7bb4fc291",
-      "bytes": 18335
+      "sha256": "c008e2292c69243b8a5ad68a6cf866c5ebf929b387793fdf2d4cccffbea59bb7",
+      "bytes": 22151
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
@@ -232,7 +232,7 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "2895e0cde9bdb4f29bfcee400124bf19e800fa7f3b2cb46311885bf607f57c82",
+      "sha256": "b0d7fabc10f76573305796e3d09ec32a1913a53f338ca5a5602f895f05b36337",
       "bytes": 23149
     },
     {
@@ -1162,5 +1162,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-26T12:44:49Z"
+  "generated_at_utc": "2026-11-26T12:47:34Z"
 }
