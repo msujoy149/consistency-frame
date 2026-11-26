@@ -374,3 +374,23 @@ hash-chain rule).
 - Any provider, companion, or media-generation integration.
 - PR creation, push, or merge (the parent handles those after this
   report).
+
+## 11. Post-push provenance addendum (parent)
+
+- Content push: 19 files (all round files except
+  `.github/workflows/p0-ci.yml`) pushed via the API to
+  `feat/cf-p1-002-skill-routing-runtime`, GitHub head
+  `997fd119bb6349bbab67860ca19b5687b4c95ccd`.
+- The workflow file cannot be pushed via the API (403, established
+  in P1-001-R2), so `.github/workflows/p0-ci.yml` was edited on the
+  GitHub website: the "Check routing catalog is fresh" step, commit
+  `14eb178c8586b58f5ca52114d950022098c151b1`. The remote file was
+  verified byte-identical to the local file after the edit.
+- Provenance was regenerated with `--github-head 14eb178…` after
+  the workflow commit. The pre-push provenance recorded in §7
+  (manifest generated against content head `0802045`, source
+  snapshot `b2db4882`) is superseded by that regeneration, not
+  rewritten. The tested implementation head remains the local
+  content commit; the workflow commit changes no runtime, test, or
+  policy file. The regenerated manifest and CHECKSUMS values live in
+  the delivery report, not here (hash-chain rule §7).
