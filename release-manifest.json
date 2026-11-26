@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-003-script-to-performance-runtime",
-  "commit": "5d65010f1766c27bb494f0da636dfca623f3cb5c",
-  "github_branch_head": "cc45a284ae7d1f3a4a63323e9cf3301a0811bf72",
+  "commit": "b6b75f12f6831ae862f923e19acb7398205e554f",
+  "github_branch_head": "9a3e068da2c311c8137b98f9d58471abcf73fb72",
   "files": [
     {
       "path": ".gitattributes",
@@ -22,13 +22,13 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "c0f1548d7d1747a97e232dd005cfa032b3aff6d90a6854557e1f9a243794c69a",
-      "bytes": 37036
+      "sha256": "9b9b8de999704f37cb014651c7a267835ada479df4435ab9de371731015721dc",
+      "bytes": 38155
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "9c7304f01cda1ae12f3609032ac402f6c1fcc878783f921943d24267a7ce86fd",
-      "bytes": 92505
+      "sha256": "5e99cfbe0317bbe4c2151099ca048f16dd42616fb1acb9416b2cdcdb2d8d7da6",
+      "bytes": 93699
     },
     {
       "path": "README.md",
@@ -127,8 +127,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "31867395e235d1625adf6a11020451446b9e014608fbb44e33df426302814741",
-      "bytes": 27397
+      "sha256": "ca507db465ca257451eab8c15ed25ef6b5bf3487a5e267ffe30c56b3ea6d55fb",
+      "bytes": 28301
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -137,8 +137,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "0afac13b1197de3ff6584a151d5f6bcedd777fd1c23ecc4eec086ba12524b52a",
-      "bytes": 59359
+      "sha256": "e25d7fdb28160c5f280c1b1908284776e8a014f4f5d849e84ddc47850aae8f7e",
+      "bytes": 60842
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -222,8 +222,8 @@
     },
     {
       "path": "docs/implementation/CF-WO-P1-003-corrections.md",
-      "sha256": "8e26e48c0612085735579c90437ffa39eadcf5ba6f5b54a968cbaaf049f6f57e",
-      "bytes": 34017
+      "sha256": "2153113cad014f898bd50cff67abea396a36ca697adfa626a1e8a8d8254f56e6",
+      "bytes": 47290
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
@@ -232,8 +232,8 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "d3c2369e8b618a87c9509536047a00e2686604c362b1f768a91e39a9c8320bce",
-      "bytes": 23785
+      "sha256": "d6ebfbf822b7efdeef47e08c58dbdb34cc0eb29d9ad42853b647367491fb888c",
+      "bytes": 25625
     },
     {
       "path": "docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md",
@@ -292,8 +292,8 @@
     },
     {
       "path": "runtime/script_to_performance.py",
-      "sha256": "06159d5559acd53cb5406b822103702cf528383a7095c68a147871a583569267",
-      "bytes": 72799
+      "sha256": "a963862cdde7b4b2868b8880ff86fc4a3c31586ca4e51b414fbbf2a193ee74c0",
+      "bytes": 75331
     },
     {
       "path": "runtime/skill_router.py",
@@ -802,13 +802,13 @@
     },
     {
       "path": "tests/last-run.json",
-      "sha256": "31229c0f99ecadb2dff0cce2314a06b4c8c403bb4e358a830705a46792ad13d7",
-      "bytes": 11594
+      "sha256": "edcfe2f7ba2c690ebde8441e3a18537231d014eab4628734d1d44a032956970b",
+      "bytes": 13065
     },
     {
       "path": "tests/run-tests.sh",
-      "sha256": "efff9d21c6f2da7bb517ff7dd00259e3224ecea042f0f2d0d2789314854b1367",
-      "bytes": 7577
+      "sha256": "e77d398e157377912f77628390992d6a425d7702535e7d95acd208f8d0f627e5",
+      "bytes": 8652
     },
     {
       "path": "tests/test_atomic_write.py",
@@ -882,8 +882,8 @@
     },
     {
       "path": "tests/test_reports.py",
-      "sha256": "6ae8b65843f601b90161622bc197aaa3bb3172713bee8f9e27b371eee313b6ed",
-      "bytes": 13525
+      "sha256": "9773679e943a9506a958c9d71aca589611ffe4122aa5720480ccf2b64465c4ca",
+      "bytes": 21611
     },
     {
       "path": "tests/test_routing.py",
@@ -897,8 +897,8 @@
     },
     {
       "path": "tests/test_script_to_performance_runtime.py",
-      "sha256": "6587b26b3cb19452515c34272f721b86ba59df120b98f4e86d061664cc169d93",
-      "bytes": 89444
+      "sha256": "8b3e9173bcf9812aa3dfd02923daa718171830562f30a95759cea458181bfc45",
+      "bytes": 159989
     },
     {
       "path": "tests/test_session_authorization.py",
@@ -1142,6 +1142,42 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-003-R2-BINDINGS",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-BUNDLE",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-EDITING",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-MANIFEST",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-PERFORMANCE",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-PROFILE",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-SCENE",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-SCRIPT",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-003-R2-SHOT",
+      "result": "PASS"
+    },
+    {
       "id": "CF-P1-003-SCRIPT",
       "result": "PASS"
     },
@@ -1174,5 +1210,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-26T13:29:51Z"
+  "generated_at_utc": "2026-11-26T15:07:33Z"
 }

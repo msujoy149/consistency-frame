@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-26 13:29 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-26 15:07 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-003-script-to-performance-runtime`
-**Head commit:** `5d65010f1766c27bb494f0da636dfca623f3cb5c`
-**GitHub branch head:** `cc45a284ae7d1f3a4a63323e9cf3301a0811bf72` (remote head of `feat/cf-p1-003-script-to-performance-runtime` at
+**Head commit:** `b6b75f12f6831ae862f923e19acb7398205e554f`
+**GitHub branch head:** `9a3e068da2c311c8137b98f9d58471abcf73fb72` (remote head of `feat/cf-p1-003-script-to-performance-runtime` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -421,15 +421,24 @@ tests/test_timeline_manifest.py
 - `CF-P1-003-R1-BUNDLE-SHAPE` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
 - `CF-P1-003-R1-FAIL-CLOSED` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
 - `CF-P1-003-R1-DIALOGUE-META` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-SCRIPT` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-PROFILE` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-SCENE` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-SHOT` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-PERFORMANCE` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-EDITING` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-BINDINGS` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-003-R2-BUNDLE` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
-- `CF-INT-023` — python3 scripts/generate-report.py — **PASS** (exit 0)
-- `CF-INT-023` — python3 scripts/generate-report.py --check — **PASS** (exit 0)
-- `CF-P0-ROUTING-004` — python3 tests/test_routing.py — **PASS** (exit 0)
 - `CF-P0-REPORT-001` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-002` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-003` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-004` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-005` — python3 tests/test_reports.py — **PASS** (exit 0)
+- `CF-P1-003-R2-MANIFEST` — python3 tests/test_reports.py — **PASS** (exit 0)
+- `CF-INT-023` — python3 scripts/generate-report.py — **PASS** (exit 0)
+- `CF-INT-023` — python3 scripts/generate-report.py --check — **PASS** (exit 0)
+- `CF-P0-ROUTING-004` — python3 tests/test_routing.py — **PASS** (exit 0)
 
 CI workflow: `.github/workflows/p0-ci.yml` (runs on pull requests and
 pushes to the feature branch). Remote CI PASSED on
@@ -515,4 +524,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-26 13:29 UTC.
+- Report generated: 2026-11-26 15:07 UTC.

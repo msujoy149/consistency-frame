@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p1-003-script-to-performance-runtime",
-  "head_commit": "5d65010f1766c27bb494f0da636dfca623f3cb5c",
-  "github_branch_head": "cc45a284ae7d1f3a4a63323e9cf3301a0811bf72",
+  "head_commit": "b6b75f12f6831ae862f923e19acb7398205e554f",
+  "github_branch_head": "9a3e068da2c311c8137b98f9d58471abcf73fb72",
   "status": "PASS",
   "changed_files": [
     ".gitattributes",
@@ -593,6 +593,69 @@
     },
     {
       "id": "CF-P1-003-R1-FAIL-CLOSED",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-R2-BINDINGS",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-R2-BUNDLE",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-R2-EDITING",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-R2-MANIFEST",
+      "command": "python3 tests/test_reports.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-R2-PERFORMANCE",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-R2-PROFILE",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-R2-SCENE",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-R2-SCRIPT",
+      "command": "python3 tests/test_script_to_performance_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-003-R2-SHOT",
       "command": "python3 tests/test_script_to_performance_runtime.py",
       "exit_code": 0,
       "result": "PASS",
