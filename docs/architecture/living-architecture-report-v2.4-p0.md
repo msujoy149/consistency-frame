@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-24 07:34 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-26 06:22 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -22,9 +22,9 @@ video production/editing). See
 
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
-**Feature branch:** `feat/cf-p1-001-trusted-session`
-**Head commit:** `bfd9f35c7b47da0432dad22877f23e6fed6afef6`
-**GitHub branch head:** `01c59f6b0ecd48f3dc9555f3f5bbcf60174d17bc` (remote head of `feat/cf-p1-001-trusted-session` at
+**Feature branch:** `feat/cf-p1-002-skill-routing-runtime`
+**Head commit:** `080204562036a481580c8689fa11679f80108522`
+**GitHub branch head:** `b2db48828b3e964eebca3fe585bff84bafb00dae` (remote head of `feat/cf-p1-002-skill-routing-runtime` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -38,7 +38,7 @@ head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §
 | Features (`registry/features.json`) | 165 |
 | Workflows / intent modes (`registry/workflows.json`) | 13 |
 | Adapters (`registry/adapters.json`) | 12 |
-| JSON Schemas (`schemas/*.json`) | 26 |
+| JSON Schemas (`schemas/*.json`) | 28 |
 | Routing matrix entries (`architecture/SKILL_ROUTING_MATRIX.yaml`) | 15 |
 | Workflow graph nodes / edges (`architecture/WORKFLOW_GRAPH.yaml`) | 15 / 42 |
 | Companion capabilities (`architecture/COMPANION_CAPABILITY_REGISTRY.yaml`) | 20 (3 exercised_recorded_run, 16 present_locally, 1 upstream_inspected_pinned_commit, 0 production_verified) |
@@ -205,18 +205,22 @@ docs/implementation/CF-WO-P0-012-corrections.md
 docs/implementation/CF-WO-P0-014-corrections.md
 docs/implementation/CF-WO-P0-015-corrections.md
 docs/implementation/CF-WO-P1-001-corrections.md
+docs/implementation/CF-WO-P1-002-corrections.md
 docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
 docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md
+docs/runtime/SKILL_ROUTING_RUNTIME.md
 registry/adapters.json
 registry/features.json
+registry/routing-catalog.json
 registry/skills.json
 registry/workflows.json
 release-manifest.json
 runtime/__init__.py
 runtime/authorization.py
 runtime/local_session.py
+runtime/skill_router.py
 schemas/README.md
 schemas/approval.json
 schemas/build-report.json
@@ -238,6 +242,8 @@ schemas/scene-plan.json
 schemas/script-contract.json
 schemas/script-to-performance.json
 schemas/shot-plan.json
+schemas/skill-routing-plan.json
+schemas/skill-routing-request.json
 schemas/sound-asset.json
 schemas/story-bible.json
 schemas/timeline-manifest.json
@@ -249,6 +255,7 @@ scripts/atomic_write.py
 scripts/generate-build-report.py
 scripts/generate-registries.py
 scripts/generate-report.py
+scripts/generate-routing-catalog.py
 scripts/sync-skills.sh
 scripts/timeline_policy.py
 scripts/validate-repo.py
@@ -334,6 +341,7 @@ tests/test_reports.py
 tests/test_routing.py
 tests/test_schemas.py
 tests/test_session_authorization.py
+tests/test_skill_router.py
 tests/test_timeline_manifest.py
 ```
 
@@ -349,6 +357,7 @@ tests/test_timeline_manifest.py
 - `P0-SHELL` — bash -n tests/run-tests.sh — **PASS** (exit 0)
 - `P0-SCHEMA` — python3 scripts/validate-repo.py — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-registries.py --check — **PASS** (exit 0)
+- `CF-P1-002-CATALOG` — python3 scripts/generate-routing-catalog.py --check — **PASS** (exit 0)
 - `P0-SCHEMA` — python3 tests/test_schemas.py — **PASS** (exit 0)
 - `P0-ROUTING` — python3 tests/test_routing.py — **PASS** (exit 0)
 - `CF-P0-ROUTING-001` — python3 tests/test_routing.py — **PASS** (exit 0)
@@ -386,6 +395,13 @@ tests/test_timeline_manifest.py
 - `CF-P1-001-SESSION` — python3 tests/test_local_session_runtime.py — **PASS** (exit 0)
 - `CF-P1-001-AUTHZ` — python3 tests/test_session_authorization.py — **PASS** (exit 0)
 - `CF-P0-ATOMIC-001` — python3 tests/test_atomic_write.py — **PASS** (exit 0)
+- `CF-P1-002-CATALOG` — python3 tests/test_skill_router.py — **PASS** (exit 0)
+- `CF-P1-002-SCHEMA` — python3 tests/test_skill_router.py — **PASS** (exit 0)
+- `CF-P1-002-ROUTING` — python3 tests/test_skill_router.py — **PASS** (exit 0)
+- `CF-P1-002-CONFLICTS` — python3 tests/test_skill_router.py — **PASS** (exit 0)
+- `CF-P1-002-MODES` — python3 tests/test_skill_router.py — **PASS** (exit 0)
+- `CF-P1-002-PLAN` — python3 tests/test_skill_router.py — **PASS** (exit 0)
+- `CF-P1-002-SECURITY` — python3 tests/test_skill_router.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-report.py — **PASS** (exit 0)
 - `CF-INT-023` — python3 scripts/generate-report.py --check — **PASS** (exit 0)
@@ -480,4 +496,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-24 07:34 UTC.
+- Report generated: 2026-11-26 06:22 UTC.

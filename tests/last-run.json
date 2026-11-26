@@ -62,6 +62,12 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-002-CATALOG",
+      "command": "python3 scripts/generate-routing-catalog.py --check",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "P0-SCHEMA",
       "command": "python3 tests/test_schemas.py",
       "exit_code": 0,
@@ -280,6 +286,48 @@
     {
       "id": "CF-P0-ATOMIC-001",
       "command": "python3 tests/test_atomic_write.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-002-CATALOG",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-002-SCHEMA",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-002-ROUTING",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-002-CONFLICTS",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-002-MODES",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-002-PLAN",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-002-SECURITY",
+      "command": "python3 tests/test_skill_router.py",
       "exit_code": 0,
       "result": "PASS"
     },

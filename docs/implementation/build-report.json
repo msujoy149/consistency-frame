@@ -6,9 +6,9 @@
   "repository_url": "https://github.com/msujoy149/consistency-frame",
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
-  "branch": "feat/cf-p1-001-trusted-session",
-  "head_commit": "bfd9f35c7b47da0432dad22877f23e6fed6afef6",
-  "github_branch_head": "01c59f6b0ecd48f3dc9555f3f5bbcf60174d17bc",
+  "branch": "feat/cf-p1-002-skill-routing-runtime",
+  "head_commit": "080204562036a481580c8689fa11679f80108522",
+  "github_branch_head": "b2db48828b3e964eebca3fe585bff84bafb00dae",
   "status": "PASS",
   "changed_files": [
     ".github/workflows/p0-ci.yml",
@@ -52,18 +52,22 @@
     "docs/implementation/CF-WO-P0-014-corrections.md",
     "docs/implementation/CF-WO-P0-015-corrections.md",
     "docs/implementation/CF-WO-P1-001-corrections.md",
+    "docs/implementation/CF-WO-P1-002-corrections.md",
     "docs/implementation/CHECKSUMS.txt",
     "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
     "docs/implementation/build-report.json",
     "docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md",
+    "docs/runtime/SKILL_ROUTING_RUNTIME.md",
     "registry/adapters.json",
     "registry/features.json",
+    "registry/routing-catalog.json",
     "registry/skills.json",
     "registry/workflows.json",
     "release-manifest.json",
     "runtime/__init__.py",
     "runtime/authorization.py",
     "runtime/local_session.py",
+    "runtime/skill_router.py",
     "schemas/README.md",
     "schemas/approval.json",
     "schemas/build-report.json",
@@ -85,6 +89,8 @@
     "schemas/script-contract.json",
     "schemas/script-to-performance.json",
     "schemas/shot-plan.json",
+    "schemas/skill-routing-plan.json",
+    "schemas/skill-routing-request.json",
     "schemas/sound-asset.json",
     "schemas/story-bible.json",
     "schemas/timeline-manifest.json",
@@ -96,6 +102,7 @@
     "scripts/generate-build-report.py",
     "scripts/generate-registries.py",
     "scripts/generate-report.py",
+    "scripts/generate-routing-catalog.py",
     "scripts/sync-skills.sh",
     "scripts/timeline_policy.py",
     "scripts/validate-repo.py",
@@ -181,6 +188,7 @@
     "tests/test_routing.py",
     "tests/test_schemas.py",
     "tests/test_session_authorization.py",
+    "tests/test_skill_router.py",
     "tests/test_timeline_manifest.py"
   ],
   "ci": {
@@ -455,6 +463,55 @@
     {
       "id": "CF-P1-001-SESSION",
       "command": "python3 tests/test_local_session_runtime.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-002-CATALOG",
+      "command": "python3 scripts/generate-routing-catalog.py --check",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-002-CONFLICTS",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-002-MODES",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-002-PLAN",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-002-ROUTING",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-002-SCHEMA",
+      "command": "python3 tests/test_skill_router.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-002-SECURITY",
+      "command": "python3 tests/test_skill_router.py",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"

@@ -445,6 +445,39 @@ step-by-step order for every video, in §7).
   engine, script-to-performance generation, or the
   script-to-finished-video pipeline.
 
+## P1-002 Deterministic runtime skill router (2026-11-25)
+
+- **The router plans; it never generates.** `runtime/skill_router.py`
+  is the second P1 runtime component: it resolves skills and builds
+  deterministic workflow plans from structured requests, reading
+  only the compiled catalog `registry/routing-catalog.json` (built
+  by `scripts/generate-routing-catalog.py` from the matrix, graph,
+  and intent modes; standard-library only at runtime, PyYAML only
+  in the build-time compiler). No provider calls, no companion
+  invocation, no media generation, no persistence, no server, no
+  LLM classifier, no script-to-performance generation.
+- **Dependencies order, they never expand the selection.** A
+  dependent is never ready before a prerequisite that is also
+  selected, but selecting a skill never forces its dependencies
+  into the plan. A dependency that is not selected and does not
+  list the mode is recorded in the plan as resolved per mode scope
+  — never silently dropped, never invented. Precedence is a
+  tie-breaker only, never an exclusion.
+- **Conflicts are scoped, never global.** TC-1..TC-10 fire only in
+  their documented scope — same subject, same shot, same dialogue
+  line. Cross-shot and cross-subject combinations stay allowed, and
+  a blocked plan names the rule, the skills, the shot, the subject,
+  and the decision required; neither skill is ever silently removed.
+  TC-10 fails closed when a speaking subject's anatomy cannot be
+  established.
+- **Plans need an exact active session.** `build_workflow_plan`
+  accepts only an exact `LocalSession` verified by the P1-001
+  verifier; identity comes only from the session, and the plan
+  records only the session ID. UPLOAD_ONLY and REPORT_UPDATE_ONLY
+  never route production work. Full record:
+  `docs/implementation/CF-WO-P1-002-corrections.md`, and the
+  runtime contract in `docs/runtime/SKILL_ROUTING_RUNTIME.md`.
+
 ## Rules that always apply
 
 - A character's identity (face, eyes, nose, mouth, hands, feet) is
