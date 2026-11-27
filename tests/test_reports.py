@@ -128,7 +128,13 @@ def errors_for(schema, value):
 # (evidence/p1005/gap-map, evidence/p1005/local-execution-evidence,
 # evidence/p1005/vs-headers). Every other file this round touched
 # was already in the manifest from an earlier round.
-MANIFEST_EXPECTED_COUNT = 232
+# 233 since CF-WO-P1-005-R1 (2026-11-27): one genuinely new file —
+# the CI run #263 Windows-failure evidence record
+# (evidence/p1005/ci-263-windows-failure-note). The file entered the
+# manifest only once committed: the generator counts committed files,
+# so the pre-commit regen still showed 232. Every other file this
+# round touched was already in the manifest from an earlier round.
+MANIFEST_EXPECTED_COUNT = 233
 MANIFEST_EXCLUDED = ("release-manifest.json",
                      "docs/implementation/CHECKSUMS.txt")
 
