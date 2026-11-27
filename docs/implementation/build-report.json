@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p1-004-universal-production-brain",
-  "head_commit": "27d9fdd5e1b9714ae42ba2ec6b4ad0c1b2fa227e",
-  "github_branch_head": "cdc0cb50c2af99a1aa81dd8e108812456b0b0f72",
+  "head_commit": "6b9df31fd1d2d151fa74e2f29ae97e74342d5672",
+  "github_branch_head": "92bd038569989412c52e26ba80287f1c7a991daa",
   "status": "PASS",
   "changed_files": [
     ".gitattributes",
@@ -70,6 +70,7 @@
     "docs/runtime/PROVIDER_ADAPTERS.md",
     "docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md",
     "docs/runtime/SKILL_ROUTING_RUNTIME.md",
+    "evidence/p1005/ci-263-windows-failure-note.md",
     "evidence/p1005/gap-map.md",
     "evidence/p1005/local-execution-evidence.md",
     "evidence/p1005/vs-headers.txt",

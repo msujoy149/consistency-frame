@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-004-universal-production-brain",
-  "commit": "27d9fdd5e1b9714ae42ba2ec6b4ad0c1b2fa227e",
-  "github_branch_head": "cdc0cb50c2af99a1aa81dd8e108812456b0b0f72",
+  "commit": "6b9df31fd1d2d151fa74e2f29ae97e74342d5672",
+  "github_branch_head": "92bd038569989412c52e26ba80287f1c7a991daa",
   "files": [
     {
       "path": ".gitattributes",
@@ -22,8 +22,8 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "ab97feb5979a977495b6e474102895cd4db2267690fbe1674afe54585b484a8a",
-      "bytes": 59322
+      "sha256": "703b2d1c98123c2f03e5d15516d875580c12043021737fe092edddc7cec60785",
+      "bytes": 59974
     },
     {
       "path": "CHANGELOG.md",
@@ -142,8 +142,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "8849ca45902f4479e9a6362bdea6fd7cdb40ab77ea598e199c05283587099162",
-      "bytes": 32372
+      "sha256": "4d7bbb68b9ae1cafc681caeae6c02e6cfd9d2efaacf53a4301eed06e40569857",
+      "bytes": 32418
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -152,8 +152,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "0e12b0e4c14f6fb67ca59b403bd5dd1ed1a551a466515930405c5e48a7e44005",
-      "bytes": 67591
+      "sha256": "fd06d5f8d2cda03d1f7b494bc087b8bd6214ac84e8585adfac938436a3dd1454",
+      "bytes": 68157
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -247,8 +247,8 @@
     },
     {
       "path": "docs/implementation/CF-WO-P1-005-corrections.md",
-      "sha256": "4d39752a61168948ee8cf9f178152ba234e948b620b505f320b0cd617f932266",
-      "bytes": 13657
+      "sha256": "7510521b752c7e401841baac2721c62d9ed83bcab63c81556a4caec808cda9d3",
+      "bytes": 16028
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
@@ -257,8 +257,8 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "0244f32f54f50c28178e89b20007e8295563326730c28509fc21164efd80896c",
-      "bytes": 32157
+      "sha256": "f41a46e11ab787304ff733344882beb1ac131821a81414b1c2bccde5ebd049b2",
+      "bytes": 32210
     },
     {
       "path": "docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md",
@@ -294,6 +294,11 @@
       "path": "docs/runtime/SKILL_ROUTING_RUNTIME.md",
       "sha256": "eb78278310d59b982e5973f9f7e02ff55cfbdf0d75933c306171060f0603e7cd",
       "bytes": 24408
+    },
+    {
+      "path": "evidence/p1005/ci-263-windows-failure-note.md",
+      "sha256": "d32b8d107872828f2a31e11cf80d9e94a8c316e9e648fdbe00b4b297714395af",
+      "bytes": 2653
     },
     {
       "path": "evidence/p1005/gap-map.md",
@@ -602,8 +607,8 @@
     },
     {
       "path": "scripts/atomic_write.py",
-      "sha256": "76d01b29e2e495d8eece67915664dd180561c18d7b255ee9b4ca683c49b207ab",
-      "bytes": 3822
+      "sha256": "63055b099caf1b4af5e5bce4ed460a5db384f51d9f07f4ebbe1c073ca5f904ae",
+      "bytes": 4553
     },
     {
       "path": "scripts/generate-build-report.py",
@@ -1112,8 +1117,8 @@
     },
     {
       "path": "tests/test_production_store.py",
-      "sha256": "e9018f9fbfcd7ec6c828b57b590a2bc3b46746eea3b0b5f3db745946e55b4937",
-      "bytes": 14151
+      "sha256": "4bd8d6d9df4b96bab75cacf1d094da3501259a1fe8a2497239724d8958e44a4c",
+      "bytes": 17759
     },
     {
       "path": "tests/test_registries.py",
@@ -1122,8 +1127,8 @@
     },
     {
       "path": "tests/test_reports.py",
-      "sha256": "8ca187bec507a6f613e737b991d0d6ae04ec4a3c102c8afb90d47e743628a922",
-      "bytes": 29786
+      "sha256": "a38180a595dbbdb596818681c940efbb79cf0fc19ce7b3bd6362f6e38a91b3dd",
+      "bytes": 30177
     },
     {
       "path": "tests/test_routing.py",
@@ -1548,5 +1553,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-27T09:35:40Z"
+  "generated_at_utc": "2026-11-27T12:15:53Z"
 }
