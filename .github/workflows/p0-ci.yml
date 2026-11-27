@@ -13,7 +13,7 @@
 # natively on Windows (Python 3.10 and 3.12), including the real
 # multiprocessing first-run race test under the spawn start
 # method. The Windows job produces no last-run.json artefact —
-# its evidence is the job log (the four suites' PASS lines).
+# its evidence is the job log (the suites' PASS lines).
 name: P0 CI
 
 on:
@@ -129,3 +129,33 @@ jobs:
         # hide the others.
         shell: bash
         run: python tests/test_script_to_performance_runtime.py
+      - name: Run identity resolution suite
+        # CF-WO-P1-005: the identity resolution suite (P1-004-R1)
+        # and the production-store suite (P1-004-R1) are
+        # platform-independent runtime code; both are Windows-safe
+        # in structure (symlink tests catch OSError; POSIX mode
+        # checks are gated on os.name == "posix"). One step per
+        # suite: a failure in one suite must not hide the others.
+        shell: bash
+        run: python tests/test_identity_resolution.py
+      - name: Run production store suite
+        shell: bash
+        run: python tests/test_production_store.py
+      - name: Run media execution suite
+        # CF-WO-P1-005: the media execution state machine, the
+        # adapter suites and the timeline delivery suite are
+        # platform-independent runtime code. The FFmpeg suite and
+        # the pipeline group skip (exit 0, no conformance claimed)
+        # where ffmpeg/ffprobe are absent; the OpenMontage group
+        # skips where the component checkout is absent.
+        shell: bash
+        run: python tests/test_media_execution.py
+      - name: Run FFmpeg adapter suite
+        shell: bash
+        run: python tests/test_ffmpeg_adapter.py
+      - name: Run media adapters suite
+        shell: bash
+        run: python tests/test_media_adapters.py
+      - name: Run timeline delivery suite
+        shell: bash
+        run: python tests/test_timeline_delivery.py
