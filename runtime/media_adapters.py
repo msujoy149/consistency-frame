@@ -36,8 +36,16 @@ Local adapters (real tools in this repository):
 External adapters (WO §6): :class:`HttpProviderAdapter` is a
 mockable HTTP lifecycle adapter driven by one declarative spec per
 live provider (endpoint, auth, async pattern, cancellation,
-retrieval, charge behaviour). Specs come from the current official
-provider documentation audited 2026-11-27 (see
+retrieval, charge behaviour). Every outbound URL is validated by
+the provider URL security policy
+(:mod:`runtime.provider_url_policy`): explicit per-provider API
+and output origin allowlists, no IP-literal or private/loopback
+destination, every redirect hop validated, authorization headers
+never forwarded across origins, and the default transport pins
+the connection to a validated resolved address (DNS-rebinding
+protection against this client; see the policy module for the
+exact boundary). Specs come from the current official provider
+documentation audited 2026-11-27 (see
 ``docs/runtime/PROVIDER_ADAPTERS.md`` and the provider registry);
 Sora has no adapter — the service was shut down 2026-09-24 and
 its registry record is FAILED, so it is never matched. No live
@@ -60,10 +68,18 @@ import shutil
 import subprocess
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 import wave
 
-from .media_execution import MediaAdapter, MediaExecutionError
+from .media_execution import (
+    FAILURE_CODES, MediaAdapter, MediaExecutionError)
+from .provider_contracts import get_contract
+from .provider_url_policy import (
+    AUTH_HEADER_NAMES, MAX_DOWNLOAD_BYTES, MAX_RESPONSE_BYTES,
+    ProviderURLPolicy, safe_url_for_message,
+    validate_endpoint_segment, validate_model_id,
+    validate_provider_job_id)
 
 # Canonical component pins (setup.sh). The adapters verify the
 # installed checkout against these; a mismatch fails closed.
@@ -80,13 +96,121 @@ VOICESTUDIO_DEFAULT_BASE_URL = "http://127.0.0.1:3900"
 # silently falling back to a wrong language.
 OMNIVOICE_LANGUAGES = ("bn", "en", "hi")
 
+# VoiceStudio /generate capability map (CF-WO-P1-005-R4, workstream
+# D), verified against the BUNDLED backend in
+# components/voicestudio (audit 2026-11-27; the adapter never
+# modifies VoiceStudio internals). The backend's /generate
+# endpoint accepts: text, language, ref_audio, ref_text,
+# instruct, design_recipe, duration, num_step, guidance_scale,
+# speed (float, default 1.0), t_shift, denoise,
+# postprocess_output, layer_penalty_factor,
+# position_temperature, class_temperature, emo_text, emo_vector,
+# emotion (max 200 chars), profile_id, seed, effect_preset,
+# wav_bits, engine, preset_voice, max_chunk_chars, crossfade_ms,
+# pronounce, stream. It has NO pitch field and NO pauses field.
+# For the adapter's engine (omnivoice): instruct_vocabulary is
+# "tags" (fixed English tags only), supports_emotion is False so
+# emotion control is "none" and apply_span_emotion IGNORES the
+# emotion, and supports_voice_design applies only when no
+# reference audio is used — this adapter always sends profile
+# reference audio. So of the voice-binding controls, only
+# instruct (from the execution context) and a numeric speaking
+# pace (as speed) are genuinely forwarded; the rest are refused
+# with a precise capability error instead of being silently
+# dropped. The supported list is what the registry advertises
+# (schemas/provider-capability.json: voice_controls).
+VOICESTUDIO_SUPPORTED_VOICE_CONTROLS = ("instruct", "speed", "seed")
+VOICESTUDIO_UNSUPPORTED_VOICE_CONTROLS = {
+    "emotional_delivery":
+        "the bundled OmniVoice engine has no emotion control "
+        "(supports_emotion is False); the backend accepts an "
+        "emotion field but it has no effect on this engine",
+    "pitch_range":
+        "the /generate endpoint has no pitch field",
+    "pauses":
+        "the /generate endpoint has no pauses field",
+    "vocal_characteristics":
+        "voice design applies only when no reference audio is "
+        "used; this adapter always sends profile reference audio, "
+        "so vocal characteristics cannot be forwarded",
+    "pronunciation_preferences":
+        "the backend pronounce flag applies a stored user "
+        "pronunciation dictionary, not per-request free-text "
+        "preferences",
+}
+
+
+def _voice_control_present(value) -> bool:
+    """True when a voice control carries a value to forward."""
+    return value is not None and value != "" and value != {}
+
+
+def _parse_voice_speed(value):
+    """Numeric speed for a speaking_pace value, or None.
+
+    Accepts a finite positive number, or a string parsing to
+    one. Descriptive labels ("natural", "slow") have no
+    documented numeric mapping and return None — they are
+    refused, never guessed.
+    """
+    import math
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        number = float(value)
+    elif isinstance(value, str):
+        try:
+            number = float(value.strip())
+        except ValueError:
+            return None
+    else:
+        return None
+    if not math.isfinite(number) or number <= 0:
+        return None
+    return number
+
+
+def _voice_control_errors(binding, context) -> list:
+    """Capability errors for unsupported voice controls.
+
+    Every control the binding asks for that the bundled
+    OmniVoice engine cannot honour is an error here — the
+    adapter refuses instead of silently dropping it. A
+    descriptive speaking_pace with no numeric mapping is an
+    error too, and a non-string instruct is one.
+    """
+    errors: list[str] = []
+    binding = binding or {}
+    context = context or {}
+    for field, reason in \
+            VOICESTUDIO_UNSUPPORTED_VOICE_CONTROLS.items():
+        if _voice_control_present(binding.get(field)):
+            errors.append(
+                f"voice control {field!r} is not supported by the "
+                f"bundled OmniVoice engine: {reason}")
+    pace = binding.get("speaking_pace")
+    if _voice_control_present(pace) and _parse_voice_speed(pace) is None:
+        errors.append(
+            "voice control 'speaking_pace' "
+            f"{pace!r} cannot be mapped to a numeric speed: the "
+            "bundled OmniVoice engine accepts a speed number only, "
+            "and no documented mapping exists for descriptive "
+            "pace labels")
+    instruct = context.get("instruct")
+    if instruct is not None and not isinstance(instruct, str):
+        errors.append(
+            "voice control 'instruct' must be a string of fixed "
+            "backend tags, not "
+            f"{type(instruct).__name__}")
+    return errors
+
 # Allow-listed credential environment variables, one per external
 # provider. No other variable is ever read as a secret.
 PROVIDER_SECRET_ENV = {
     "provider-openai-image": "OPENAI_API_KEY",
     "provider-gemini-image": "GEMINI_API_KEY",
     "provider-fal-image": "FAL_KEY",
-    "provider-veo-video": "GEMINI_API_KEY",
+    "provider-veo-video": "VERTEX_ACCESS_TOKEN",
     "provider-kling-video": "KLING_API_KEY",
     "provider-ltx-video": "LTX_API_KEY",
     "provider-elevenlabs-voice": "ELEVENLABS_API_KEY",
@@ -144,6 +268,70 @@ def _contained_path(root: str, path: str) -> str:
         raise MediaExecutionError(
             f"path {path!r} escapes the workspace root")
     return candidate
+
+
+_REFERENCE_MIME_BY_EXT = {
+    ".png": "image/png", ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg", ".webp": "image/webp",
+    ".wav": "audio/wav", ".mp3": "audio/mpeg",
+}
+
+
+def _normalize_reference(root: str, value, field: str) -> dict:
+    """Normalize one context reference to ``{"mime", "base64"}``.
+
+    Accepts the already-loaded form or ``{"path"}`` (a
+    workspace-contained file, read here — references never travel
+    as bytes inside a task packet). Anything else fails closed.
+    """
+    import base64
+
+    if not isinstance(value, dict):
+        raise MediaExecutionError(
+            f"{field} must be an object with mime/base64 or path")
+    if isinstance(value.get("base64"), str) \
+            and isinstance(value.get("mime"), str):
+        return {"mime": value["mime"], "base64": value["base64"]}
+    path = value.get("path")
+    if not isinstance(path, str) or not path:
+        raise MediaExecutionError(
+            f"{field} needs mime/base64 or a workspace path")
+    real = _contained_path(root, path)
+    ext = os.path.splitext(real)[1].lower()
+    mime = _REFERENCE_MIME_BY_EXT.get(ext)
+    if mime is None:
+        raise MediaExecutionError(
+            f"{field} file type {ext!r} is not a supported "
+            "reference type")
+    with open(real, "rb") as handle:
+        raw = handle.read()
+    return {"mime": mime,
+            "base64": base64.b64encode(raw).decode("ascii")}
+
+
+def _normalize_references(root: str, context) -> dict:
+    """Return a copy of ``context`` with reference entries loaded.
+
+    ``reference_images`` (a list), ``first_frame``,
+    ``last_frame`` and ``reference_audio`` (single entries) are
+    normalized; every other context key passes through
+    unchanged. The provider contract then validates counts,
+    mimes and sizes for its own provider.
+    """
+    context = dict(context or {})
+    refs = context.get("reference_images")
+    if refs is not None:
+        if not isinstance(refs, list):
+            raise MediaExecutionError(
+                "reference_images must be a list")
+        context["reference_images"] = [
+            _normalize_reference(root, ref, "reference_images")
+            for ref in refs]
+    for key in ("first_frame", "last_frame", "reference_audio"):
+        if context.get(key) is not None:
+            context[key] = _normalize_reference(
+                root, context[key], key)
+    return context
 
 
 def _run_argv(argv, *, timeout_s, secrets=(), cwd=None) -> tuple:
@@ -370,7 +558,28 @@ class FFmpegAdapter(MediaAdapter):
                     argv += [flag, str(value)]
             size = options.get("size")
             if size:
+                # A size is exactly WxH; anything else is refused
+                # before it can reach the ffmpeg command line.
+                if not isinstance(size, str) \
+                        or not re.fullmatch(r"[0-9]+x[0-9]+", size):
+                    raise MediaExecutionError(
+                        f"ffmpeg size option {size!r} is not WxH",
+                        code="local-tool-error")
+            fps = options.get("fps")
+            if fps is not None:
+                if isinstance(fps, bool) \
+                        or not isinstance(fps, (int, float)) \
+                        or fps <= 0 or fps > 240:
+                    raise MediaExecutionError(
+                        "ffmpeg fps option must be a positive "
+                        "number no greater than 240",
+                        code="local-tool-error")
+            if size and fps is not None:
+                argv += ["-vf", f"scale={size},fps={fps},setsar=1"]
+            elif size:
                 argv += ["-s", str(size)]
+            elif fps is not None:
+                argv += ["-vf", f"fps={fps}"]
             argv.append(out_real)
             return argv, out_real
         if operation == "assemble":
@@ -463,6 +672,17 @@ class VoiceStudioAdapter(MediaAdapter):
     BLOCKED with the exact start command, and the operator starts
     it. The default OmniVoice weights are CC-BY-NC — commercial /
     monetized production is refused in preflight.
+
+    Voice controls (R4-D, verified against the bundled backend
+    2026-11-27): ``instruct`` (fixed English tags only, from the
+    execution context) and a numeric ``speaking_pace`` (as the
+    backend's ``speed``) are forwarded; ``seed`` is forwarded.
+    ``emotional_delivery``, ``pitch_range``, ``pauses``,
+    ``vocal_characteristics`` and ``pronunciation_preferences``
+    have no backend field on this engine and are refused with a
+    precise capability error in preflight and in translate —
+    never silently dropped. See
+    ``VOICESTUDIO_UNSUPPORTED_VOICE_CONTROLS``.
     """
 
     adapter_id = "adapter-voicestudio"
@@ -569,6 +789,10 @@ class VoiceStudioAdapter(MediaAdapter):
                 f"language {language!r} is not evidenced for the "
                 f"bundled OmniVoice engine (evidenced: "
                 f"{', '.join(OMNIVOICE_LANGUAGES)})")
+        # R4-D: unsupported voice controls fail preflight with a
+        # precise capability error instead of being silently
+        # dropped at submit time.
+        errors.extend(_voice_control_errors(binding, context))
         profile_id = binding.get("voice_profile_id")
         expected = context.get("voice_profile_id")
         if expected is not None and profile_id != expected:
@@ -594,13 +818,26 @@ class VoiceStudioAdapter(MediaAdapter):
         binding = (packet or {}).get("voice_binding") or {}
         dialogue = (packet or {}).get("canonical_instruction", "")
         text = binding.get("dialogue_text") or dialogue
-        request["voice_request"] = {
+        # R4-D: refuse unsupported controls here too, so a direct
+        # translate call can never silently drop them.
+        control_errors = _voice_control_errors(binding, context)
+        if control_errors:
+            raise MediaExecutionError(control_errors,
+                                     code="validation-failed")
+        voice_request = {
             "text": text,
             "language": binding.get("language"),
             "profile_id": binding.get("voice_profile_id"),
             "seed": binding.get("seed"),
             "dialogue_line_id": binding.get("dialogue_line_id"),
         }
+        instruct = (context or {}).get("instruct")
+        if isinstance(instruct, str) and instruct != "":
+            voice_request["instruct"] = instruct
+        pace = binding.get("speaking_pace")
+        if _voice_control_present(pace):
+            voice_request["speed"] = _parse_voice_speed(pace)
+        request["voice_request"] = voice_request
         return request
 
     def _multipart(self, fields, file_field=None, file_bytes=None,
@@ -641,6 +878,13 @@ class VoiceStudioAdapter(MediaAdapter):
             "profile_id": voice.get("profile_id"),
             "seed": (str(voice["seed"])
                      if voice.get("seed") is not None else None),
+            # R4-D: instruct (fixed backend tags) and speed (from
+            # a numeric speaking_pace) are the only voice
+            # controls this engine forwards. _multipart skips
+            # None values, so absent controls send nothing.
+            "instruct": voice.get("instruct"),
+            "speed": (str(voice["speed"])
+                      if voice.get("speed") is not None else None),
             "engine": self.engine,
         }
         file_bytes = None
@@ -872,27 +1116,35 @@ PROVIDER_SPECS = {
     "provider-openai-image": {
         "adapter_id": "adapter-openai-image",
         "api_version": "Images API (2026)",
-        "models": ["gpt-image-1.5", "gpt-image-2",
-                   "gpt-image-2.5-sunburst", "gpt-image-2.5-flare",
-                   "gpt-image-2.6-sunburst", "gpt-image-2.6-flare"],
+        "models": ["gpt-image-1-mini", "gpt-image-1.5", "gpt-image-2",
+                   "gpt-image-2-2026-04-21",
+                   "gpt-image-2.5-sunburst",
+                   "gpt-image-2.5-sunburst-2026-09-08",
+                   "gpt-image-2.5-flare",
+                   "gpt-image-2.5-flare-2026-09-08",
+                   "gpt-image-2.6-sunburst", "gpt-image-2.6-flare",
+                   "chatgpt-image-latest"],
         "documentation_url":
             "https://developers.openai.com/api/reference/ruby/"
             "resources/images/methods/generate",
         "documentation_status": "official",
         "submit": {"method": "POST",
                    "url": "https://api.openai.com/v1/images/generations"},
+        # R4-A: explicit origin allowlists. Output is base64 in the
+        # response body, so no output origin exists.
+        "api_origins": ["api.openai.com"],
+        "output_origins": [],
         "auth": {"env_var": "OPENAI_API_KEY", "header": "Authorization",
                  "scheme": "Bearer"},
         "async": False, "cancel": None, "retrieval": "base64-body",
         "charge_behaviour": "per token/request; current per-model "
-                            "pricing UNCONFIRMED (only gpt-image-1 "
-                            "rates were verified, and that model is "
-                            "shut down)",
-        "reference_images": "up to 10 on edits",
+                            "pricing UNCONFIRMED (not re-read "
+                            "2026-11-27)",
+        "reference_images": "up to 16 on edits",
         "async_behaviour": "synchronous",
         "cancellation_support": "none — synchronous",
         "output_retrieval": "base64 b64_json in the response",
-        "character_reference_limits": "up to 10 reference images on edits",
+        "character_reference_limits": "up to 16 reference images on edits",
         "aspect_ratios": ["1024x1024", "1536x1024", "1024x1536",
                           "auto"],
         "audio_support": False,
@@ -902,25 +1154,35 @@ PROVIDER_SPECS = {
         "api_version": "Interactions API (Api-Revision 2026-05-20)",
         "models": ["gemini-nano-banana-2.1",
                    "gemini-3.1-flash-lite-image",
-                   "gemini-3-pro-image"],
+                   "gemini-3-pro-image",
+                   # Deprecated 2026-10-06, no shutdown date
+                   # announced; still works.
+                   "gemini-3.1-flash-image"],
         "documentation_url":
             "https://aistudio.google.com/docs/image-generation",
         "documentation_status": "official",
         "submit": {"method": "POST",
                    "url": "https://generativelanguage.googleapis.com/"
                           "v1beta/interactions"},
+        # R4-A: output is base64 in the response body.
+        "api_origins": ["generativelanguage.googleapis.com"],
+        "output_origins": [],
         "auth": {"env_var": "GEMINI_API_KEY", "header": "x-goog-api-key",
                  "scheme": "key"},
         "async": False, "cancel": None, "retrieval": "base64-body",
         "charge_behaviour": "per image/token; Nano Banana 2.1 "
                             "≈ $0.0336 (1K) / $0.0504 (2K) / $0.113 "
                             "(4K) per image (secondary-quoted)",
-        "reference_images": "up to 14 (4 character max on 2.1)",
+        "reference_images": "up to 14 (2.1/3.1-flash-image: 10 "
+                            "objects + 4 characters; Pro: 6 objects "
+                            "+ 5 characters + 3 style)",
         "async_behaviour": "synchronous",
         "cancellation_support": "none — synchronous",
         "output_retrieval": "base64 in the response",
         "character_reference_limits":
-            "up to 14 reference images (4 character max on 2.1)",
+            "up to 14 reference images (2.1/3.1-flash-image: 10 "
+            "objects + 4 characters; Pro: 6 objects + 5 "
+            "characters + 3 style)",
         "aspect_ratios": ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5",
                           "5:4", "9:16", "16:9", "21:9"],
         "audio_support": False,
@@ -934,6 +1196,12 @@ PROVIDER_SPECS = {
         "documentation_status": "official",
         "submit": {"method": "POST",
                    "url": "https://queue.fal.run/{endpoint}"},
+        # R4-A: output is a signed URL on the fal.media CDN.
+        # Poll/cancel URLs come from the submit response and are
+        # validated against api_origins before use (the fal queue
+        # API returns status_url / cancel_url on submit).
+        "api_origins": ["queue.fal.run"],
+        "output_origins": ["fal.media"],
         "auth": {"env_var": "FAL_KEY", "header": "Authorization",
                  "scheme": "Key"},
         "async": True,
@@ -941,8 +1209,13 @@ PROVIDER_SPECS = {
         "retrieval": "cdn-url",
         "charge_behaviour": "per output from prepaid credits; "
                             "server errors (HTTP 500+) never charged; "
-                            "queue-wait time never charged",
-        "reference_images": "per-endpoint (up to 10 on some)",
+                            "queue-wait time never charged; a 422 may "
+                            "be charged if GPU time was spent; "
+                            "nano-banana-2 $0.08/image (2K 1.5x, 4K "
+                            "2x, 0.5K 0.75x)",
+        "reference_images": "not supported by the contract "
+                            "(reference-part serialization "
+                            "UNCONFIRMED; no upload flow)",
         "async_behaviour": "asynchronous queue with polling "
                            "(direct endpoints synchronous)",
         "cancellation_support": "PUT cancel_url — cancellation "
@@ -950,90 +1223,145 @@ PROVIDER_SPECS = {
         "output_retrieval": "fal.media CDN URL, available 7 days "
                             "or more",
         "character_reference_limits":
-            "per-endpoint (up to 10 on some)",
+            "not supported by the contract (see reference_images)",
         "aspect_ratios": ["per-model"],
         "audio_support": False,
     },
     "provider-veo-video": {
         "adapter_id": "adapter-veo-video",
-        "api_version": "Veo 3.1 (Gemini API preview IDs; Vertex GA IDs)",
-        "models": ["veo-3.1-generate-preview",
-                   "veo-3.1-fast-generate-preview",
-                   "veo-3.1-lite-generate-preview"],
+        "api_version": "Veo 3.1 (Vertex AI / Gemini Enterprise Agent Platform; -001 IDs)",
+        "models": ["veo-3.1-generate-001",
+                   "veo-3.1-fast-generate-001",
+                   "veo-3.1-lite-generate-001"],
         "documentation_url":
             "https://docs.cloud.google.com/gemini-enterprise-"
             "agent-platform/models/video/generate-videos-from-text",
         "documentation_status": "official",
         "submit": {"method": "POST",
-                   "url": "https://generativelanguage.googleapis.com/"
-                          "v1beta/models/{model}:predictLongRunning"},
-        "auth": {"env_var": "GEMINI_API_KEY", "header": "x-goog-api-key",
-                 "scheme": "key"},
-        "async": True, "cancel": None, "retrieval": "download",
-        "charge_behaviour": "per second of output, success only; "
-                            "Lite $0.05/s (720p), Fast $0.10/s (720p), "
-                            "Standard $0.40/s (720p) (secondary-quoted)",
-        "reference_images": "up to 3 (Standard/Fast; Lite: none)",
+                   "url": "https://us-central1-aiplatform.googleapis.com/"
+                          "v1/projects/{project_id}/locations/us-central1/"
+                          "publishers/google/models/{model}:"
+                          "predictLongRunning"},
+        # R4 follow-up: the Gemini API Veo preview IDs
+        # (veo-3.1-generate-preview and siblings) were shut down
+        # 2026-10-22. The live route is Vertex AI, authenticated
+        # with an OAuth Bearer token (VERTEX_ACCESS_TOKEN), never
+        # an API key. The poll is a POST to the model's
+        # :fetchPredictOperation with the full operation name in
+        # the body; completion carries inline video bytes (no
+        # storageUri) or a GCS URI. A GCS URI cannot be
+        # downloaded: no GCS download origin is documented in
+        # the audit, so output_origins stays empty and the
+        # contract refuses GCS output explicitly.
+        "api_origins": ["us-central1-aiplatform.googleapis.com"],
+        "output_origins": [],
+        "poll_template": "https://us-central1-aiplatform.googleapis.com/"
+                         "v1/projects/{project_id}/locations/us-central1/"
+                         "publishers/google/models/{model}:"
+                         "fetchPredictOperation",
+        "auth": {"env_var": "VERTEX_ACCESS_TOKEN",
+                 "header": "Authorization", "scheme": "Bearer"},
+        "async": True, "cancel": None, "retrieval": "inline-bytes",
+        "charge_behaviour": "per 1 count (official unit; the "
+                            "pricing page does not define 1 count); "
+                            "per-second pricing is SECONDARY-only "
+                            "and is NOT encoded",
+        "reference_images": "up to 3 (Standard/Fast; Lite image "
+                            "input UNCONFIRMED — Vertex docs "
+                            "conflict: model page says not "
+                            "supported, capabilities row says "
+                            "supported)",
         "async_behaviour": "asynchronous long-running operation "
-                           "with polling",
-        "cancellation_support": "UNCONFIRMED — no cancel operation "
-                                "found in the official docs",
-        "output_retrieval": "download URL / GCS URI on completion",
+                           "with polling (fetchPredictOperation)",
+        "cancellation_support": "none — no cancel operation is "
+                                "documented for Vertex Veo",
+        "output_retrieval": "inline video bytes in the "
+                            "fetchPredictOperation response when no "
+                            "storageUri is set; a GCS URI output "
+                            "cannot be downloaded (download origin "
+                            "UNCONFIRMED)",
         "character_reference_limits":
-            "up to 3 reference images (Standard/Fast; Lite: none)",
+            "up to 3 reference images (Standard/Fast; Lite image "
+            "input UNCONFIRMED)",
         "aspect_ratios": ["16:9", "9:16"],
         "audio_support": True,
         "duration_limits": {"min_seconds": 4, "max_seconds": 8},
     },
     "provider-kling-video": {
         "adapter_id": "adapter-kling-video",
-        "api_version": "Kling AI Open Platform (legacy + model-in-path)",
-        "models": ["kling-4.0", "kling-4.0-flash", "kling-3.0",
-                   "kling-3.0-turbo"],
+        "api_version": "Kling AI Open Platform (legacy /v1 design)",
+        "models": ["kling-v1", "kling-v1-6", "kling-v2-master",
+                   "kling-v2-1-master", "kling-v2-5-turbo",
+                   "kling-v2-6"],
         "documentation_url":
             "https://app.klingai.com/global/dev/document-api",
         "documentation_status": "secondary-quoting-official",
         "submit": {"method": "POST",
                    "url": "https://api-singapore.klingai.com/v1/videos/"
                           "text2video"},
+        # R4-A: poll is the legacy per-task URL for the submit
+        # design this spec uses (secondary-quoting-official).
+        # R4-B: the result URL host is UNCONFIRMED — output_origins
+        # stays empty, so a download fails closed until confirmed.
+        # The newer path-based design (Kling 4.0 etc.) is NOT
+        # implemented: its prompt field was UNCONFIRMED at audit
+        # time.
+        "api_origins": ["api-singapore.klingai.com"],
+        "output_origins": [],
+        "poll_template": "https://api-singapore.klingai.com/v1/videos/"
+                         "text2video/{job_id}",
         "auth": {"env_var": "KLING_API_KEY", "header": "Authorization",
                  "scheme": "Bearer"},
         "async": True, "cancel": None, "retrieval": "url",
         "charge_behaviour": "prepaid resource packages (units); "
-                            "failed tasks do not consume credits",
-        "reference_images": "keyframes / multi-image / Omni",
+                            "failed-task charging UNCONFIRMED",
+        "reference_images": "image-to-video first/last frame "
+                            "(base64, <= 10 MB)",
         "async_behaviour": "asynchronous task_id with polling and "
                            "callback_url",
-        "cancellation_support": "UNCONFIRMED — no cancel operation "
-                                "found in the official docs",
+        "cancellation_support": "none — no cancel endpoint is "
+                                "documented (secondary-quoting-"
+                                "official)",
         "output_retrieval": "result URL, 30 days",
         "character_reference_limits":
-            "keyframes / multi-image / Omni",
+            "image-to-video first/last frame",
         "aspect_ratios": ["16:9", "9:16", "1:1"],
         "audio_support": True,
-        "duration_limits": {"min_seconds": 3, "max_seconds": 30},
+        "duration_limits": {"min_seconds": 5, "max_seconds": 10},
     },
     "provider-ltx-video": {
         "adapter_id": "adapter-ltx-video",
         "api_version": "LTX API v2 (async; V1 retired 2026-10-26)",
-        "models": ["ltx-2-5-fast", "ltx-2-5-pro"],
+        "models": ["ltx-2-5-fast", "ltx-2-5-pro", "ltx-2-3-fast",
+                   "ltx-2-3-pro"],
         "documentation_url": "https://docs.ltx.io/welcome",
         "documentation_status": "secondary-quoting-official",
         "submit": {"method": "POST",
                    "url": "https://api.ltx.io/v2/{endpoint}"},
+        # R4-A: poll is GET /v2/{endpoint}/{id} (official docs).
+        # The video_url host is UNCONFIRMED — output_origins stays
+        # empty, so a download fails closed until confirmed.
+        "api_origins": ["api.ltx.io"],
+        "output_origins": [],
+        "poll_template": "https://api.ltx.io/v2/{endpoint}/{job_id}",
         "auth": {"env_var": "LTX_API_KEY", "header": "Authorization",
                  "scheme": "Bearer"},
         "async": True, "cancel": None, "retrieval": "url",
         "charge_behaviour": "per second of output video (per second "
                             "of input audio for audio-to-video); "
-                            "Fast $0.09/s (720p); failed-task charging "
-                            "UNCONFIRMED",
-        "reference_images": "one first-frame image",
+                            "Fast $0.09/s (720p); prepaid credits are "
+                            "reserved before generation and charged "
+                            "only on success — a failed job releases "
+                            "its reservation",
+        "reference_images": "one first-frame image (data URI, "
+                            "<= 7 MB)",
         "async_behaviour": "asynchronous only (V2) with job ID "
                            "polling",
-        "cancellation_support": "UNCONFIRMED — no cancel operation "
-                                "found in the official docs",
-        "output_retrieval": "video_url, available under 24 hours",
+        "cancellation_support": "none found in the official docs "
+                                "(UNCONFIRMED)",
+        "output_retrieval": "video_url, available under 24 hours "
+                            "(signed URL expires 1 hour after it is "
+                            "checked)",
         "character_reference_limits": "one first-frame image",
         "aspect_ratios": ["16:9", "9:16", "1:1"],
         "audio_support": True,
@@ -1050,6 +1378,9 @@ PROVIDER_SPECS = {
         "submit": {"method": "POST",
                    "url": "https://api.elevenlabs.io/v1/text-to-speech/"
                           "{voice_id}"},
+        # R4-A: output is raw audio bytes in the response.
+        "api_origins": ["api.elevenlabs.io"],
+        "output_origins": [],
         "auth": {"env_var": "ELEVENLABS_API_KEY", "header": "xi-api-key",
                  "scheme": "key"},
         "async": False, "cancel": None, "retrieval": "response-body",
@@ -1071,13 +1402,16 @@ PROVIDER_SPECS = {
         "adapter_id": "adapter-lyria-music",
         "api_version": "Lyria 3.5 via Interactions API "
                        "(Api-Revision 2026-05-20)",
-        "models": ["lyria-3.5"],
+        "models": ["lyria-3.5", "lyria-3-clip-preview"],
         "documentation_url":
             "https://aistudio.google.com/docs/music-generation",
         "documentation_status": "official",
         "submit": {"method": "POST",
                    "url": "https://generativelanguage.googleapis.com/"
                           "v1beta/interactions"},
+        # R4-A: output is base64 in the response body.
+        "api_origins": ["generativelanguage.googleapis.com"],
+        "output_origins": [],
         "auth": {"env_var": "GEMINI_API_KEY", "header": "x-goog-api-key",
                  "scheme": "key"},
         "async": False, "cancel": None, "retrieval": "base64-body",
@@ -1101,15 +1435,43 @@ class HttpProviderAdapter(MediaAdapter):
 
     Driven by a declarative spec from :data:`PROVIDER_SPECS`. The
     transport is injectable: tests pass a mock transport, and the
-    default transport is urllib with a timeout. No live paid call
-    is made without explicit user authorization and a credential in
-    the allow-listed environment variable; without a credential the
-    adapter fails closed with ``credential-missing``.
+    default transport is the pinned HTTPS transport from
+    :mod:`runtime.provider_url_policy` (DNS resolution validated
+    once, connection pinned to a validated public address, TLS
+    SNI/certificate validation against the hostname). No live paid
+    call is made without explicit user authorization and a
+    credential in the allow-listed environment variable; without a
+    credential the adapter fails closed with
+    ``credential-missing``.
+
+    URL security (R4-A): every request URL — submit, poll,
+    cancel, download — is validated against the spec's explicit
+    origin allowlists before any byte is sent; every redirect hop
+    is validated the same way; provider authorization headers are
+    kept only on same-origin hops. For downloads they are sent
+    only when the download URL's host is the provider's own API
+    origin (no current provider has a documented API-origin
+    download, so in practice no download receives them; the
+    rule stays for any future provider that does); a signed
+    CDN download URL never receives them. A forbidden destination
+    is refused before the transport is ever called for that hop.
+
+    Provider contracts (R4-B): the request body, the submit
+    response parsing, the poll/cancel/response parsing and the
+    error classification come from the provider's contract in
+    :mod:`runtime.provider_contracts` — one exact contract per
+    provider, audited against the official docs 2026-11-27. No
+    generic ``{model, prompt}`` payload is ever built; a request
+    that was not built by a contract is refused. Reference
+    assets arrive through the execution context (``{"mime",
+    "base64"}`` or a workspace ``{"path"}``) and are normalized
+    here before the contract validates them for its provider.
     """
 
     def __init__(self, spec, *, workspace_root, timeout_s=120,
-                 max_download_bytes=512 * 1024 * 1024,
-                 transport=None):
+                 max_download_bytes=MAX_DOWNLOAD_BYTES,
+                 max_response_bytes=MAX_RESPONSE_BYTES,
+                 transport=None, url_policy=None, resolver=None):
         self.spec = spec
         self.provider_id = spec.get("provider_id", "")
         self.adapter_id = spec.get("adapter_id", "")
@@ -1117,7 +1479,13 @@ class HttpProviderAdapter(MediaAdapter):
         self.workspace_root = workspace_root
         self.timeout_s = timeout_s
         self.max_download_bytes = max_download_bytes
+        self.max_response_bytes = max_response_bytes
         self.transport = transport
+        self.url_policy = url_policy or ProviderURLPolicy(
+            api_origins=spec.get("api_origins") or (),
+            output_origins=spec.get("output_origins") or (),
+            resolver=resolver, timeout_s=timeout_s,
+            max_response_bytes=max_response_bytes)
 
     def capabilities(self) -> dict:
         operations = []
@@ -1151,40 +1519,157 @@ class HttpProviderAdapter(MediaAdapter):
             errors.extend(exc.errors)
         return errors
 
-    def _request(self, method, url, *, headers=None, body=None):
-        """One HTTP call via the injected transport or urllib.
+    def _single_hop(self, method, url, *, headers=None, body=None,
+                    purpose="api", stream_to=None):
+        """One HTTP hop, no redirects.
 
-        Returns (status, headers dict, body bytes). A transport
-        failure after the request was sent is submission-uncertain.
+        Returns ``(status, headers, body)`` where ``body`` is bytes
+        — except when ``stream_to`` is a file handle, where the
+        body is a live ``http.client.HTTPResponse`` (real
+        transport) or bytes (mock transport) and the caller must
+        stream-or-discard it and close it before deciding the hop
+        is final. A transport failure after the request was sent
+        is submission-uncertain. A response larger than the cap is
+        refused before it is returned or written.
         """
         if self.transport is not None:
             try:
-                return self.transport(method, url, headers=headers,
-                                      body=body)
+                status, resp_headers, resp_body = self.transport(
+                    method, url, headers=headers, body=body)
             except MediaExecutionError:
                 raise
             except Exception as exc:  # noqa: BLE001 - transport guard
                 raise MediaExecutionError(
                     f"provider request failed: {_redact(str(exc))}",
                     code="submission-uncertain")
-        request = urllib.request.Request(url, data=body, method=method)
-        for key, value in (headers or {}).items():
-            request.add_header(key, value)
-        try:
-            with urllib.request.urlopen(
-                    request, timeout=self.timeout_s) as response:
-                return (response.status,
-                        {k.lower(): v for k, v in
-                         response.headers.items()},
-                        response.read())
-        except urllib.error.HTTPError as exc:
-            return (exc.code,
-                    {k.lower(): v for k, v in exc.headers.items()},
-                    exc.read())
-        except (urllib.error.URLError, TimeoutError, OSError) as exc:
-            raise MediaExecutionError(
-                f"provider request failed: {_redact(str(exc))}",
-                code="submission-uncertain")
+            resp_body = resp_body or b""
+            if len(resp_body) > self.max_response_bytes \
+                    and stream_to is None:
+                raise MediaExecutionError(
+                    "provider response exceeds the size limit",
+                    code="validation-failed")
+            return (status,
+                    {k.lower(): v for k, v
+                     in (resp_headers or {}).items()},
+                    resp_body)
+        return self.url_policy.pinned_request(
+            method, url, purpose=purpose, headers=headers, body=body,
+            raw_response=(stream_to is not None))
+
+    @staticmethod
+    def _close_body(body) -> None:
+        """Close a live HTTPResponse body, if that is what it is."""
+        close = getattr(body, "close", None)
+        if callable(close):
+            try:
+                close()
+            except Exception:  # noqa: BLE001 - close is best-effort
+                pass
+
+    def _stream_body(self, body, stream_to) -> None:
+        """Write one final-hop body to the download file, capped."""
+        written = 0
+        if hasattr(body, "read"):
+            while True:
+                chunk = body.read(1024 * 1024)
+                if not chunk:
+                    break
+                written += len(chunk)
+                if written > self.max_download_bytes:
+                    raise MediaExecutionError(
+                        "download exceeds the size limit",
+                        code="local-tool-error")
+                stream_to.write(chunk)
+        else:
+            body = body or b""
+            for offset in range(0, len(body), 1024 * 1024):
+                chunk = body[offset:offset + 1024 * 1024]
+                written += len(chunk)
+                if written > self.max_download_bytes:
+                    raise MediaExecutionError(
+                        "download exceeds the size limit",
+                        code="local-tool-error")
+                stream_to.write(chunk)
+
+    def _request(self, method, url, *, headers=None, body=None,
+                 purpose="api", stream_to=None):
+        """One HTTP request with a validated redirect loop.
+
+        The starting URL and EVERY redirect hop are validated
+        against the policy for ``purpose`` before the transport is
+        called for that hop, so a forbidden destination is never
+        requested. Authorization headers are kept only while the
+        hop stays on the origin the request started from; they are
+        stripped on any cross-origin hop. For ``"output"``
+        downloads they are kept only when the download URL's host
+        is one of the provider's own API origins (no current
+        provider has a documented API-origin download, so in
+        practice no download receives them); a signed CDN download
+        URL never receives them. A
+        303 turns the request into a GET with no body; 307/308
+        keep method and body. At most ``MAX_REDIRECTS`` redirects
+        are followed. When ``stream_to`` is given, a hop's body is
+        written to the file only once the hop is known to be final
+        — a redirect hop's body is discarded, never written.
+        """
+        current_url = url
+        current_method = method
+        current_headers = dict(headers or {})
+        current_body = body
+        if purpose == "output":
+            parsed_start = self.url_policy.validate_url(
+                current_url, purpose)
+            if parsed_start["host"] not in \
+                    self.url_policy.api_origins:
+                current_headers = {
+                    key: value for key, value in current_headers.items()
+                    if key.lower() not in AUTH_HEADER_NAMES}
+        origin = None
+        for hop in range(self.url_policy.max_redirects + 1):
+            parsed = self.url_policy.validate_url(current_url, purpose)
+            hop_origin = (parsed["host"], parsed["port"])
+            if origin is None:
+                origin = hop_origin
+            elif hop_origin != origin:
+                current_headers = {
+                    key: value
+                    for key, value in current_headers.items()
+                    if key.lower() not in AUTH_HEADER_NAMES}
+            status, resp_headers, resp_body = self._single_hop(
+                current_method, current_url, headers=current_headers,
+                body=current_body, purpose=purpose,
+                stream_to=stream_to)
+            if status not in (301, 302, 303, 307, 308):
+                if stream_to is not None:
+                    try:
+                        self._stream_body(resp_body, stream_to)
+                    finally:
+                        self._close_body(resp_body)
+                    return status, resp_headers, b""
+                return status, resp_headers, resp_body
+            location = (resp_headers or {}).get("location")
+            # A redirect hop's body is never download content.
+            self._close_body(resp_body)
+            if not location:
+                if stream_to is not None:
+                    return status, resp_headers, b""
+                return status, resp_headers, resp_body
+            if hop >= self.url_policy.max_redirects:
+                raise MediaExecutionError(
+                    "provider request exceeded the redirect limit",
+                    code="validation-failed")
+            # Validate the next hop BEFORE following it: a
+            # redirect to a forbidden destination is refused
+            # here, and the transport is never called for it.
+            next_url = urllib.parse.urljoin(current_url, location)
+            self.url_policy.validate_url(next_url, purpose)
+            if status == 303:
+                current_method = "GET"
+                current_body = None
+            current_url = next_url
+        raise MediaExecutionError(
+            "provider request exceeded the redirect limit",
+            code="validation-failed")
 
     def _auth_headers(self) -> dict:
         spec_auth = self.spec.get("auth") or {}
@@ -1196,136 +1681,288 @@ class HttpProviderAdapter(MediaAdapter):
         return {header: f"{scheme} {secret}"}
 
     def translate(self, packet, context) -> dict:
+        """Build the provider request from the packet + context.
+
+        The request is built by the provider's contract
+        (:mod:`runtime.provider_contracts`) — never a generic
+        ``{model, prompt}`` payload. Reference assets in the
+        context are normalized here (``{"path"}`` entries are
+        read from the workspace) and validated by the contract
+        for its own provider. The built request — including the
+        contract's ``context_updates`` — is stored in the
+        translated packet under ``contract_request``; submit
+        refuses a packet that was not built by a contract.
+        """
         request = super().translate(packet, context)
-        request["provider_request"] = {
-            "model": (context or {}).get("model")
-                     or (self.spec.get("models") or [None])[0],
-            "prompt": packet.get("canonical_instruction", ""),
-        }
+        model = packet.get("model") or (context or {}).get("model") \
+            or (self.spec.get("models") or [None])[0]
+        if model is None:
+            raise MediaExecutionError(
+                f"{self.provider_id}: packet has no model")
+        context = _normalize_references(self.workspace_root,
+                                        context or {})
+        contract = get_contract(self.provider_id)
+        built = contract.build_request(packet, context, model)
+        request["contract_request"] = built
+        request["context"] = {**context, **built["context_updates"]}
+        request["request"] = {
+            "model": built["model"], "body": built["body"],
+            "content_type": built["content_type"],
+            "headers": built["headers"],
+            "url_values": built["url_values"],
+            "query": built["query"]}
         return request
 
+    def _submit_url(self, built) -> str:
+        """The submit URL: the contract's URL, or the spec template
+        with the contract's validated URL values substituted.
+
+        Template values travel inside the submit URL: each one is
+        validated as a safe path token before substitution, so a
+        hostile model/endpoint/voice id cannot smuggle a path
+        traversal or a second host into the request.
+        """
+        url = built.get("url")
+        if url is not None:
+            return url
+        url = (self.spec.get("submit") or {}).get("url", "")
+        values = built.get("url_values") or {}
+        for var, value in values.items():
+            placeholder = "{" + var + "}"
+            if placeholder not in url:
+                continue
+            if var == "model":
+                token = validate_model_id(value)
+            elif var == "endpoint":
+                token = validate_endpoint_segment(value)
+            else:
+                token = validate_provider_job_id(value)
+            url = url.replace(placeholder, token)
+        if "{" in url or "}" in url:
+            raise MediaExecutionError(
+                f"provider {self.provider_id} submit URL has an "
+                "unfilled template placeholder",
+                code="validation-failed")
+        query = built.get("query") or {}
+        if query:
+            separator = "&" if "?" in url else "?"
+            url = url + separator + urllib.parse.urlencode(query)
+        return url
+
+    def _classify_provider_error(self, status, raw_body):
+        """(code, message) for a provider HTTP error response."""
+        contract = get_contract(self.provider_id)
+        kind, detail, _retryable = contract.parse_error_response(
+            status, raw_body)
+        code = kind if kind in FAILURE_CODES else "provider-error"
+        return code, f"{self.provider_id} request failed ({kind}): " \
+                     f"{detail}"
+
     def submit(self, request, context) -> dict:
-        submit_spec = self.spec.get("submit") or {}
-        url = submit_spec.get("url", "")
-        url = url.replace("{model}",
-                          (request.get("provider_request") or {})
-                          .get("model", ""))
-        url = url.replace("{endpoint}",
-                          (context or {}).get("endpoint", ""))
-        url = url.replace("{voice_id}",
-                          (context or {}).get("voice_id", ""))
-        headers = self._auth_headers()
-        headers["Content-Type"] = "application/json"
-        body = json.dumps(
-            request.get("provider_request") or {}).encode("utf-8")
+        """Submit; parse the provider's submit response by contract."""
+        contract = get_contract(self.provider_id)
+        built = (request or {}).get("contract_request")
+        if not isinstance(built, dict) \
+                or not isinstance(built.get("body"), (dict, bytes)):
+            raise MediaExecutionError(
+                f"{self.provider_id}: submit refused — the packet "
+                "was not translated by its provider contract "
+                "(no contract_request)")
+        shown = (request or {}).get("request") or {}
+        if shown.get("body") != built["body"]:
+            raise MediaExecutionError(
+                f"{self.provider_id}: submit refused — the request "
+                "body does not match the contract-built request")
+        context = _normalize_references(self.workspace_root,
+                                        context or {})
+        ctx = dict((request or {}).get("context") or {})
+        ctx.update(context)
+        ctx.update(built.get("context_updates") or {})
+        url = self._submit_url(built)
+        self.url_policy.validate_url(url, "api")
+        headers = dict(self._auth_headers())
+        headers.update(built.get("headers") or {})
+        content_type = built.get("content_type")
+        body = built["body"]
+        if content_type == "application/json":
+            body = json.dumps(body).encode("utf-8")
+            headers["Content-Type"] = "application/json"
+        elif isinstance(content_type, str) and content_type.startswith(
+                "multipart/form-data"):
+            # The contract already encoded the multipart body
+            # (OpenAI edits); the boundary travels in the content
+            # type. The body must be bytes, never rebuilt here.
+            if not isinstance(body, (bytes, bytearray)):
+                raise MediaExecutionError(
+                    f"{self.provider_id}: contract returned a "
+                    "multipart body that is not bytes",
+                    code="local-tool-error")
+            headers["Content-Type"] = content_type
+        else:
+            raise MediaExecutionError(
+                f"{self.provider_id}: unsupported contract content "
+                f"type {content_type!r}")
+        method = (self.spec.get("submit") or {}).get("method", "POST")
         try:
-            status, _headers, resp_body = self._request(
-                submit_spec.get("method", "POST"), url,
-                headers=headers, body=body)
+            status, resp_headers, resp_body = self._request(
+                method, url, headers=headers, body=body,
+                purpose="api")
         except MediaExecutionError:
             raise
         if status >= 400:
-            detail = _redact(resp_body.decode("utf-8", "replace"))
+            code, message = self._classify_provider_error(
+                status, resp_body)
+            raise MediaExecutionError(message, code=code)
+        if not contract.is_async:
+            return self._finish_sync(contract, resp_body,
+                                     resp_headers, ctx)
+        try:
+            data = json.loads(resp_body.decode("utf-8"))
+        except ValueError:
             raise MediaExecutionError(
-                f"provider {self.provider_id} submit returned HTTP "
-                f"{status}: {detail}",
-                code="provider-error")
-        if self.spec.get("async"):
-            try:
-                data = json.loads(resp_body.decode("utf-8"))
-            except ValueError:
-                raise MediaExecutionError(
-                    f"provider {self.provider_id} returned "
-                    "unparseable async submit response",
-                    code="malformed-output")
-            job_id = (data.get("request_id") or data.get("id")
-                      or data.get("task_id")
-                      or (data.get("name") or "").split("/")[-1])
-            if not job_id:
-                raise MediaExecutionError(
-                    f"provider {self.provider_id} async submit "
-                    "returned no job id",
-                    code="malformed-output")
-            return {"provider_job_id": str(job_id), "completed": False,
-                    "output": None, "failure": None}
-        return self._finish_sync(resp_body, context)
+                f"provider {self.provider_id} returned unparseable "
+                "async submit response",
+                code="malformed-output")
+        if not isinstance(data, dict):
+            raise MediaExecutionError(
+                f"provider {self.provider_id} returned a "
+                "non-object async submit response",
+                code="malformed-output")
+        result = contract.parse_submit_response(data, status, ctx)
+        output = result.get("output")
+        if output is not None:
+            # Synchronous completion delivered through the submit
+            # path (a contract whose submit response is JSON
+            # carrying the output).
+            out_rel = self._save_output_bytes(
+                output["raw"], output["ext"], ctx)
+            artifact = self.verify_output(out_rel, None, ctx)
+            return {"provider_job_id": result.get("job_id"),
+                    "completed": True, "output": artifact,
+                    "failure": None}
+        return {"provider_job_id": result.get("job_id"),
+                "completed": False, "output": None, "failure": None}
 
-    def _finish_sync(self, resp_body, context) -> dict:
-        """Save a synchronous response body as the output artifact."""
-        retrieval = self.spec.get("retrieval")
-        execution_id = (context or {}).get("execution_id") or "output"
-        ext = {"base64-body": ".bin", "response-body": ".bin"}.get(
-            retrieval, ".bin")
-        if retrieval == "base64-body":
-            try:
-                data = json.loads(resp_body.decode("utf-8"))
-            except ValueError:
-                raise MediaExecutionError(
-                    f"provider {self.provider_id} returned "
-                    "unparseable response",
-                    code="malformed-output")
-            import base64
-            blob = None
-            for key in ("b64_json", "data", "audio"):
-                value = data.get(key)
-                if isinstance(value, str):
-                    blob = value
-                    break
-                if isinstance(value, list) and value:
-                    first = value[0]
-                    if isinstance(first, dict):
-                        blob = (first.get("b64_json")
-                                or first.get("data"))
-                    elif isinstance(first, str):
-                        blob = first
-                    if blob:
-                        break
-            if not blob:
-                raise MediaExecutionError(
-                    f"provider {self.provider_id} response carried "
-                    "no base64 output",
-                    code="malformed-output")
-            try:
-                raw = base64.b64decode(blob, validate=True)
-            except Exception:
-                raise MediaExecutionError(
-                    f"provider {self.provider_id} response carried "
-                    "invalid base64 output",
-                    code="malformed-output")
-        else:
-            raw = resp_body
+    def _save_output_bytes(self, raw, ext, ctx) -> str:
+        """Write verified output bytes under outputs/; return the
+        workspace-relative path."""
         if not raw:
             raise MediaExecutionError(
-                f"provider {self.provider_id} returned no output "
-                "bytes",
+                f"{self.provider_id} returned no output bytes",
                 code="malformed-output")
+        execution_id = (ctx or {}).get("execution_id") or "output"
         out_rel = os.path.join("outputs", f"{execution_id}{ext}")
         out_real = _contained_path(self.workspace_root, out_rel)
         os.makedirs(os.path.dirname(out_real), exist_ok=True)
         with open(out_real, "wb") as handle:
             handle.write(raw)
-        artifact = self.verify_output(out_rel, None, context)
+        return out_rel
+
+    def _finish_sync(self, contract, resp_body, headers, ctx) -> dict:
+        """Save a synchronous response's output bytes (verified).
+
+        The contract decodes the provider's bytes (JSON-wrapped
+        base64 for OpenAI/Gemini/Lyria, raw bytes for
+        ElevenLabs); the file is verified by the size and hash
+        checks in :meth:`verify_output`.
+        """
+        raw, ext = contract.extract_sync_output(resp_body, headers)
+        out_rel = self._save_output_bytes(raw, ext, ctx)
+        artifact = self.verify_output(out_rel, None, ctx)
         return {"provider_job_id": None, "completed": True,
                 "output": artifact, "failure": None}
 
-    def poll(self, provider_job_id, context) -> dict:
-        if not self.spec.get("async"):
+    def _poll_request(self, provider_job_id, context):
+        """(method, url, body) for one poll of an async job.
+
+        The contract rebuilds it from the documented endpoint
+        template + the validated job id (Veo's full Vertex
+        operation name → a POST to :fetchPredictOperation with
+        the operation name in the body, Kling's per-task URL,
+        LTX's per-endpoint URL). Where the provider has no
+        rebuildable template (fal), a ``status_url`` returned by
+        the provider on submit is accepted ONLY after the policy
+        validates it against this provider's API origins; it is
+        never used unvalidated. No status/cancellation endpoint
+        is invented. A job id the contract cannot use fails
+        closed here, before any request — the transport is never
+        called for it.
+        """
+        if not isinstance(provider_job_id, str) \
+                or not provider_job_id:
             raise MediaExecutionError(
-                f"adapter {self.adapter_id} serves a synchronous "
-                "provider and does not implement poll")
+                "provider job id is required",
+                code="validation-failed")
+        contract = get_contract(self.provider_id)
+        request = contract.build_poll_request(provider_job_id,
+                                              context)
+        if request is not None:
+            method, url, body = request
+            self.url_policy.validate_url(url, "api")
+            return method, url, body
+        validate_provider_job_id(provider_job_id)
         status_url = (context or {}).get("status_url")
         if not status_url:
             raise MediaExecutionError(
-                "async poll needs a status_url in the context",
+                "async poll needs a rebuildable poll URL from the "
+                "provider contract or a status_url in the context",
                 code="local-tool-error")
-        headers = self._auth_headers()
-        status, _headers, resp_body = self._request(
-            "GET", status_url, headers=headers)
-        if status >= 400:
+        self.url_policy.validate_url(status_url, "api")
+        return "GET", status_url, None
+
+    def _cancel_url(self, provider_job_id, context) -> str:
+        """Build the cancel URL, or refuse when none is documented.
+
+        The contract rebuilds it where the provider has a
+        template; otherwise a submit-returned ``cancel_url``
+        validated against the provider's API origins. Providers
+        without documented cancellation stay explicitly
+        non-cancellable.
+        """
+        contract = get_contract(self.provider_id)
+        if not contract.supports_cancel:
             raise MediaExecutionError(
-                f"provider {self.provider_id} poll returned HTTP "
-                f"{status}",
-                code="provider-error")
+                f"provider {self.provider_id} offers no documented "
+                "cancellation",
+                code="local-tool-error")
+        if not isinstance(provider_job_id, str) \
+                or not provider_job_id:
+            raise MediaExecutionError(
+                "provider job id is required",
+                code="validation-failed")
+        url = contract.build_cancel_url(provider_job_id, context)
+        if url is not None:
+            self.url_policy.validate_url(url, "api")
+            return url
+        validate_provider_job_id(provider_job_id)
+        cancel_url = (context or {}).get("cancel_url")
+        if not cancel_url:
+            raise MediaExecutionError(
+                "cancellation needs a cancel URL in the context",
+                code="local-tool-error")
+        self.url_policy.validate_url(cancel_url, "api")
+        return cancel_url
+
+    def poll(self, provider_job_id, context) -> dict:
+        contract = get_contract(self.provider_id)
+        if not contract.is_async:
+            raise MediaExecutionError(
+                f"adapter {self.adapter_id} serves a synchronous "
+                "provider and does not implement poll")
+        method, status_url, poll_body = self._poll_request(
+            provider_job_id, context)
+        headers = self._auth_headers()
+        body = None
+        if poll_body is not None:
+            body = json.dumps(poll_body).encode("utf-8")
+            headers["Content-Type"] = "application/json"
+        status, _headers, resp_body = self._request(
+            method, status_url, headers=headers, body=body,
+            purpose="api")
+        if status >= 400:
+            code, message = self._classify_provider_error(
+                status, resp_body)
+            raise MediaExecutionError(message, code=code)
         try:
             data = json.loads(resp_body.decode("utf-8"))
         except ValueError:
@@ -1333,107 +1970,191 @@ class HttpProviderAdapter(MediaAdapter):
                 f"provider {self.provider_id} poll returned "
                 "unparseable JSON",
                 code="malformed-output")
-        state = str(data.get("status") or data.get("state") or "")
-        done = state.upper() in ("COMPLETED", "SUCCEED", "SUCCEEDED",
-                                 "SUCCESS")
-        failed = state.upper() in ("FAILED", "FAILURE", "ERROR")
-        cancelled = state.upper() in ("CANCELLED", "CANCELED")
-        if done:
-            output_url = None
-            result = data.get("result") or data.get("output") or {}
-            if isinstance(result, dict):
-                videos = result.get("videos")
-                if isinstance(videos, list) and videos \
-                        and isinstance(videos[0], dict):
-                    output_url = videos[0].get("url")
-                output_url = (output_url or result.get("video_url")
-                              or result.get("url"))
-            if not output_url and isinstance(data.get("output"), str):
-                output_url = data["output"]
-            if not output_url:
-                raise MediaExecutionError(
-                    f"provider {self.provider_id} completed without "
-                    "an output URL",
-                    code="malformed-output")
-            local_path = self.retrieve(provider_job_id, output_url,
-                                       context)
-            artifact = self.verify_output(local_path, None, context)
+        if not isinstance(data, dict):
+            raise MediaExecutionError(
+                f"provider {self.provider_id} poll returned a "
+                "non-object response",
+                code="malformed-output")
+        parsed = contract.parse_poll_response(data)
+        state = parsed["state"]
+        if state == "running":
+            return {"provider_job_id": provider_job_id,
+                    "completed": False, "output": None,
+                    "failure": None}
+        if state == "cancelled":
+            return {"provider_job_id": provider_job_id,
+                    "completed": True, "output": None,
+                    "failure": {
+                        "code": "cancelled-by-provider",
+                        "message": parsed.get("error")
+                        or "provider reported the job cancelled",
+                        "retryable": False}}
+        if state == "failed":
+            return {"provider_job_id": provider_job_id,
+                    "completed": True, "output": None,
+                    "failure": {
+                        "code": "provider-error",
+                        "message": parsed.get("error")
+                        or "provider reported the job failed",
+                        "retryable": False}}
+        inline = parsed.get("output")
+        if inline is not None:
+            # Inline-bytes completion (Veo): the poll response
+            # carried the output bytes; no download happens.
+            out_rel = self._save_output_bytes(
+                inline["raw"], inline["ext"], context)
+            artifact = self.verify_output(out_rel, None, context)
             return {"provider_job_id": provider_job_id,
                     "completed": True, "output": artifact,
                     "failure": None}
-        if failed:
-            return {"provider_job_id": provider_job_id,
-                    "completed": True, "output": None,
-                    "failure": {"code": "provider-error",
-                                "message": "provider reported the "
-                                           "job failed",
-                                "retryable": False}}
-        if cancelled:
-            return {"provider_job_id": provider_job_id,
-                    "completed": True, "output": None,
-                    "failure": {"code": "cancelled-by-provider",
-                                "message": "provider reported the "
-                                           "job cancelled",
-                                "retryable": False}}
-        return {"provider_job_id": provider_job_id, "completed": False,
-                "output": None, "failure": None}
+        output_url = parsed.get("output_url")
+        response_url = parsed.get("response_url") \
+            or (context or {}).get("response_url")
+        if response_url is not None:
+            # Two-step result (fal): fetch the result document
+            # from the provider's response URL, then read its
+            # output URL. The URL is validated like any API URL.
+            result_data = self._get_json(response_url)
+            result_parsed = contract.parse_result_response(
+                result_data)
+            if result_parsed.get("error"):
+                return {"provider_job_id": provider_job_id,
+                        "completed": True, "output": None,
+                        "failure": {
+                            "code": "provider-error",
+                            "message": result_parsed["error"],
+                            "retryable": False}}
+            output_url = result_parsed.get("output_url")
+        if not output_url:
+            raise MediaExecutionError(
+                f"provider {self.provider_id} completed without "
+                "an output URL",
+                code="malformed-output")
+        local_path = self.retrieve(provider_job_id, output_url,
+                                   context)
+        artifact = self.verify_output(local_path, None, context)
+        return {"provider_job_id": provider_job_id,
+                "completed": True, "output": artifact,
+                "failure": None}
+
+    def _get_json(self, url) -> dict:
+        """GET a provider JSON document (fal result fetch)."""
+        self.url_policy.validate_url(url, "api")
+        status, _headers, resp_body = self._request(
+            "GET", url,
+            headers=self._auth_headers(), purpose="api")
+        if status >= 400:
+            code, message = self._classify_provider_error(
+                status, resp_body)
+            raise MediaExecutionError(message, code=code)
+        try:
+            data = json.loads(resp_body.decode("utf-8"))
+        except ValueError:
+            raise MediaExecutionError(
+                f"provider {self.provider_id} returned unparseable "
+                "JSON",
+                code="malformed-output")
+        if not isinstance(data, dict):
+            raise MediaExecutionError(
+                f"provider {self.provider_id} returned a "
+                "non-object response",
+                code="malformed-output")
+        return data
 
     def cancel(self, provider_job_id, context) -> bool:
-        cancel_spec = self.spec.get("cancel")
-        if not cancel_spec:
+        contract = get_contract(self.provider_id)
+        if not contract.supports_cancel:
             raise MediaExecutionError(
                 f"provider {self.provider_id} offers no documented "
                 "cancellation",
                 code="local-tool-error")
-        cancel_url = (context or {}).get("cancel_url")
-        if not cancel_url:
-            raise MediaExecutionError(
-                "cancellation needs a cancel_url in the context",
-                code="local-tool-error")
+        cancel_url = self._cancel_url(provider_job_id, context)
         headers = self._auth_headers()
-        status, _headers, _body = self._request(
-            cancel_spec.get("method", "PUT"), cancel_url,
-            headers=headers)
+        method = (self.spec.get("cancel") or {}).get("method", "PUT")
+        status, _headers, resp_body = self._request(
+            method, cancel_url, headers=headers, purpose="api")
         if status >= 400:
-            raise MediaExecutionError(
-                f"provider {self.provider_id} cancel returned HTTP "
-                f"{status}",
-                code="provider-error")
-        return True
+            code, message = self._classify_provider_error(
+                status, resp_body)
+            raise MediaExecutionError(message, code=code)
+        if resp_body:
+            try:
+                data = json.loads(resp_body.decode("utf-8"))
+            except ValueError:
+                raise MediaExecutionError(
+                    f"provider {self.provider_id} cancel returned "
+                    "unparseable JSON",
+                    code="malformed-output")
+            if not isinstance(data, dict):
+                raise MediaExecutionError(
+                    f"provider {self.provider_id} cancel returned "
+                    "a non-object response",
+                    code="malformed-output")
+        else:
+            data = {}
+        parsed = contract.parse_cancel_response(status, data)
+        return parsed.get("cancelled") is True
 
     def retrieve(self, provider_job_id, output_ref, context) -> str:
+        """Retrieve provider output to a local path; returns the path.
+
+        URL outputs are downloads through the URL security policy
+        (purpose ``"output"``): the URL is validated against the
+        provider's permitted output/CDN origins BEFORE any request
+        is made, authorization headers are sent only when the
+        download URL's host is the provider's own API origin
+        (no current provider has a documented API-origin
+        download, so in practice no download receives them — a
+        signed CDN download URL never receives them), every
+        redirect hop is validated, and the
+        body is streamed to disk under ``max_download_bytes``. A
+        failed or over-limit download leaves no partial file
+        behind. Non-URL references are workspace-contained local
+        paths, as before.
+        """
         if not isinstance(output_ref, str) or not output_ref:
             raise MediaExecutionError(
                 "retrieve needs a non-empty output reference",
                 code="local-tool-error")
         if output_ref.startswith(("http://", "https://")):
-            headers = {}
+            # Validate before any request — and before opening the
+            # destination file — so a malicious output URL can
+            # neither trigger a request nor create a file.
+            self.url_policy.validate_url(output_ref, "output")
             execution_id = (context or {}).get("execution_id") \
                 or "output"
             out_rel = os.path.join("outputs", execution_id)
             out_real = _contained_path(self.workspace_root, out_rel)
             os.makedirs(os.path.dirname(out_real), exist_ok=True)
             try:
-                with urllib.request.urlopen(
-                        output_ref,
-                        timeout=self.timeout_s) as response:
-                    size = 0
-                    with open(out_real, "wb") as handle:
-                        while True:
-                            chunk = response.read(1024 * 1024)
-                            if not chunk:
-                                break
-                            size += len(chunk)
-                            if size > self.max_download_bytes:
-                                raise MediaExecutionError(
-                                    "download exceeds the size limit",
-                                    code="local-tool-error")
-                            handle.write(chunk)
+                with open(out_real, "wb") as handle:
+                    status, _headers, _body = self._request(
+                        "GET", output_ref,
+                        headers=self._auth_headers(),
+                        purpose="output", stream_to=handle)
             except MediaExecutionError:
+                try:
+                    os.unlink(out_real)
+                except OSError:
+                    pass
                 raise
             except Exception as exc:  # noqa: BLE001 - download guard
+                try:
+                    os.unlink(out_real)
+                except OSError:
+                    pass
                 raise MediaExecutionError(
                     f"output download failed: {_redact(str(exc))}",
+                    code="provider-error")
+            if status >= 400:
+                try:
+                    os.unlink(out_real)
+                except OSError:
+                    pass
+                raise MediaExecutionError(
+                    "output download returned HTTP "
+                    f"{status} for "
+                    f"{safe_url_for_message(output_ref)}",
                     code="provider-error")
             return out_rel
         return _contained_path(self.workspace_root, output_ref)
@@ -1481,6 +2202,8 @@ __all__ = [
     "OPENMONTAGE_PIN",
     "VOICESTUDIO_DEFAULT_BASE_URL",
     "OMNIVOICE_LANGUAGES",
+    "VOICESTUDIO_SUPPORTED_VOICE_CONTROLS",
+    "VOICESTUDIO_UNSUPPORTED_VOICE_CONTROLS",
     "PROVIDER_SECRET_ENV",
     "resolve_provider_secret",
     "probe_opentimelineio",

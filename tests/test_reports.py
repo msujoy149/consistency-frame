@@ -134,7 +134,13 @@ def errors_for(schema, value):
 # manifest only once committed: the generator counts committed files,
 # so the pre-commit regen still showed 232. Every other file this
 # round touched was already in the manifest from an earlier round.
-MANIFEST_EXPECTED_COUNT = 233
+# 240 since CF-WO-P1-005-R4 (2026-11-27): seven genuinely new files —
+# two runtime modules (provider_url_policy, provider_contracts) and
+# five test files (test_provider_url_security,
+# test_provider_contracts, test_timeline_geometry,
+# test_voicestudio_controls, test_e2e_local). Every other file this
+# round touched was already in the manifest from an earlier round.
+MANIFEST_EXPECTED_COUNT = 240
 MANIFEST_EXCLUDED = ("release-manifest.json",
                      "docs/implementation/CHECKSUMS.txt")
 

@@ -315,6 +315,20 @@ providers:
     licence: "CC-BY-NC weights (noncommercial); application AGPL-3.0"
     commercial_use_approved: false
     commercial_use_reason: noncommercial_licence
+    # R4-D: voice controls the bundled OmniVoice engine genuinely
+    # forwards (verified against components/voicestudio 2026-11-27).
+    # Only "supported" controls are ever sent; "unsupported" ones
+    # are refused with a precise capability error, never silently
+    # dropped. Instruct carries fixed English tags only; speed is
+    # a number (from a numeric speaking_pace); seed is forwarded.
+    voice_controls:
+      supported: [instruct, speed, seed]
+      unsupported:
+        emotional_delivery: "the bundled OmniVoice engine has no emotion control (supports_emotion is False); the backend accepts an emotion field but it has no effect on this engine"
+        pitch_range: "the /generate endpoint has no pitch field"
+        pauses: "the /generate endpoint has no pauses field"
+        vocal_characteristics: "voice design applies only when no reference audio is used; this adapter always sends profile reference audio, so vocal characteristics cannot be forwarded"
+        pronunciation_preferences: "the backend pronounce flag applies a stored pronunciation dictionary, not per-request free-text preferences"
     adapter_version: "0.5.8"
     conformance:
       status: EXERCISED
@@ -398,7 +412,7 @@ providers:
     schema_version: "2.5"
     provider_type: image-generation
     operations: [generate-image]
-    input_constraints: ["text prompt; optional reference image"]
+    input_constraints: ["text prompt; no reference images (reference-part serialization UNCONFIRMED)"]
     output_constraints: ["image; limits per endpoint"]
     reference_image_capability: true
     character_reference_capability: true
@@ -418,10 +432,10 @@ providers:
     async_behaviour: "asynchronous queue with polling (direct endpoints synchronous)"
     cancellation_support: "PUT cancel_url — cancellation supported"
     output_retrieval: "fal.media CDN URL, available 7 days or more"
-    charge_behaviour: "per output from prepaid credits; server errors (HTTP 500+) never charged; queue-wait time never charged"
+    charge_behaviour: "per output from prepaid credits; server errors (HTTP 500+) never charged; queue-wait time never charged; a 422 may be charged if GPU time was spent; nano-banana-2 $0.08/image (2K 1.5x, 4K 2x, 0.5K 0.75x)"
     aspect_ratios: ["per-model"]
     audio_support: false
-    character_reference_limits: "per-endpoint (up to 10 on some)"
+    character_reference_limits: "not supported by the contract (see reference_images)"
     conformance:
       status: NOT_TESTED
       test_id: ""
@@ -432,7 +446,7 @@ providers:
     schema_version: "2.5"
     provider_type: image-generation
     operations: [generate-image]
-    input_constraints: ["text prompt; optional reference image (up to 10 on edits)"]
+    input_constraints: ["text prompt; optional reference image (up to 16 on edits)"]
     output_constraints: ["image; sizes 1024x1024 / 1536x1024 / 1024x1536 / auto"]
     reference_image_capability: true
     character_reference_capability: true
@@ -452,21 +466,21 @@ providers:
     async_behaviour: "synchronous"
     cancellation_support: "none — synchronous"
     output_retrieval: "base64 b64_json in the response"
-    charge_behaviour: "per token/request; current per-model pricing UNCONFIRMED (only gpt-image-1 rates were verified, and that model is shut down)"
+    charge_behaviour: "per token/request; current per-model pricing UNCONFIRMED (not re-read 2026-11-27)"
     aspect_ratios: ["1024x1024", "1536x1024", "1024x1536", "auto"]
     audio_support: false
-    character_reference_limits: "up to 10 reference images on edits"
+    character_reference_limits: "up to 16 reference images on edits"
     conformance:
       status: NOT_TESTED
       test_id: ""
-      evidence: "audited against the current official Images API docs 2026-11-27 (gpt-image-1 shut down 2026-10-23; current family gpt-image-1.5/2/2.5/2.6); no live paid call made"
+      evidence: "audited against the current official Images API docs 2026-11-27 (gpt-image-1 shut down 2026-10-23; current family gpt-image-1-mini/1.5/2/2.5/2.6); no live paid call made"
       last_verified: "2026-11-27"
-    evidence: "audited against the current official Images API docs 2026-11-27 (gpt-image-1 shut down 2026-10-23; current family gpt-image-1.5/2/2.5/2.6); no live paid call made"
+    evidence: "audited against the current official Images API docs 2026-11-27 (gpt-image-1 shut down 2026-10-23; current family gpt-image-1-mini/1.5/2/2.5/2.6); no live paid call made"
   - provider_id: provider-gemini-image
     schema_version: "2.5"
     provider_type: image-generation
     operations: [generate-image]
-    input_constraints: ["text prompt; optional reference image (up to 14; 4 character max on 2.1)"]
+    input_constraints: ["text prompt; optional reference image (up to 14; 2.1/3.1-flash-image: 10 objects + 4 characters; Pro: 6 objects + 5 characters + 3 style)"]
     output_constraints: ["image; aspect ratios 1:1 to 21:9"]
     reference_image_capability: true
     character_reference_capability: true
@@ -486,10 +500,10 @@ providers:
     async_behaviour: "synchronous"
     cancellation_support: "none — synchronous"
     output_retrieval: "base64 in the response"
-    charge_behaviour: "per image/token; Nano Banana 2.1 approx $0.0336 (1K) / $0.0504 (2K) / $0.113 (4K) per image (secondary-quoted)"
+    charge_behaviour: "per image/token; Nano Banana 2.1 ≈ $0.0336 (1K) / $0.0504 (2K) / $0.113 (4K) per image (secondary-quoted)"
     aspect_ratios: ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]
     audio_support: false
-    character_reference_limits: "up to 14 reference images (4 character max on 2.1)"
+    character_reference_limits: "up to 14 reference images (2.1/3.1-flash-image: 10 objects + 4 characters; Pro: 6 objects + 5 characters + 3 style)"
     conformance:
       status: NOT_TESTED
       test_id: ""
@@ -500,8 +514,8 @@ providers:
     schema_version: "2.5"
     provider_type: video-generation
     operations: [generate-video]
-    input_constraints: ["text prompt; optional starting reference image (up to 3 Standard/Fast; Lite: none)"]
-    output_constraints: ["video; 4/6/8 s; 720p/1080p (4K on 8 s Standard/Fast); native audio"]
+    input_constraints: ["text prompt; optional starting reference image (up to 3 Standard/Fast; Lite image input UNCONFIRMED); Vertex project id in context (vertex_project_id); us-central1 only; image input at most 20 MB"]
+    output_constraints: ["video; 4/6/8 s; 720p/1080p (4K on 8 s Standard; Fast 4K UNCONFIRMED); native audio; 24 fps"]
     reference_image_capability: true
     character_reference_capability: true
     audio_capability: false
@@ -513,30 +527,30 @@ providers:
     licence: proprietary-paid
     commercial_use_approved: false
     commercial_use_reason: unverified
-    adapter_version: "Veo 3.1 (Gemini API preview IDs; Vertex GA IDs)"
+    adapter_version: "Veo 3.1 (Vertex AI / Gemini Enterprise Agent Platform; -001 IDs)"
     documentation_url: "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/video/generate-videos-from-text"
     documentation_status: "official"
-    api_version: "Veo 3.1 (Gemini API preview IDs; Vertex GA IDs)"
-    async_behaviour: "asynchronous long-running operation with polling"
-    cancellation_support: "UNCONFIRMED — no cancel operation found in the official docs"
-    output_retrieval: "download URL / GCS URI on completion"
-    charge_behaviour: "per second of output, success only; Lite $0.05/s (720p), Fast $0.10/s (720p), Standard $0.40/s (720p) (secondary-quoted)"
+    api_version: "Veo 3.1 (Vertex AI / Gemini Enterprise Agent Platform; -001 IDs)"
+    async_behaviour: "asynchronous long-running operation with polling (fetchPredictOperation)"
+    cancellation_support: "none — no cancel operation is documented for Vertex Veo"
+    output_retrieval: "inline video bytes in the fetchPredictOperation response when no storageUri is set; a GCS URI output cannot be downloaded (download origin UNCONFIRMED)"
+    charge_behaviour: "per 1 count (official unit; the pricing page does not define 1 count); per-second pricing is SECONDARY-only and is NOT encoded; Fast 4K UNCONFIRMED (pricing lists it, model page does not)"
     aspect_ratios: ["16:9", "9:16"]
     audio_support: true
-    character_reference_limits: "up to 3 reference images (Standard/Fast; Lite: none)"
+    character_reference_limits: "up to 3 reference images (Standard/Fast; Lite image input UNCONFIRMED — Vertex docs conflict: model page says not supported, capabilities row says supported)"
     duration_limits: {min_seconds: 4, max_seconds: 8}
     conformance:
       status: NOT_TESTED
       test_id: ""
-      evidence: "audited against the current official Veo 3.1 docs 2026-11-27 (async long-running operation, native audio); no live paid call made"
+      evidence: "audited against the official Vertex AI Veo docs 2026-11-27 (Gemini Enterprise Agent Platform, -001 IDs; Gemini API preview IDs shut down 2026-10-22); GA-ID retirement wording UNCONFIRMED; no live paid call made"
       last_verified: "2026-11-27"
-    evidence: "audited against the current official Veo 3.1 docs 2026-11-27 (async long-running operation, native audio); no live paid call made"
+    evidence: "audited against the official Vertex AI Veo docs 2026-11-27 (Gemini Enterprise Agent Platform, -001 IDs; Gemini API preview IDs shut down 2026-10-22); GA-ID retirement wording UNCONFIRMED; no live paid call made"
   - provider_id: provider-kling-video
     schema_version: "2.5"
     provider_type: video-generation
     operations: [generate-video]
-    input_constraints: ["text prompt; optional starting reference image (keyframes / multi-image / Omni)"]
-    output_constraints: ["video; 3-30 s (4.0); 3-15 s (3.0)"]
+    input_constraints: ["text prompt; optional starting reference image (image-to-video first/last frame, base64, <= 10 MB)"]
+    output_constraints: ["video; 5 or 10 s (legacy /v1)"]
     reference_image_capability: true
     character_reference_capability: true
     audio_capability: false
@@ -548,18 +562,18 @@ providers:
     licence: proprietary-paid
     commercial_use_approved: false
     commercial_use_reason: unverified
-    adapter_version: "Kling AI Open Platform (legacy + model-in-path)"
+    adapter_version: "Kling AI Open Platform (legacy /v1 design)"
     documentation_url: "https://app.klingai.com/global/dev/document-api"
     documentation_status: "secondary-quoting-official"
-    api_version: "Kling AI Open Platform (legacy + model-in-path)"
+    api_version: "Kling AI Open Platform (legacy /v1 design)"
     async_behaviour: "asynchronous task_id with polling and callback_url"
-    cancellation_support: "UNCONFIRMED — no cancel operation found in the official docs"
+    cancellation_support: "none — no cancel endpoint is documented (secondary-quoting-official)"
     output_retrieval: "result URL, 30 days"
-    charge_behaviour: "prepaid resource packages (units); failed tasks do not consume credits"
+    charge_behaviour: "prepaid resource packages (units); failed-task charging UNCONFIRMED"
     aspect_ratios: ["16:9", "9:16", "1:1"]
     audio_support: true
-    character_reference_limits: "keyframes / multi-image / Omni"
-    duration_limits: {min_seconds: 3, max_seconds: 30}
+    character_reference_limits: "image-to-video first/last frame"
+    duration_limits: {min_seconds: 5, max_seconds: 10}
     conformance:
       status: NOT_TESTED
       test_id: ""
@@ -604,7 +618,7 @@ providers:
     schema_version: "2.5"
     provider_type: video-generation
     operations: [generate-video]
-    input_constraints: ["text prompt; optional first-frame image"]
+    input_constraints: ["text prompt; optional first-frame image (data URI, <= 7 MB)"]
     output_constraints: ["video; 6-20 s (Fast); 6/8/10 s (Pro)"]
     reference_image_capability: true
     character_reference_capability: true
@@ -622,9 +636,9 @@ providers:
     documentation_status: "secondary-quoting-official"
     api_version: "LTX API v2 (async; V1 retired 2026-10-26)"
     async_behaviour: "asynchronous only (V2) with job ID polling"
-    cancellation_support: "UNCONFIRMED — no cancel operation found in the official docs"
-    output_retrieval: "video_url, available under 24 hours"
-    charge_behaviour: "per second of output video (per second of input audio for audio-to-video); Fast $0.09/s (720p); failed-task charging UNCONFIRMED"
+    cancellation_support: "none found in the official docs (UNCONFIRMED)"
+    output_retrieval: "video_url, available under 24 hours (signed URL expires 1 hour after it is checked)"
+    charge_behaviour: "per second of output video (per second of input audio for audio-to-video); Fast $0.09/s (720p); prepaid credits are reserved before generation and charged only on success — a failed job releases its reservation"
     aspect_ratios: ["16:9", "9:16", "1:1"]
     audio_support: true
     character_reference_limits: "one first-frame image"
@@ -640,7 +654,7 @@ providers:
     provider_type: voice-tts
     operations: [generate-speech, clone-voice]
     input_constraints: ["text plus a voice id; reference audio for cloning"]
-    output_constraints: ["wav audio; single speaker per call"]
+    output_constraints: ["audio (default MP3); single speaker per call"]
     reference_image_capability: false
     character_reference_capability: false
     audio_capability: true
@@ -674,7 +688,7 @@ providers:
     provider_type: music
     operations: [generate-sound]
     input_constraints: ["text prompt describing the music"]
-    output_constraints: ["audio; full song up to ~3 minutes"]
+    output_constraints: ["audio; full song up to ~3 minutes (lyria-3.5); 30 s clip (lyria-3-clip-preview)"]
     reference_image_capability: false
     character_reference_capability: false
     audio_capability: true
@@ -701,6 +715,6 @@ providers:
     conformance:
       status: NOT_TESTED
       test_id: ""
-      evidence: "audited against the current official music-generation docs 2026-11-27 (Lyria 3.5, SynthID watermark); no live paid call made"
+      evidence: "audited against the current official music-generation docs 2026-11-27 (Lyria 3.5 + lyria-3-clip-preview, SynthID watermark); no live paid call made"
       last_verified: "2026-11-27"
-    evidence: "audited against the current official music-generation docs 2026-11-27 (Lyria 3.5, SynthID watermark); no live paid call made"
+    evidence: "audited against the current official music-generation docs 2026-11-27 (Lyria 3.5 + lyria-3-clip-preview, SynthID watermark); no live paid call made"

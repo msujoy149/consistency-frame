@@ -234,9 +234,17 @@ def validate_format_profile(profile) -> list[str]:
                         or not chapter.get("title"):
                     errors.append("format_profile.chapters: every "
                                   "chapter needs a title")
+    # R4-C: an explicit output geometry target (aspect ratio,
+    # width/height, frame rate) is validated by the delivery
+    # geometry rules; the lazy import keeps the orchestrator from
+    # depending on the delivery module at import time.
+    geometry = profile.get("output_geometry")
+    if geometry is not None:
+        from .timeline_delivery import validate_output_geometry
+        errors.extend(validate_output_geometry(geometry))
     for key in profile:
         if key not in ("delivery_profile", "duration_target_seconds",
-                       "chapters"):
+                       "chapters", "output_geometry"):
             errors.append(f"format_profile: unexpected field '{key}'")
     return errors
 

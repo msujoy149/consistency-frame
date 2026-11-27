@@ -423,3 +423,294 @@ leading-slash cases fail), so the pin does not depend on the CI
 runner's version. The delivery suite grows by the eight new
 checks. No previous check was removed or weakened. No generated
 values are quoted in this section.
+
+
+## 12. R4 — provider URL security, provider contracts, timeline geometry, VoiceStudio honesty, local end-to-end (2026-11-27)
+
+Five workstreams, one round. (A) Provider URL security /
+SSRF prevention. (B) Provider-specific contracts replacing
+the generic `{model, prompt}` payload. (C) Timeline geometry
+and media metadata: the hardcoded 16:9 / 24 FPS / 1920x1080
+fallback is gone. (D) VoiceStudio capability honesty. (E)
+Local execution + end-to-end regression with real FFmpeg.
+No generated values are quoted in this section.
+
+### 12.A URL security policy
+
+`runtime/provider_url_policy.py` (new in R4-A) is the single
+place outbound provider URLs are judged: explicit
+per-provider API and output/CDN origin allowlists, HTTPS only,
+no userinfo, no unapproved host or port, no IP-literal /
+loopback / private / link-local / multicast / reserved /
+unspecified destination, no cloud-metadata address, no
+alternate numeric address representation, no encoded
+path/hostname trick, no trailing-dot hostname. Every redirect
+hop is validated before it is followed (at most five hops);
+authorization headers are kept only on same-origin hops and
+are sent with a download only when the download URL's host is
+the provider's own API origin — a signed CDN download URL
+never receives them. The default transport pins the
+connection to a validated resolved address, so a hostname
+cannot resolve to a prohibited destination between validation
+and connection; that pinning protects this client against
+DNS-rebinding of its own requests and is documented as exactly
+that, never as a claim about the provider's infrastructure.
+A forbidden destination is refused before the transport is
+called for that hop, and no signed URL query string,
+credential, or authorization header is ever logged.
+
+Defect found while wiring workstream B: the adapter's submit
+path read a `canonical` key from `validate_url`, which returns
+parsed components (`scheme`, `host`, `port`, `path`, `query`)
+and has no such key — every redirect test failed with a
+`KeyError` before any request. Fixed by validating the URL and
+using the submitted string as-is. Regression: the redirect
+groups in the security suite, which fail without the fix.
+
+### 12.B Provider contracts
+
+`runtime/provider_contracts.py` (new in R4-B) holds one
+contract class per live provider — OpenAI image, Gemini image,
+fal image, Veo video, Kling video, LTX video, ElevenLabs
+voice, Lyria music — each implementing request construction,
+model selection, authentication, reference serialization,
+submit/poll/result/cancel parsing, and error classification.
+`HttpProviderAdapter` now builds every request through its
+provider's contract and refuses any packet that was not built
+by one, including a tampered body or a request built for
+another provider. Reference assets arrive through the
+execution context (`{"mime", "base64"}` or a workspace
+`{"path"}`) and are normalized inside the workspace root
+before the contract validates them.
+
+The official-doc audit (2026-11-27, table in
+`docs/runtime/PROVIDER_ADAPTERS.md`) corrected the specs:
+OpenAI gains `gpt-image-1-mini`, the `gpt-image-2-2026-04-21`
+and 2.5/2.6 snapshots, and `chatgpt-image-latest`, and edits
+take up to 16 images; Gemini gains the deprecated-but-working
+`gemini-3.1-flash-image` and the full reference-count
+breakdown; fal.ai refuses reference images (serialization
+UNCONFIRMED, no upload flow) and its poll statuses are only
+`IN_QUEUE` / `IN_PROGRESS` / `COMPLETED`; Veo job ids are the
+full operation name, its poll URL is the documented
+operations.get URL, its output downloads from the Gemini Files
+API on the same host (so auth is kept for that origin only),
+and it has no documented cancellation; Kling uses the legacy
+/v1 design (`kling-v1` … `kling-v2-6`, 5/10 s) — the newer
+path-based models are NOT implemented and failed-task
+charging is UNCONFIRMED; LTX gains `ltx-2-3-fast/pro` and
+charges only on success (a failed job releases its
+reservation); Lyria gains `lyria-3-clip-preview` (30 s) while
+WAV output is refused explicitly (fields unconfirmed). Sora
+stays FAILED and has no contract. The registry YAML and the
+generated `registry/providers.json` were re-synced to the
+corrected specs (shared-key diff zero after the sync).
+
+Defects found while wiring: (1) the fal contract dropped
+`response_url` from a COMPLETED poll response, so the adapter
+had no result document to fetch — fixed by carrying the URL
+from the poll response, with a context-carried URL as
+fallback; (2) the adapter called `parse_cancel_response`
+with swapped arguments and treated its dict return as a bool
+— fixed to `(status, data)` and `result["cancelled"]`;
+(3) `parse_result_response` returns a dict, not a bare URL —
+fixed at the call site. Regression: the new
+`CF-P1-005-R4-CONTRACTS` suite (161 checks) pins exact
+method, endpoint, auth header, and body per provider, the
+async lifecycles, cancellation only where supported,
+malformed responses, missing output, wrong content type,
+download failure, size limits, submission uncertainty, and
+the generic-payload refusal. Existing Veo/fal/Kling/LTX
+fixtures were updated to the new verified response shapes;
+no previous check was removed or weakened.
+
+Two honest limits stay. First, Kling and LTX completed jobs
+carry a result URL whose host is UNCONFIRMED, so the
+download fails closed until the host is confirmed — the
+contract tests pin that refusal rather than pretending the
+download works. Second, Kling, LTX and ElevenLabs are
+`secondary-quoting-official`, so `prepare()` (preflight)
+refuses them until the official documentation is verified;
+their contract tests call `translate()` directly, which
+exercises the contract without the live-call gate.
+
+### 12.C Timeline geometry
+
+The hardcoded aspect ratio 16:9, frame rate 24 and 1920x1080
+fallback is removed from `runtime/timeline_delivery.py`,
+`runtime/media_execution.py` and
+`runtime/production_orchestrator.py`. Final timeline geometry
+now comes from an explicit validated output profile or from
+verified media probe results: a profile target is validated
+against the generated media; with no target, geometry is
+derived from the verified media; incompatible source geometry
+is normalized through an explicit, recorded media operation
+to the selected target or rejected with a clear validation
+error; audio-only timelines invent no video geometry. Probe
+results carry width, height, aspect ratio, frame rate
+(rational representations handled), duration, codec and audio
+stream metadata, and a multi-clip timeline is never
+characterized from its first clip alone. The stale sentence
+in `docs/runtime/MEDIA_EXECUTION_RUNTIME.md` ("otherwise
+1920x1080") was corrected with the code. Regression:
+`CF-P1-005-R4-GEOMETRY` (80 checks) covers 9:16 1080x1920
+30 FPS, 16:9 1920x1080 24 and 30 FPS, 1:1 square, 4:3, mixed
+aspect ratios and frame rates, missing probe metadata,
+invalid output profile, audio-only timelines, explicit FFmpeg
+normalization, and failure when actual output does not match
+its declared profile.
+
+### 12.D VoiceStudio capability honesty
+
+The bundled VoiceStudio API was inspected (its internals
+never modified) to determine which controls the backend plus
+the selected engine genuinely support. The adapter now
+forwards exactly `instruct`, `speed` and `seed` to the
+documented backend fields, and refuses pitch, pace, emotion
+and pauses with a precise capability error instead of
+silently dropping them; the provider capability registry
+never advertises an unsupported feature. The OmniVoice
+CC-BY-NC commercial restriction is unchanged. Regression:
+`CF-P1-005-R4-VOICE` (41 checks).
+
+### 12.E Local end-to-end regression
+
+`tests/test_e2e_local.py` (`CF-P1-005-R4-E2E`, 28 checks)
+runs the validated packet → local media execution → verified
+output artifact (SHA-256 + byte size) → FFmpeg probe →
+timeline manifest → delivery validation → evidence record
+path on deterministic locally generated media. It exercises
+real FFmpeg/ffprobe operations and fails, never skips, when
+FFmpeg is absent; `.github/workflows/p0-ci.yml` now installs
+a known FFmpeg/ffprobe version in `p0-validate`, and the
+`windows-compat` job runs the new contracts suite alongside
+the geometry and voice suites (Python 3.10 and 3.12; the
+py313 path-policy simulation group is retained). No optional
+external provider became a mandatory dependency.
+
+### 12.F Open defect found by this round (not fixed here)
+
+The full suite currently fails at the `P0-SCHEMA` step:
+`scripts/validate-repo.py` reports
+`schemas/provider-capability.json.voice_controls.unsupported:
+object schema needs non-empty properties` and
+`additionalProperties must be false`. The R4-D schema addition
+declares `unsupported` as a free-form map (control name to
+refusal reason, `additionalProperties: {"type": "string"}`),
+but the validator's closed-object rule requires every object
+schema to carry non-empty `properties` and
+`additionalProperties: false`. The schema file and the
+validator are both untouched by this round, so the failure is
+pre-existing relative to workstreams B and F; it is recorded
+here rather than fixed by re-shaping D's schema or by
+weakening the validator inside a contracts/docs commit. Fix
+options for the D follow-up: restructure `unsupported` as an
+array of `{control, reason}` objects, enumerate the refused
+controls as fixed properties, or extend the validator to allow
+map-style objects with a typed `additionalProperties`.
+
+Closed by §12.G below (the enumerated-properties option was
+chosen).
+
+### 12.G Follow-up fixes — schema defect closed, Veo contract rewritten onto Vertex AI (2026-11-27)
+
+**Schema defect (§12.F) — closed.** `voice_controls.properties.unsupported`
+in `schemas/provider-capability.json` now carries explicit
+properties for exactly the five refused-control keys used by
+the VoiceStudio adapter constant
+`VOICESTUDIO_UNSUPPORTED_VOICE_CONTROLS` and by the registry
+record `provider-voicestudio-omnivoice` — `emotional_delivery`,
+`pauses`, `pitch_range`, `pronunciation_preferences`,
+`vocal_characteristics` — each `{"type": "string",
+"description": "<the same reason text the adapter/registry
+uses>"}`, with `additionalProperties: false`. The registry keys
+and the adapter constant are unchanged; the existing test
+`CF-P1-005-R4-VOICE-registry-unsupported` (registry keys equal
+adapter keys) still passes. `python3 scripts/validate-repo.py`
+now prints `VALIDATE-REPO: PASS`.
+
+One drift found while aligning the reason texts: the registry
+and the YAML record say "a stored pronunciation dictionary"
+for `pronunciation_preferences`, while the adapter constant
+says "a stored user pronunciation dictionary". Keys are what
+the test pins; values are not asserted equal anywhere. The
+wording difference is recorded here, not silently harmonised.
+
+**Veo contract — rewritten onto the live Vertex AI route.**
+The consolidated provider audit (two workers, direct reads of
+the official deprecations page, 2026-11-27) confirms the
+Gemini API Veo preview IDs (`veo-3.1-generate-preview`,
+`veo-3.1-fast-generate-preview`,
+`veo-3.1-lite-generate-preview`) were shut down 2026-10-22.
+The old contract used `generativelanguage.googleapis.com` +
+`:predictLongRunning` + `x-goog-api-key` + those IDs, a GET
+poll via `operations.get`, and a Gemini Files download. All
+of that is gone. The contract now uses, with only the audit's
+confirmed facts:
+
+- Models `veo-3.1-generate-001` (GA, Nov 17 2025),
+  `veo-3.1-fast-generate-001` (GA),
+  `veo-3.1-lite-generate-001` (Preview, Apr 2 2026).
+- Submit: `POST
+  https://us-central1-aiplatform.googleapis.com/v1/projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{MODEL_ID}:predictLongRunning`.
+- Auth: `Authorization: Bearer <OAuth token>`, credential from
+  the allow-listed environment variable `VERTEX_ACCESS_TOKEN`
+  only — never hardcoded, never logged. `GEMINI_API_KEY` is
+  removed from the Veo contract; the Gemini-image and Lyria
+  contracts keep `generativelanguage.googleapis.com` +
+  `x-goog-api-key` (live, untouched).
+- Poll: `POST .../models/{MODEL_ID}:fetchPredictOperation`
+  with `{"operationName": "<full operation name>"}` in the
+  body. The adapter gained a base-class `build_poll_request`
+  hook (default: GET of `build_poll_url`); Veo overrides it.
+  The job id is the full Vertex operation name
+  (`projects/<project>/locations/us-central1/publishers/google/models/<model>/operations/<id>`),
+  validated segment by segment (project id shape, model in
+  the live set, operation id shape).
+- Output: inline video bytes in the poll response (no
+  `storageUri`) are saved and verified; a GCS URI output is
+  refused explicitly, because the audit states no GCS download
+  origin — `output_origins` stays empty and the contract fails
+  closed rather than guessing a host.
+- Constraints enforced by the contract: us-central1 only,
+  `vertex_project_id` required from the execution context,
+  1–4 outputs, 4/6/8 s, 24 fps, at most 3 reference images
+  (Standard/Fast only), image input at most 20 MB. No cancel
+  operation is documented — cancellation stays explicitly
+  non-cancellable.
+- Pricing: the official unit is per "1 count" (the pricing
+  page does not define 1 count). No per-second price is
+  encoded anywhere; the earlier per-second figures were
+  SECONDARY-only.
+- The registry record `provider-veo-video`, the adapter spec,
+  and `docs/runtime/PROVIDER_ADAPTERS.md` were updated to the
+  Vertex route; conformance stays NOT_TESTED — mock tests alone
+  never promote readiness, and no live paid call was made.
+  Sora stays FAILED/unavailable; nothing was restored.
+
+Marked UNCONFIRMED in the registry and the docs: Fast 4K
+(pricing lists it, model page does not); Lite image input
+(model page says not supported, capabilities row says
+supported — the contract refuses Lite references until the
+conflict is resolved); GA-ID retirement wording (model page
+says Nov 17, 2026 or later, versions page says no date
+announced). `gemini-omni-1.2-flash` (the Gemini API
+replacement) needs its own audit and is out of scope for this
+round.
+
+The request `instances`/`parameters` body shape was carried
+over unchanged from the prior contract — it was NOT
+independently re-verified against the Vertex docs in this
+round; a live conformance run (still unauthorised) is the
+place that shape is proved.
+
+Tests: the Veo contract group grew from 16 to 20 checks — the
+dead preview IDs are refused, a missing or malformed Vertex
+project id is refused, the old Gemini-API operation-name form
+is refused, the poll is pinned to POST + `fetchPredictOperation`
++ `operationName` body, inline-bytes completion saves and
+verifies, and a GCS-only completion is refused with
+`validation-failed`. The Veo groups in the adapter and URL
+security suites were updated to the same Vertex shapes (7 and
+3 checks, counts unchanged). Gemini-image and Lyria tests are
+untouched.

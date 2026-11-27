@@ -422,16 +422,24 @@ def http_provider_group(tmpdir):
     # poll reports running, then failed, then cancelled.
     veo_spec = dict(PROVIDER_SPECS["provider-veo-video"])
     veo_spec["provider_id"] = "provider-veo-video"
-    old = set_env("GEMINI_API_KEY", "test-gemini-key")
+    old = set_env("VERTEX_ACCESS_TOKEN", "test-vertex-token")
     try:
+        veo_project = "test-project-1"
+        veo_operation = ("projects/" + veo_project
+                         + "/locations/us-central1/publishers/google/"
+                         "models/veo-3.1-generate-001/operations/"
+                         "veo-job-001")
+        veo_context = {"execution_id": "exec-veo-adapter-001",
+                       "vertex_project_id": veo_project}
+
         def veo_transport(method, url, *, headers=None, body=None):
             if method == "POST":
                 return (200, {},
                         json.dumps(
-                            {"name": "operations/veo-job-001"}
+                            {"name": veo_operation}
                         ).encode("utf-8"))
             return (200, {}, json.dumps(
-                {"status": "PROCESSING"}).encode("utf-8"))
+                {"done": False}).encode("utf-8"))
 
         adapter = HttpProviderAdapter(
             veo_spec, workspace_root=workspace,
@@ -439,24 +447,61 @@ def http_provider_group(tmpdir):
         packet = {"task_id": "task-vid-001",
                   "task_type": "video-generation",
                   "canonical_instruction": "a boat crosses the river"}
-        request = adapter.prepare(packet, {})
-        result = adapter.submit(request, {})
+        request = adapter.prepare(packet, veo_context)
+        result = adapter.submit(request, veo_context)
         check("CF-P1-005-ADAPTERS-http-async-accepted",
               result.get("completed") is False
-              and result.get("provider_job_id") == "veo-job-001")
-        polled = adapter.poll("veo-job-001", {
-            "status_url": "https://example.invalid/operations/veo-job-001"})
+              and result.get("provider_job_id") == veo_operation)
+        # R4 follow-up: the job id IS the full Vertex operation
+        # name from the submit response; poll POSTs it to the
+        # documented :fetchPredictOperation endpoint — no caller
+        # supplied status_url is accepted anymore (the old test
+        # passed an unapproved example.invalid URL, which the URL
+        # security policy now refuses before any request).
+        seen_polls = []
+
+        def veo_poll_transport(method, url, *, headers=None, body=None):
+            seen_polls.append((method, url, body))
+            return (200, {}, json.dumps(
+                {"done": False}).encode("utf-8"))
+        adapter.transport = veo_poll_transport
+        polled = adapter.poll(veo_operation, veo_context)
         check("CF-P1-005-ADAPTERS-http-async-still-running",
               polled.get("completed") is False)
-        expect_error("CF-P1-005-ADAPTERS-http-poll-no-url",
-                     lambda: adapter.poll("veo-job-001", {}))
+        check("CF-P1-005-ADAPTERS-http-poll-template-url",
+              len(seen_polls) == 1
+              and seen_polls[0][0] == "POST"
+              and seen_polls[0][1] == "https://us-central1-"
+              "aiplatform.googleapis.com/v1/projects/"
+              + veo_project + "/locations/us-central1/publishers/"
+              "google/models/veo-3.1-generate-001:"
+              "fetchPredictOperation"
+              and json.loads(seen_polls[0][2].decode("utf-8"))
+              == {"operationName": veo_operation},
+              str(seen_polls))
+        # A provider with no poll template and no status_url in
+        # the context still fails closed (fal.ai has no template:
+        # its status_url comes from the submit response).
+        fal_spec = dict(PROVIDER_SPECS["provider-fal-image"])
+        fal_spec["provider_id"] = "provider-fal-image"
+        old_fal = set_env("FAL_KEY", "test-fal-key")
+        try:
+            fal_adapter = HttpProviderAdapter(
+                fal_spec, workspace_root=workspace,
+                transport=veo_poll_transport)
+            expect_error("CF-P1-005-ADAPTERS-http-poll-no-url",
+                         lambda: fal_adapter.poll("fal-job-001", {}))
+        finally:
+            restore_env("FAL_KEY", old_fal)
 
         def failed_transport(method, url, *, headers=None, body=None):
             return (200, {}, json.dumps(
-                {"status": "FAILED"}).encode("utf-8"))
+                {"done": True,
+                 "error": {"status": "FAILED",
+                           "message": "generation failed"}}
+            ).encode("utf-8"))
         adapter.transport = failed_transport
-        polled = adapter.poll("veo-job-001", {
-            "status_url": "https://example.invalid/operations/veo-job-001"})
+        polled = adapter.poll(veo_operation, veo_context)
         check("CF-P1-005-ADAPTERS-http-async-failed",
               polled.get("completed") is True
               and polled["failure"]["code"] == "provider-error")
@@ -464,10 +509,12 @@ def http_provider_group(tmpdir):
         def cancelled_transport(method, url, *, headers=None,
                                 body=None):
             return (200, {}, json.dumps(
-                {"status": "CANCELLED"}).encode("utf-8"))
+                {"done": True,
+                 "error": {"status": "CANCELLED", "code": 499,
+                           "message": "operation cancelled"}}
+            ).encode("utf-8"))
         adapter.transport = cancelled_transport
-        polled = adapter.poll("veo-job-001", {
-            "status_url": "https://example.invalid/operations/veo-job-001"})
+        polled = adapter.poll(veo_operation, veo_context)
         check("CF-P1-005-ADAPTERS-http-async-cancelled",
               polled.get("completed") is True
               and polled["failure"]["code"] == "cancelled-by-provider")
@@ -475,10 +522,10 @@ def http_provider_group(tmpdir):
         # A provider with no documented cancellation refuses it.
         expect_error("CF-P1-005-ADAPTERS-http-cancel-unsupported",
                      lambda: adapter.cancel(
-                         "veo-job-001",
+                         veo_operation,
                          {"cancel_url": "https://example.invalid/x"}))
     finally:
-        restore_env("GEMINI_API_KEY", old)
+        restore_env("VERTEX_ACCESS_TOKEN", old)
 
 
 def factory_group(tmpdir):
@@ -502,11 +549,13 @@ def factory_group(tmpdir):
                         workspace_root=workspace)
     check("CF-P1-005-ADAPTERS-factory-openai",
           image.adapter_id == "adapter-openai-image")
-    # Every live spec carries the fields the WO §5 audit requires.
+    # Every live spec carries the fields the WO §5 audit requires,
+    # plus the R4-A origin allowlists (api + output, separate).
     required = ("documentation_url", "documentation_status",
                 "api_version", "async_behaviour",
                 "cancellation_support", "output_retrieval",
-                "charge_behaviour", "character_reference_limits")
+                "charge_behaviour", "character_reference_limits",
+                "api_origins", "output_origins")
     missing = {pid: [f for f in required if f not in spec]
                for pid, spec in PROVIDER_SPECS.items()}
     check("CF-P1-005-ADAPTERS-specs-complete",

@@ -278,11 +278,23 @@ opt-in:
 - **External providers are optional and keyed by environment
   variable only — never in a file, never committed.** One variable
   per provider: `OPENAI_API_KEY` (OpenAI image), `GEMINI_API_KEY`
-  (Gemini image, Veo video, Lyria music), `FAL_KEY` (fal.ai image),
+  (Gemini image, Lyria music), `VERTEX_ACCESS_TOKEN` (Veo video,
+  OAuth Bearer token), `FAL_KEY` (fal.ai image),
   `KLING_API_KEY` (Kling video), `LTX_API_KEY` (LTX video),
   `ELEVENLABS_API_KEY` (ElevenLabs voice). Without its variable the
   adapter fails closed with `credential-missing`. No paid external
   call is ever made without explicit authorization for that run.
+  Every external request is built by that provider's exact
+  contract (`runtime/provider_contracts.py`) — no generic payload
+  — and every outbound URL is validated against explicit
+  per-provider origin allowlists (`runtime/provider_url_policy.py`).
+  A completed Kling or LTX job's download currently fails closed
+  until its result-URL host is confirmed in the docs.
+- **FFmpeg is required for the local end-to-end test.** The
+  integration suite (`tests/test_e2e_local.py`) exercises real
+  ffprobe/ffmpeg operations and fails, never skips, when FFmpeg
+  is absent; CI installs a known FFmpeg version in `p0-validate`.
+  Basic planning and handoff work does not need it.
 - **Commercial rules.** The bundled OmniVoice weights are CC-BY-NC
   (noncommercial) — never use them for commercial or monetized
   production; the adapter refuses commercial voice tasks outright.

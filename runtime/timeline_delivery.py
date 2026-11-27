@@ -59,6 +59,191 @@ class TimelineDeliveryError(ValueError):
         super().__init__("; ".join(self.errors))
 
 
+# -- Timeline geometry (CF-WO-P1-005-R4, workstream C) ---------------
+#
+# A manifest never invents geometry. Its aspect ratio, resolution
+# and frame rate come from exactly one of two honest sources: an
+# explicit, validated output target in the job's format profile
+# (``format_profile.output_geometry``), or verified probe results
+# from the delivered media itself. The old hardcoded 16:9 / 24 FPS
+# / 1920x1080 fallback is gone: with no target and no probe data
+# the manifest simply omits geometry (the schema leaves all three
+# fields optional), and an audio-only timeline never carries video
+# geometry at all.
+
+#: Aspect-ratio labels the timeline manifest schema accepts.
+GEOMETRY_ASPECT_RATIOS = ("16:9", "9:16", "4:3", "3:4", "1:1",
+                          "2.39:1", "21:9", "other")
+#: Frame-rate agreement tolerance (fps): 23.976 (24000/1001) and
+#: 24, or 29.97 and 30, are the same delivery rate in practice.
+FRAME_RATE_TOLERANCE = 0.05
+#: Aspect-ratio agreement tolerance (relative).
+ASPECT_RATIO_TOLERANCE = 0.01
+#: Sanity upper bound for a declared frame rate.
+MAX_FRAME_RATE = 240
+
+
+def aspect_ratio_for_dimensions(width, height) -> str:
+    """Aspect-ratio label for frame dimensions, or ``"other"``.
+
+    Exact reduced fractions map to the schema's labels
+    (``21:9`` reduces to 7:3); a ratio within tolerance of 2.39
+    maps to ``"2.39:1"``; anything else is ``"other"``.
+    """
+    if not isinstance(width, int) or not isinstance(height, int) \
+            or width <= 0 or height <= 0:
+        return "other"
+    import math
+    divisor = math.gcd(width, height)
+    reduced = (width // divisor, height // divisor)
+    labels = {(16, 9): "16:9", (9, 16): "9:16", (4, 3): "4:3",
+              (3, 4): "3:4", (1, 1): "1:1", (7, 3): "21:9"}
+    if reduced in labels:
+        return labels[reduced]
+    if abs(width / height - 2.39) <= ASPECT_RATIO_TOLERANCE * 2.39:
+        return "2.39:1"
+    return "other"
+
+
+def _aspect_ratio_value(label) -> float | None:
+    """Numeric width/height for a ratio label, or None for other."""
+    if label == "2.39:1":
+        return 2.39
+    if isinstance(label, str) and ":" in label:
+        left, right = label.split(":", 1)
+        try:
+            return float(left) / float(right)
+        except (TypeError, ValueError, ZeroDivisionError):
+            return None
+    return None
+
+
+def validate_output_geometry(geometry) -> list:
+    """Output-target geometry errors (empty list = valid).
+
+    ``output_geometry`` is the explicit delivery target in a
+    format profile: optional ``aspect_ratio`` (schema enum),
+    optional ``frame_rate`` (positive number, at most 240), and
+    ``width``/``height`` as a pair of positive integers. A lone
+    width or height is an error; a stated aspect ratio must agree
+    with the stated dimensions (unless it is ``"other"``).
+    """
+    errors: list[str] = []
+    if not isinstance(geometry, dict):
+        return ["output_geometry: expected an object, got "
+                f"{type(geometry).__name__}"]
+    for key in geometry:
+        if key not in ("aspect_ratio", "width", "height",
+                       "frame_rate"):
+            errors.append(f"output_geometry: unexpected field '{key}'")
+    ratio = geometry.get("aspect_ratio")
+    if ratio is not None and ratio not in GEOMETRY_ASPECT_RATIOS:
+        errors.append("output_geometry.aspect_ratio "
+                      f"{ratio!r} is not a known aspect ratio")
+    width = geometry.get("width")
+    height = geometry.get("height")
+    if (width is None) != (height is None):
+        errors.append("output_geometry: width and height must be "
+                      "given together")
+    for name, value in (("width", width), ("height", height)):
+        if value is not None and (type(value) is not int or value <= 0):
+            errors.append(f"output_geometry.{name} must be a "
+                          "positive integer")
+    if ratio is not None and ratio != "other" \
+            and type(width) is int and type(height) is int \
+            and width > 0 and height > 0:
+        expected = _aspect_ratio_value(ratio)
+        if expected is not None:
+            actual = width / height
+            if abs(actual - expected) > \
+                    ASPECT_RATIO_TOLERANCE * expected:
+                errors.append(
+                    "output_geometry.aspect_ratio "
+                    f"{ratio!r} disagrees with width/height "
+                    f"{width}x{height}")
+    rate = geometry.get("frame_rate")
+    if rate is not None:
+        if isinstance(rate, bool) or not isinstance(rate, (int, float)) \
+                or rate <= 0 or rate > MAX_FRAME_RATE:
+            errors.append("output_geometry.frame_rate must be a "
+                          "positive number no greater than "
+                          f"{MAX_FRAME_RATE}")
+    return errors
+
+
+def geometry_from_probe(metadata) -> dict | None:
+    """Manifest geometry from verified probe metadata, or None.
+
+    Needs a positive integer width and height; the frame rate is
+    included only when the probe reports a positive one (a still
+    image track has none). The frame rate is rounded to three
+    decimals so a rational probe value (``24000/1001``) stays
+    stable in the manifest.
+    """
+    if not isinstance(metadata, dict):
+        return None
+    width = metadata.get("width")
+    height = metadata.get("height")
+    if type(width) is not int or type(height) is not int \
+            or width <= 0 or height <= 0:
+        return None
+    geometry = {"aspect_ratio": aspect_ratio_for_dimensions(
+                    width, height),
+                "resolution": {"width": width, "height": height}}
+    rate = metadata.get("frame_rate")
+    if isinstance(rate, (int, float)) and not isinstance(rate, bool) \
+            and rate > 0:
+        geometry["frame_rate"] = round(float(rate), 3)
+    return geometry
+
+
+def geometry_mismatch(target, actual, *, clip_id="") -> str | None:
+    """Why ``actual`` probe geometry fails ``target``, or None.
+
+    Only fields the target states are compared: a target without
+    a frame rate does not constrain the frame rate. Resolution
+    must match exactly; aspect ratio must match by label, or by
+    numeric ratio when either side is ``"other"``; frame rate
+    must agree within :data:`FRAME_RATE_TOLERANCE`.
+    """
+    where = f"clip {clip_id}" if clip_id else "clip"
+    target_resolution = (target or {}).get("resolution")
+    actual_resolution = (actual or {}).get("resolution")
+    if isinstance(target_resolution, dict) \
+            and isinstance(actual_resolution, dict):
+        if target_resolution.get("width") != actual_resolution.get(
+                "width") or target_resolution.get("height") != \
+                actual_resolution.get("height"):
+            return (f"{where} resolution "
+                    f"{actual_resolution.get('width')}x"
+                    f"{actual_resolution.get('height')} does not "
+                    f"match the output target "
+                    f"{target_resolution.get('width')}x"
+                    f"{target_resolution.get('height')}")
+    target_ratio = (target or {}).get("aspect_ratio")
+    actual_ratio = (actual or {}).get("aspect_ratio")
+    if target_ratio is not None and actual_ratio is not None:
+        if target_ratio != actual_ratio:
+            target_value = _aspect_ratio_value(target_ratio)
+            actual_value = _aspect_ratio_value(actual_ratio)
+            agrees = False
+            if target_value is not None and actual_value is not None:
+                agrees = abs(target_value - actual_value) <= \
+                    ASPECT_RATIO_TOLERANCE * target_value
+            if not agrees:
+                return (f"{where} aspect ratio {actual_ratio!r} "
+                        f"does not match the output target "
+                        f"{target_ratio!r}")
+    target_rate = (target or {}).get("frame_rate")
+    actual_rate = (actual or {}).get("frame_rate")
+    if target_rate is not None and actual_rate is not None:
+        if abs(float(target_rate) - float(actual_rate)) \
+                > FRAME_RATE_TOLERANCE:
+            return (f"{where} frame rate {actual_rate} does not "
+                    f"match the output target {target_rate}")
+    return None
+
+
 def _require_session(session) -> None:
     if not local_session.is_active_session(session):
         raise TimelineDeliveryError(
@@ -263,9 +448,38 @@ def build_delivery_manifest(session, job, executions, *,
                if isinstance(p, dict)}
     if registry is None:
         registry = registry_from_job(job)
+    # The output target, when the job states one. It is validated
+    # here (and by validate_format_profile at job creation): an
+    # invalid target fails the build instead of silently shaping
+    # the manifest.
+    profile = job.get("format_profile") or {}
+    output_geometry = profile.get("output_geometry")
+    target_errors = []
+    if output_geometry is not None:
+        target_errors = validate_output_geometry(output_geometry)
+    if target_errors:
+        raise TimelineDeliveryError(target_errors)
+    target = None
+    if isinstance(output_geometry, dict):
+        target = {}
+        width = output_geometry.get("width")
+        height = output_geometry.get("height")
+        if type(width) is int and type(height) is int:
+            target["resolution"] = {"width": width, "height": height}
+            target["aspect_ratio"] = output_geometry.get(
+                "aspect_ratio") or aspect_ratio_for_dimensions(
+                    width, height)
+        elif output_geometry.get("aspect_ratio") is not None:
+            target["aspect_ratio"] = output_geometry["aspect_ratio"]
+        if output_geometry.get("frame_rate") is not None:
+            target["frame_rate"] = output_geometry["frame_rate"]
     video_clips: list = []
     audio_clips: list = []
-    first_video_resolution = None
+    # (clip_id, probe geometry or None) for every video clip, in
+    # order. Geometry is NEVER taken from the first clip alone:
+    # every probed clip is compared before the manifest claims
+    # one geometry for the timeline.
+    video_geometries: list = []
     in_seconds = 0.0
     qualified = 0
     for execution in executions or []:
@@ -319,38 +533,90 @@ def build_delivery_manifest(session, job, executions, *,
                 else "narration")
             audio_clips.append(clip)
         else:
-            if first_video_resolution is None:
-                width = metadata.get("width")
-                height = metadata.get("height")
-                if isinstance(width, int) and isinstance(height, int) \
-                        and width > 0 and height > 0:
-                    first_video_resolution = {
-                        "width": width, "height": height}
+            video_geometries.append(
+                (clip_id, geometry_from_probe(metadata)))
             video_clips.append(clip)
     if qualified == 0:
         raise TimelineDeliveryError(
             "no SUCCEEDED execution with a validated output "
             "artifact was supplied — nothing may enter the "
             "timeline manifest")
-    profile = job.get("format_profile") or {}
-    # The production format profile carries only the delivery
-    # profile, duration target and chapters (see
-    # production_orchestrator.validate_format_profile) — it never
-    # carries media geometry. The delivery manifest is always the
-    # canonical editor-neutral format; its resolution defaults to
-    # 1920x1080 unless a delivered video artifact proves otherwise.
+    # Resolve the manifest geometry. No hardcoded fallback exists:
+    # with a target, every probed clip must match it (and a clip
+    # without probe data cannot be verified against it); without
+    # a target, every probed clip must agree with the others;
+    # with neither a target nor probe data, geometry is omitted
+    # rather than invented. An audio-only timeline never carries
+    # video geometry.
+    manifest_geometry = None
+    if video_clips:
+        probed = [(cid, geo) for cid, geo in video_geometries
+                  if geo is not None]
+        if target is not None:
+            for clip_id, geo in video_geometries:
+                if geo is None:
+                    raise TimelineDeliveryError(
+                        f"clip {clip_id} cannot be verified "
+                        "against the output target: no probe data "
+                        "is available for it")
+                mismatch = geometry_mismatch(target, geo,
+                                             clip_id=clip_id)
+                if mismatch:
+                    raise TimelineDeliveryError(mismatch)
+            # Fields the target leaves unstated are filled from
+            # the probed clips — and the clips must agree on them,
+            # or the timeline mixes frame rates/resolutions the
+            # target never resolved.
+            reference = dict(target)
+            for key in ("aspect_ratio", "resolution", "frame_rate"):
+                if key not in reference and key in probed[0][1]:
+                    reference[key] = probed[0][1][key]
+            for clip_id, geo in probed[1:]:
+                mismatch = geometry_mismatch(reference, geo,
+                                             clip_id=clip_id)
+                if mismatch:
+                    raise TimelineDeliveryError(
+                        "video clips disagree on geometry "
+                        f"({probed[0][0]} vs {clip_id}): "
+                        f"{mismatch} — normalize the clips to one "
+                        "selected target profile")
+            manifest_geometry = dict(reference)
+        elif probed:
+            reference_id, reference = probed[0]
+            for clip_id, geo in probed[1:]:
+                mismatch = geometry_mismatch(reference, geo,
+                                             clip_id=clip_id)
+                if mismatch:
+                    raise TimelineDeliveryError(
+                        "video clips disagree on geometry "
+                        f"({reference_id} vs {clip_id}): "
+                        f"{mismatch} — normalize the clips to one "
+                        "selected target profile or set "
+                        "output_geometry")
+            manifest_geometry = dict(reference)
+    elif target is not None:
+        raise TimelineDeliveryError(
+            "the job's output target specifies video geometry but "
+            "the timeline has no video clips — an audio-only "
+            "timeline must not invent video geometry")
+    # The delivery manifest is always the canonical editor-neutral
+    # format. Its geometry is the resolved manifest geometry
+    # above, or absent when nothing verified it.
     manifest = {
         "schema_version": "2.5",
         "id": "timeline-" + job["job_id"],
         "project_id": job["project_id"],
         "sequence_id": "seq-" + job["job_id"],
         "format": "editor_neutral_v1",
-        "aspect_ratio": "16:9",
-        "resolution": first_video_resolution or {
-            "width": 1920, "height": 1080},
-        "frame_rate": 24,
         "tracks": [],
     }
+    if manifest_geometry is not None:
+        if "aspect_ratio" in manifest_geometry:
+            manifest["aspect_ratio"] = manifest_geometry["aspect_ratio"]
+        if "resolution" in manifest_geometry:
+            manifest["resolution"] = manifest_geometry["resolution"]
+        if "frame_rate" in manifest_geometry:
+            manifest["frame_rate"] = manifest_geometry["frame_rate"]
     if video_clips:
         manifest["tracks"].append(
             {"track_id": "track-video-1", "kind": "video",
@@ -378,6 +644,82 @@ def build_delivery_manifest(session, job, executions, *,
     return manifest
 
 
+def normalize_media_to_geometry(ffmpeg_adapter, input_path,
+                                output_path, target_geometry,
+                                *, execution_id="normalize") -> dict:
+    """Normalize one media file to a selected target geometry.
+
+    An explicit, recorded media operation: the input is
+    transcoded through the FFmpeg adapter to the target's
+    width/height (and frame rate, when the target states one),
+    the output is probed, and the probe must match the target —
+    otherwise the operation fails instead of claiming success.
+    Returns the operation record (``operation``,
+    ``normalize-geometry``; input/output paths; the target; the
+    verified output geometry; the output artifact). This is the
+    operation a pipeline runs BEFORE delivery when source clips
+    disagree: the manifest itself never normalizes silently.
+    """
+    errors = validate_output_geometry(target_geometry)
+    if errors:
+        raise TimelineDeliveryError(errors)
+    width = target_geometry.get("width")
+    height = target_geometry.get("height")
+    if type(width) is not int or type(height) is not int:
+        raise TimelineDeliveryError(
+            "normalization needs a target width and height")
+    options = {"size": f"{width}x{height}"}
+    rate = target_geometry.get("frame_rate")
+    if rate is not None:
+        options["fps"] = rate
+    request = {
+        "provider_id": "provider-ffmpeg",
+        "canonical_instruction": "normalize media to the selected "
+                                 "output geometry",
+        "task_id": "normalize-" + execution_id,
+        "ffmpeg_operation": "transcode",
+        "inputs": [input_path],
+        "output": output_path,
+        "options": options,
+    }
+    try:
+        result = ffmpeg_adapter.submit(
+            request, {"execution_id": execution_id})
+    except MediaExecutionError as exc:
+        raise TimelineDeliveryError(
+            "normalization failed: " + "; ".join(exc.errors))
+    if not result.get("completed") or result.get("output") is None:
+        raise TimelineDeliveryError(
+            "normalization produced no output artifact")
+    artifact = result["output"]
+    verified = geometry_from_probe(artifact)
+    if verified is None:
+        raise TimelineDeliveryError(
+            "normalization produced an output with no probe "
+            "geometry")
+    target_manifest = {
+        "resolution": {"width": width, "height": height}}
+    ratio = target_geometry.get("aspect_ratio")
+    if ratio is not None:
+        target_manifest["aspect_ratio"] = ratio
+    else:
+        target_manifest["aspect_ratio"] = \
+            aspect_ratio_for_dimensions(width, height)
+    if rate is not None:
+        target_manifest["frame_rate"] = rate
+    mismatch = geometry_mismatch(target_manifest, verified,
+                                 clip_id=output_path)
+    if mismatch:
+        raise TimelineDeliveryError(
+            "normalized output does not match its target: "
+            + mismatch)
+    return {"operation": "normalize-geometry",
+            "input": input_path, "output": output_path,
+            "target_geometry": dict(target_geometry),
+            "verified_geometry": verified,
+            "artifact": artifact}
+
+
 def delivery_manifest_summary(manifest) -> dict:
     """Counts for one delivery manifest (clips per track)."""
     tracks = manifest.get("tracks") or []
@@ -395,6 +737,13 @@ def delivery_manifest_summary(manifest) -> dict:
 
 __all__ = [
     "TimelineDeliveryError",
+    "GEOMETRY_ASPECT_RATIOS",
+    "FRAME_RATE_TOLERANCE",
+    "aspect_ratio_for_dimensions",
+    "validate_output_geometry",
+    "geometry_from_probe",
+    "geometry_mismatch",
+    "normalize_media_to_geometry",
     "validate_delivery_artifact",
     "registry_from_job",
     "build_delivery_manifest",

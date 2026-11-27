@@ -596,6 +596,36 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-005-R4-SEC",
+      "command": "python3 tests/test_provider_url_security.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-R4-CONTRACTS",
+      "command": "python3 tests/test_provider_contracts.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-R4-GEOMETRY",
+      "command": "python3 tests/test_timeline_geometry.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-R4-VOICE",
+      "command": "python3 tests/test_voicestudio_controls.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-R4-E2E",
+      "command": "python3 tests/test_e2e_local.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "command": "git diff --check",
       "exit_code": 0,

@@ -154,6 +154,15 @@ run_one "CF-P1-005-FFMPEG" python3 tests/test_ffmpeg_adapter.py
 run_one "CF-P1-005-ADAPTERS" python3 tests/test_media_adapters.py
 run_one "CF-P1-005-DELIVERY" python3 tests/test_timeline_delivery.py
 
+# R4 (CF-WO-P1-005-R4): provider URL security, provider contracts,
+# timeline geometry, VoiceStudio capability honesty, local
+# end-to-end integration.
+run_one "CF-P1-005-R4-SEC" python3 tests/test_provider_url_security.py
+run_one "CF-P1-005-R4-CONTRACTS" python3 tests/test_provider_contracts.py
+run_one "CF-P1-005-R4-GEOMETRY" python3 tests/test_timeline_geometry.py
+run_one "CF-P1-005-R4-VOICE" python3 tests/test_voicestudio_controls.py
+run_one "CF-P1-005-R4-E2E" python3 tests/test_e2e_local.py
+
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check
 

@@ -37,7 +37,7 @@
         "clone-voice"
       ],
       "output_constraints": [
-        "wav audio; single speaker per call"
+        "audio (default MP3); single speaker per call"
       ],
       "output_retrieval": "response bytes (audio)",
       "privacy_transmission": "transmission-to-provider-requires-authorization",
@@ -58,8 +58,8 @@
       "authorization_required": true,
       "cancellation_support": "PUT cancel_url \u2014 cancellation supported",
       "character_reference_capability": true,
-      "character_reference_limits": "per-endpoint (up to 10 on some)",
-      "charge_behaviour": "per output from prepaid credits; server errors (HTTP 500+) never charged; queue-wait time never charged",
+      "character_reference_limits": "not supported by the contract (see reference_images)",
+      "charge_behaviour": "per output from prepaid credits; server errors (HTTP 500+) never charged; queue-wait time never charged; a 422 may be charged if GPU time was spent; nano-banana-2 $0.08/image (2K 1.5x, 4K 2x, 0.5K 0.75x)",
       "commercial_use_approved": false,
       "commercial_use_reason": "unverified",
       "conformance": {
@@ -73,7 +73,7 @@
       "documentation_url": "https://fal.ai/llms-full.txt",
       "evidence": "audited against the current official fal.ai docs 2026-11-27 (queue + direct endpoints); no live paid call made",
       "input_constraints": [
-        "text prompt; optional reference image"
+        "text prompt; no reference images (reference-part serialization UNCONFIRMED)"
       ],
       "licence": "proprietary-paid",
       "native_camera_controls": [],
@@ -147,8 +147,8 @@
       "authorization_required": true,
       "cancellation_support": "none \u2014 synchronous",
       "character_reference_capability": true,
-      "character_reference_limits": "up to 14 reference images (4 character max on 2.1)",
-      "charge_behaviour": "per image/token; Nano Banana 2.1 approx $0.0336 (1K) / $0.0504 (2K) / $0.113 (4K) per image (secondary-quoted)",
+      "character_reference_limits": "up to 14 reference images (2.1/3.1-flash-image: 10 objects + 4 characters; Pro: 6 objects + 5 characters + 3 style)",
+      "charge_behaviour": "per image/token; Nano Banana 2.1 \u2248 $0.0336 (1K) / $0.0504 (2K) / $0.113 (4K) per image (secondary-quoted)",
       "commercial_use_approved": false,
       "commercial_use_reason": "unverified",
       "conformance": {
@@ -162,7 +162,7 @@
       "documentation_url": "https://aistudio.google.com/docs/image-generation",
       "evidence": "audited against the current official image-generation docs 2026-11-27 (Nano Banana / Interactions API); no live paid call made",
       "input_constraints": [
-        "text prompt; optional reference image (up to 14; 4 character max on 2.1)"
+        "text prompt; optional reference image (up to 14; 2.1/3.1-flash-image: 10 objects + 4 characters; Pro: 6 objects + 5 characters + 3 style)"
       ],
       "licence": "proprietary-paid",
       "native_camera_controls": [],
@@ -181,8 +181,8 @@
       "schema_version": "2.5"
     },
     {
-      "adapter_version": "Kling AI Open Platform (legacy + model-in-path)",
-      "api_version": "Kling AI Open Platform (legacy + model-in-path)",
+      "adapter_version": "Kling AI Open Platform (legacy /v1 design)",
+      "api_version": "Kling AI Open Platform (legacy /v1 design)",
       "aspect_ratios": [
         "16:9",
         "9:16",
@@ -192,10 +192,10 @@
       "audio_capability": false,
       "audio_support": true,
       "authorization_required": true,
-      "cancellation_support": "UNCONFIRMED \u2014 no cancel operation found in the official docs",
+      "cancellation_support": "none \u2014 no cancel endpoint is documented (secondary-quoting-official)",
       "character_reference_capability": true,
-      "character_reference_limits": "keyframes / multi-image / Omni",
-      "charge_behaviour": "prepaid resource packages (units); failed tasks do not consume credits",
+      "character_reference_limits": "image-to-video first/last frame",
+      "charge_behaviour": "prepaid resource packages (units); failed-task charging UNCONFIRMED",
       "commercial_use_approved": false,
       "commercial_use_reason": "unverified",
       "conformance": {
@@ -208,12 +208,12 @@
       "documentation_status": "secondary-quoting-official",
       "documentation_url": "https://app.klingai.com/global/dev/document-api",
       "duration_limits": {
-        "max_seconds": 30,
-        "min_seconds": 3
+        "max_seconds": 10,
+        "min_seconds": 5
       },
       "evidence": "audited 2026-11-27 from sources quoting the official Kling docs (official docs are login/JS-gated and could not be read directly); no live paid call made",
       "input_constraints": [
-        "text prompt; optional starting reference image (keyframes / multi-image / Omni)"
+        "text prompt; optional starting reference image (image-to-video first/last frame, base64, <= 10 MB)"
       ],
       "licence": "proprietary-paid",
       "native_camera_controls": [],
@@ -222,7 +222,7 @@
         "generate-video"
       ],
       "output_constraints": [
-        "video; 3-30 s (4.0); 3-15 s (3.0)"
+        "video; 5 or 10 s (legacy /v1)"
       ],
       "output_retrieval": "result URL, 30 days",
       "privacy_transmission": "transmission-to-provider-requires-authorization",
@@ -243,10 +243,10 @@
       "audio_capability": false,
       "audio_support": true,
       "authorization_required": true,
-      "cancellation_support": "UNCONFIRMED \u2014 no cancel operation found in the official docs",
+      "cancellation_support": "none found in the official docs (UNCONFIRMED)",
       "character_reference_capability": true,
       "character_reference_limits": "one first-frame image",
-      "charge_behaviour": "per second of output video (per second of input audio for audio-to-video); Fast $0.09/s (720p); failed-task charging UNCONFIRMED",
+      "charge_behaviour": "per second of output video (per second of input audio for audio-to-video); Fast $0.09/s (720p); prepaid credits are reserved before generation and charged only on success \u2014 a failed job releases its reservation",
       "commercial_use_approved": false,
       "commercial_use_reason": "unverified",
       "conformance": {
@@ -264,7 +264,7 @@
       },
       "evidence": "audited 2026-11-27 from sources quoting the official LTX docs (direct read not completed); no live paid call made",
       "input_constraints": [
-        "text prompt; optional first-frame image"
+        "text prompt; optional first-frame image (data URI, <= 7 MB)"
       ],
       "licence": "proprietary-paid",
       "native_camera_controls": [],
@@ -275,7 +275,7 @@
       "output_constraints": [
         "video; 6-20 s (Fast); 6/8/10 s (Pro)"
       ],
-      "output_retrieval": "video_url, available under 24 hours",
+      "output_retrieval": "video_url, available under 24 hours (signed URL expires 1 hour after it is checked)",
       "privacy_transmission": "transmission-to-provider-requires-authorization",
       "provider_id": "provider-ltx-video",
       "provider_type": "video-generation",
@@ -297,7 +297,7 @@
       "commercial_use_approved": false,
       "commercial_use_reason": "unverified",
       "conformance": {
-        "evidence": "audited against the current official music-generation docs 2026-11-27 (Lyria 3.5, SynthID watermark); no live paid call made",
+        "evidence": "audited against the current official music-generation docs 2026-11-27 (Lyria 3.5 + lyria-3-clip-preview, SynthID watermark); no live paid call made",
         "last_verified": "2026-11-27",
         "status": "NOT_TESTED",
         "test_id": ""
@@ -308,7 +308,7 @@
       "duration_limits": {
         "max_seconds": 180
       },
-      "evidence": "audited against the current official music-generation docs 2026-11-27 (Lyria 3.5, SynthID watermark); no live paid call made",
+      "evidence": "audited against the current official music-generation docs 2026-11-27 (Lyria 3.5 + lyria-3-clip-preview, SynthID watermark); no live paid call made",
       "input_constraints": [
         "text prompt describing the music"
       ],
@@ -319,7 +319,7 @@
         "generate-sound"
       ],
       "output_constraints": [
-        "audio; full song up to ~3 minutes"
+        "audio; full song up to ~3 minutes (lyria-3.5); 30 s clip (lyria-3-clip-preview)"
       ],
       "output_retrieval": "base64 MP3 in the response",
       "privacy_transmission": "transmission-to-provider-requires-authorization",
@@ -343,12 +343,12 @@
       "authorization_required": true,
       "cancellation_support": "none \u2014 synchronous",
       "character_reference_capability": true,
-      "character_reference_limits": "up to 10 reference images on edits",
-      "charge_behaviour": "per token/request; current per-model pricing UNCONFIRMED (only gpt-image-1 rates were verified, and that model is shut down)",
+      "character_reference_limits": "up to 16 reference images on edits",
+      "charge_behaviour": "per token/request; current per-model pricing UNCONFIRMED (not re-read 2026-11-27)",
       "commercial_use_approved": false,
       "commercial_use_reason": "unverified",
       "conformance": {
-        "evidence": "audited against the current official Images API docs 2026-11-27 (gpt-image-1 shut down 2026-10-23; current family gpt-image-1.5/2/2.5/2.6); no live paid call made",
+        "evidence": "audited against the current official Images API docs 2026-11-27 (gpt-image-1 shut down 2026-10-23; current family gpt-image-1-mini/1.5/2/2.5/2.6); no live paid call made",
         "last_verified": "2026-11-27",
         "status": "NOT_TESTED",
         "test_id": ""
@@ -356,9 +356,9 @@
       "cost_model": "paid-per-call",
       "documentation_status": "official",
       "documentation_url": "https://developers.openai.com/api/reference/ruby/resources/images/methods/generate",
-      "evidence": "audited against the current official Images API docs 2026-11-27 (gpt-image-1 shut down 2026-10-23; current family gpt-image-1.5/2/2.5/2.6); no live paid call made",
+      "evidence": "audited against the current official Images API docs 2026-11-27 (gpt-image-1 shut down 2026-10-23; current family gpt-image-1-mini/1.5/2/2.5/2.6); no live paid call made",
       "input_constraints": [
-        "text prompt; optional reference image (up to 10 on edits)"
+        "text prompt; optional reference image (up to 16 on edits)"
       ],
       "licence": "proprietary-paid",
       "native_camera_controls": [],
@@ -486,24 +486,24 @@
       "schema_version": "2.5"
     },
     {
-      "adapter_version": "Veo 3.1 (Gemini API preview IDs; Vertex GA IDs)",
-      "api_version": "Veo 3.1 (Gemini API preview IDs; Vertex GA IDs)",
+      "adapter_version": "Veo 3.1 (Vertex AI / Gemini Enterprise Agent Platform; -001 IDs)",
+      "api_version": "Veo 3.1 (Vertex AI / Gemini Enterprise Agent Platform; -001 IDs)",
       "aspect_ratios": [
         "16:9",
         "9:16"
       ],
-      "async_behaviour": "asynchronous long-running operation with polling",
+      "async_behaviour": "asynchronous long-running operation with polling (fetchPredictOperation)",
       "audio_capability": false,
       "audio_support": true,
       "authorization_required": true,
-      "cancellation_support": "UNCONFIRMED \u2014 no cancel operation found in the official docs",
+      "cancellation_support": "none \u2014 no cancel operation is documented for Vertex Veo",
       "character_reference_capability": true,
-      "character_reference_limits": "up to 3 reference images (Standard/Fast; Lite: none)",
-      "charge_behaviour": "per second of output, success only; Lite $0.05/s (720p), Fast $0.10/s (720p), Standard $0.40/s (720p) (secondary-quoted)",
+      "character_reference_limits": "up to 3 reference images (Standard/Fast; Lite image input UNCONFIRMED \u2014 Vertex docs conflict: model page says not supported, capabilities row says supported)",
+      "charge_behaviour": "per 1 count (official unit; the pricing page does not define 1 count); per-second pricing is SECONDARY-only and is NOT encoded; Fast 4K UNCONFIRMED (pricing lists it, model page does not)",
       "commercial_use_approved": false,
       "commercial_use_reason": "unverified",
       "conformance": {
-        "evidence": "audited against the current official Veo 3.1 docs 2026-11-27 (async long-running operation, native audio); no live paid call made",
+        "evidence": "audited against the official Vertex AI Veo docs 2026-11-27 (Gemini Enterprise Agent Platform, -001 IDs; Gemini API preview IDs shut down 2026-10-22); GA-ID retirement wording UNCONFIRMED; no live paid call made",
         "last_verified": "2026-11-27",
         "status": "NOT_TESTED",
         "test_id": ""
@@ -515,9 +515,9 @@
         "max_seconds": 8,
         "min_seconds": 4
       },
-      "evidence": "audited against the current official Veo 3.1 docs 2026-11-27 (async long-running operation, native audio); no live paid call made",
+      "evidence": "audited against the official Vertex AI Veo docs 2026-11-27 (Gemini Enterprise Agent Platform, -001 IDs; Gemini API preview IDs shut down 2026-10-22); GA-ID retirement wording UNCONFIRMED; no live paid call made",
       "input_constraints": [
-        "text prompt; optional starting reference image (up to 3 Standard/Fast; Lite: none)"
+        "text prompt; optional starting reference image (up to 3 Standard/Fast; Lite image input UNCONFIRMED); Vertex project id in context (vertex_project_id); us-central1 only; image input at most 20 MB"
       ],
       "licence": "proprietary-paid",
       "native_camera_controls": [],
@@ -526,9 +526,9 @@
         "generate-video"
       ],
       "output_constraints": [
-        "video; 4/6/8 s; 720p/1080p (4K on 8 s Standard/Fast); native audio"
+        "video; 4/6/8 s; 720p/1080p (4K on 8 s Standard; Fast 4K UNCONFIRMED); native audio; 24 fps"
       ],
-      "output_retrieval": "download URL / GCS URI on completion",
+      "output_retrieval": "inline video bytes in the fetchPredictOperation response when no storageUri is set; a GCS URI output cannot be downloaded (download origin UNCONFIRMED)",
       "privacy_transmission": "transmission-to-provider-requires-authorization",
       "provider_id": "provider-veo-video",
       "provider_type": "video-generation",
@@ -570,7 +570,21 @@
       "provider_id": "provider-voicestudio-omnivoice",
       "provider_type": "voice-tts",
       "reference_image_capability": false,
-      "schema_version": "2.5"
+      "schema_version": "2.5",
+      "voice_controls": {
+        "supported": [
+          "instruct",
+          "speed",
+          "seed"
+        ],
+        "unsupported": {
+          "emotional_delivery": "the bundled OmniVoice engine has no emotion control (supports_emotion is False); the backend accepts an emotion field but it has no effect on this engine",
+          "pauses": "the /generate endpoint has no pauses field",
+          "pitch_range": "the /generate endpoint has no pitch field",
+          "pronunciation_preferences": "the backend pronounce flag applies a stored pronunciation dictionary, not per-request free-text preferences",
+          "vocal_characteristics": "voice design applies only when no reference audio is used; this adapter always sends profile reference audio, so vocal characteristics cannot be forwarded"
+        }
+      }
     }
   ],
   "registry": "providers",

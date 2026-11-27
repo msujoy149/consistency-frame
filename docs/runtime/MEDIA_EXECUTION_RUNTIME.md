@@ -102,10 +102,16 @@ database, and a compiled packet is still never proof of execution.
    manifest. The manifest is the canonical v2.5 editor-neutral
    format (`editor_neutral_v1`), schema-valid and structurally
    valid; the strict cross-reference check runs only when the
-   caller supplies both requester ids. The manifest resolution
-   comes from the first delivered video artifact when probed,
-   otherwise 1920x1080 — the production format profile carries no
-   media geometry.
+   caller supplies both requester ids. Final timeline geometry
+   comes from an explicit validated output profile or from
+   verified media probe results — never from a silent 16:9 /
+   24 FPS / 1920x1080 fallback (R4-C): when a profile specifies
+   an output target, generated media is validated against it;
+   when no target is specified, geometry is derived from the
+   verified media; incompatible source geometry is either
+   normalized through an explicit, recorded media operation to
+   the selected target or rejected with a clear validation
+   error; audio-only timelines invent no video geometry.
 8. **No secrets, no private media, no mandatory providers.**
    Provider credentials come only from allow-listed environment
    variables (`resolve_provider_secret`); no key appears in Git,
@@ -126,6 +132,14 @@ database, and a compiled packet is still never proof of execution.
   spec-driven HTTP provider adapter, the eight live provider
   specs, and the `get_adapter` factory. See
   `docs/runtime/PROVIDER_ADAPTERS.md`.
+- `runtime/provider_contracts.py` — one exact request builder +
+  response parser per live external provider (R4-B); the adapter
+  never builds a generic payload and refuses any request not
+  built by a contract.
+- `runtime/provider_url_policy.py` — the provider URL security
+  policy (R4-A): explicit API/output origin allowlists, redirect
+  validation, credential handling, and the pinned HTTPS
+  transport.
 - `runtime/execution_orchestrator.py` — provider selection,
   authorization and identity-lock checks, submit/poll/verify,
   technical QC, the semantic handoff, the G6 evidence check, and
@@ -171,17 +185,20 @@ database, and a compiled packet is still never proof of execution.
 
 ## External providers
 
-Eight live providers have spec-driven HTTP adapters (see
+Eight live providers have contract-driven HTTP adapters (see
 `docs/runtime/PROVIDER_ADAPTERS.md`): OpenAI image, Gemini image,
 fal.ai image, Veo video, Kling video, LTX video, ElevenLabs voice,
 Lyria music. Sora has no adapter: the service was shut down
 2026-09-24. All eight are conformance NOT_TESTED — no live paid
 call has been made, and none is made without explicit user
-authorization for that run. Adapter tests use mock transports.
+authorization for that run. Adapter tests use mock transports
+only. Every outbound URL is validated by the provider URL
+security policy (R4-A); every request body is built by the
+provider's contract (R4-B).
 
 ## Tests
 
-- `tests/test_media_execution.py` (`CF-P1-005-EXECUTION`, 85
+- `tests/test_media_execution.py` (`CF-P1-005-EXECUTION`, 92
   checks): record/failure/artifact validation, the schemas, the
   state machine (create, transitions, resume, retry), the
   orchestrator (sync/async/uncertain/failure submit, poll,
@@ -192,25 +209,39 @@ authorization for that run. Adapter tests use mock transports.
   G6 evidence check.
 - `tests/test_ffmpeg_adapter.py` (`CF-P1-005-FFMPEG`, 28 checks):
   real local execution on deterministic lavfi media.
-- `tests/test_media_adapters.py` (`CF-P1-005-ADAPTERS`, 56
+- `tests/test_media_adapters.py` (`CF-P1-005-ADAPTERS`, 57
   checks): VoiceStudio against a mock backend, OpenMontage
   checkout verification and fail-closed submit, the OTIO probe,
   credential handling and redaction, the HTTP adapter over mock
   transports (sync image, async video submit + poll, cancel),
   and the factory (Sora refused).
-- `tests/test_timeline_delivery.py` (`CF-P1-005-DELIVERY`, 26
+- `tests/test_timeline_delivery.py` (`CF-P1-005-DELIVERY`, 46
   checks): manifest from validated artifacts, rejection of
   fabricated/missing/mismatched paths, the strict cross-reference
   check with a real requester, and the registry built from a job.
+- R4 suites: `tests/test_provider_url_security.py`
+  (`CF-P1-005-R4-SEC`, 169 checks) pins the URL security policy;
+  `tests/test_provider_contracts.py`
+  (`CF-P1-005-R4-CONTRACTS`, 157 checks) pins the per-provider
+  contracts; `tests/test_timeline_geometry.py`
+  (`CF-P1-005-R4-GEOMETRY`, 80 checks) pins explicit-profile and
+  probe-derived geometry with no silent fallback;
+  `tests/test_voicestudio_controls.py`
+  (`CF-P1-005-R4-VOICE`, 41 checks) pins the VoiceStudio control
+  mapping; `tests/test_e2e_local.py` (`CF-P1-005-R4-E2E`, 28
+  checks) runs the local end-to-end regression on real
+  FFmpeg/ffprobe (it fails, never skips, when FFmpeg is absent;
+  `p0-validate` installs a known FFmpeg version).
 
 ## Known gaps (P1-005)
 
-- The VoiceStudio adapter does not forward the voice binding's
-  vocal characteristics (pitch, pace, emotional delivery, pauses)
-  or an `instruct` string to the backend; the 2026-11-13
-  instruct+seed test pattern is reproducible only by a direct
-  backend call, not through the adapter. Forwarding needs a
-  voice-binding schema decision first.
+- The VoiceStudio adapter forwards only the controls the bundled
+  backend genuinely supports (`instruct`, `speed`, `seed`) to
+  the documented backend fields (R4-D); pitch, pace, emotion
+  and pauses are refused with a precise capability error instead
+  of being silently dropped, and the registry never advertises
+  an unsupported control. The 2026-11-13 instruct+seed test
+  pattern is reproducible through the adapter.
 - No video provider is VERIFIED or EXERCISED, and no external
   provider has had a live conformance run (no credentials, no
   authorization in this round). Open items per provider are in
