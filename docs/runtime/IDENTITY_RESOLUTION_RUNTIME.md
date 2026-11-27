@@ -115,10 +115,40 @@ orchestrator and compiler take only thin additive hooks:
   id is an error naming only the id. Registry files are read
   directly (`character.json` / `character-registration.json` files
   and a top-level `registry.json`); there is no second registry.
+- `load_authorized_voice_registry(root, *, owner_id,
+  workspace_id)` (F1) — the corresponding canonical voice path
+  from the same overlay root: `voice-profile.json` files anywhere
+  under the root plus a top-level `voices.json`. Same refusal,
+  validation, scoping and symlink rules as the character loader;
+  a root with no voice files loads as empty. `overlay_root_configured()`
+  reports whether the overlay environment variable is set, and
+  `scope_registry_to_session(registry, *, owner_id, workspace_id)`
+  filters an explicitly supplied mapping to the session's owner
+  and workspace (records without ownership pass through; the
+  voice ownership check still happens at selection time).
 - `resolve_character_reference(registry, *, character_id=None,
   name=None)` — the exact name/id resolution rules above.
 - `resolve_project_identity_policy(policy, *, registry)` —
-  validates the policy and resolves its selected ids.
+  validates the policy and resolves its selected ids. The
+  canonical selector record `selected_characters` (F1) selects by
+  exact id, exact unique name, or both (both must name the same
+  record); `selected_character_ids` stays valid, and when both
+  lists are supplied they must resolve to the same character set.
+- `complete_auto_match_selection(*, cast, policy_resolution,
+  registry, analysis)` / `enrich_analysis_for_auto_match(analysis,
+  *, registry)` (F1) — the two halves of `AUTO_MATCH_APPROVED`:
+  enrichment fills `registered_character_id` on name-only
+  approved resolutions by exact unique name before validation,
+  and completion resolves every eligible unselected cast
+  reference (all classes except `MENTIONED_ONLY`) into the policy
+  resolution, failing closed on duplicate names, unknown names
+  and conflicting identifiers.
+- `validate_new_only_inputs(*, analysis, bundle,
+  character_registry, voice_registry=None, proposals=None)` (F1)
+  — NEW_ONLY hardening: an approved registered resolution, a
+  proposal reusing a registered reference asset, or a bundle
+  voice binding naming a registered voice all fail closed,
+  naming only caller-supplied references.
 - `resolve_script_cast(script, analysis, bundle)` — classifies the
   script cast from dialogue, analysis resolutions, shot
   `character_ids`, and performance lines; an excluded character in
@@ -138,7 +168,11 @@ orchestrator and compiler take only thin additive hooks:
   role=None, emotion=None)` /
   `identity_bindings_for_shot(snapshot, shot)` /
   `voice_binding_for_line(snapshot, line, *, dialogue_line_id=None)`
-  — the packet binding builders used by the task compiler.
+  — the packet binding builders used by the task compiler. The
+  voice binding normalizes the performance line's pause
+  direction to one string (the performance-plan schema types
+  `voice.pauses` as an array, the task-packet schema types
+  `voice_binding.pauses` as a string); a list joins with `"; "`.
 
 The orchestrator hooks are `create_production_job(...,
 identity_policy=None)`, `validate_job` (validates a stored policy

@@ -8,6 +8,14 @@ voice resolution (P24–P34), multi-character/continuity
 actual packet/snapshot contents, not only schema labels or
 status flags. Valid AND invalid fixtures are both exercised.
 
+CF-WO-P1-004-R1-F1 adds the unified-entry regression matrix
+F1–F6: the real plan_script_to_production() across all four
+identity modes (F1), name/ID selection (F2), the adversarial
+NEW_ONLY case with original references (F3), a six-character
+cast with a non-speaking visible character (F4), the short and
+long fixtures through the same planner (F5), and persistent
+identity save/resume under a new session (F6).
+
 Test identities are synthetic fixtures named by the work order
 (Arif, Sarena, Mina, Rahim, Tania, a shopkeeper, a narrator).
 They are test-only records with placeholder ownership and
@@ -33,6 +41,7 @@ ROOT_ABS = os.path.abspath(ROOT)
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "tests"))
 import test_script_to_performance_runtime as T  # noqa: E402
+import test_production_orchestrator as O  # noqa: E402
 from runtime import local_session  # noqa: E402
 from runtime.local_session import (  # noqa: E402
     close_session, is_active_session, load_or_create_profile,
@@ -43,7 +52,8 @@ from runtime import task_compiler as tc  # noqa: E402
 from runtime.production_orchestrator import (  # noqa: E402
     ProductionOrchestratorError, build_production_bundle,
     build_qc_correction_tasks, compile_provider_tasks,
-    create_production_job, transition_job, validate_job)
+    create_production_job, plan_script_to_production,
+    transition_job, validate_job)
 
 failures = []
 _checks = [0]
@@ -1788,6 +1798,1044 @@ def _privacy_group():
           public_files == [], f"got {public_files}")
 
 
+def _f1_plan(session, job_id, pol, script, profile, draft, analysis,
+             bundle_id, proposals, store_root=None, characters=None,
+             voices=None):
+    """One unified plan_script_to_production() run with the
+    stamped registries as explicit mappings (overridable for
+    the foreign-workspace case). Returns the result."""
+    if characters is None or voices is None:
+        characters, voices = registries(session)
+    job = create_production_job(
+        session, job_id, "proj-test-001",
+        {"delivery_profile": analysis["format_profile"][
+            "delivery_profile"]},
+        identity_policy=pol)
+    job = transition_job(session, job, "ANALYZING")
+    return plan_script_to_production(
+        session, job, script, profile, draft, analysis,
+        T.fresh_routing_plan(session), bundle_id,
+        proposals=proposals, character_registry=characters,
+        voice_registry=voices, identity_policy=pol,
+        store_root=store_root)
+
+
+def _expect_plan_error(name, fn, *needles):
+    try:
+        fn()
+    except ProductionOrchestratorError as exc:
+        errors = getattr(exc, "errors", None)
+        text = " ".join(errors) if isinstance(errors, list) \
+            else str(exc)
+        check(name, all(needle in text for needle in needles),
+              f"error={text}")
+        return
+    check(name, False, "planning succeeded instead of refusing")
+
+
+def _registered_only_inputs():
+    """The mixed story with only registered characters: the
+    shopkeeper and the narrator are removed from the script,
+    the draft and the analysis, so SELECTED_REGISTERED_ONLY
+    can run end to end with no task-local proposal at all."""
+    script = clone(mixed_script())
+    profile = clone(mixed_profile())
+    draft = clone(mixed_draft())
+    analysis = clone(mixed_analysis())
+    script["dialogue"] = [
+        line for line in script["dialogue"]
+        if line["character_id"] not in ("shopkeeper", "narr-001")]
+    for shot in script["shots"]:
+        shot["character_ids"] = [
+            cid for cid in shot["character_ids"]
+            if cid != "shopkeeper"]
+    profile["per_subject_overrides"] = [
+        o for o in profile["per_subject_overrides"]
+        if o["character_id"] != "shopkeeper"]
+    scene = draft["scene_plan"]["scenes"][0]
+    scene["character_ids"] = [
+        cid for cid in scene["character_ids"] if cid != "shopkeeper"]
+    scene["subjects"] = [
+        s for s in scene["subjects"]
+        if s["character_id"] != "shopkeeper"]
+    for shot in draft["shot_plan"]["shots"]:
+        shot["character_ids"] = [
+            cid for cid in shot["character_ids"] if cid != "shopkeeper"]
+        shot["subjects"] = [
+            s for s in shot["subjects"]
+            if s["character_id"] != "shopkeeper"]
+    draft["performance_plan"]["lines"] = [
+        line for line in draft["performance_plan"]["lines"]
+        if line["character_id"] not in ("shopkeeper", "narr-001")]
+    draft["character_voice_bindings"] = [
+        b for b in draft["character_voice_bindings"]
+        if b["character_id"] not in ("shopkeeper", "narr-001")]
+    analysis["premise"] = ("Arif and Sarena decide to go together, "
+                           "and set off down the clear road with Mina.")
+    analysis["dialogue_preservation"] = {
+        "source_dialogue_line_count": 4, "mapped_line_count": 4,
+        "rewrite_requested": False,
+        "notes": "All four source lines map one-to-one."}
+    analysis["character_resolutions"] = [
+        r for r in analysis["character_resolutions"]
+        if r["character_ref"] not in ("shopkeeper", "narr-001")]
+    analysis["scenes"][0]["character_refs"] = [
+        ref for ref in analysis["scenes"][0]["character_refs"]
+        if ref != "shopkeeper"]
+    return script, profile, draft, analysis
+
+
+def _f2_selection_group():
+    session = fresh_session()
+    characters, voices = registries(session)
+
+    def resolve(pol):
+        return ir.resolve_project_identity_policy(
+            pol, registry=characters)
+
+    # Case 1: unique exact name.
+    pol = policy(policy_id="pol-f2-name-001",
+                 mode="SELECTED_REGISTERED_ONLY",
+                 selected=(), allow_new=False)
+    pol["selected_characters"] = [{"name": "Mina"}]
+    resolved = resolve(pol)
+    check("CF-P1-004-R1-F1-SELECTION: a unique exact name resolves "
+          "to its registered id",
+          resolved["selected_character_ids"] == ["char-003"]
+          and resolved["resolved"]["char-003"]["character_id"]
+          == "char-003",
+          f"got {resolved}")
+
+    # Case 2: exact id.
+    pol = policy(policy_id="pol-f2-id-001",
+                 mode="SELECTED_REGISTERED_ONLY",
+                 selected=(), allow_new=False)
+    pol["selected_characters"] = [{"character_id": "char-002"}]
+    resolved = resolve(pol)
+    check("CF-P1-004-R1-F1-SELECTION: an exact id resolves",
+          resolved["selected_character_ids"] == ["char-002"],
+          f"got {resolved}")
+
+    # Case 3: name + matching id.
+    pol = policy(policy_id="pol-f2-both-001",
+                 mode="SELECTED_REGISTERED_ONLY",
+                 selected=("char-003",), allow_new=False)
+    pol["selected_characters"] = [{"character_id": "char-003",
+                                   "name": "Mina"}]
+    resolved = resolve(pol)
+    check("CF-P1-004-R1-F1-SELECTION: a name with its matching id "
+          "resolves to the same record",
+          resolved["selected_character_ids"] == ["char-003"]
+          and resolved["selected_characters"][0]["matched_by"]
+          == "id-and-name",
+          f"got {resolved}")
+
+    # Case 4: name + mismatching id.
+    pol = policy(policy_id="pol-f2-mismatch-001",
+                 mode="SELECTED_REGISTERED_ONLY",
+                 selected=("char-001",), allow_new=False)
+    pol["selected_characters"] = [{"character_id": "char-001",
+                                   "name": "Mina"}]
+    try:
+        resolve(pol)
+        check("CF-P1-004-R1-F1-SELECTION: a name with a mismatching "
+              "id is refused", False,
+              "mismatched name+id resolved instead of refusing")
+    except ir.IdentityResolutionError as exc:
+        text = " ".join(exc.errors)
+        check("CF-P1-004-R1-F1-SELECTION: a name with a mismatching "
+              "id is refused",
+              "char-001" in text and "Mina" in text,
+              f"errors={exc.errors}")
+
+    # Case 5: duplicate name ambiguity (two characters named
+    # Arif: char-001 and char-005).
+    pol = policy(policy_id="pol-f2-ambig-001",
+                 mode="SELECTED_REGISTERED_ONLY",
+                 selected=(), allow_new=False)
+    pol["selected_characters"] = [{"name": "Arif"}]
+    try:
+        resolve(pol)
+        check("CF-P1-004-R1-F1-SELECTION: a duplicated name is "
+              "refused as ambiguous", False,
+              "duplicate name resolved instead of refusing")
+    except ir.IdentityResolutionError as exc:
+        text = " ".join(exc.errors)
+        check("CF-P1-004-R1-F1-SELECTION: a duplicated name is "
+              "refused as ambiguous",
+              "Arif" in text and "ambiguous" in text
+              and "char-001" not in text
+              and "char-005" not in text,
+              f"errors={exc.errors}")
+
+    # Case 6: unavailable identity (unknown id, unknown name).
+    pol = policy(policy_id="pol-f2-missing-001",
+                 mode="SELECTED_REGISTERED_ONLY",
+                 selected=("char-999",), allow_new=False)
+    try:
+        resolve(pol)
+        missing_id_refused = False
+    except ir.IdentityResolutionError:
+        missing_id_refused = True
+    pol["selected_character_ids"] = []
+    pol["selected_characters"] = [{"name": "Nobody"}]
+    try:
+        resolve(pol)
+        missing_name_refused = False
+    except ir.IdentityResolutionError:
+        missing_name_refused = True
+    check("CF-P1-004-R1-F1-SELECTION: an unavailable identity is "
+          "refused by id and by name",
+          missing_id_refused and missing_name_refused,
+          "an unknown id or name resolved instead of refusing")
+
+    # Case 7: unauthorized workspace — a record stamped to a
+    # foreign workspace is invisible to this session, so the
+    # policy selecting it fails closed without naming the
+    # foreign record.
+    foreign = fresh_session()
+    raw = [r for r in load_fixture("identity-registry.json")[
+        "characters"] if r.get("character_id") == "char-001"][0]
+    foreign_characters = dict(characters)
+    foreign_characters["char-001"] = stamp_ownership(raw, foreign)
+    pol = policy(policy_id="pol-f2-foreign-001",
+                 mode="SELECTED_REGISTERED_ONLY",
+                 selected=("char-001", "char-002", "char-003"),
+                 allow_new=False)
+    _expect_plan_error(
+        "CF-P1-004-R1-F1-SELECTION: an identity from another "
+        "workspace is not selectable in this session",
+        lambda: _f1_plan(
+            session, "job-f2-foreign-001", pol,
+            mixed_script(), mixed_profile(), mixed_draft(),
+            mixed_analysis(), "bundle-f2-foreign-001",
+            list(mixed_proposals("job-f2-foreign-001").values()),
+            characters=foreign_characters, voices=voices),
+        "char-001")
+
+    # Case 8: explicitly excluded identity in the cast.
+    pol = policy(policy_id="pol-f2-excluded-001",
+                 mode="MIXED_REGISTERED_AND_NEW",
+                 selected=("char-001", "char-003"),
+                 excluded=("char-002",), allow_new=True)
+    _expect_plan_error(
+        "CF-P1-004-R1-F1-SELECTION: an explicitly excluded "
+        "identity that appears in the script cast is refused",
+        lambda: _f1_plan(
+            session, "job-f2-excluded-001", pol,
+            mixed_script(), mixed_profile(), mixed_draft(),
+            mixed_analysis(), "bundle-f2-excluded-001",
+            list(mixed_proposals("job-f2-excluded-001").values())),
+        "char-002", "excluded")
+
+    # Case 9: exact AUTO_MATCH of an unselected but approved
+    # character — Mina (char-003) is not selected, yet the
+    # analysis approves her and the planner resolves her.
+    pol = policy(policy_id="pol-f2-auto-001",
+                 mode="AUTO_MATCH_APPROVED",
+                 selected=("char-001",), allow_new=True)
+    result = _f1_plan(session, "job-f2-auto-001", pol,
+                      mixed_script(), mixed_profile(), mixed_draft(),
+                      mixed_analysis(), "bundle-f2-auto-001",
+                      list(mixed_proposals("job-f2-auto-001").values()))
+    snapshot = result["job"]["identity_snapshot"]
+    by_line = {p["voice_binding"]["dialogue_line_id"]: p
+               for p in result["task_package"]["packets"]
+               if p["task_type"] == "voice-generation"
+               and p.get("voice_binding")}
+    check("CF-P1-004-R1-F1-SELECTION: AUTO_MATCH resolves the "
+          "unselected approved character with her exact voice "
+          "binding",
+          snapshot["selected_character_ids"] == ["char-001"]
+          and "char-003" in {e["character_id"] for e in
+                             snapshot["resolved_characters"]}
+          and by_line["l-04"]["voice_binding"]["voice_profile_id"]
+          == "voice-mina-bn-001"
+          and by_line["l-04"]["voice_binding"][
+              "reference_audio_sha256"] == "c1" * 32,
+          f"got {snapshot} {by_line}")
+
+    # Case 10: a mentioned-only character gets no visual
+    # binding — Rahim (char-004) is registered and selected
+    # and speaks in no line, so he is resolved but appears in
+    # no image or video packet and gets no voice selection.
+    analysis = clone(mixed_analysis())
+    analysis["character_resolutions"].append({
+        "character_ref": "Rahim", "resolution": "approved",
+        "registered_character_id": "char-004", "role": "supporting",
+        "provenance": "FROM_APPROVED_PROJECT_CANON",
+        "cast_class": "MENTIONED_ONLY", "scene_ids": []})
+    pol = policy(policy_id="pol-f2-mentioned-001",
+                 mode="SELECTED_REGISTERED_ONLY",
+                 selected=("char-001", "char-002", "char-003",
+                           "char-004"),
+                 allow_new=False)
+    result = _f1_plan(session, "job-f2-mentioned-001", pol,
+                      mixed_script(), mixed_profile(), mixed_draft(),
+                      analysis, "bundle-f2-mentioned-001",
+                      list(mixed_proposals(
+                          "job-f2-mentioned-001").values()))
+    snapshot = result["job"]["identity_snapshot"]
+    all_bindings = [b["character_id"]
+                    for p in result["task_package"]["packets"]
+                    for b in p.get("identity_bindings") or []]
+    check("CF-P1-004-R1-F1-SELECTION: a mentioned-only character "
+          "is resolved with its cast class but receives no visual "
+          "binding and no voice selection",
+          {"character_ref": "Rahim",
+           "cast_class": "MENTIONED_ONLY"}
+          in snapshot["cast_classes"]
+          and "char-004" not in all_bindings
+          and "char-004" not in {s["character_id"] for s in
+                                 snapshot["voice_selections"]},
+          f"got {snapshot['cast_classes']} {all_bindings}")
+
+
+def _new_only_adversarial_inputs(job_id):
+    """Original mixed script/cast references, but every
+    registered identity reinterpreted as a new task-local one:
+    the analysis resolutions become task-local proposals with
+    new job-scoped proposal ids, and the draft voice bindings
+    are renamed to job-scoped voice ids. The story roles and
+    relationships are preserved; no registered id survives."""
+    script = clone(mixed_script())
+    profile = clone(mixed_profile())
+    draft = clone(mixed_draft())
+    analysis = clone(mixed_analysis())
+    renames = [
+        ("voice-arif-en-001", "voice-new-arif-en-001"),
+        ("voice-arif-bn-001", "voice-new-arif-bn-001"),
+        ("voice-sarena-bn-001", "voice-new-sarena-bn-001"),
+        ("voice-mina-bn-001", "voice-new-mina-bn-001"),
+        ("audio-arif-l01", "audio-new-arif-l01"),
+        ("audio-arif-l06", "audio-new-arif-l06"),
+        ("audio-sarena-l02", "audio-new-sarena-l02"),
+        ("audio-mina-l04", "audio-new-mina-l04"),
+        ("asset-arif-001", "asset-new-arif-001"),
+        ("asset-sarena-001", "asset-new-sarena-001"),
+        ("asset-mina-001", "asset-new-mina-001"),
+    ]
+
+    def renamed(value):
+        text = json.dumps(value)
+        for old, new in renames:
+            text = text.replace(old, new)
+        return json.loads(text)
+
+    draft = renamed(draft)
+    proposals = {}
+    for ref in ("char-001", "char-002", "char-003"):
+        record = shopkeeper_proposal(job_id)
+        record["proposal_id"] = f"prop-{ref}-001"
+        record["character_ref"] = ref
+        record["design_brief"] = (f"A new character for the {ref} "
+                                  "role, designed for this story only.")
+        record["approved_reference_ids"] = [f"ref-new-{ref}-front"]
+        proposals[record["proposal_id"]] = record
+    for resolution in analysis["character_resolutions"]:
+        ref = resolution["character_ref"]
+        if ref in ("char-001", "char-002", "char-003"):
+            resolution["resolution"] = "task-local-proposal"
+            resolution["proposal_id"] = f"prop-{ref}-001"
+            resolution["provenance"] = "INFERRED_FOR_PRODUCTION"
+            resolution.pop("registered_character_id", None)
+    proposals.update(mixed_proposals(job_id))
+    return script, profile, draft, analysis, proposals
+
+
+def _registered_tokens(characters, voices):
+    """(string tokens, generation-seed values) naming private
+    registry content: every reference asset id/path/hash,
+    model-sheet id/path/hash, fixed prompt block, voice profile
+    id, voice reference-audio path/hash, and character
+    generation seed. The leak scan checks the compiled package,
+    the production bundle and the snapshot against these."""
+    tokens = set()
+    seeds = set()
+    for record in characters.values():
+        if not isinstance(record, dict):
+            continue
+        for key in ("canonical_reference_images",
+                    "expression_pose_references", "reference_assets"):
+            for asset in record.get(key) or []:
+                if isinstance(asset, dict):
+                    tokens.update(
+                        v for v in (asset.get("asset_id"),
+                                    asset.get("path"),
+                                    asset.get("sha256"))
+                        if isinstance(v, str) and v)
+        sheet = record.get("model_sheet") or {}
+        tokens.update(v for v in (sheet.get("asset_id"),
+                                  sheet.get("path"),
+                                  sheet.get("sha256"))
+                      if isinstance(v, str) and v)
+        block = record.get("fixed_prompt_block")
+        if isinstance(block, str) and block:
+            tokens.add(block)
+        seed = record.get("generation_seed")
+        if isinstance(seed, int):
+            seeds.add(seed)
+        tokens.update(
+            v for v in (record.get("default_voice_profile_id"),)
+            if isinstance(v, str) and v)
+        tokens.update(
+            v for v in
+            (record.get("additional_voice_profile_ids") or [])
+            if isinstance(v, str) and v)
+    for record in voices.values():
+        if not isinstance(record, dict):
+            continue
+        voice_id = record.get("voice_profile_id")
+        if isinstance(voice_id, str) and voice_id:
+            tokens.add(voice_id)
+        audio = record.get("reference_audio") or {}
+        tokens.update(v for v in (audio.get("path"),
+                                  audio.get("sha256"))
+                      if isinstance(v, str) and v)
+        for asset in record.get("audio_reference_assets") or []:
+            if isinstance(asset, dict) and asset.get("path"):
+                tokens.add(asset["path"])
+        seed = record.get("seed")
+        if isinstance(seed, int):
+            seeds.add(seed)
+    return sorted(tokens), seeds
+
+
+def _scan_for_leaks(value, string_tokens, seed_values):
+    """Registered content found in a compiled value: string
+    tokens as substrings of string values, generation seeds as
+    integer values, and any 'seed' / 'generation_seed' key.
+    Returns the leaked descriptors (empty = clean)."""
+    leaked = []
+
+    def walk(node):
+        if isinstance(node, dict):
+            for key, item in node.items():
+                if key in ("seed", "generation_seed"):
+                    leaked.append(f"key:{key}")
+                walk(item)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+        elif isinstance(node, str):
+            for token in string_tokens:
+                if token in node:
+                    leaked.append(token)
+        elif isinstance(node, int) and not isinstance(node, bool):
+            if node in seed_values:
+                leaked.append(f"seed-value:{node}")
+
+    walk(value)
+    return sorted(set(leaked))
+
+
+def _f3_new_only_adversarial_group():
+    session = fresh_session()
+    characters, voices = registries(session)
+    string_tokens, seed_values = _registered_tokens(
+        characters, voices)
+    before_characters = json.dumps(characters, sort_keys=True)
+    before_voices = json.dumps(voices, sort_keys=True)
+    before_char_hash = ir.registry_snapshot_hash(characters)
+    before_voice_hash = ir.registry_snapshot_hash(voices)
+    pol = policy(policy_id="pol-f1-newonly-adv-001", mode="NEW_ONLY",
+                 selected=(), allow_new=True)
+
+    # Success: original references, task-local reinterpretation.
+    script, profile, draft, analysis, proposals = \
+        _new_only_adversarial_inputs("job-f1-newonly-adv-001")
+    result = _f1_plan(session, "job-f1-newonly-adv-001", pol,
+                      script, profile, draft, analysis,
+                      "bundle-f1-newonly-adv-001",
+                      list(proposals.values()))
+    snapshot = result["job"]["identity_snapshot"]
+    check("CF-P1-004-R1-F1-NEWONLY-ADVERSARIAL: NEW_ONLY with "
+          "original references and a populated registry plans "
+          "with only new task-local identities",
+          result["job"]["state"] == "PLAN_READY"
+          and snapshot is not None
+          and snapshot["mode"] == "NEW_ONLY"
+          and sorted(e["character_id"]
+                     for e in snapshot["resolved_characters"])
+          == ["prop-char-001-001", "prop-char-002-001",
+              "prop-char-003-001", "prop-narrator-001",
+              "prop-shopkeeper-001"]
+          and snapshot["voice_selections"] == [],
+          f"got {snapshot}")
+    scanned = {"task_package": result["task_package"],
+               "production_bundle": result["production_bundle"],
+               "identity_snapshot": snapshot}
+    leaked = _scan_for_leaks(scanned, string_tokens, seed_values)
+    check("CF-P1-004-R1-F1-NEWONLY-ADVERSARIAL: no registered "
+          "reference, model sheet, fixed identity, seed, voice "
+          "profile, reference-audio id or hash leaks into the "
+          "package, the bundle or the snapshot",
+          leaked == [] and "fixed-identity:" not in json.dumps(scanned),
+          f"leaked: {leaked}")
+    check("CF-P1-004-R1-F1-NEWONLY-ADVERSARIAL: NEW_ONLY packets "
+          "bind only task-local references and carry no "
+          "registered voice binding",
+          all(b["character_id"].startswith("prop-")
+              for p in result["task_package"]["packets"]
+              for b in p.get("identity_bindings") or [])
+          and all("voice_binding" not in p
+                  for p in result["task_package"]["packets"]
+                  if p["task_type"] == "voice-generation"),
+          "a packet binds a registered identity")
+    check("CF-P1-004-R1-F1-NEWONLY-ADVERSARIAL: the old registries "
+          "are unchanged by the NEW_ONLY run",
+          ir.registry_snapshot_hash(characters) == before_char_hash
+          and ir.registry_snapshot_hash(voices) == before_voice_hash
+          and json.dumps(characters, sort_keys=True)
+          == before_characters
+          and json.dumps(voices, sort_keys=True) == before_voices,
+          "a registry record changed")
+
+    # Rejection 1: the original approved analysis cannot be
+    # reinterpreted — the planner refuses and names the refs.
+    _expect_plan_error(
+        "CF-P1-004-R1-F1-NEWONLY-ADVERSARIAL: an approved "
+        "registered identity under NEW_ONLY is refused with a "
+        "task-local proposal requested",
+        lambda: _f1_plan(
+            session, "job-f1-newonly-rj1-001", pol,
+            mixed_script(), mixed_profile(), mixed_draft(),
+            mixed_analysis(), "bundle-f1-newonly-rj1-001",
+            list(mixed_proposals("job-f1-newonly-rj1-001").values())),
+        "char-001", "task-local proposal")
+
+    # Rejection 2: a task-local analysis whose draft still names
+    # a registered voice profile is refused.
+    script, profile, draft, analysis, proposals = \
+        _new_only_adversarial_inputs("job-f1-newonly-rj2-001")
+    draft["character_voice_binding"]["voice_profile_id"] = \
+        "voice-arif-en-001"
+    _expect_plan_error(
+        "CF-P1-004-R1-F1-NEWONLY-ADVERSARIAL: a draft voice "
+        "binding naming a registered voice under NEW_ONLY is "
+        "refused",
+        lambda: _f1_plan(
+            session, "job-f1-newonly-rj2-001", pol,
+            script, profile, draft, analysis,
+            "bundle-f1-newonly-rj2-001", list(proposals.values())),
+        "char-001", "d-01", "registered voice")
+
+
+def _multi_inputs():
+    """The mixed cast plus Rahim (char-004) as a visible
+    non-speaking character: he joins scene 1 and shot 2, speaks
+    in no line, and carries no default voice — so no voice
+    selection may be attempted for him."""
+    script = clone(mixed_script())
+    profile = clone(mixed_profile())
+    draft = clone(mixed_draft())
+    analysis = clone(mixed_analysis())
+    script["shots"][1]["character_ids"].append("char-004")
+    profile["per_subject_overrides"].append({
+        "character_id": "char-004", "subject_kind": "digital-human",
+        "representation": "ai-digital-human",
+        "source_media": "reference-image",
+        "rendering_style": "photorealistic-digital-human",
+        "articulation_target": "human-mouth-lips", "species": "human",
+        "motion_methods": ["face-animation",
+                           "lip-sync-phoneme-viseme",
+                           "body-animation"],
+        "is_live_action_footage": False})
+    scene = draft["scene_plan"]["scenes"][0]
+    scene["character_ids"].append("char-004")
+    scene["subjects"].append(_subject("char-004", "char-001"))
+    shot = draft["shot_plan"]["shots"][1]
+    shot["character_ids"].append("char-004")
+    shot["subjects"].append(_subject("char-004", "char-001"))
+    analysis["scenes"][0]["character_refs"].append("char-004")
+    analysis["character_resolutions"].append({
+        "character_ref": "char-004", "resolution": "approved",
+        "registered_character_id": "char-004", "role": "supporting",
+        "provenance": "FROM_APPROVED_PROJECT_CANON",
+        "cast_class": "VISIBLE_CHARACTER", "scene_ids": ["sc-01"]})
+    return script, profile, draft, analysis
+
+
+def _f4_multi_group():
+    session = fresh_session()
+    script, profile, draft, analysis = _multi_inputs()
+    pol = policy(policy_id="pol-f1-multi-001",
+                 mode="MIXED_REGISTERED_AND_NEW",
+                 selected=("char-001", "char-002", "char-003",
+                           "char-004"),
+                 allow_new=True)
+    result = _f1_plan(session, "job-f1-multi-001", pol,
+                      script, profile, draft, analysis,
+                      "bundle-f1-multi-001",
+                      list(mixed_proposals("job-f1-multi-001").values()))
+    snapshot = result["job"]["identity_snapshot"]
+    check("CF-P1-004-R1-F1-MULTI: six characters resolve — four "
+          "registered, two task-local — with the narrator "
+          "voice-only and Rahim visible but non-speaking",
+          snapshot is not None
+          and len(snapshot["resolved_characters"]) == 6
+          and snapshot["cast_classes"] == [
+              {"character_ref": "char-001",
+               "cast_class": "VISIBLE_CHARACTER"},
+              {"character_ref": "char-002",
+               "cast_class": "VISIBLE_CHARACTER"},
+              {"character_ref": "char-003",
+               "cast_class": "VISIBLE_CHARACTER"},
+              {"character_ref": "char-004",
+               "cast_class": "VISIBLE_CHARACTER"},
+              {"character_ref": "narr-001",
+               "cast_class": "NARRATOR_OR_VOICE_OVER"},
+              {"character_ref": "shopkeeper",
+               "cast_class": "VISIBLE_CHARACTER"}]
+          and sorted((s["character_id"], s["language"])
+                     for s in snapshot["voice_selections"])
+          == [("char-001", "bn"), ("char-001", "en"),
+              ("char-002", "bn"), ("char-003", "bn")],
+          f"got {snapshot}")
+    rahim = next(e for e in snapshot["resolved_characters"]
+                 if e.get("character_id") == "char-004")
+    check("CF-P1-004-R1-F1-MULTI: the non-speaking registered "
+          "character freezes his approved reference without a "
+          "voice selection",
+          rahim["primary_reference_id"] == "ref-rahim-front"
+          and rahim["fixed_identity_reference"].startswith(
+              "fixed-identity:"),
+          f"got {rahim}")
+    videos = _packets_by_shot(result["task_package"],
+                              "video-generation")
+    check("CF-P1-004-R1-F1-MULTI: every shot binds exactly its "
+          "own characters — the non-speaking character only "
+          "where he appears",
+          len(videos) == 3
+          and {b["character_id"] for b in
+               videos["sh-01"]["identity_bindings"]} == {"char-001"}
+          and {b["character_id"] for b in
+               videos["sh-02"]["identity_bindings"]}
+          == {"char-001", "char-002", "char-004",
+              "prop-shopkeeper-001"}
+          and {b["character_id"] for b in
+               videos["sh-03"]["identity_bindings"]}
+          == {"char-001", "char-003"},
+          f"got {videos}")
+    voice_packets = _packets_of_type(result["task_package"],
+                                     "voice-generation")
+    check("CF-P1-004-R1-F1-MULTI: six voice packets, four with "
+          "registered bindings, none for the non-speaking "
+          "character or the narrator",
+          len(voice_packets) == 6
+          and len([p for p in voice_packets
+                   if p.get("voice_binding")]) == 4
+          and all(p["voice_binding"]["character_id"] != "char-004"
+                  for p in voice_packets if p.get("voice_binding")),
+          f"got {voice_packets}")
+
+
+def _kiki_proposal(job_id):
+    """A task-local proposal for the bird Kiki, modelled on the
+    shopkeeper proposal: job-scoped references only."""
+    record = shopkeeper_proposal(job_id)
+    record["proposal_id"] = "prop-kiki-001"
+    record["character_ref"] = "char-kiki-001"
+    record["design_brief"] = ("A small African grey parrot who rides "
+                              "on Arif's shoulder and repeats what she "
+                              "hears. Designed for this story only.")
+    record["appearance"] = {
+        "face_structure": "grey parrot head, pale beak",
+        "hairstyle": "not applicable",
+        "body_proportions": "small parrot, folded wings",
+        "distinctive_features": ["red tail feathers", "pale beak"]}
+    record["clothing"] = []
+    record["accessories"] = []
+    record["personality"] = "Curious and quick to repeat a phrase."
+    record["signature_colour"] = "parrot grey"
+    record["expression_requirements"] = ["head tilted, listening"]
+    record["reference_preparation"] = {
+        "front_reference_required": True,
+        "side_reference_required": True,
+        "turnaround_required": False,
+        "expression_sheet_required": True,
+        "pose_references": ["perched on a shoulder",
+                            "head tilted"]}
+    record["approved_reference_ids"] = ["ref-kiki-front",
+                                        "ref-kiki-side"]
+    return record
+
+
+def _kiki_analysis(analysis):
+    """The short/long analysis with Kiki reinterpreted as a
+    task-local proposal (she has no registry record)."""
+    value = clone(analysis)
+    for resolution in value["character_resolutions"]:
+        if resolution["character_ref"] == "char-kiki-001":
+            resolution["resolution"] = "task-local-proposal"
+            resolution["proposal_id"] = "prop-kiki-001"
+            resolution["provenance"] = "INFERRED_FOR_PRODUCTION"
+            resolution.pop("registered_character_id", None)
+            resolution["cast_class"] = "VISIBLE_CHARACTER"
+    return value
+
+
+def _arif_voice_draft(draft):
+    """The short/long draft with Arif's voice binding naming
+    his registered English profile (the fixture draft names a
+    placeholder profile that belongs to no registered
+    character)."""
+    value = clone(draft)
+    binding = value.get("character_voice_binding") or {}
+    if binding.get("character_id") == "char-001":
+        binding["voice_profile_id"] = "voice-arif-en-001"
+    return value
+
+
+def _f5_long_short_group():
+    session = fresh_session()
+
+    # Short form: Arif registered, Kiki task-local.
+    pol = policy(policy_id="pol-f1-short-001",
+                 mode="MIXED_REGISTERED_AND_NEW",
+                 selected=("char-001",), allow_new=True)
+    result = _f1_plan(session, "job-f1-short-001", pol,
+                      T.script(), T.profile(),
+                      _arif_voice_draft(T.draft()),
+                      _kiki_analysis(O.short_analysis()),
+                      "bundle-f1-short-001",
+                      [_kiki_proposal("job-f1-short-001")])
+    snapshot = result["job"]["identity_snapshot"]
+    counts = {}
+    for packet in result["task_package"]["packets"]:
+        counts[packet["task_type"]] = \
+            counts.get(packet["task_type"], 0) + 1
+    check("CF-P1-004-R1-F1-LONGSHORT: the short form plans "
+          "through the unified entry point with Arif registered "
+          "and Kiki task-local",
+          result["job"]["state"] == "PLAN_READY"
+          and counts == {"character-design": 1,
+                         "reference-sheet": 1,
+                         "environment-reference": 1,
+                         "video-generation": 2,
+                         "voice-generation": 2,
+                         "sound-generation": 3,
+                         "media-technical": 2,
+                         "creative-editing": 1,
+                         "semantic-qc-review": 1}
+          and sorted(e["character_id"]
+                     for e in snapshot["resolved_characters"])
+          == ["char-001", "prop-kiki-001"]
+          and snapshot["voice_selections"]
+          == [{"character_id": "char-001",
+               "voice_profile_id": "voice-arif-en-001",
+               "dialogue_line_ids": ["l-01"], "language": "en",
+               "reference_audio_asset_id": "voice-reference",
+               "reference_audio_sha256": "b2" * 32,
+               "approval_status": "approved",
+               "consent_status": "granted",
+               "provider_voice_id": "omnivoice"}],
+          f"got {counts} {snapshot}")
+    voice_packets = _packets_of_type(result["task_package"],
+                                     "voice-generation")
+    arif_packet = next(
+        p for p in voice_packets if p.get("voice_binding"))
+    check("CF-P1-004-R1-F1-LONGSHORT: the short-form voice "
+          "binding carries the pause direction as one string",
+          arif_packet["voice_binding"]["pauses"]
+          == "short pause after 'help'",
+          f"got {arif_packet.get('voice_binding')}")
+
+    # Long form: Arif registered, Kiki and the fisherman
+    # task-local; the fisherman appears in scenes but no shot.
+    fisherman = load_fixture(
+        "character-design-proposal-fisherman-approved.json")
+    pol = policy(policy_id="pol-f1-long-001",
+                 mode="MIXED_REGISTERED_AND_NEW",
+                 selected=("char-001",), allow_new=True)
+    result = _f1_plan(session, "job-f1-long-001", pol,
+                      O.long_script(), O.long_profile(),
+                      _arif_voice_draft(O.long_draft()),
+                      _kiki_analysis(O.long_analysis()),
+                      "bundle-f1-long-001",
+                      [_kiki_proposal("job-f1-long-001"), fisherman])
+    snapshot = result["job"]["identity_snapshot"]
+    counts = {}
+    for packet in result["task_package"]["packets"]:
+        counts[packet["task_type"]] = \
+            counts.get(packet["task_type"], 0) + 1
+    check("CF-P1-004-R1-F1-LONGSHORT: the long form plans through "
+          "the unified entry point with 21 packets and three "
+          "resolved characters",
+          result["job"]["state"] == "PLAN_READY"
+          and counts == {"character-design": 2,
+                         "reference-sheet": 2,
+                         "environment-reference": 3,
+                         "video-generation": 4,
+                         "voice-generation": 4,
+                         "sound-generation": 4,
+                         "media-technical": 2,
+                         "creative-editing": 1,
+                         "semantic-qc-review": 1}
+          and sorted(e["character_id"]
+                     for e in snapshot["resolved_characters"])
+          == ["char-001", "prop-fisherman-001", "prop-kiki-001"]
+          and snapshot["cast_classes"] == [
+              {"character_ref": "char-001",
+               "cast_class": "VISIBLE_CHARACTER"},
+              {"character_ref": "char-kiki-001",
+               "cast_class": "VISIBLE_CHARACTER"},
+              {"character_ref": "the old fisherman",
+               "cast_class": "VISIBLE_CHARACTER"}],
+          f"got {counts} {snapshot}")
+    videos = _packets_by_shot(result["task_package"],
+                              "video-generation")
+    all_bindings = [b["character_id"]
+                    for p in videos.values()
+                    for b in p.get("identity_bindings") or []]
+    check("CF-P1-004-R1-F1-LONGSHORT: long-form shots bind only "
+          "their own characters; the scene-only fisherman gets "
+          "no shot binding",
+          {b["character_id"] for b in
+           videos["sh-01"]["identity_bindings"]} == {"char-001"}
+          and {b["character_id"] for b in
+               videos["sh-02"]["identity_bindings"]}
+          == {"char-001", "prop-kiki-001"}
+          and "prop-fisherman-001" not in all_bindings,
+          f"got {videos}")
+
+
+def _f6_persistent_group():
+    profile, session = fresh_profile_session()
+    characters, voices = registries(session)
+    store_root = tempfile.mkdtemp(prefix="cf-p1-004-r1-f1-resume-")
+    pol = policy(policy_id="pol-f1-persist-001",
+                 mode="MIXED_REGISTERED_AND_NEW")
+    result = _f1_plan(session, "job-f1-persist-001", pol,
+                      mixed_script(), mixed_profile(), mixed_draft(),
+                      mixed_analysis(), "bundle-f1-persist-001",
+                      list(mixed_proposals("job-f1-persist-001").values()),
+                      store_root=store_root)
+    job = result["job"]
+    snapshot = job["identity_snapshot"]
+    check("CF-P1-004-R1-F1-PERSISTENT: planning with a store root "
+          "persists the identity-aware job",
+          result["persisted"] is True
+          and job["state"] == "PLAN_READY"
+          and snapshot is not None,
+          f"got {job.get('state')} persisted={result['persisted']}")
+    close_session(session)
+    session2 = start_session(profile, profile.workspace_id)
+    _sessions.append(session2)
+    resumed = store.resume_production_job(
+        session2, store_root, job["job_id"], job["project_id"],
+        registry=characters, voice_registry=voices)
+    check("CF-P1-004-R1-F1-PERSISTENT: resume under a new session "
+          "rebinds the session and keeps the frozen snapshot, "
+          "hashes and voice selections",
+          resumed["session_id"] == session2.session_id
+          and resumed["state"] == "PLAN_READY"
+          and resumed["identity_snapshot"]["snapshot_hash"]
+          == snapshot["snapshot_hash"]
+          and resumed["identity_snapshot"]["voice_selections"]
+          == snapshot["voice_selections"]
+          and resumed["identity_snapshot"][
+              "registry_snapshot_hash"]
+          == snapshot["registry_snapshot_hash"],
+          f"got {resumed.get('identity_snapshot')}")
+    changed_voices = clone(voices)
+    changed_voices["voice-arif-bn-001"]["reference_audio"]["sha256"] \
+        = "0" * 64
+    try:
+        store.resume_production_job(
+            session2, store_root, job["job_id"], job["project_id"],
+            registry=characters, voice_registry=changed_voices)
+        check("CF-P1-004-R1-F1-PERSISTENT: a changed voice "
+              "reference audio hash blocks resume", False,
+              "resume succeeded with a changed voice hash")
+    except store.ProductionStoreError as exc:
+        check("CF-P1-004-R1-F1-PERSISTENT: a changed voice "
+              "reference audio hash blocks resume",
+              "identity" in str(exc).lower(), f"error={exc}")
+    missing = clone(characters)
+    del missing["char-002"]
+    try:
+        store.resume_production_job(
+            session2, store_root, job["job_id"], job["project_id"],
+            registry=missing, voice_registry=voices)
+        check("CF-P1-004-R1-F1-PERSISTENT: a missing registered "
+              "character asset blocks resume", False,
+              "resume succeeded with a missing character record")
+    except store.ProductionStoreError as exc:
+        check("CF-P1-004-R1-F1-PERSISTENT: a missing registered "
+              "character asset blocks resume",
+              "identity" in str(exc).lower(), f"error={exc}")
+
+
+def _f1_unified_group():
+    session = fresh_session()
+
+    # Mode 1: SELECTED_REGISTERED_ONLY, registered-only cast.
+    script, profile, draft, analysis = _registered_only_inputs()
+    pol = policy(policy_id="pol-f1-selected-001",
+                 mode="SELECTED_REGISTERED_ONLY",
+                 selected=("char-001", "char-002", "char-003"),
+                 allow_new=False)
+    result = _f1_plan(session, "job-f1-selected-001", pol,
+                      script, profile, draft, analysis,
+                      "bundle-f1-selected-001", [])
+    snapshot = result["job"]["identity_snapshot"]
+    check("CF-P1-004-R1-F1-UNIFIED: SELECTED_REGISTERED_ONLY runs "
+          "through plan_script_to_production with a registered-only "
+          "snapshot",
+          result["job"]["state"] == "PLAN_READY"
+          and result["persisted"] is False
+          and snapshot is not None
+          and snapshot["mode"] == "SELECTED_REGISTERED_ONLY"
+          and snapshot["task_local_proposal_ids"] == []
+          and len(snapshot["resolved_characters"]) == 3
+          and all(e["resolution"] == "approved"
+                  for e in snapshot["resolved_characters"])
+          and sorted((s["character_id"], s["language"])
+                     for s in snapshot["voice_selections"])
+          == [("char-001", "bn"), ("char-001", "en"),
+              ("char-002", "bn"), ("char-003", "bn")],
+          f"got {snapshot}")
+    videos = _packets_by_shot(result["task_package"],
+                              "video-generation")
+    check("CF-P1-004-R1-F1-UNIFIED: SELECTED_REGISTERED_ONLY video "
+          "packets bind only the registered characters of each shot",
+          len(videos) == 3
+          and {b["character_id"] for b in
+               videos["sh-02"]["identity_bindings"]}
+          == {"char-001", "char-002"}
+          and all(b.get("primary_reference_id", "").startswith("ref-")
+                  for p in videos.values()
+                  for b in p["identity_bindings"])
+          and len(_packets_of_type(result["task_package"],
+                                   "reference-sheet")) == 0,
+          f"got {videos}")
+    voice_packets = _packets_of_type(result["task_package"],
+                                     "voice-generation")
+    by_line = {p["voice_binding"]["dialogue_line_id"]: p
+               for p in voice_packets if p.get("voice_binding")}
+    check("CF-P1-004-R1-F1-UNIFIED: SELECTED_REGISTERED_ONLY voice "
+          "packets carry the exact approved bindings",
+          len(voice_packets) == 4 and len(by_line) == 4
+          and by_line["l-01"]["voice_binding"]["voice_profile_id"]
+          == "voice-arif-en-001"
+          and by_line["l-01"]["voice_binding"][
+              "reference_audio_sha256"] == "b2" * 32
+          and by_line["l-06"]["voice_binding"]["voice_profile_id"]
+          == "voice-arif-bn-001",
+          f"got {voice_packets}")
+
+    # Mode 2: MIXED_REGISTERED_AND_NEW, full mixed cast, with
+    # persistence through the production store.
+    store_root = tempfile.mkdtemp(prefix="cf-p1-004-r1-f1-store-")
+    pol = policy(policy_id="pol-f1-mixed-001",
+                 mode="MIXED_REGISTERED_AND_NEW")
+    result = _f1_plan(session, "job-f1-mixed-001", pol,
+                      mixed_script(), mixed_profile(), mixed_draft(),
+                      mixed_analysis(), "bundle-f1-mixed-001",
+                      list(mixed_proposals("job-f1-mixed-001").values()),
+                      store_root=store_root)
+    snapshot = result["job"]["identity_snapshot"]
+    check("CF-P1-004-R1-F1-UNIFIED: MIXED_REGISTERED_AND_NEW runs "
+          "through plan_script_to_production and persists the job "
+          "with its frozen snapshot",
+          result["job"]["state"] == "PLAN_READY"
+          and result["persisted"] is True
+          and result["job_path"] is not None
+          and os.path.isfile(result["job_path"])
+          and result["checkpoint_id"] == "plan-bundle-f1-mixed-001"
+          and os.path.isfile(result["checkpoint_path"])
+          and snapshot is not None
+          and snapshot["mode"] == "MIXED_REGISTERED_AND_NEW"
+          and len(snapshot["resolved_characters"]) == 5
+          and sorted(snapshot["task_local_proposal_ids"])
+          == ["prop-narrator-001", "prop-shopkeeper-001"],
+          f"got {snapshot}")
+    stored = store.load_production_job(
+        store_root, "job-f1-mixed-001", "proj-test-001")
+    check("CF-P1-004-R1-F1-UNIFIED: the stored job round-trips "
+          "with its snapshot hash",
+          stored["job"]["state"] == "PLAN_READY"
+          and stored["job"]["identity_snapshot"]["snapshot_hash"]
+          == snapshot["snapshot_hash"],
+          f"got {stored['job'].get('identity_snapshot')}")
+    package = result["task_package"]
+    check("CF-P1-004-R1-F1-UNIFIED: MIXED compiles 20 packets "
+          "with the three-character shot separated",
+          len(package["packets"]) == 20
+          and {b["character_id"] for b in
+               _packets_by_shot(package, "video-generation")["sh-02"][
+                   "identity_bindings"]}
+          == {"char-001", "char-002", "prop-shopkeeper-001"}
+          and len(_packets_of_type(package, "reference-sheet")) == 1,
+          f"packets={len(package['packets'])}")
+    voice_packets = _packets_of_type(package, "voice-generation")
+    bound = [p for p in voice_packets if p.get("voice_binding")]
+    check("CF-P1-004-R1-F1-UNIFIED: MIXED voice packets bind the "
+          "registered speakers exactly; the narrator keeps a "
+          "voice packet with no registered binding",
+          len(voice_packets) == 6 and len(bound) == 4
+          and {p["voice_binding"]["voice_profile_id"]
+               for p in bound}
+          == {"voice-arif-en-001", "voice-arif-bn-001",
+              "voice-sarena-bn-001", "voice-mina-bn-001"}
+          and any("voice_binding" not in p
+                  and "And so the journey began at dawn." in
+                  p["canonical_instruction"]
+                  for p in voice_packets),
+          f"got {voice_packets}")
+
+    # Mode 3: AUTO_MATCH_APPROVED, policy selects only char-001;
+    # the other approved cast members resolve by exact id.
+    pol = policy(policy_id="pol-f1-auto-001",
+                 mode="AUTO_MATCH_APPROVED",
+                 selected=("char-001",), allow_new=True)
+    result = _f1_plan(session, "job-f1-auto-001", pol,
+                      mixed_script(), mixed_profile(), mixed_draft(),
+                      mixed_analysis(), "bundle-f1-auto-001",
+                      list(mixed_proposals("job-f1-auto-001").values()))
+    snapshot = result["job"]["identity_snapshot"]
+    check("CF-P1-004-R1-F1-UNIFIED: AUTO_MATCH_APPROVED completes "
+          "the selection from the script cast without changing "
+          "the policy's own selection",
+          snapshot is not None
+          and snapshot["mode"] == "AUTO_MATCH_APPROVED"
+          and snapshot["selected_character_ids"] == ["char-001"]
+          and sorted(e["character_id"]
+                     for e in snapshot["resolved_characters"])
+          == ["char-001", "char-002", "char-003",
+              "prop-narrator-001", "prop-shopkeeper-001"]
+          and sorted((s["character_id"], s["language"])
+                     for s in snapshot["voice_selections"])
+          == [("char-001", "bn"), ("char-001", "en"),
+              ("char-002", "bn"), ("char-003", "bn")],
+          f"got {snapshot}")
+
+    # Mode 4: NEW_ONLY, renamed inputs (the existing P39
+    # fixture) through the unified entry point.
+    script, profile, draft, analysis, proposals = _new_only_inputs()
+    pol = policy(policy_id="pol-f1-newonly-001", mode="NEW_ONLY",
+                 selected=(), allow_new=True)
+    result = _f1_plan(session, "job-f1-newonly-001", pol,
+                      script, profile, draft, analysis,
+                      "bundle-f1-newonly-001",
+                      list(proposals.values()))
+    snapshot = result["job"]["identity_snapshot"]
+    check("CF-P1-004-R1-F1-UNIFIED: NEW_ONLY runs through "
+          "plan_script_to_production with no registered character "
+          "and no voice selection",
+          result["job"]["state"] == "PLAN_READY"
+          and snapshot is not None
+          and snapshot["mode"] == "NEW_ONLY"
+          and all(e["resolution"] == "task-local-proposal"
+                  for e in snapshot["resolved_characters"])
+          and snapshot["voice_selections"] == []
+          and all("voice_binding" not in p
+                  for p in result["task_package"]["packets"]
+                  if p["task_type"] == "voice-generation"),
+          f"got {snapshot}")
+
+
 def main():
     _resolution_group()
     _policy_group()
@@ -1796,6 +2844,12 @@ def main():
     _e2e_group()
     _new_only_group()
     _privacy_group()
+    _f1_unified_group()
+    _f2_selection_group()
+    _f3_new_only_adversarial_group()
+    _f4_multi_group()
+    _f5_long_short_group()
+    _f6_persistent_group()
     for session in list(_sessions):
         try:
             if is_active_session(session):

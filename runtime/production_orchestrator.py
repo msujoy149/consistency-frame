@@ -591,6 +591,22 @@ def validate_production_analysis(analysis, script=None) -> list[str]:
                     if isinstance(ref, str) and ref:
                         known.add(ref)
         unknown = sorted(seen_refs - known)
+        # F1: a resolution that declares cast_class
+        # MENTIONED_ONLY is not an unknown-identity error — the
+        # host explicitly records a character the story only
+        # mentions, and the declaration claims no visibility, no
+        # shot and no voice. The cast classifier independently
+        # derives MENTIONED_ONLY for such a ref, and the snapshot
+        # builder refuses any disagreement between the declared
+        # class and the derived one, so a genuinely visible
+        # character cannot hide behind the declaration.
+        mentioned_only = {
+            r.get("character_ref") for r in
+            analysis.get("character_resolutions") or []
+            if isinstance(r, dict)
+            and r.get("cast_class") == "MENTIONED_ONLY"}
+        unknown = [ref for ref in unknown
+                   if ref not in mentioned_only]
         if unknown:
             errors.append("production_analysis.character_resolutions: "
                           "resolutions name unknown identities "
@@ -1057,6 +1073,33 @@ def _build_identity_snapshot_for_bundle(
         raise ProductionOrchestratorError(
             "an identity policy needs an authorized character "
             "registry (character_registry must be an object)")
+    # F1 Defect A step 3: an explicitly supplied registry never
+    # sees more than the authorized overlay would have shown
+    # this session — records under another owner or workspace
+    # are invisible here, exactly as the loader excludes them
+    # at load time.
+    try:
+        character_registry = identity_resolution \
+            .scope_registry_to_session(
+                character_registry, owner_id=session.owner_id,
+                workspace_id=session.workspace_id)
+        if isinstance(voice_registry, dict):
+            voice_registry = identity_resolution \
+                .scope_registry_to_session(
+                    voice_registry, owner_id=session.owner_id,
+                    workspace_id=session.workspace_id)
+    except identity_resolution.IdentityResolutionError as exc:
+        raise ProductionOrchestratorError(exc.errors) from exc
+    # F1 Task D: NEW_ONLY hardening — no registered identity may
+    # survive into a NEW_ONLY job, whatever the draft carries.
+    if isinstance(policy, dict) and policy.get("mode") == "NEW_ONLY":
+        new_only_errors = identity_resolution \
+            .validate_new_only_inputs(
+                analysis=analysis, bundle=s2p_bundle,
+                character_registry=character_registry,
+                voice_registry=voice_registry, proposals=proposals)
+        if new_only_errors:
+            raise ProductionOrchestratorError(new_only_errors)
     try:
         policy_resolution = identity_resolution \
             .resolve_project_identity_policy(
@@ -1069,6 +1112,38 @@ def _build_identity_snapshot_for_bundle(
             policy_resolution=policy_resolution)
     except identity_resolution.IdentityResolutionError as exc:
         raise ProductionOrchestratorError(exc.errors) from exc
+    # F1 Defect B: the declared cast class must agree with the
+    # class derived from the script structure — a visible
+    # character cannot hide behind a MENTIONED_ONLY declaration,
+    # and a narrator cannot claim a visible binding.
+    for resolution in analysis.get("character_resolutions") or []:
+        if not isinstance(resolution, dict):
+            continue
+        declared = resolution.get("cast_class")
+        ref = resolution.get("character_ref")
+        if declared is None or ref is None:
+            continue
+        derived = cast["cast"].get(ref)
+        if derived is not None and derived != declared:
+            raise ProductionOrchestratorError(
+                f"character {ref!r} declares cast class "
+                f"{declared!r} but the script structure classifies "
+                f"it as {derived!r}")
+    # F1 Defect B: AUTO_MATCH_APPROVED completes the selection
+    # from the script cast — unselected but needed characters
+    # resolve by exact id or exact unique name.
+    if policy_resolution.get("mode") == "AUTO_MATCH_APPROVED":
+        try:
+            additions = identity_resolution \
+                .complete_auto_match_selection(
+                    cast=cast["cast"],
+                    policy_resolution=policy_resolution,
+                    registry=character_registry, analysis=analysis)
+        except identity_resolution.IdentityResolutionError as exc:
+            raise ProductionOrchestratorError(exc.errors) from exc
+        if additions:
+            policy_resolution = copy.deepcopy(policy_resolution)
+            policy_resolution["resolved"].update(additions)
     proposals_by_id: dict = {}
     if isinstance(proposals, dict):
         proposals_by_id = {k: v for k, v in proposals.items()
@@ -1084,6 +1159,23 @@ def _build_identity_snapshot_for_bundle(
                 and resolution.get("registered_character_id"):
             ref_to_id[resolution["character_ref"]] = resolution[
                 "registered_character_id"]
+    # The resolved selection also maps script refs to ids (the
+    # auto-match path resolves names the analysis never named by
+    # id). A ref the analysis and the resolution map to different
+    # ids is a conflict, not a tie to break.
+    for entry in policy_resolution.get("resolved", {}).values():
+        if not isinstance(entry, dict):
+            continue
+        ref = (entry.get("resolution") or {}).get("character_ref")
+        cid = entry.get("character_id")
+        if ref and cid:
+            if ref in ref_to_id and ref_to_id[ref] != cid:
+                raise ProductionOrchestratorError(
+                    f"character reference {ref!r} resolves to "
+                    f"{ref_to_id[ref]!r} in the analysis but to "
+                    f"{cid!r} in the identity policy — conflicting "
+                    "identifiers")
+            ref_to_id[ref] = cid
     resolved_ids = set(policy_resolution.get("resolved") or [])
     s2p = s2p_bundle.get("script_to_performance") or {}
     # Voice profile per dialogue line (the s2p bindings name one
@@ -1398,7 +1490,12 @@ def plan_script_to_production(session, job, script, profile, draft,
                               providers=None, *,
                               voice_consent=False, voice_kinds=None,
                               dialogue_rewrite_authorised=False,
-                              store_root=None, providers_path=None) \
+                              store_root=None, providers_path=None,
+                              identity_policy=None,
+                              character_registry=None,
+                              voice_registry=None,
+                              character_registry_root=None,
+                              voice_registry_root=None) \
         -> dict:
     """One unified script-to-production planning entry point.
 
@@ -1420,6 +1517,27 @@ def plan_script_to_production(session, job, script, profile, draft,
     ``wf-generate-from-script`` is NOT promoted by this entry
     point — no timeline manifest is produced and no fake media
     path is invented.
+
+    Identity (CF-WO-P1-004-R1-F1, Defect A): the identity
+    parameters are all optional and compatible with the existing
+    positional arguments. ``identity_policy`` is the approved
+    identity-selection policy — an explicit parameter wins over
+    a policy stored on the job. ``character_registry`` /
+    ``voice_registry`` are explicitly supplied authorized
+    registry mappings; ``character_registry_root`` /
+    ``voice_registry_root`` are authorized private overlay roots
+    the registries are loaded from. With no policy, behaviour is
+    exactly the pre-F1 behaviour and no registry is accessed at
+    all. With a policy, registries resolve in this order —
+    explicit mapping, then root, then the authorized overlay
+    environment variable — and the voice registry defaults to
+    the character registry root; a loader failure fails the
+    planning with ``ProductionOrchestratorError``. The resolved
+    policy and registries are passed to
+    :func:`build_production_bundle`, which freezes the identity
+    snapshot on the job. With ``AUTO_MATCH_APPROVED`` the
+    analysis is enriched first (name-only approved resolutions
+    resolved by exact unique name) so it validates.
     """
     _require_session(session)
     _require_bool(dialogue_rewrite_authorised,
@@ -1433,13 +1551,73 @@ def plan_script_to_production(session, job, script, profile, draft,
         raise ProductionOrchestratorError(
             "script-to-production planning can only start while the "
             f"job is ANALYZING, not {job.get('state')!r}")
+    # F1 Defect A: the unified entry point is the single place
+    # where an identity policy, its authorized registries and
+    # the bundle meet. An explicit parameter wins over a policy
+    # stored on the job; without any policy, nothing below
+    # touches a registry.
+    effective_policy = identity_policy \
+        if identity_policy is not None \
+        else job.get("identity_policy")
+    resolved_character_registry = character_registry
+    resolved_voice_registry = voice_registry
+    if effective_policy is not None:
+        if resolved_character_registry is None:
+            try:
+                resolved_character_registry = \
+                    identity_resolution \
+                    .load_authorized_character_registry(
+                        character_registry_root,
+                        owner_id=session.owner_id,
+                        workspace_id=session.workspace_id)
+            except identity_resolution.IdentityResolutionError \
+                    as exc:
+                raise ProductionOrchestratorError(
+                    exc.errors) from exc
+        if resolved_voice_registry is None:
+            voice_root = voice_registry_root \
+                if voice_registry_root is not None \
+                else character_registry_root
+            if voice_root is not None or \
+                    identity_resolution.overlay_root_configured():
+                try:
+                    resolved_voice_registry = \
+                        identity_resolution \
+                        .load_authorized_voice_registry(
+                            voice_root,
+                            owner_id=session.owner_id,
+                            workspace_id=session.workspace_id)
+                except identity_resolution.IdentityResolutionError \
+                        as exc:
+                    raise ProductionOrchestratorError(
+                        exc.errors) from exc
+        # F1 Defect B: AUTO_MATCH_APPROVED resolves name-only
+        # approved resolutions by exact unique name before the
+        # analysis is validated (an approved resolution without
+        # a registered id is otherwise a validation error).
+        if isinstance(effective_policy, dict) \
+                and effective_policy.get("mode") \
+                == "AUTO_MATCH_APPROVED":
+            try:
+                analysis = identity_resolution \
+                    .enrich_analysis_for_auto_match(
+                        analysis,
+                        registry=resolved_character_registry)
+            except identity_resolution.IdentityResolutionError \
+                    as exc:
+                raise ProductionOrchestratorError(
+                    exc.errors) from exc
     errors = validate_production_analysis(analysis, script)
     if errors:
         raise ProductionOrchestratorError(errors)
     production_bundle, job = build_production_bundle(
         session, job, routing_plan, script, profile, draft, analysis,
         bundle_id,
-        dialogue_rewrite_authorised=dialogue_rewrite_authorised)
+        dialogue_rewrite_authorised=dialogue_rewrite_authorised,
+        identity_policy=effective_policy,
+        character_registry=resolved_character_registry,
+        voice_registry=resolved_voice_registry,
+        proposals=proposals)
     reference_errors = validate_analysis_bundle_references(
         analysis, production_bundle)
     if reference_errors:
@@ -1455,6 +1633,7 @@ def plan_script_to_production(session, job, script, profile, draft,
         "production_bundle": production_bundle,
         "job": job,
         "task_package": task_package,
+        "identity_policy": effective_policy,
         "persisted": False,
         "job_path": None,
         "checkpoint_id": None,

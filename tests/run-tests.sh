@@ -139,6 +139,12 @@ run_one "CF-P1-004-R1-IDENTITY-VOICE" python3 tests/test_identity_resolution.py
 run_one "CF-P1-004-R1-IDENTITY-E2E" python3 tests/test_identity_resolution.py
 run_one "CF-P1-004-R1-IDENTITY-NEWONLY" python3 tests/test_identity_resolution.py
 run_one "CF-P1-004-R1-IDENTITY-PRIVACY" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-F1-UNIFIED" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-F1-SELECTION" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-F1-NEWONLY-ADVERSARIAL" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-F1-MULTI" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-F1-LONGSHORT" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-F1-PERSISTENT" python3 tests/test_identity_resolution.py
 
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check

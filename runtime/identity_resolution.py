@@ -231,6 +231,12 @@ def validate_identity_policy(policy) -> list[str]:
     registered character and allows new ones;
     SELECTED_REGISTERED_ONLY allows no new characters; a record
     cannot be both the project default and a one-job override.
+    Selector records (``selected_characters``, CF-WO-P1-004-R1-F1
+    Defect B) each name at least one of character_id / name, and
+    a name-only selector never stands in for an id the caller
+    could not name. Agreement between the two selector lists is
+    checked at resolution time (it needs the registry); this
+    validator only checks selector shape.
     """
     errors = schema_errors("identity-selection-policy", policy,
                            "identity_selection_policy")
@@ -244,6 +250,43 @@ def validate_identity_policy(policy) -> list[str]:
     selected = policy.get("selected_character_ids") or []
     excluded = policy.get("excluded_character_ids") or []
     allow_new = policy.get("allow_new_task_local_characters")
+    selectors = policy.get("selected_characters")
+    selector_ids: list[str] = []
+    if selectors is not None:
+        if not isinstance(selectors, list):
+            errors.append("identity_selection_policy."
+                          "selected_characters: expected an array")
+        else:
+            for index, selector in enumerate(selectors):
+                if not isinstance(selector, dict):
+                    errors.append("identity_selection_policy."
+                                  f"selected_characters[{index}]: "
+                                  "expected an object")
+                    continue
+                character_id = selector.get("character_id")
+                name = selector.get("name")
+                if character_id is None and name is None:
+                    errors.append("identity_selection_policy."
+                                  f"selected_characters[{index}]: "
+                                  "names neither a character id nor "
+                                  "a name")
+                if character_id is not None:
+                    if not _is_id(character_id):
+                        errors.append("identity_selection_policy."
+                                      f"selected_characters[{index}]: "
+                                      f"character_id {character_id!r} "
+                                      "is not a valid id")
+                    else:
+                        selector_ids.append(character_id)
+                if name is not None and (not isinstance(name, str)
+                                         or not name):
+                    errors.append("identity_selection_policy."
+                                  f"selected_characters[{index}]: "
+                                  "name must be a non-empty string")
+            if len(set(selector_ids)) != len(selector_ids):
+                errors.append("identity_selection_policy."
+                              "selected_characters: duplicate "
+                              "character_id in the selector list")
     if isinstance(selected, list) and isinstance(excluded, list):
         overlap = sorted(set(selected) & set(excluded))
         if overlap:
@@ -255,11 +298,15 @@ def validate_identity_policy(policy) -> list[str]:
             errors.append("identity_selection_policy: NEW_ONLY must "
                           "select no registered characters, got "
                           f"{selected}")
+        if selectors:
+            errors.append("identity_selection_policy: NEW_ONLY must "
+                          "select no registered characters (a "
+                          "selected_characters list was supplied)")
         if allow_new is not True:
             errors.append("identity_selection_policy: NEW_ONLY must "
                           "allow new task-local characters")
     if mode == "MIXED_REGISTERED_AND_NEW":
-        if not selected:
+        if not selected and not selector_ids and not selectors:
             errors.append("identity_selection_policy: "
                           "MIXED_REGISTERED_AND_NEW needs at least "
                           "one selected registered character")
@@ -410,6 +457,161 @@ def registry_snapshot_hash(registry) -> str:
     return sha256_hex(canonical_json(ordered))
 
 
+_VOICE_REGISTRY_FILENAMES = ("voice-profile.json",)
+
+
+def overlay_root_configured() -> bool:
+    """True when an authorized private overlay root is
+    configured (the ``CONSISTENCY_FRAME_CHARACTERS`` environment
+    variable is set to a non-empty value). The unified planner
+    uses this to decide whether a voice registry can be
+    resolved from the overlay at all — an unconfigured voice
+    source leaves the voice registry unset, and the snapshot
+    builder fails closed later only when a registered speaking
+    character actually needs one."""
+    root = os.environ.get(_OVERLAY_ENV_VAR)
+    return isinstance(root, str) and bool(root)
+
+
+def _voice_record_files(overlay_root):
+    """Voice-profile record files under the overlay root, in
+    deterministic order. Only ``voice-profile.json`` files are
+    read, plus a top-level ``voices.json`` index (either
+    ``{"voice_profiles": [...]}`` or a bare list)."""
+    found: list[str] = []
+    for dirpath, dirnames, filenames in os.walk(overlay_root):
+        dirnames.sort()
+        for name in sorted(filenames):
+            if name in _VOICE_REGISTRY_FILENAMES:
+                found.append(os.path.join(dirpath, name))
+    index = os.path.join(overlay_root, "voices.json")
+    if os.path.isfile(index):
+        found.append(index)
+    return sorted(found)
+
+
+def load_authorized_voice_registry(overlay_root=None, *,
+                                   owner_id=None,
+                                   workspace_id=None) -> dict:
+    """Load the authorized private voice registry.
+
+    The root is an explicit argument, else the
+    ``CONSISTENCY_FRAME_CHARACTERS`` environment variable — the
+    voice registry lives in the same private overlay as the
+    character registry (CF-WO-P1-004-R1-F1, Defect A: the
+    canonical authorized voice-registry resolution path). Every
+    record is schema-validated (``voice-profile``) and must
+    carry its character binding; when an owner/workspace is
+    supplied, records under a different owner or workspace are
+    silently excluded (never leaked). A duplicate voice-profile
+    id across files is an error naming only the id. A missing
+    or unreadable root, an unreadable file, or an invalid
+    record fails closed with a generic message that never
+    reveals registry contents. A root with no voice records at
+    all loads as an empty registry — the snapshot builder fails
+    closed later only when a registered speaking character
+    actually needs a voice.
+
+    Returns ``{voice_profile_id: record}`` (deep copies). The
+    registry is data, not authorization: every use still goes
+    through the P1-001 session and the P0 authorization
+    boundary.
+    """
+    root = overlay_root or os.environ.get(_OVERLAY_ENV_VAR)
+    if not isinstance(root, str) or not root:
+        raise IdentityResolutionError(
+            "no authorized voice registry is configured: pass an "
+            "overlay root or set CONSISTENCY_FRAME_CHARACTERS")
+    if not os.path.isabs(root):
+        raise IdentityResolutionError(
+            "voice registry root must be an absolute path")
+    if os.path.islink(root) or not os.path.isdir(root):
+        raise IdentityResolutionError(
+            "voice registry root is not a readable directory")
+    registry: dict = {}
+    for path in _voice_record_files(root):
+        if os.path.islink(path):
+            raise IdentityResolutionError(
+                "voice registry record is a symlink — refusing to "
+                "read a symlinked record")
+        _contained_path(root, os.path.relpath(path, root))
+        try:
+            with open(path, encoding="utf-8") as handle:
+                data = json.load(handle)
+        except (OSError, ValueError) as exc:
+            raise IdentityResolutionError(
+                "voice registry record is unreadable: "
+                f"{exc}") from exc
+        records: list = []
+        if isinstance(data, dict) and isinstance(
+                data.get("voice_profiles"), list):
+            records = data["voice_profiles"]
+        elif isinstance(data, dict):
+            records = [data]
+        elif isinstance(data, list):
+            records = data
+        else:
+            raise IdentityResolutionError(
+                "voice registry record is not an object")
+        for record in records:
+            if not isinstance(record, dict):
+                raise IdentityResolutionError(
+                    "voice registry record is not an object")
+            errors = schema_errors("voice-profile", record,
+                                   "voice_registry_record")
+            if errors:
+                raise IdentityResolutionError(errors)
+            vid = record.get("voice_profile_id")
+            if not _is_id(vid):
+                raise IdentityResolutionError(
+                    "voice registry record carries no valid voice "
+                    "profile id")
+            if vid in registry:
+                raise IdentityResolutionError(
+                    f"duplicate voice profile id {vid!r} in the "
+                    "authorized voice registry")
+            ownership = record.get("ownership") or {}
+            if owner_id is not None and ownership.get("owner_id") \
+                    not in (None, owner_id):
+                continue
+            if workspace_id is not None and ownership.get(
+                    "workspace_id") not in (None, workspace_id):
+                continue
+            registry[vid] = copy.deepcopy(record)
+    return registry
+
+
+def scope_registry_to_session(registry, *, owner_id,
+                              workspace_id) -> dict:
+    """The authorized-registry scoping rule for an explicitly
+    supplied registry mapping (CF-WO-P1-004-R1-F1, Defect A
+    step 3): records whose ownership names a different owner
+    or workspace are invisible to this session — the loader
+    applies the same rule at load time, so an explicit mapping
+    never sees more than the overlay would have shown it.
+    Records without ownership pass through (legacy shape);
+    voice ownership is enforced separately by the P0 resolver
+    at selection time. Returns a deep copy; the input mapping
+    is never mutated.
+    """
+    if not isinstance(registry, dict):
+        raise IdentityResolutionError("registry is not an object")
+    scoped: dict = {}
+    for key, record in registry.items():
+        if not isinstance(record, dict):
+            raise IdentityResolutionError(
+                "registry record is not an object")
+        ownership = record.get("ownership") or {}
+        if owner_id is not None and ownership.get("owner_id") \
+                not in (None, owner_id):
+            continue
+        if workspace_id is not None and ownership.get(
+                "workspace_id") not in (None, workspace_id):
+            continue
+        scoped[key] = copy.deepcopy(record)
+    return scoped
+
+
 __all__ = [
     "IdentityResolutionError",
     "IDENTITY_MODES",
@@ -417,7 +619,10 @@ __all__ = [
     "IDENTITY_SCHEMA_VERSION",
     "record_hash",
     "validate_identity_policy",
+    "overlay_root_configured",
     "load_authorized_character_registry",
+    "load_authorized_voice_registry",
+    "scope_registry_to_session",
     "registry_snapshot_hash",
 ]
 
@@ -519,8 +724,15 @@ def resolve_project_identity_policy(policy, *, registry):
     ids; NEW_ONLY resolves none (registry selection is disabled);
     AUTO_MATCH_APPROVED resolves the selected ids and leaves the
     rest to per-name auto-matching at cast-resolution time.
+    Canonical selectors (``selected_characters``,
+    CF-WO-P1-004-R1-F1 Defect B) resolve by exact id, exact
+    unique name, or both (both must name the same record); when
+    both selector lists are supplied they must resolve to the
+    same character set, or the policy is refused as conflicting.
     Returns the resolved selection (records deep-copied) plus the
-    registry snapshot hash the resolution was built from.
+    registry snapshot hash the resolution was built from, and the
+    normalized ``selected_characters`` (one entry per resolved
+    character, with its matched-by).
     """
     errors = validate_identity_policy(policy)
     if errors:
@@ -544,6 +756,7 @@ def resolve_project_identity_policy(policy, *, registry):
                 f"excluded character id {excluded_id!r} is not in "
                 "the authorized character registry")
     resolved: dict = {}
+    normalized_selectors: list = []
     if mode != "NEW_ONLY":
         for character_id in selected_ids:
             if character_id in excluded_ids:
@@ -553,12 +766,53 @@ def resolve_project_identity_policy(policy, *, registry):
             resolved[character_id] = resolve_character_reference(
                 selector={"character_id": character_id},
                 registry=registry)
+        selector_ids: set = set()
+        for selector in policy.get("selected_characters") or []:
+            if not isinstance(selector, dict):
+                raise IdentityResolutionError(
+                    "identity policy selected_characters entry is "
+                    "not an object")
+            result = resolve_character_reference(
+                selector={"character_id": selector.get("character_id"),
+                          "name": selector.get("name")},
+                registry=registry)
+            character_id = result["character_id"]
+            if character_id in excluded_ids:
+                raise IdentityResolutionError(
+                    f"character {character_id!r} cannot be both "
+                    "selected and excluded")
+            if character_id in resolved \
+                    and resolved[character_id]["record"] != \
+                    result["record"]:
+                raise IdentityResolutionError(
+                    "identity policy selected_characters disagrees "
+                    "with selected_character_ids for character "
+                    f"{character_id!r}")
+            resolved[character_id] = result
+            selector_ids.add(character_id)
+            normalized_selectors.append({
+                "character_id": character_id,
+                **({"name": selector["name"]}
+                   if selector.get("name") else {}),
+                "matched_by": result["matched_by"],
+            })
+        if selected_ids and (policy.get("selected_characters") or []):
+            # Both selector lists supplied: they must name the
+            # same character set, or the policy contradicts
+            # itself about what is selected.
+            if set(selected_ids) != selector_ids:
+                raise IdentityResolutionError(
+                    "identity policy selected_character_ids and "
+                    "selected_characters select different "
+                    "characters — one selection list must agree "
+                    "with the other")
     return {
         "policy_id": policy["policy_id"],
         "project_id": policy["project_id"],
         "mode": mode,
-        "selected_character_ids": selected_ids,
+        "selected_character_ids": sorted(resolved),
         "excluded_character_ids": excluded_ids,
+        "selected_characters": normalized_selectors,
         "allow_new_task_local_characters": bool(
             policy.get("allow_new_task_local_characters")),
         "resolved": resolved,
@@ -660,6 +914,157 @@ def resolve_script_cast(script_contract, analysis, bundle=None, *,
                     f"excluded character {ref!r} appears in the "
                     "script cast")
     return {"cast": cast, "by_character_id": by_id}
+
+
+def complete_auto_match_selection(*, cast, policy_resolution,
+                                  registry, analysis=None):
+    """AUTO_MATCH_APPROVED completion (CF-WO-P1-004-R1-F1,
+    Defect B).
+
+    For every eligible cast reference — every cast class except
+    MENTIONED_ONLY — that the policy resolution does not already
+    cover, resolve the exact approved record from the authorized
+    registry: an exact registered id when the analysis supplies
+    one for the reference, otherwise an exact unique character
+    name. Exclusions are already enforced by
+    :func:`resolve_script_cast` (an excluded character in the
+    cast fails there). A task-local proposal for the reference
+    leaves the resolution to the proposal path. Duplicate names,
+    unknown names and conflicting identifiers fail closed; no
+    fuzzy or speculative matching, and a name mentioned only in
+    dialogue never gains a visible binding (MENTIONED_ONLY refs
+    are skipped here — the snapshot builder never binds them).
+
+    Returns additional resolved entries
+    ``{character_id: resolve_character_reference result}`` to
+    merge into the policy resolution. The input resolution and
+    the registry are never mutated.
+    """
+    if not isinstance(cast, dict):
+        raise IdentityResolutionError("script cast is not an object")
+    if not isinstance(policy_resolution, dict):
+        raise IdentityResolutionError("policy resolution is not an "
+                                      "object")
+    if not isinstance(registry, dict):
+        raise IdentityResolutionError("character registry is not an "
+                                      "object")
+    resolved = policy_resolution.get("resolved") or {}
+    resolved_ids = set(resolved)
+    ref_to_id: dict = {}
+    for entry in resolved.values():
+        if isinstance(entry, dict):
+            ref = (entry.get("resolution") or {}).get("character_ref")
+            cid = entry.get("character_id")
+            if ref and cid:
+                ref_to_id[ref] = cid
+    analysis_resolutions: dict = {}
+    proposal_refs: set = set()
+    if isinstance(analysis, dict):
+        for resolution in analysis.get("character_resolutions") or []:
+            if not isinstance(resolution, dict):
+                continue
+            ref = resolution.get("character_ref")
+            if not ref:
+                continue
+            analysis_resolutions[ref] = resolution
+            if resolution.get("resolution") == "task-local-proposal":
+                proposal_refs.add(ref)
+            supplied = resolution.get("registered_character_id")
+            if isinstance(supplied, str) and supplied:
+                ref_to_id[ref] = supplied
+    additions: dict = {}
+    for ref in sorted(cast):
+        if cast[ref] == "MENTIONED_ONLY":
+            continue
+        known_id = ref_to_id.get(ref)
+        if known_id is not None and known_id in resolved_ids:
+            continue
+        if ref in proposal_refs:
+            continue
+        supplied = analysis_resolutions.get(ref, {}).get(
+            "registered_character_id")
+        if ref in registry:
+            if supplied is not None and supplied != ref:
+                raise IdentityResolutionError(
+                    f"character reference {ref!r} names registered "
+                    f"id {ref!r} but the analysis supplies "
+                    f"{supplied!r} — conflicting identifiers")
+            result = resolve_character_reference(
+                selector={"character_id": ref}, registry=registry)
+        elif supplied is not None:
+            result = resolve_character_reference(
+                selector={"character_id": supplied, "name": ref},
+                registry=registry)
+        else:
+            result = resolve_character_reference(
+                selector={"name": ref}, registry=registry)
+        character_id = result["character_id"]
+        if character_id in resolved_ids:
+            raise IdentityResolutionError(
+                f"character reference {ref!r} and another script "
+                "reference resolve to the same registered "
+                f"character {character_id!r} — conflicting "
+                "identifiers")
+        additions[character_id] = result
+        resolved_ids.add(character_id)
+        ref_to_id[ref] = character_id
+    return additions
+
+
+def enrich_analysis_for_auto_match(analysis, *, registry):
+    """Fill registered_character_id on ``approved`` analysis
+    resolutions that lack one, by exact unique name resolution
+    against the authorized registry (CF-WO-P1-004-R1-F1,
+    Defect B).
+
+    The unified planner runs this for AUTO_MATCH_APPROVED
+    policies before validating the analysis: the AI host's draft
+    may name a registered character by its exact unique name
+    without hard-coding the id, and the Brain resolves it —
+    never by fuzzy matching, never by inventing an id. A
+    resolution that already names an id is verified against the
+    name (both must name the same record). A
+    task-local-proposal or needs-decision resolution is left
+    untouched. Returns an enriched deep copy; the input analysis
+    is never mutated. Raises IdentityResolutionError on any
+    ambiguous name, unknown name, or name/id conflict.
+    """
+    if not isinstance(analysis, dict):
+        raise IdentityResolutionError("production analysis is not "
+                                      "an object")
+    if not isinstance(registry, dict):
+        raise IdentityResolutionError("character registry is not an "
+                                      "object")
+    enriched = copy.deepcopy(analysis)
+    for resolution in enriched.get("character_resolutions") or []:
+        if not isinstance(resolution, dict):
+            continue
+        if resolution.get("resolution") != "approved":
+            continue
+        ref = resolution.get("character_ref")
+        if not isinstance(ref, str) or not ref:
+            continue
+        supplied = resolution.get("registered_character_id")
+        if supplied is not None:
+            if ref in registry and ref != supplied:
+                raise IdentityResolutionError(
+                    f"character reference {ref!r} names registered "
+                    f"id {ref!r} but the analysis supplies "
+                    f"{supplied!r} — conflicting identifiers")
+            if ref in registry:
+                continue
+            resolve_character_reference(
+                selector={"character_id": supplied, "name": ref},
+                registry=registry)
+            continue
+        if ref in registry:
+            resolution["registered_character_id"] = ref
+            continue
+        result = resolve_character_reference(
+            selector={"name": ref}, registry=registry)
+        resolution["registered_character_id"] = \
+            result["character_id"]
+    return enriched
 
 
 # ---------------------------------------------------------------------------
@@ -1183,10 +1588,117 @@ def validate_resumed_identity(job, *, registry,
         snapshot, registry=registry, voice_registry=voice_registry)
 
 
+def _registered_reference_asset_ids(character_registry) -> set:
+    """Every reference asset id a character registry names
+    (reference assets, canonical images, model sheets)."""
+    ids: set = set()
+    for record in (character_registry or {}).values():
+        if not isinstance(record, dict):
+            continue
+        for asset in record.get("reference_assets") or []:
+            if isinstance(asset, dict) and asset.get("asset_id"):
+                ids.add(asset["asset_id"])
+        for asset in record.get("canonical_reference_images") or []:
+            if isinstance(asset, dict) and asset.get("asset_id"):
+                ids.add(asset["asset_id"])
+        sheet = record.get("model_sheet")
+        if isinstance(sheet, dict) and sheet.get("asset_id"):
+            ids.add(sheet["asset_id"])
+    return ids
+
+
+def _registered_voice_profile_ids(character_registry,
+                                  voice_registry) -> set:
+    """Every voice profile id the registries name: the voice
+    registry's own keys plus every voice bound to a character
+    record."""
+    ids: set = set(voice_registry or {})
+    for record in (character_registry or {}).values():
+        if not isinstance(record, dict):
+            continue
+        ids.update(_voice_ids_of_character(record))
+    return ids
+
+
+def validate_new_only_inputs(*, analysis, bundle, character_registry,
+                             voice_registry=None, proposals=None):
+    """NEW_ONLY hardening (CF-WO-P1-004-R1-F1, Task D).
+
+    A NEW_ONLY job must carry no registered identity anywhere:
+    an analysis resolution that approves a registered character,
+    a task-local proposal that reuses a registered reference
+    asset, or an S2P bundle voice binding that names a registered
+    voice profile all fail closed. Errors name only the
+    caller-supplied reference (character ref, proposal id,
+    dialogue line id) — never registry contents. The registries
+    are the authority for what counts as registered. Returns the
+    error list (empty = clean); the caller raises on a non-empty
+    list. Never deletes, modifies or deprecates any permanent
+    registry record.
+    """
+    errors: list[str] = []
+    registered_refs = _registered_reference_asset_ids(
+        character_registry)
+    registered_voices = _registered_voice_profile_ids(
+        character_registry, voice_registry)
+    if isinstance(analysis, dict):
+        for resolution in analysis.get("character_resolutions") or []:
+            if not isinstance(resolution, dict):
+                continue
+            ref = resolution.get("character_ref")
+            if resolution.get("resolution") == "approved" \
+                    or resolution.get("registered_character_id"):
+                errors.append("NEW_ONLY forbids a registered "
+                              f"identity for character {ref!r}: "
+                              "supply a task-local proposal for "
+                              "this character instead of an approved "
+                              "registered identity")
+    proposals_by_id: dict = {}
+    if isinstance(proposals, dict):
+        proposals_by_id = {k: v for k, v in proposals.items()
+                           if isinstance(v, dict)}
+    else:
+        for record in proposals or []:
+            if isinstance(record, dict) and record.get("proposal_id"):
+                proposals_by_id[record["proposal_id"]] = record
+    for proposal_id, proposal in sorted(proposals_by_id.items()):
+        for asset_id in proposal.get("approved_reference_ids") or []:
+            if asset_id in registered_refs:
+                errors.append("NEW_ONLY forbids a registered "
+                              "reference asset in task-local proposal "
+                              f"{proposal_id!r}: supply a new "
+                              "job-scoped reference instead")
+                break
+    s2p = {}
+    if isinstance(bundle, dict):
+        s2p = bundle.get("script_to_performance") or {}
+    bindings = list(s2p.get("character_voice_bindings") or [])
+    singular = s2p.get("character_voice_binding")
+    if isinstance(singular, dict):
+        bindings.append(singular)
+    for binding in bindings:
+        if not isinstance(binding, dict):
+            continue
+        voice_profile_id = binding.get("voice_profile_id")
+        if voice_profile_id in registered_voices:
+            errors.append("NEW_ONLY forbids a registered voice "
+                          "profile in the voice binding for "
+                          f"character "
+                          f"{binding.get('character_id')!r} "
+                          "(dialogue line "
+                          f"{binding.get('dialogue_line_id')!r}): "
+                          "supply a task-local voice for this "
+                          "character instead")
+    return errors
+
+
 __all__ += [
     "resolve_character_reference",
     "resolve_project_identity_policy",
     "resolve_script_cast",
+    "complete_auto_match_selection",
+    "enrich_analysis_for_auto_match",
+    "validate_new_only_inputs",
     "resolve_character_voice",
     "build_identity_snapshot",
     "validate_identity_snapshot",
@@ -1414,6 +1926,26 @@ def identity_bindings_for_shot(*, shot, snapshot, lines=None,
     return bindings, missing
 
 
+def _pauses_text(pauses):
+    """Normalize a performance-line pause direction to the
+    single string the task-packet voice binding carries. The
+    performance-plan schema types ``voice.pauses`` as an array
+    of pause descriptions, while the task-packet schema types
+    ``voice_binding.pauses`` as one string — a non-empty list
+    joins with '; ', a plain string passes through, anything
+    else is no pause direction. (F1 test-found defect: the
+    canonical short/long drafts carry a non-empty pauses list
+    on the first line, which the binding used to copy verbatim
+    and the task-packet schema then rejected.)"""
+    if isinstance(pauses, str):
+        return pauses
+    if isinstance(pauses, list):
+        parts = [part for part in pauses
+                 if isinstance(part, str) and part]
+        return "; ".join(parts) if parts else ""
+    return ""
+
+
 def voice_binding_for_line(*, line, snapshot, voice_record=None):
     """The exact voice binding for one speaking dialogue-line
     task, from the job's identity snapshot (and the resolved
@@ -1494,8 +2026,8 @@ def voice_binding_for_line(*, line, snapshot, voice_record=None):
             or line.get("primary_emotion")}
            if line.get("emotion") or line.get("primary_emotion")
            else {}),
-        **({"pauses": voice["pauses"]}
-           if voice.get("pauses") else {}),
+        **({"pauses": _pauses_text(voice.get("pauses"))}
+           if _pauses_text(voice.get("pauses")) else {}),
         **({"reference_audio_asset_id":
             selection["reference_audio_asset_id"]}
            if selection.get("reference_audio_asset_id") else {}),

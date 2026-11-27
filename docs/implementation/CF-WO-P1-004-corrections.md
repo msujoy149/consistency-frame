@@ -571,3 +571,129 @@ and no workstream's file was overwritten by the other.
   left untouched for Workstream A is now historical: the
   integration applied Workstream A's label fix, so the labels
   and the expected count agree in the integrated tree.
+
+## 17. R1-F1: unified identity workflow, exact name resolution & end-to-end production integration
+
+Independent review of P1-004-R1 found the identity system and
+the production orchestration system each correct on their own
+but not yet joined: the unified entry point did not accept an
+identity policy or registries, the canonical policy named
+characters by id only, and the NEW_ONLY hardening had been
+proven only on renamed fixtures. This round joins them without
+redesigning either system. No P1-004-R1 behaviour changes for
+jobs without an identity policy.
+
+- **Defect A — the planner now carries identity end to end.**
+  `plan_script_to_production` takes optional keyword-only
+  `identity_policy`, `character_registry`, `voice_registry`,
+  `character_registry_root` and `voice_registry_root`. An
+  explicit policy wins over a policy stored on the job. With a
+  policy, registries resolve in this order — explicit mapping,
+  then root, then the authorized overlay environment variable —
+  and the voice registry defaults to the character registry
+  root; a loader failure fails the planning. The resolved
+  policy and registries are passed to `build_production_bundle`,
+  which freezes the identity snapshot on the job, and the
+  result records the effective policy. With no policy, behaviour
+  is exactly the pre-F1 behaviour and no registry is accessed.
+  An explicitly supplied registry is scoped to the session
+  (`scope_registry_to_session`) inside the snapshot builder,
+  so records under another owner or workspace are invisible
+  there exactly as the loader excludes them at load time.
+- **Defect B — canonical selectors and exact auto-matching.**
+  `schemas/identity-selection-policy.json` gains optional
+  `selected_characters`, an array of `{character_id, name}`
+  records (at least one of the two per record; both must resolve
+  to the same record). `selected_character_ids` stays valid.
+  When both selector lists are supplied they must resolve to
+  the same character set, or the policy is refused as
+  conflicting; the agreement check runs at resolution time
+  because names need the registry, and the repo's validator
+  subset cannot express it in the schema. `AUTO_MATCH_APPROVED`
+  completes in two places: the planner enriches the analysis
+  first (`enrich_analysis_for_auto_match` fills
+  `registered_character_id` on name-only approved resolutions
+  by exact unique name, so the analysis validates), and the
+  snapshot builder completes the selection from the script cast
+  (`complete_auto_match_selection` resolves every eligible
+  unselected cast reference by exact id, else exact unique
+  name; duplicate names, unknown names and conflicting
+  identifiers fail closed; no fuzzy matching). A character only
+  mentioned in dialogue receives no visible binding: the
+  analysis validator now accepts a resolution ref outside the
+  known set only when it declares `cast_class`
+  `MENTIONED_ONLY`, and the snapshot builder refuses any
+  disagreement between a declared cast class and the class the
+  cast classifier derives from the script structure.
+- **Defect C — the 12-step sequence runs through the real
+  planner.** The F1 integration tests call
+  `plan_script_to_production` itself across all four modes and
+  verify the bundle, the frozen snapshot, the image/video
+  packets, the voice packets and persistence; the existing
+  helper-level tests are preserved unchanged.
+- **Task D — NEW_ONLY hardening and the adversarial test.**
+  `validate_new_only_inputs` runs in the snapshot builder for
+  every NEW_ONLY job: an analysis resolution that approves a
+  registered character, a task-local proposal reusing a
+  registered reference asset, or a bundle voice binding naming
+  a registered voice profile all fail closed, naming only the
+  caller-supplied reference (character ref, proposal id,
+  dialogue line id) — never registry contents. The adversarial
+  test uses the original script/cast references against the
+  populated registries (the previous NEW_ONLY fixture renamed
+  them first): the story roles are reinterpreted as new
+  task-local identities, and the whole compiled package, the
+  production bundle and the snapshot are scanned for registered
+  reference ids, paths and hashes, model-sheet ids, fixed
+  prompt blocks, fixed-identity references, generation seeds,
+  voice-profile ids, reference-audio ids, paths and hashes, and
+  any seed key. The old registry records are deep-compared
+  before and after and are never modified, deleted or
+  deprecated. Two rejection cases pin the fail-closed path:
+  the original approved analysis under NEW_ONLY, and a
+  task-local analysis whose draft still names a registered
+  voice profile.
+- **Task E — the preserved binding builders are actually
+  invoked.** `identity_bindings_for_shot`,
+  `identity_binding_for_character`, `voice_binding_for_line`,
+  `build_identity_snapshot` and `validate_identity_snapshot`
+  are unchanged in contract and are exercised through the
+  planner in every mode; the F1 tests assert exact approved
+  reference ids, primary references, model sheets, expression
+  references and identity hashes on visible registered
+  characters, and exact approved voice-profile ids with
+  authorized reference-audio ids and hashes on speaking
+  registered characters. Task-local characters and voices use
+  job-scoped references throughout.
+- **Test-found defect: voice-binding pauses.**
+  `voice_binding_for_line` copied the performance line's
+  `voice.pauses` verbatim into the packet binding, but the
+  performance-plan schema types `pauses` as an array of pause
+  descriptions while the task-packet schema types
+  `voice_binding.pauses` as one string. The identity fixture's
+  lines carry empty pause lists (falsy, so the key was omitted
+  and the defect never fired); the canonical short/long drafts
+  carry a non-empty list, which the F5 test exposed as a
+  schema rejection at compile time. The binding now normalizes
+  the pause direction to one string (a list joins with `"; "`,
+  a plain string passes through, anything else is no pause
+  direction). No existing packet changes: empty pause lists
+  still omit the key.
+- **Voice registry canonical path.** One overlay root serves
+  both registries. `load_authorized_voice_registry` reads
+  `voice-profile.json` files anywhere under the root plus a
+  top-level `voices.json` (a `{"voice_profiles": [...]}` object
+  or a bare list); it schema-validates every record, refuses
+  duplicate voice ids and symlinked paths, enforces owner /
+  workspace scoping, and loads as empty when no voice files
+  exist. No second registry was added: the voice registry is
+  the same private overlay the character registry already
+  used, and the fixture voice registry remains test-only.
+- **What this round did NOT do.** No P0 authorization logic
+  changed; no VoiceStudio or OpenMontage internals changed; no
+  new skill; no new tracked file (the manifest scope is
+  unchanged); no provider was exercised and no media was
+  generated — packets compile as provider-neutral handoffs as
+  before. The handbook PDF cross-check and the
+  `docs/06-installation.md` update remain open from earlier
+  rounds.

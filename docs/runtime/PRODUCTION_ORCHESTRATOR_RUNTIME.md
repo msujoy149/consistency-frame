@@ -316,6 +316,24 @@ inside it. `wf-generate-from-script` is NOT promoted by this
 entry point: no timeline manifest is produced and no fake media
 path is invented.
 
+Identity (F1): the planner takes optional keyword-only
+`identity_policy`, `character_registry`, `voice_registry`,
+`character_registry_root` and `voice_registry_root`. An explicit
+policy wins over a policy stored on the job; with a policy the
+registries resolve explicit mapping first, then root, then the
+authorized overlay environment variable, with the voice registry
+defaulting to the character registry root; a loader failure fails
+the planning. The resolved policy and registries are passed to
+`build_production_bundle`, which freezes the identity snapshot
+on the job, and the result records the effective policy. With no
+policy, behaviour is exactly the pre-F1 behaviour and no registry
+is accessed. With `AUTO_MATCH_APPROVED` the analysis is enriched
+first (name-only approved resolutions resolved by exact unique
+name). A resolution ref outside the known set is accepted only
+when it declares cast class `MENTIONED_ONLY`, and the snapshot
+builder refuses any disagreement between a declared cast class
+and the classifier's class.
+
 ## Short-form and long-form
 
 The same contracts and orchestration serve every delivery
