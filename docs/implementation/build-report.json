@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p1-004-universal-production-brain",
-  "head_commit": "11b4eb28c9c8457fb9121088cf5c6199d3494e76",
-  "github_branch_head": "9c5206a842fc80867d4ee606275547d6e25c9a73",
+  "head_commit": "d690902b643471391443d93271204e67a691a9e2",
+  "github_branch_head": "8d047ce0be48d1f7f8bfd5f542c46246659c3a43",
   "status": "PASS",
   "changed_files": [
     ".gitattributes",
@@ -62,6 +62,7 @@
     "docs/implementation/CHECKSUMS.txt",
     "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
     "docs/implementation/build-report.json",
+    "docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md",
     "docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md",
     "docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md",
     "docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md",
@@ -75,8 +76,10 @@
     "release-manifest.json",
     "runtime/__init__.py",
     "runtime/authorization.py",
+    "runtime/identity_resolution.py",
     "runtime/local_session.py",
     "runtime/production_orchestrator.py",
+    "runtime/production_store.py",
     "runtime/script_to_performance.py",
     "runtime/skill_router.py",
     "runtime/task_compiler.py",
@@ -89,6 +92,8 @@
     "schemas/episode-state.json",
     "schemas/evidence.json",
     "schemas/gate-state.json",
+    "schemas/identity-selection-policy.json",
+    "schemas/identity-snapshot.json",
     "schemas/installer-result.json",
     "schemas/intake-job.json",
     "schemas/location.json",
@@ -149,6 +154,8 @@
     "tests/fixtures/character-registration-valid.json",
     "tests/fixtures/character-valid-v25-animal.json",
     "tests/fixtures/character-valid.json",
+    "tests/fixtures/identity-registry.json",
+    "tests/fixtures/identity-voice-registry.json",
     "tests/fixtures/intake-temporary.json",
     "tests/fixtures/performance-plan-bird.json",
     "tests/fixtures/performance-plan-human.json",
@@ -197,6 +204,7 @@
     "tests/run-tests.sh",
     "tests/test_atomic_write.py",
     "tests/test_character_registration.py",
+    "tests/test_identity_resolution.py",
     "tests/test_installer.sh",
     "tests/test_installer_manifest_security.sh",
     "tests/test_installer_metadata_failure.sh",
@@ -204,12 +212,14 @@
     "tests/test_installer_status.sh",
     "tests/test_local_session_runtime.py",
     "tests/test_modes.py",
+    "tests/test_muse_adapter_conformance.py",
     "tests/test_performance_semantics.py",
     "tests/test_private_overlay.py",
     "tests/test_private_voice_security.py",
     "tests/test_production_analysis.py",
     "tests/test_production_direction.py",
     "tests/test_production_orchestrator.py",
+    "tests/test_production_store.py",
     "tests/test_registries.py",
     "tests/test_reports.py",
     "tests/test_routing.py",
@@ -723,6 +733,69 @@
     {
       "id": "CF-P1-004-ORCHESTRATOR",
       "command": "python3 tests/test_production_orchestrator.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-ADAPTER",
+      "command": "python3 tests/test_muse_adapter_conformance.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-BINDING",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-E2E",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-NEWONLY",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-POLICY",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-PRIVACY",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-RESOLUTION",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-VOICE",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-STORE",
+      "command": "python3 tests/test_production_store.py",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"

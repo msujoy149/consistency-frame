@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-26 18:39 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-27 05:54 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-004-universal-production-brain`
-**Head commit:** `11b4eb28c9c8457fb9121088cf5c6199d3494e76`
-**GitHub branch head:** `9c5206a842fc80867d4ee606275547d6e25c9a73` (remote head of `feat/cf-p1-004-universal-production-brain` at
+**Head commit:** `d690902b643471391443d93271204e67a691a9e2`
+**GitHub branch head:** `8d047ce0be48d1f7f8bfd5f542c46246659c3a43` (remote head of `feat/cf-p1-004-universal-production-brain` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -38,7 +38,7 @@ head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §
 | Features (`registry/features.json`) | 173 |
 | Workflows / intent modes (`registry/workflows.json`) | 13 |
 | Adapters (`registry/adapters.json`) | 15 |
-| JSON Schemas (`schemas/*.json`) | 33 |
+| JSON Schemas (`schemas/*.json`) | 35 |
 | Routing matrix entries (`architecture/SKILL_ROUTING_MATRIX.yaml`) | 15 |
 | Workflow graph nodes / edges (`architecture/WORKFLOW_GRAPH.yaml`) | 15 / 42 |
 | Companion capabilities (`architecture/COMPANION_CAPABILITY_REGISTRY.yaml`) | 20 (3 exercised_recorded_run, 16 present_locally, 1 upstream_inspected_pinned_commit, 0 production_verified) |
@@ -97,7 +97,7 @@ deferred P1 work.
 
 | Adapter | Integration | Native skill install | Conformance | Status |
 |---|---|---|---|---|
-| Muse (Meta) | PACKAGED | UNSUPPORTED | NOT_TESTED | untested |
+| Muse (Meta) | PACKAGED | UNSUPPORTED | VERIFIED | verified |
 | Claude Code | NATIVE | NOT_TESTED | NOT_TESTED | untested |
 | Codex | NATIVE | NOT_TESTED | NOT_TESTED | untested |
 | Gemini CLI | NATIVE | NOT_TESTED | NOT_TESTED | untested |
@@ -218,6 +218,7 @@ docs/implementation/CF-WO-P1-004-corrections.md
 docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
+docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md
 docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md
 docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md
 docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md
@@ -231,8 +232,10 @@ registry/workflows.json
 release-manifest.json
 runtime/__init__.py
 runtime/authorization.py
+runtime/identity_resolution.py
 runtime/local_session.py
 runtime/production_orchestrator.py
+runtime/production_store.py
 runtime/script_to_performance.py
 runtime/skill_router.py
 runtime/task_compiler.py
@@ -245,6 +248,8 @@ schemas/character.json
 schemas/episode-state.json
 schemas/evidence.json
 schemas/gate-state.json
+schemas/identity-selection-policy.json
+schemas/identity-snapshot.json
 schemas/installer-result.json
 schemas/intake-job.json
 schemas/location.json
@@ -305,6 +310,8 @@ tests/fixtures/character-registration-valid-human.json
 tests/fixtures/character-registration-valid.json
 tests/fixtures/character-valid-v25-animal.json
 tests/fixtures/character-valid.json
+tests/fixtures/identity-registry.json
+tests/fixtures/identity-voice-registry.json
 tests/fixtures/intake-temporary.json
 tests/fixtures/performance-plan-bird.json
 tests/fixtures/performance-plan-human.json
@@ -353,6 +360,7 @@ tests/last-run.json
 tests/run-tests.sh
 tests/test_atomic_write.py
 tests/test_character_registration.py
+tests/test_identity_resolution.py
 tests/test_installer.sh
 tests/test_installer_manifest_security.sh
 tests/test_installer_metadata_failure.sh
@@ -360,12 +368,14 @@ tests/test_installer_security.sh
 tests/test_installer_status.sh
 tests/test_local_session_runtime.py
 tests/test_modes.py
+tests/test_muse_adapter_conformance.py
 tests/test_performance_semantics.py
 tests/test_private_overlay.py
 tests/test_private_voice_security.py
 tests/test_production_analysis.py
 tests/test_production_direction.py
 tests/test_production_orchestrator.py
+tests/test_production_store.py
 tests/test_registries.py
 tests/test_reports.py
 tests/test_routing.py
@@ -459,6 +469,15 @@ tests/test_timeline_manifest.py
 - `CF-P1-004-ANALYSIS` — python3 tests/test_production_analysis.py — **PASS** (exit 0)
 - `CF-P1-004-ORCHESTRATOR` — python3 tests/test_production_orchestrator.py — **PASS** (exit 0)
 - `CF-P1-004-COMPILER` — python3 tests/test_task_compiler.py — **PASS** (exit 0)
+- `CF-P1-004-R1-STORE` — python3 tests/test_production_store.py — **PASS** (exit 0)
+- `CF-P1-004-R1-ADAPTER` — python3 tests/test_muse_adapter_conformance.py — **PASS** (exit 0)
+- `CF-P1-004-R1-IDENTITY-RESOLUTION` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-IDENTITY-POLICY` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-IDENTITY-BINDING` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-IDENTITY-VOICE` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-IDENTITY-E2E` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-IDENTITY-NEWONLY` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-IDENTITY-PRIVACY` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
 - `CF-P0-REPORT-001` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-002` — python3 tests/test_reports.py — **PASS** (exit 0)
@@ -554,4 +573,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-26 18:39 UTC.
+- Report generated: 2026-11-27 05:54 UTC.

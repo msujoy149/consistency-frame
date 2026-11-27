@@ -482,6 +482,60 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-004-R1-STORE",
+      "command": "python3 tests/test_production_store.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-ADAPTER",
+      "command": "python3 tests/test_muse_adapter_conformance.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-RESOLUTION",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-POLICY",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-BINDING",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-VOICE",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-E2E",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-NEWONLY",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-PRIVACY",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "command": "git diff --check",
       "exit_code": 0,
