@@ -825,7 +825,13 @@ def _make_test_ca(tmpdir, common_name):
         handle.write(f"subjectAltName=DNS:{common_name}\n")
     subprocess.run([openssl, "req", "-x509", "-newkey", "rsa:2048",
                     "-keyout", ca_key, "-out", ca_crt, "-days", "2",
-                    "-nodes", "-subj", "/CN=CF Test CA"],
+                    "-nodes", "-subj", "/CN=CF Test CA",
+                    # The CA needs real CA extensions: Python 3.14 /
+                    # newer OpenSSL rejects a CA certificate without a
+                    # key-usage extension (CI run #273), while older
+                    # releases accept the bare certificate.
+                    "-addext", "basicConstraints=critical,CA:TRUE",
+                    "-addext", "keyUsage=critical,keyCertSign,cRLSign"],
                    check=True, capture_output=True, timeout=60)
     subprocess.run([openssl, "req", "-newkey", "rsa:2048",
                     "-keyout", srv_key, "-out", srv_csr, "-nodes",
@@ -863,6 +869,21 @@ def pinned_tls_group(tmpdir):
         ca_crt, srv_key, srv_crt = _make_test_ca(workdir, "provider.test")
     except RuntimeError as exc:
         check("CF-P1-005-R4-SEC-tls-openssl-present", False, str(exc))
+        return
+    # The fixture CA must pass strict chain verification on every
+    # host: Python 3.14 / newer OpenSSL rejects a CA certificate
+    # without a key-usage extension, while older releases accept it.
+    # Checking here makes the fixture's conformance fail locally
+    # instead of only in CI (run #273).
+    strict = subprocess.run(
+        [shutil.which("openssl"), "verify", "-x509_strict",
+         "-CAfile", ca_crt, srv_crt],
+        capture_output=True, timeout=60)
+    check("CF-P1-005-R4-SEC-tls-ca-strict",
+          strict.returncode == 0,
+          (strict.stderr or strict.stdout).decode(
+              "utf-8", "replace").strip())
+    if strict.returncode != 0:
         return
     server_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     server_ctx.load_cert_chain(srv_crt, srv_key)
