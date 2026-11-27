@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-004-universal-production-brain",
-  "commit": "6d20105b32eee02908c10f703e4297a4da05017c",
-  "github_branch_head": "d45e38def6a9897153a9d334dd57493d69ff7538",
+  "commit": "85ff43be9fd5a9c96daaed425c3b63ca60aaf065",
+  "github_branch_head": "a68b46d94a313176a2e3fc8071f8bc392098da6d",
   "files": [
     {
       "path": ".gitattributes",
@@ -22,8 +22,8 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "07c71d358dcf4c0175e96e145cefdc9b89eece4af3540a7475c11bcc9c8d2aa7",
-      "bytes": 60709
+      "sha256": "d30a973f42767802bde03fd9b2f5d1216fb522587ca1541aa55ac93bf9a838f7",
+      "bytes": 61320
     },
     {
       "path": "CHANGELOG.md",
@@ -142,7 +142,7 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "f5fca8f19401bde75ca5126a7b66e351185a503ffa70fdf35ed1ac6249148ed8",
+      "sha256": "5af8b0a2f933547f33bd6fc9c4d8e6123cf05fbebc092bff2e360429a3dfa611",
       "bytes": 32418
     },
     {
@@ -152,8 +152,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "d1696095df478dda631074cd47989c9ea85e89862351edde8c4a4ff8e02d1d2d",
-      "bytes": 68426
+      "sha256": "78b4e6ea09e61803c06a219bb99d3fc5a238ce5ffe5c7b05132ece7bf407640e",
+      "bytes": 68719
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -247,8 +247,8 @@
     },
     {
       "path": "docs/implementation/CF-WO-P1-005-corrections.md",
-      "sha256": "2f0d88056a088e867ab527a71bc207c28f29d4b3e11e762ee86fc9a5cb0a51d7",
-      "bytes": 18825
+      "sha256": "3ec2afc5c344b7bdb7d119100b154362a50c91bae1201b4eeb4d7219fb5a5cd6",
+      "bytes": 21281
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
@@ -257,7 +257,7 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "0ddb0ff8ff8aa905e6242abc66904368437ffae7bdf05ccbc5c328c7bb0d3b6d",
+      "sha256": "7508b23e88fd658c44a6b0c39d49a4f1f27a726f3ab870850663c5721540585f",
       "bytes": 32210
     },
     {
@@ -297,8 +297,8 @@
     },
     {
       "path": "evidence/p1005/ci-263-windows-failure-note.md",
-      "sha256": "6ce24cae1c7446f9aca02dc0c8637281e1fac6e88b4283ee0fabca5618c81380",
-      "bytes": 5173
+      "sha256": "02576b1124ec53eb55b24272752092453c496db660760c761797ad54684e4b1b",
+      "bytes": 7514
     },
     {
       "path": "evidence/p1005/gap-map.md",
@@ -377,8 +377,8 @@
     },
     {
       "path": "runtime/media_execution.py",
-      "sha256": "c96b61be1fe525680ce35465c598052ea432a36e12fd804199bbde9e1eba7363",
-      "bytes": 32354
+      "sha256": "cf3f2cdd623389ae7642851c78a8430d0cd72dc1a8a8a3ef6670a9d00dcba8d2",
+      "bytes": 33045
     },
     {
       "path": "runtime/production_orchestrator.py",
@@ -1072,8 +1072,8 @@
     },
     {
       "path": "tests/test_media_execution.py",
-      "sha256": "da48296bda3d7c9b3fe46ccf6285da32e9dab7dcee5274d719f78d1ac73465f5",
-      "bytes": 38030
+      "sha256": "44a8defa2606e5fd96ef5669732a4fa2f7821875f4dfcf0875c64b3ae1784aef",
+      "bytes": 38425
     },
     {
       "path": "tests/test_modes.py",
@@ -1162,8 +1162,8 @@
     },
     {
       "path": "tests/test_timeline_delivery.py",
-      "sha256": "10fc92e032b5658e1da243cee89e919a36416d465ffbfe640241d12a9e356d74",
-      "bytes": 16748
+      "sha256": "84ec0463377ca84e973dd0758104657ed487cbd401b8ad545bde6474b43fadd1",
+      "bytes": 18329
     },
     {
       "path": "tests/test_timeline_manifest.py",
@@ -1553,5 +1553,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-27T12:32:40Z"
+  "generated_at_utc": "2026-11-27T12:48:34Z"
 }
