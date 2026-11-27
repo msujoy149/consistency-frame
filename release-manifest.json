@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-004-universal-production-brain",
-  "commit": "345c9b2b3b59a577a3ebfa380ca2a975445713ae",
-  "github_branch_head": "21b293df9e97a096397cd49d35defcd88755a560",
+  "commit": "27d9fdd5e1b9714ae42ba2ec6b4ad0c1b2fa227e",
+  "github_branch_head": "cdc0cb50c2af99a1aa81dd8e108812456b0b0f72",
   "files": [
     {
       "path": ".gitattributes",
@@ -142,7 +142,7 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "72ff7fafec6c6355998d8f0f0746aba8e65c2aace9e2ad89313ba6e8a829a898",
+      "sha256": "8849ca45902f4479e9a6362bdea6fd7cdb40ab77ea598e199c05283587099162",
       "bytes": 32372
     },
     {
@@ -152,8 +152,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "a08c8e10d528e6166e30831306741b8501ab7bc9943fbe5eda79852e9e9c536e",
-      "bytes": 67463
+      "sha256": "0e12b0e4c14f6fb67ca59b403bd5dd1ed1a551a466515930405c5e48a7e44005",
+      "bytes": 67591
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -257,7 +257,7 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "08bdaa5e43b13684a152b7f8e69394dd6a64198f36fb16dc41bdd0682dfe3ba9",
+      "sha256": "0244f32f54f50c28178e89b20007e8295563326730c28509fc21164efd80896c",
       "bytes": 32157
     },
     {
@@ -1548,5 +1548,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-27T09:27:11Z"
+  "generated_at_utc": "2026-11-27T09:35:40Z"
 }
