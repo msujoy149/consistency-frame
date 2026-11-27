@@ -277,6 +277,38 @@ def run_checks():
     check("CF-P1-005-DELIVERY-path-non-string-refused",
           not td.is_safe_relative_path(None)
           and not td.is_safe_relative_path(42))
+    # CF-WO-P1-005-R3: the leading-slash refusal must NOT depend on
+    # ``ntpath.isabs()``. Since Python 3.13 (GH-44626) it returns
+    # False for a path starting with exactly one (back)slash, so
+    # the R2 predicate accepted ``/abs/escape.mp4`` on the CI
+    # runner's Python 3.14.4 while local Python 3.12.3 refused it
+    # (CI runs #267/#268). Simulate the 3.13+ stdlib by replacing
+    # ``ntpath.isabs`` with a version that returns False for a
+    # single leading slash, and require the predicate to refuse
+    # every unsafe form anyway. Without the explicit first-character
+    # test this group fails on every Python version — including
+    # local 3.12 — so the pin does not depend on the CI runner.
+    import ntpath as _ntpath
+    _orig_isabs = _ntpath.isabs
+    try:
+        def _isabs_313(s):
+            s = str(s)
+            if len(s) >= 1 and s[0] in "/\\" \
+                    and (len(s) == 1 or s[1] not in "/\\"):
+                return False
+            return _orig_isabs(s)
+        _ntpath.isabs = _isabs_313
+        for bad in ("/abs/escape.mp4", "/tmp/out.mp4",
+                    "C:/escape.mp4", "C:\\escape.mp4",
+                    "\\\\server\\share\\escape.mp4",
+                    "..\\escape.mp4"):
+            check("CF-P1-005-DELIVERY-path-unsafe-py313: " + bad,
+                  not td.is_safe_relative_path(bad))
+        for good in ("clip.mp4", "sub/clip.mp4"):
+            check("CF-P1-005-DELIVERY-path-safe-py313: " + good,
+                  td.is_safe_relative_path(good))
+    finally:
+        _ntpath.isabs = _orig_isabs
     expect_error("CF-P1-005-DELIVERY-artifact-not-object",
                  lambda: td.validate_delivery_artifact(
                      "not-an-artifact", delivery_root))

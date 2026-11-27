@@ -210,12 +210,12 @@ def validate_execution_failure(failure) -> list[str]:
 
 
 def is_safe_relative_path(path) -> bool:
-    """Host-independent relative-path check (CF-WO-P1-005-R2).
+    """Host-independent relative-path check (CF-WO-P1-005-R2/R3).
 
     A delivery/execution artifact path must be relative with no
-    parent references, on every host. A POSIX-only check
-    (``startswith("/")`` plus ``split("/")``) accepts Windows
-    absolute paths on a Windows host — ``D:\\...``,
+    parent references, on every host and every Python version. A
+    POSIX-only check (``startswith("/")`` plus ``split("/")``)
+    accepts Windows absolute paths on a Windows host — ``D:\\...``,
     ``\\\\server\\share``, drive-relative ``C:relative`` — and a
     ``split("/")`` parent check misses backslash separators
     (``..\\escape``). So: any drive letter, any absolute form on
@@ -223,8 +223,21 @@ def is_safe_relative_path(path) -> bool:
     is unsafe. ``ntpath`` is used deliberately: it recognises both
     platforms' absolute forms on any host, so the check is the
     same on Linux and Windows.
+
+    R3: a leading slash or backslash is refused EXPLICITLY, never
+    through ``ntpath.isabs()`` alone. Since Python 3.13 (GH-44626)
+    ``ntpath.isabs()`` returns False for a path starting with
+    exactly one (back)slash — on Windows that form is
+    drive-relative, not absolute — so ``"/tmp/out.mp4"`` was
+    accepted on the CI runner's Python 3.14.4 while local Python
+    3.12.3 still refused it. CI run #267 proved it: the only
+    failures on an otherwise green run were the three
+    leading-slash cases. The explicit first-character test makes
+    the refusal identical on every Python version.
     """
     if not isinstance(path, str) or not path:
+        return False
+    if path[0] in ("/", "\\"):
         return False
     if ntpath.splitdrive(path)[0]:
         return False

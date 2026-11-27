@@ -378,3 +378,48 @@ the CI run #266 failure itself. The execution suite grows by the
 seven new checks; the delivery suite by the twelve new checks. No
 previous check was removed or weakened. No generated values are
 quoted in this section.
+
+## 11. R3 — `ntpath.isabs` changed in Python 3.13, so the R2 predicate still accepted leading-slash paths on the CI runner (2026-11-27)
+
+The CI run on the R2 content head failed `p0-validate` (both
+`windows-compat` jobs SUCCEEDED — the R2 fix worked there) with
+exactly three failures, all leading-slash paths:
+`CF-P1-005-EXECUTION-artifact-absolute-path` (`/tmp/out.mp4`) and
+`CF-P1-005-DELIVERY-artifact-absolute-refused` plus
+`CF-P1-005-DELIVERY-path-unsafe: /abs/escape.mp4`. Every
+Windows-style case passed. The same run also failed the manifest
+check — expected at that point, because the docs push had not
+happened yet and the manifest on the remote still listed the R1
+file hashes.
+
+Root cause: the R2 predicate relied on `ntpath.isabs()` for the
+leading-slash case. Since Python 3.13 (GH-44626) `ntpath.isabs()`
+returns False for a path starting with exactly one (back)slash —
+on Windows that form is drive-relative, not absolute. The CI
+`p0-validate` job runs Python 3.14.4, where
+`ntpath.isabs("/tmp/out.mp4")` is False; local Python is 3.12.3,
+where it is still True — which is why the local suite passed and
+CI failed. Verified from the upstream change record (the 3.13
+release note: "On Windows, `os.path.isabs` no longer considers
+paths starting with exactly one (back)slash to be absolute") and
+by the failure pattern itself: precisely the drive-less
+leading-slash cases failed, nothing else.
+
+Fix: the predicate now refuses a leading `/` or `\` EXPLICITLY
+(first-character test), before consulting `ntpath` at all, so the
+refusal is identical on every Python version. `ntpath.splitdrive`
+and `ntpath.isabs` still cover drive-qualified and UNC forms.
+
+Regression: the three failing checks ARE the pin — they failed
+on run #267 and pass locally. The fix is additionally pinned by a
+committed simulation group in `tests/test_timeline_delivery.py`
+(`CF-P1-005-DELIVERY-path-unsafe-py313` / `-safe-py313`, eight
+checks): it replaces `ntpath.isabs` with the Python 3.13+
+semantics (False for a single leading slash) and requires every
+unsafe form to still be refused and both relative controls to
+still be accepted. Without the explicit first-character test
+this group fails on local Python 3.12 too (the two
+leading-slash cases fail), so the pin does not depend on the CI
+runner's version. The delivery suite grows by the eight new
+checks. No previous check was removed or weakened. No generated
+values are quoted in this section.

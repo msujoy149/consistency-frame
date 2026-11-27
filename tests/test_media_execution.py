@@ -287,6 +287,12 @@ def validation_group():
           len(validate_execution_artifact(
               {"path": "out.mp4", "sha256": "zz", "bytes": 10,
                "format": "mp4"})) > 0)
+    # CF-WO-P1-005-R2/R3: "/tmp/out.mp4" pins the leading-slash
+    # refusal. R3: the refusal must NOT depend on ntpath.isabs(),
+    # which since Python 3.13 (GH-44626) returns False for a path
+    # starting with exactly one (back)slash — CI run #267 (Python
+    # 3.14.4) accepted this path while local Python 3.12.3 refused
+    # it. The predicate now refuses a leading slash explicitly.
     check("CF-P1-005-EXECUTION-artifact-absolute-path",
           len(validate_execution_artifact(
               {"path": "/tmp/out.mp4", "sha256": "c" * 64, "bytes": 10,

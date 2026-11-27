@@ -124,3 +124,62 @@ pre-fix on Linux. Full record: corrections doc §10.
 Both files are kept in `ci-evidence-p1-005/` with the extracted logs
 under `logs-extracted-266/` (per-step files; the Windows jobs ran
 all 16 steps this time).
+
+---
+
+# CI run #267 — p0-validate failure note (P1-005-R3)
+
+Run: #267, ID 45999573038, workflow P0 CI, PR #5, head
+`d45e38def6a9897153a9d334dd57493d69ff7538` (P1-005-R2 content head).
+Overall: Failure, 2m 0s.
+
+- p0-validate (Linux): Failed, 1m 58s.
+- windows-compat (Python 3.10): Success.
+- windows-compat (Python 3.12): Success.
+
+The R2 fix worked on Windows — both jobs passed. The Linux job
+failed with exactly three path-check failures, all leading-slash
+paths:
+
+- `CF-P1-005-EXECUTION-artifact-absolute-path` (`/tmp/out.mp4`)
+- `CF-P1-005-DELIVERY-artifact-absolute-refused`
+- `CF-P1-005-DELIVERY-path-unsafe: /abs/escape.mp4`
+
+Every Windows-style case passed (execution 75 checks with 1
+failure; delivery 35 checks with 2 failures — the lower counts
+vs local are the ffmpeg-dependent groups skipping without ffmpeg
+in the runner). The same run also failed the manifest check
+(CF-P0-REPORT-001..005, CF-P1-003-R2-MANIFEST) — expected at
+that point, because the R2 docs push had not happened yet and
+the manifest on the remote still listed the R1 file hashes.
+
+## Root cause
+
+The R2 predicate relied on `ntpath.isabs()` for the leading-slash
+case. Since Python 3.13 (GH-44626) `ntpath.isabs()` returns False
+for a path starting with exactly one (back)slash — on Windows
+that form is drive-relative, not absolute. The CI `p0-validate`
+job runs Python 3.14.4, where `ntpath.isabs("/tmp/out.mp4")` is
+False; local Python is 3.12.3, where it is still True — which is
+why the local suite passed and CI failed.
+
+## Fix
+
+The predicate now refuses a leading `/` or `\` explicitly
+(first-character test), before consulting `ntpath` at all, so
+the refusal is identical on every Python version. Verified
+locally under a simulated Python 3.13+ `ntpath.isabs`. Full
+record: corrections doc §11.
+
+## Downloaded evidence
+
+- Log archive `logs_124445100881.zip`, SHA-256
+  `23d4110ee2c77e02ed0aef328a8d7655c06f2f70689d359c78a5779498674dec`
+  (run-wide archive, suite endpoint `suites/124445100881/logs`).
+- Artifact `p0-test-results.zip`, SHA-256
+  `89067f871d05fc9e69bbce2c672f0e22898621e4af1b87a784bd064c968b5a8f`
+  (artifact ID 15197602286; matches the digest shown on the run page).
+
+Both files are kept in `ci-evidence-p1-005/` with the extracted logs
+under `logs-extracted-267/` (per-step files; the p0-validate job ran
+all 7 steps).

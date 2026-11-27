@@ -776,6 +776,16 @@ step-by-step order for every video, in §7).
   + `..` under either separator), pinned by Windows-style path
   cases that fail pre-fix on Linux too. Full record: corrections
   doc §10.
+- **R3 Python 3.13 `ntpath.isabs` fix (2026-11-27):** the CI run
+  on the R2 head passed both `windows-compat` jobs but failed
+  `p0-validate` on exactly three leading-slash cases — the R2
+  predicate relied on `ntpath.isabs()`, which since Python 3.13
+  (GH-44626) returns False for a path starting with exactly one
+  (back)slash, and the CI runner uses Python 3.14.4 while local
+  Python is 3.12.3. The predicate now refuses a leading `/` or
+  `\` explicitly, before consulting `ntpath` at all, and the fix
+  was verified locally under a simulated 3.13+ `ntpath.isabs`.
+  Full record: corrections doc §11.
 
 ## Rules that always apply
 
