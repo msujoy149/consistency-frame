@@ -41,13 +41,32 @@ Jobs are plain dicts, never persisted by this runtime, never
 modified in place: every function works on a deep copy and returns
 the updated job. ``job_hash`` is the SHA-256 of the canonical JSON
 of the job without the job_hash field itself, recomputed on every
-mutation (the S2P bundle-hash pattern).
+mutation (the S2P bundle-hash pattern). Durable persistence lives
+in the companion module :mod:`runtime.production_store`, which
+:func:`plan_script_to_production` uses when a store root is
+given; this module itself never touches the filesystem.
+
+Character-resolution coverage (R1 A2): an empty
+``character_resolutions`` array is valid only when the source
+genuinely has no visible character subjects. When the source has
+speaking or visible identities, every distinct required identity
+must be resolved exactly once — missing, duplicate and unknown
+resolutions are all errors. A narrator / voice-over identity is
+not a visible character: it is excluded when the analysis marks
+it with a narrator role, or when it speaks but appears in no
+scene and no shot. Cross-reference integrity (R1 A4):
+``validate_analysis_bundle_references`` runs the scene / beat /
+shot / sound-cue / character checks against the actual built
+P1-003 bundle inside :func:`build_production_bundle`, and
+:func:`plan_script_to_production` runs them once more
+explicitly; unknown references are never silently ignored.
 """
 from __future__ import annotations
 
 import copy
 import re
 
+from . import identity_resolution
 from . import local_session
 from . import script_to_performance
 from . import task_compiler
@@ -222,6 +241,251 @@ def validate_format_profile(profile) -> list[str]:
     return errors
 
 
+NARRATOR_ROLES = ("narrator", "voice-over")
+
+
+def _narrator_refs(resolutions) -> set[str]:
+    """Character refs the analysis marks as narrator / voice-over."""
+    refs: set[str] = set()
+    for resolution in resolutions or []:
+        if isinstance(resolution, dict) \
+                and resolution.get("role") in NARRATOR_ROLES:
+            ref = resolution.get("character_ref")
+            if isinstance(ref, str) and ref:
+                refs.add(ref)
+    return refs
+
+
+def _required_character_refs(analysis, script=None) -> set[str]:
+    """Visible character identities the analysis must resolve.
+
+    Sources: speaking identities in the source script, visible
+    identities in the script's shots, and characters the analysis
+    itself declares in its scenes. A narrator / voice-over identity
+    is never required as a visible character: it is excluded when
+    the analysis marks it with a narrator role, or when it speaks
+    but appears in no scene and no shot (a voice-over speaks from
+    off-screen). The second rule is a documented heuristic with a
+    known limit — a visible character a sloppy script leaves out
+    of every shot list would also be treated as a voice-over — so
+    the analysis's own scene declarations always win: any
+    character declared in a scene is required.
+    """
+    speaking: set[str] = set()
+    shot_visible: set[str] = set()
+    if isinstance(script, dict):
+        for line in script.get("dialogue") or []:
+            if isinstance(line, dict) and line.get("character_id"):
+                speaking.add(line["character_id"])
+        for shot in script.get("shots") or []:
+            if isinstance(shot, dict):
+                for ref in shot.get("character_ids") or []:
+                    if isinstance(ref, str) and ref:
+                        shot_visible.add(ref)
+    scene_refs: set[str] = set()
+    resolutions = (analysis or {}).get("character_resolutions") or []
+    for scene in (analysis or {}).get("scenes") or []:
+        if isinstance(scene, dict):
+            for ref in scene.get("character_refs") or []:
+                if isinstance(ref, str) and ref:
+                    scene_refs.add(ref)
+    narrators = _narrator_refs(resolutions)
+    visible = (speaking | shot_visible | scene_refs) - narrators
+    # A speaking identity in no scene and no shot is a voice-over.
+    for ref in speaking:
+        if ref not in scene_refs and ref not in shot_visible \
+                and ref not in narrators:
+            visible.discard(ref)
+    return visible
+
+
+def validate_analysis_bundle_references(analysis, production_bundle) \
+        -> list[str]:
+    """Analysis-to-plan cross-reference errors (empty = valid).
+
+    Runs against the actual built P1-003 bundle, not a standalone
+    fixture: every referenced scene id must resolve to the validated
+    Scene Plan, every beat id within its referenced scene, every
+    shot-direction shot id to the validated Shot Plan with the
+    scene agreeing, every sound cue's scene / shot / beat reference
+    must resolve, and character resolutions must cover every
+    identity the source and the approved plans require. Unknown
+    references are errors, never silently ignored.
+    """
+    errors: list[str] = []
+    if not isinstance(analysis, dict):
+        return ["production_analysis: expected an object, "
+                f"got {type(analysis).__name__}"]
+    if not isinstance(production_bundle, dict):
+        return ["production_bundle: expected an object, "
+                f"got {type(production_bundle).__name__}"]
+    s2p_bundle = production_bundle.get("s2p_bundle")
+    if not isinstance(s2p_bundle, dict):
+        return ["production_bundle: carries no s2p_bundle"]
+    scene_plan = s2p_bundle.get("scene_plan") or {}
+    shot_plan = s2p_bundle.get("shot_plan") or {}
+    perf_plan = s2p_bundle.get("performance_plan") or {}
+    plan_scenes: dict[str, dict] = {}
+    for scene in scene_plan.get("scenes") or []:
+        if isinstance(scene, dict) and scene.get("scene_id"):
+            plan_scenes[scene["scene_id"]] = scene
+    plan_shots: dict[str, dict] = {}
+    for shot in shot_plan.get("shots") or []:
+        if isinstance(shot, dict) and shot.get("shot_id"):
+            plan_shots[shot["shot_id"]] = shot
+    analysis_scenes: dict[str, dict] = {}
+    for scene in analysis.get("scenes") or []:
+        if isinstance(scene, dict) and scene.get("scene_id"):
+            analysis_scenes[scene["scene_id"]] = scene
+    for scene_id in analysis_scenes:
+        if scene_id not in plan_scenes:
+            errors.append("production_analysis.scenes: scene "
+                          f"{scene_id!r} does not resolve to the "
+                          "validated Scene Plan")
+    for scene_id, scene in analysis_scenes.items():
+        plan_scene = plan_scenes.get(scene_id)
+        if plan_scene is None:
+            continue
+        plan_beats = {b.get("beat_id") for b in
+                      plan_scene.get("beats") or []
+                      if isinstance(b, dict)}
+        for beat in scene.get("beats") or []:
+            if isinstance(beat, dict) and beat.get("beat_id") \
+                    and beat["beat_id"] not in plan_beats:
+                errors.append("production_analysis.scenes: beat "
+                              f"{beat['beat_id']!r} does not resolve "
+                              f"within scene {scene_id!r} of the "
+                              "validated Scene Plan")
+    seen_shots: set[str] = set()
+    for direction in analysis.get("shot_direction") or []:
+        if not isinstance(direction, dict):
+            continue
+        shot_id = direction.get("shot_id")
+        scene_id = direction.get("scene_id")
+        if shot_id in seen_shots:
+            errors.append("production_analysis.shot_direction: "
+                          f"duplicate shot-direction entry for shot "
+                          f"{shot_id!r}")
+        seen_shots.add(shot_id)
+        shot = plan_shots.get(shot_id)
+        if shot is None:
+            errors.append("production_analysis.shot_direction: shot "
+                          f"{shot_id!r} does not resolve to the "
+                          "validated Shot Plan")
+        elif scene_id is not None \
+                and shot.get("scene_id") != scene_id:
+            errors.append("production_analysis.shot_direction: shot "
+                          f"{shot_id!r} belongs to scene "
+                          f"{shot.get('scene_id')!r} in the Shot Plan, "
+                          f"not {scene_id!r}")
+    for cue in analysis.get("sound_direction") or []:
+        if not isinstance(cue, dict):
+            continue
+        cue_id = cue.get("cue_id") or cue.get("cue_type")
+        scene_id = cue.get("scene_id")
+        if scene_id is not None and scene_id not in plan_scenes:
+            errors.append("production_analysis.sound_direction: cue "
+                          f"{cue_id!r} references unknown scene "
+                          f"{scene_id!r}")
+        shot_id = cue.get("shot_id")
+        if shot_id is not None:
+            shot = plan_shots.get(shot_id)
+            if shot is None:
+                errors.append("production_analysis.sound_direction: "
+                              f"cue {cue_id!r} references unknown shot "
+                              f"{shot_id!r}")
+            elif scene_id is not None \
+                    and shot.get("scene_id") != scene_id:
+                errors.append("production_analysis.sound_direction: "
+                              f"cue {cue_id!r} references shot "
+                              f"{shot_id!r} from scene "
+                              f"{shot.get('scene_id')!r}, not "
+                              f"{scene_id!r}")
+        beat_id = cue.get("beat_id")
+        if beat_id is not None and scene_id is not None:
+            plan_scene = plan_scenes.get(scene_id)
+            if plan_scene is not None:
+                plan_beats = {b.get("beat_id") for b in
+                              plan_scene.get("beats") or []
+                              if isinstance(b, dict)}
+                if beat_id not in plan_beats:
+                    errors.append("production_analysis.sound_direction: "
+                                  f"cue {cue_id!r} references unknown "
+                                  f"beat {beat_id!r} in scene "
+                                  f"{scene_id!r}")
+    required = _required_character_refs_from_bundle(
+        analysis, s2p_bundle)
+    resolved: set[str] = set()
+    for resolution in analysis.get("character_resolutions") or []:
+        if isinstance(resolution, dict):
+            # Any recorded resolution counts as covering the
+            # identity here; a needs-decision entry is refused
+            # earlier, at bundle build, never here.
+            ref = resolution.get("character_ref")
+            if isinstance(ref, str) and ref:
+                resolved.add(ref)
+    missing = sorted(required - resolved)
+    if missing:
+        errors.append("production_analysis.character_resolutions: "
+                      "no resolution covers required identities "
+                      + ", ".join(missing))
+    return errors
+
+
+def _required_character_refs_from_bundle(analysis, s2p_bundle) \
+        -> set[str]:
+    """Visible identities the bundle's plans require resolved.
+
+    Union of performance-line characters, Scene Plan characters
+    (character_ids + subjects) and Shot Plan characters, minus
+    narrator / voice-over identities (marked by role in the
+    analysis, or a non-character subject kind in the plans).
+    """
+    required: set[str] = set()
+    non_characters: set[str] = set()
+    scene_plan = s2p_bundle.get("scene_plan") or {}
+    shot_plan = s2p_bundle.get("shot_plan") or {}
+    perf_plan = s2p_bundle.get("performance_plan") or {}
+    for scene in scene_plan.get("scenes") or []:
+        if not isinstance(scene, dict):
+            continue
+        for ref in scene.get("character_ids") or []:
+            if isinstance(ref, str) and ref:
+                required.add(ref)
+        for subject in scene.get("subjects") or []:
+            if isinstance(subject, dict) \
+                    and subject.get("character_id"):
+                if subject.get("subject_kind") == "non-character":
+                    non_characters.add(subject["character_id"])
+                else:
+                    required.add(subject["character_id"])
+    for shot in shot_plan.get("shots") or []:
+        if not isinstance(shot, dict):
+            continue
+        for ref in shot.get("character_ids") or []:
+            if isinstance(ref, str) and ref:
+                required.add(ref)
+        for subject in shot.get("subjects") or []:
+            if isinstance(subject, dict) \
+                    and subject.get("character_id"):
+                if subject.get("subject_kind") == "non-character":
+                    non_characters.add(subject["character_id"])
+                else:
+                    required.add(subject["character_id"])
+    for line in perf_plan.get("lines") or []:
+        if not isinstance(line, dict):
+            continue
+        ref = line.get("character_id")
+        if isinstance(ref, str) and ref:
+            if line.get("subject_kind") == "non-character":
+                non_characters.add(ref)
+            else:
+                required.add(ref)
+    narrators = _narrator_refs(
+        analysis.get("character_resolutions") or [])
+    return (required - non_characters) - narrators
+
+
 def validate_production_analysis(analysis, script=None) -> list[str]:
     """Analysis-contract errors (empty list = valid).
 
@@ -287,6 +551,98 @@ def validate_production_analysis(analysis, script=None) -> list[str]:
                           f"character "
                           f"{resolution.get('character_ref')!r} has "
                           f"unknown resolution {mode!r}")
+    seen_refs: set[str] = set()
+    for resolution in analysis.get("character_resolutions") or []:
+        if not isinstance(resolution, dict):
+            continue
+        ref = resolution.get("character_ref")
+        if isinstance(ref, str) and ref:
+            if ref in seen_refs:
+                errors.append("production_analysis."
+                              "character_resolutions: duplicate "
+                              f"resolution for character {ref!r}; every "
+                              "identity must be resolved exactly once")
+            seen_refs.add(ref)
+    if script is not None and isinstance(script, dict):
+        # A2: every distinct required identity must be resolved
+        # exactly once; missing, duplicate and unknown resolutions
+        # are all errors. A needs-decision entry counts as a
+        # resolution here (the identity is recorded, awaiting the
+        # user) — the bundle build refuses undecided characters
+        # later; the validator only checks the draft is complete.
+        required = _required_character_refs(analysis, script)
+        missing = sorted(required - seen_refs)
+        if missing:
+            errors.append("production_analysis.character_resolutions: "
+                          "no resolution covers required identities "
+                          + ", ".join(missing))
+        known: set[str] = set()
+        for line in script.get("dialogue") or []:
+            if isinstance(line, dict) and line.get("character_id"):
+                known.add(line["character_id"])
+        for shot in script.get("shots") or []:
+            if isinstance(shot, dict):
+                for ref in shot.get("character_ids") or []:
+                    if isinstance(ref, str) and ref:
+                        known.add(ref)
+        for scene in analysis.get("scenes") or []:
+            if isinstance(scene, dict):
+                for ref in scene.get("character_refs") or []:
+                    if isinstance(ref, str) and ref:
+                        known.add(ref)
+        unknown = sorted(seen_refs - known)
+        if unknown:
+            errors.append("production_analysis.character_resolutions: "
+                          "resolutions name unknown identities "
+                          + ", ".join(unknown))
+    # A4 (analysis level): shot-direction scene ids must resolve
+    # to the analysis scenes, shot ids must not repeat, and sound
+    # cue scene / beat references must resolve within the analysis.
+    # Shot ids are checked against the Shot Plan in the bundle path
+    # (the analysis carries no shot list of its own).
+    analysis_scene_ids = {s.get("scene_id") for s in
+                          analysis.get("scenes") or []
+                          if isinstance(s, dict)}
+    seen_direction_shots: set[str] = set()
+    for direction in analysis.get("shot_direction") or []:
+        if not isinstance(direction, dict):
+            continue
+        shot_id = direction.get("shot_id")
+        if shot_id in seen_direction_shots:
+            errors.append("production_analysis.shot_direction: "
+                          f"duplicate shot-direction entry for shot "
+                          f"{shot_id!r}")
+        seen_direction_shots.add(shot_id)
+        scene_id = direction.get("scene_id")
+        if scene_id is not None \
+                and scene_id not in analysis_scene_ids:
+            errors.append("production_analysis.shot_direction: shot "
+                          f"{shot_id!r} references unknown scene "
+                          f"{scene_id!r}")
+    for cue in analysis.get("sound_direction") or []:
+        if not isinstance(cue, dict):
+            continue
+        cue_id = cue.get("cue_id") or cue.get("cue_type")
+        scene_id = cue.get("scene_id")
+        if scene_id is not None \
+                and scene_id not in analysis_scene_ids:
+            errors.append("production_analysis.sound_direction: cue "
+                          f"{cue_id!r} references unknown scene "
+                          f"{scene_id!r}")
+        beat_id = cue.get("beat_id")
+        if beat_id is not None and scene_id is not None:
+            scene = next((s for s in analysis.get("scenes") or []
+                          if isinstance(s, dict)
+                          and s.get("scene_id") == scene_id), None)
+            if scene is not None:
+                beat_ids = {b.get("beat_id") for b in
+                            scene.get("beats") or []
+                            if isinstance(b, dict)}
+                if beat_id not in beat_ids:
+                    errors.append("production_analysis.sound_direction: "
+                                  f"cue {cue_id!r} references unknown "
+                                  f"beat {beat_id!r} in scene "
+                                  f"{scene_id!r}")
     for question in analysis.get("open_questions") or []:
         if isinstance(question, dict) \
                 and question.get("provenance") != "NEEDS_USER_DECISION":
@@ -391,6 +747,15 @@ def validate_job(job) -> list[str]:
     if job.get("state") not in STATES:
         errors.append(f"job.state {job.get('state')!r} is not a known "
                       "state")
+    # Identity policy + snapshot (CF-WO-P1-004-R1-ADDENDUM-
+    # IDENTITY): validated structurally when present; the
+    # snapshot hash is recomputed, never trusted blind.
+    if job.get("identity_policy") is not None:
+        errors.extend(identity_resolution.validate_identity_policy(
+            job["identity_policy"]))
+    if job.get("identity_snapshot") is not None:
+        errors.extend(identity_resolution.validate_identity_snapshot(
+            job["identity_snapshot"]))
     errors.extend(validate_format_profile(
         job.get("format_profile") or {}))
     errors.extend(validate_gate_state(job.get("gate_state") or {}))
@@ -428,6 +793,7 @@ __all__ = [
     "job_hash",
     "validate_format_profile",
     "validate_production_analysis",
+    "validate_analysis_bundle_references",
     "validate_character_design_proposal",
     "validate_gate_state",
     "validate_job",
@@ -436,6 +802,7 @@ __all__ = [
     "resolve_character",
     "build_production_bundle",
     "compile_provider_tasks",
+    "plan_script_to_production",
     "evaluate_production_gate",
     "record_execution_result",
     "build_qc_correction_tasks",
@@ -444,19 +811,30 @@ __all__ = [
 
 def create_production_job(session, job_id, project_id, format_profile,
                           *, commercial_use=False, stills_first=False,
-                          script_contract_id=None) -> dict:
+                          script_contract_id=None,
+                          identity_policy=None) -> dict:
     """Create a production job in state INTAKE.
 
     ``commercial_use`` marks monetised/commercial production: the
     task compiler will never match such a job to a provider whose
     commercial use is not approved. ``stills_first`` asks the
     compiler to build a starting still per shot before video tasks.
-    Both flags must be actual booleans. The job starts with all
-    six gates NOT_STARTED and no bundle, analysis or task package.
+    Both flags must be actual booleans. ``identity_policy`` is an
+    optional identity-selection policy record (see
+    ``runtime.identity_resolution``): when supplied it is
+    validated and stored on the job, and
+    :func:`build_production_bundle` resolves it into an identity
+    snapshot. The job starts with all six gates NOT_STARTED and no
+    bundle, analysis or task package.
     """
     _require_session(session)
     _require_bool(commercial_use, "commercial_use")
     _require_bool(stills_first, "stills_first")
+    if identity_policy is not None:
+        policy_errors = identity_resolution.validate_identity_policy(
+            identity_policy)
+        if policy_errors:
+            raise ProductionOrchestratorError(policy_errors)
     if not isinstance(job_id, str) or not _ID_RE.match(job_id):
         raise ProductionOrchestratorError(
             f"job_id {job_id!r} is not a valid id")
@@ -489,6 +867,9 @@ def create_production_job(session, job_id, project_id, format_profile,
         "analysis_id": None,
         "analysis_hash": None,
         "gate_state": _fresh_gate_state(job_id, project_id),
+        "identity_policy": copy.deepcopy(identity_policy)
+        if identity_policy is not None else None,
+        "identity_snapshot": None,
         "task_package": None,
         "execution_results": [],
         "qc_reports": [],
@@ -660,9 +1041,145 @@ def resolve_character(session, job, resolution, *,
         f"{mode!r}")
 
 
+def _build_identity_snapshot_for_bundle(
+        session, job, policy, analysis, script, s2p_bundle,
+        character_registry, voice_registry, proposals) -> dict:
+    """Resolve one job's identity policy + cast + voices into a
+    frozen identity snapshot (CF-WO-P1-004-R1-ADDENDUM-IDENTITY,
+    Tasks B–E, I, N). Raises ProductionOrchestratorError on any
+    unresolved identity, unapproved policy, ambiguous voice, or
+    missing registry. Task-local speaking characters keep their
+    bundle voice profiles (no registry voice exists for them);
+    registered speaking characters must resolve — one profile
+    per (character, language), since a character may speak
+    Bengali in one line and English in another."""
+    if not isinstance(character_registry, dict):
+        raise ProductionOrchestratorError(
+            "an identity policy needs an authorized character "
+            "registry (character_registry must be an object)")
+    try:
+        policy_resolution = identity_resolution \
+            .resolve_project_identity_policy(
+                policy, registry=character_registry)
+    except identity_resolution.IdentityResolutionError as exc:
+        raise ProductionOrchestratorError(exc.errors) from exc
+    try:
+        cast = identity_resolution.resolve_script_cast(
+            script, analysis, bundle=s2p_bundle,
+            policy_resolution=policy_resolution)
+    except identity_resolution.IdentityResolutionError as exc:
+        raise ProductionOrchestratorError(exc.errors) from exc
+    proposals_by_id: dict = {}
+    if isinstance(proposals, dict):
+        proposals_by_id = {k: v for k, v in proposals.items()
+                           if isinstance(v, dict)}
+    else:
+        for record in proposals or []:
+            if isinstance(record, dict) and record.get("proposal_id"):
+                proposals_by_id[record["proposal_id"]] = record
+    ref_to_id = {}
+    for resolution in analysis.get("character_resolutions") or []:
+        if isinstance(resolution, dict) \
+                and resolution.get("character_ref") \
+                and resolution.get("registered_character_id"):
+            ref_to_id[resolution["character_ref"]] = resolution[
+                "registered_character_id"]
+    resolved_ids = set(policy_resolution.get("resolved") or [])
+    s2p = s2p_bundle.get("script_to_performance") or {}
+    # Voice profile per dialogue line (the s2p bindings name one
+    # per line): a character speaking two languages needs a
+    # different profile per line, so the preference must come
+    # from the line itself, never from another line's binding.
+    voice_by_dialogue_line = {}
+    all_bindings = list(s2p.get("character_voice_bindings") or [])
+    if isinstance(s2p.get("character_voice_binding"), dict):
+        all_bindings.append(s2p["character_voice_binding"])
+    for binding in all_bindings:
+        if isinstance(binding, dict) \
+                and binding.get("dialogue_line_id") \
+                and binding.get("voice_profile_id"):
+            voice_by_dialogue_line[binding["dialogue_line_id"]] = \
+                binding["voice_profile_id"]
+    speakers: dict = {}
+    perf_plan = s2p_bundle.get("performance_plan") or {}
+    for line in perf_plan.get("lines") or []:
+        if not isinstance(line, dict):
+            continue
+        if (line.get("speaking_state") or "speaking") == "listening":
+            continue
+        if not line.get("dialogue"):
+            continue
+        ref = line.get("character_id")
+        character_id = ref_to_id.get(ref, ref)
+        if character_id not in resolved_ids:
+            continue  # task-local speaker: bundle voice stands
+        language = line.get("language")
+        key = (character_id, language)
+        entry = speakers.setdefault(key, {
+            "character_id": character_id,
+            "language": language,
+            "line_ids": [],
+            "preferred": None,
+            "role": None,
+        })
+        if line.get("line_id"):
+            entry["line_ids"].append(line["line_id"])
+        if entry["preferred"] is None:
+            entry["preferred"] = line.get("voice_profile_id") \
+                or voice_by_dialogue_line.get(
+                    line.get("dialogue_line_id"))
+        if cast["cast"].get(ref) == "NARRATOR_OR_VOICE_OVER":
+            entry["role"] = "narration"
+    voice_selections = []
+    if speakers:
+        if not isinstance(voice_registry, dict):
+            raise ProductionOrchestratorError(
+                "registered speaking characters need a voice "
+                "registry (voice_registry must be an object)")
+        for entry in sorted(speakers.values(),
+                            key=lambda e: (e["character_id"],
+                                           e["language"] or "")):
+            voice, errors = identity_resolution \
+                .resolve_character_voice(
+                    character_id=entry["character_id"],
+                    voice_registry=voice_registry,
+                    character_registry=character_registry,
+                    requesting_owner_id=session.owner_id,
+                    requesting_workspace_id=session.workspace_id,
+                    language=entry["language"],
+                    role=entry["role"],
+                    preferred_voice_profile_id=entry["preferred"],
+                    commercial_use=job.get("commercial_use") is True)
+            if errors:
+                raise ProductionOrchestratorError(errors)
+            voice_selections.append(
+                identity_resolution.voice_selection_for_character(
+                    character_id=entry["character_id"],
+                    voice_record=voice,
+                    dialogue_line_ids=entry["line_ids"],
+                    language=entry["language"]))
+    try:
+        return identity_resolution.build_identity_snapshot(
+            snapshot_id=f"snap-{job['job_id']}",
+            job_id=job["job_id"],
+            project_id=job["project_id"],
+            policy_resolution=policy_resolution,
+            voice_selections=voice_selections,
+            task_local_proposals=proposals_by_id,
+            cast_classes=cast["cast"],
+            provenance=policy.get("provenance")
+            or "EXPLICIT_FROM_USER")
+    except identity_resolution.IdentityResolutionError as exc:
+        raise ProductionOrchestratorError(exc.errors) from exc
+
+
 def build_production_bundle(session, job, routing_plan, script, profile,
                             draft, analysis, bundle_id,
-                            dialogue_rewrite_authorised=False) -> tuple:
+                            dialogue_rewrite_authorised=False,
+                            identity_policy=None,
+                            character_registry=None,
+                            voice_registry=None,
+                            proposals=None) -> tuple:
     """Validate the analysis, build the S2P bundle, bind the job.
 
     The job must be in ANALYZING. The analysis must validate
@@ -675,6 +1192,17 @@ def build_production_bundle(session, job, routing_plan, script, profile,
     and the returned production bundle carries the analysis hash
     and the S2P bundle hash for traceability. Returns
     ``(production_bundle, updated_job)``.
+
+    Identity (CF-WO-P1-004-R1-ADDENDUM-IDENTITY): when an
+    identity policy is supplied here — or the job already
+    carries one from :func:`create_production_job` — the policy
+    is resolved against ``character_registry``, the script cast
+    is classified, registered speaking characters get their
+    voice profiles resolved against ``voice_registry``, and the
+    frozen result is stored as ``job["identity_snapshot"]``.
+    Task-local proposals come from ``proposals`` (a list of
+    proposal records, or a mapping by proposal id). No policy:
+    no snapshot, and the job compiles exactly as before.
     """
     _require_session(session)
     _require_bool(dialogue_rewrite_authorised,
@@ -761,15 +1289,39 @@ def build_production_bundle(session, job, routing_plan, script, profile,
         "analysis_hash": sha256_hex(canonical_json(analysis)),
         "format_profile": copy.deepcopy(job.get("format_profile")),
     }
+    # A4: run the analysis-to-plan cross-reference checks against
+    # the actual built bundle, not merely a standalone fixture.
+    # Fail closed — no partial bundle and no state change.
+    reference_errors = validate_analysis_bundle_references(
+        analysis, production_bundle)
+    if reference_errors:
+        raise ProductionOrchestratorError(
+            "production_analysis: analysis-to-plan references fail: "
+            + "; ".join(reference_errors))
     production_bundle["bundle_hash"] = sha256_hex(canonical_json(
         {k: v for k, v in production_bundle.items()
          if k != "bundle_hash"}))
+    # -- Identity snapshot (Tasks B–E, I, N): resolve the job's
+    # identity policy into a frozen snapshot before the job
+    # leaves ANALYZING. No policy: no snapshot.
+    effective_policy = identity_policy \
+        if identity_policy is not None \
+        else job.get("identity_policy")
+    identity_snapshot = None
+    if effective_policy is not None:
+        identity_snapshot = _build_identity_snapshot_for_bundle(
+            session, job, effective_policy, analysis, script,
+            s2p_bundle, character_registry, voice_registry,
+            proposals)
     job = copy.deepcopy(job)
     job["state"] = "PLAN_READY"
     job["routing_plan_id"] = s2p_bundle.get("routing_plan_id")
     job["s2p_bundle_id"] = s2p_bundle.get("bundle_id")
     job["analysis_id"] = analysis.get("id")
     job["analysis_hash"] = production_bundle["analysis_hash"]
+    if effective_policy is not None:
+        job["identity_policy"] = copy.deepcopy(effective_policy)
+    job["identity_snapshot"] = identity_snapshot
     job = _with_hash(job)
     errors = validate_job(job)
     if errors:
@@ -780,13 +1332,19 @@ def build_production_bundle(session, job, routing_plan, script, profile,
 def compile_provider_tasks(session, job, production_bundle, analysis=None,
                            proposals=None, providers=None, *,
                            voice_consent=False, voice_kinds=None,
-                           providers_path=None) -> tuple:
+                           providers_path=None, approved_props=None,
+                           identity_snapshot=None) -> tuple:
     """Compile provider tasks for a production bundle.
 
     The job must be past planning (PLAN_READY or later, but not
     DELIVERED or BLOCKED). The production bundle must belong to
     this job. Delegates to the task compiler and stores the
     package on the job. Returns ``(task_package, updated_job)``.
+
+    Identity (CF-WO-P1-004-R1-ADDENDUM-IDENTITY): the identity
+    snapshot is the job's stored ``identity_snapshot`` unless
+    one is supplied here; the compiler attaches its structured
+    bindings to the image/video/voice packets.
     """
     _require_session(session)
     if not isinstance(job, dict):
@@ -810,13 +1368,19 @@ def compile_provider_tasks(session, job, production_bundle, analysis=None,
     if not isinstance(s2p_bundle, dict):
         raise ProductionOrchestratorError(
             "production bundle carries no s2p_bundle")
-    proposals = {p.get("proposal_id"): p
-                 for p in (proposals or []) if isinstance(p, dict)}
+    # Proposals pass through as a list; the compiler normalizes
+    # them by proposal_id itself (it also accepts a mapping, but
+    # one canonical form is kept here).
+    effective_snapshot = identity_snapshot \
+        if identity_snapshot is not None \
+        else job.get("identity_snapshot")
     try:
         package = compile_task_package(
             session, job, s2p_bundle, analysis, proposals, providers,
             voice_consent=voice_consent, voice_kinds=voice_kinds,
-            providers_path=providers_path)
+            providers_path=providers_path,
+            approved_props=approved_props,
+            identity_snapshot=effective_snapshot)
     except task_compiler.TaskCompilerError as exc:
         raise ProductionOrchestratorError(exc.errors) from exc
     job = copy.deepcopy(job)
@@ -826,6 +1390,90 @@ def compile_provider_tasks(session, job, production_bundle, analysis=None,
     if errors:
         raise ProductionOrchestratorError(errors)
     return package, job
+
+
+def plan_script_to_production(session, job, script, profile, draft,
+                              analysis, routing_plan, bundle_id,
+                              proposals=None, approved_props=None,
+                              providers=None, *,
+                              voice_consent=False, voice_kinds=None,
+                              dialogue_rewrite_authorised=False,
+                              store_root=None, providers_path=None) \
+        -> dict:
+    """One unified script-to-production planning entry point.
+
+    Runs the whole planning pipeline for a job in ANALYZING, in
+    order: validate the job and session, validate the analysis
+    draft, build the P1-003 production bundle (which runs the
+    analysis-to-plan cross-reference checks against the built
+    bundle), validate the analysis-to-plan references once more
+    explicitly (defence in depth), compile all task packets, and
+    build the complete task package. When ``store_root`` is given,
+    the planned job and a ``plan-<bundle_id>`` checkpoint are
+    persisted through the production store; without it the result
+    records ``persisted: False`` and nothing is written. Returns
+    the production bundle, the updated job, the task package and
+    the persistence information. No media is generated, no
+    provider is executed, and no creative reasoning happens here:
+    the AI reasoning host supplies the analysis draft and the
+    proposals; this runtime only validates, binds and compiles.
+    ``wf-generate-from-script`` is NOT promoted by this entry
+    point — no timeline manifest is produced and no fake media
+    path is invented.
+    """
+    _require_session(session)
+    _require_bool(dialogue_rewrite_authorised,
+                  "dialogue_rewrite_authorised")
+    if not isinstance(job, dict):
+        raise ProductionOrchestratorError("job is not an object")
+    if job.get("session_id") != session.session_id:
+        raise ProductionOrchestratorError(
+            "job belongs to a different session")
+    if job.get("state") != "ANALYZING":
+        raise ProductionOrchestratorError(
+            "script-to-production planning can only start while the "
+            f"job is ANALYZING, not {job.get('state')!r}")
+    errors = validate_production_analysis(analysis, script)
+    if errors:
+        raise ProductionOrchestratorError(errors)
+    production_bundle, job = build_production_bundle(
+        session, job, routing_plan, script, profile, draft, analysis,
+        bundle_id,
+        dialogue_rewrite_authorised=dialogue_rewrite_authorised)
+    reference_errors = validate_analysis_bundle_references(
+        analysis, production_bundle)
+    if reference_errors:
+        raise ProductionOrchestratorError(
+            "production_analysis: analysis-to-plan references fail: "
+            + "; ".join(reference_errors))
+    task_package, job = compile_provider_tasks(
+        session, job, production_bundle, analysis=analysis,
+        proposals=proposals, providers=providers,
+        voice_consent=voice_consent, voice_kinds=voice_kinds,
+        providers_path=providers_path, approved_props=approved_props)
+    result = {
+        "production_bundle": production_bundle,
+        "job": job,
+        "task_package": task_package,
+        "persisted": False,
+        "job_path": None,
+        "checkpoint_id": None,
+        "checkpoint_path": None,
+    }
+    if store_root is not None:
+        from .production_store import (  # lazy: the store imports
+            save_production_checkpoint,  # the orchestrator lazily
+            save_production_job)  # too; a top-level import would
+        # be circular.
+        job_path = save_production_job(session, store_root, job)
+        checkpoint_id = f"plan-{bundle_id}"
+        checkpoint_path = save_production_checkpoint(
+            session, store_root, job, checkpoint_id=checkpoint_id)
+        result["persisted"] = True
+        result["job_path"] = job_path
+        result["checkpoint_id"] = checkpoint_id
+        result["checkpoint_path"] = checkpoint_path
+    return result
 
 
 def evaluate_production_gate(session, job, gate_id, decision, *,
@@ -1001,6 +1649,9 @@ def build_qc_correction_tasks(session, job, qc_report, providers=None,
     Only the defective shots get packets — approved neighbours
     are preserved. Returns ``(correction_package, updated_job)``;
     the job records the report and advances its correction round.
+    Correction packets reuse the original packets' identity
+    bindings (same approved anchors); the snapshot is passed
+    through from the job for integrity validation.
     """
     _require_session(session)
     if not isinstance(job, dict):
@@ -1023,7 +1674,8 @@ def build_qc_correction_tasks(session, job, qc_report, providers=None,
     try:
         package = compile_regeneration_packets(
             session, job, qc_report, providers,
-            providers_path=providers_path)
+            providers_path=providers_path,
+            identity_snapshot=job.get("identity_snapshot"))
     except task_compiler.TaskCompilerError as exc:
         raise ProductionOrchestratorError(exc.errors) from exc
     job = copy.deepcopy(job)

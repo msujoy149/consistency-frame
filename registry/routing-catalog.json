@@ -114,15 +114,15 @@
     },
     {
       "agent_id": "agent-muse",
-      "formal_conformance_evidence": "none in P0 \u2014 no formal conformance test has been run; the VERIFIED above is usage-based only.",
-      "formal_conformance_status": "NOT_TESTED",
+      "formal_conformance_evidence": "CF-P0-ADAPTER-001 passed 2026-11-26 in this environment (tests/test_muse_adapter_conformance.py, 20 checks): knowledge-pack access, router skill identification, canonical contract read, short-form fixture analysis, verbatim dialogue preservation, schema + runtime validation, unsupported media-provider operations identified, no native-install claim.",
+      "formal_conformance_status": "VERIFIED",
       "formal_conformance_test_id": "CF-P0-ADAPTER-001",
       "knowledge_pack_path": "Clone the repo into the workspace and read skills/ from there; `bash setup.sh` syncs local .agents/skills/ copies and (opt-in) the bundled components. No native custom-SKILL.md install flow is documented by Meta.",
       "media_execution": "none \u2014 directs companions/providers only; generates no video or audio itself",
       "name": "Muse",
       "native_skill_install": "UNSUPPORTED",
       "native_skill_install_evidence": "architecture/platform-capabilities.md (\"Muse correction (P0, F3)\"); registry/adapters.json adapter-muse",
-      "notes": "The Brain's home host. The repo is installed as a versioned knowledge pack, not as a native skill install. Usage-verified (exercised daily in this account) but formal conformance NOT_TESTED; media execution is none.",
+      "notes": "The Brain's home host. The repo is installed as a versioned knowledge pack, not as a native skill install. Usage-verified (exercised daily in this account) and formal conformance VERIFIED by CF-P0-ADAPTER-001 (2026-11-26); media execution is none.",
       "status": "verified",
       "verification_basis": "usage-exercised-in-account",
       "verification_evidence": "Used daily in this account since 2026-11-12 (repo work, P0 v2.3 + v2.4 implementation, tests, blog). The knowledge-pack path is the path this account actually uses.",
@@ -1094,7 +1094,7 @@
   },
   "integrity": {
     "algorithm": "sha256-canonical-json-v1",
-    "fingerprint": "13f5df5ce60bb686ead37f0fb48fc5550ef49c4e8a7b062fdbb37e561f9149f5"
+    "fingerprint": "656179b58d5dc757a58699209ad721f6fcd249ad5e4402416ed2a76fef4ffe11"
   },
   "intent_modes": {
     "EDIT_EXISTING_MEDIA": {
@@ -2682,7 +2682,7 @@
   ],
   "sources": {
     "architecture/AGENT_COMPATIBILITY_MATRIX.yaml": {
-      "sha256": "c658391cb3b98f988f95274c54854fe8bc2a5e42781daba363e8215698ca5ecb",
+      "sha256": "e84c1598548a0ef3a60cb51a10e9201280c4d03e74d21ab037f35226fee15824",
       "version": "2.4"
     },
     "architecture/COMPANION_CAPABILITY_REGISTRY.yaml": {

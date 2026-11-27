@@ -109,7 +109,15 @@ def errors_for(schema, value):
 # docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md, and
 # docs/implementation/CF-WO-P1-004-corrections.md. Every other file
 # this round touched was already in the manifest from an earlier round.
-MANIFEST_EXPECTED_COUNT = 206
+# 216 since the combined CF-WO-P1-004-R1 + ADDENDUM-IDENTITY integration
+# (2026-11-26): ten genuinely new files — three from R1
+# (runtime/production_store.py, tests/test_production_store.py,
+# tests/test_muse_adapter_conformance.py) and seven from the identity
+# addendum (one runtime module, two schemas, two fixtures, one test
+# file, and docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md). Every other
+# file this round touched was already in the manifest from an earlier
+# round.
+MANIFEST_EXPECTED_COUNT = 216
 MANIFEST_EXCLUDED = ("release-manifest.json",
                      "docs/implementation/CHECKSUMS.txt")
 
@@ -402,12 +410,12 @@ def main():
     # the negative cases tamper in-memory copies without touching the
     # committed manifest on disk.
     manifest_errors = verify_manifest_entries(manifest, ROOT)
-    check("CF-P1-003-R2-MANIFEST: all 186 entries verify "
+    check("CF-P1-003-R2-MANIFEST: all 209 entries verify "
           "(existence + SHA-256 + byte count)",
           not manifest_errors, "; ".join(manifest_errors[:5]))
     manifest_paths = [f["path"] for f in manifest.get("files", [])]
     check("CF-P1-003-R2-MANIFEST: manifest scope is exactly the "
-          "186 managed files",
+          "209 managed files",
           len(manifest_paths) == MANIFEST_EXPECTED_COUNT
           and len(set(manifest_paths)) == MANIFEST_EXPECTED_COUNT,
           f"entries={len(manifest_paths)}")

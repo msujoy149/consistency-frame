@@ -252,9 +252,11 @@ def _analysis_group():
 # ---------------------------------------------------------------------------
 
 NULL_CASES = [
+    "character_resolutions[i].cast_class",
     "character_resolutions[i].proposal_id",
     "character_resolutions[i].provenance_note",
     "character_resolutions[i].registered_character_id",
+    "character_resolutions[i].scene_ids",
     "dialogue_preservation.notes",
     "emotional_progression",
     "emotional_progression[i].progression_note",
@@ -266,16 +268,45 @@ NULL_CASES = [
     "open_questions",
     "pacing",
     "pacing.pacing_note",
+    "scenes[i].asset_references",
+    "scenes[i].asset_references[i].reference_id",
+    "scenes[i].atmosphere",
+    "scenes[i].background_design",
+    "scenes[i].background_requirements",
     "scenes[i].character_refs",
+    "scenes[i].environment_continuity",
+    "scenes[i].foreground_requirements",
+    "scenes[i].important_props",
+    "scenes[i].important_props[i].approved_prop_id",
+    "scenes[i].important_props[i].approved_reference_ids",
+    "scenes[i].important_props[i].continuity_restrictions",
+    "scenes[i].important_props[i].design_brief",
+    "scenes[i].important_props[i].physical_requirements",
+    "scenes[i].important_props[i].provenance_note",
+    "scenes[i].important_props[i].visual_requirements",
     "scenes[i].location_brief",
+    "scenes[i].midground_requirements",
     "scenes[i].time_of_day",
     "scenes[i].transition_to_next",
+    "scenes[i].weather",
     "shot_direction",
     "shot_direction[i].angle",
     "shot_direction[i].lighting_intent",
     "shot_direction[i].movement",
     "shot_direction[i].size",
     "sound_direction",
+    "sound_direction[i].beat_id",
+    "sound_direction[i].cue_id",
+    "sound_direction[i].distance",
+    "sound_direction[i].duration_seconds",
+    "sound_direction[i].end_anchor",
+    "sound_direction[i].intensity",
+    "sound_direction[i].mixing_priority",
+    "sound_direction[i].perspective",
+    "sound_direction[i].shot_id",
+    "sound_direction[i].start_anchor",
+    "sound_direction[i].start_offset_seconds",
+    "sound_direction[i].sync_target",
 ]
 
 _VALID_CHAPTERS = [{"chapter_id": "ch-01", "scene_ids": ["sc-01"],
@@ -317,19 +348,121 @@ def _null_navigate(record, path):
     return cur, parts[-1]
 
 
+def _valid_prop():
+    """One valid important-prop entry (required fields only)."""
+    return {"prop_id": "prop-boat-001", "name": "wooden boat",
+            "provenance": "EXPLICIT_FROM_USER"}
+
+
+def _ensure_prop(record):
+    """Ensure scenes[0] carries one valid important-prop entry
+    and return it."""
+    scene = record["scenes"][0]
+    if "important_props" not in scene:
+        scene["important_props"] = [clone(_valid_prop())]
+    return scene["important_props"][0]
+
+
+def _ensure_asset_ref(record):
+    """Ensure scenes[0] carries one valid asset reference and
+    return it."""
+    scene = record["scenes"][0]
+    if "asset_references" not in scene:
+        scene["asset_references"] = [{
+            "asset_id": "asset-river-001",
+            "kind": "reference-image",
+            "provenance": "EXPLICIT_FROM_USER"}]
+    return scene["asset_references"][0]
+
+
 def _ensure_present(record, path):
     """Set a valid value for a path the short fixture does not
     carry, so the 'present' check has something to validate."""
-    if path == "character_resolutions[i].proposal_id":
+    if path == "character_resolutions[i].cast_class":
+        record["character_resolutions"][0]["cast_class"] = \
+            "VISIBLE_CHARACTER"
+    elif path == "character_resolutions[i].proposal_id":
         record["character_resolutions"][0]["proposal_id"] = \
             "prop-fisherman-001"
     elif path == "character_resolutions[i].registered_character_id":
         record["character_resolutions"][0]["registered_character_id"] = \
             "char-001"
+    elif path == "character_resolutions[i].scene_ids":
+        record["character_resolutions"][0]["scene_ids"] = ["sc-01"]
     elif path == "format_profile.chapters":
         record["format_profile"]["chapters"] = clone(_VALID_CHAPTERS)
     elif path == "format_profile.chapters[i].scene_ids":
         record["format_profile"]["chapters"] = clone(_VALID_CHAPTERS)
+    elif path == "scenes[i].asset_references":
+        _ensure_asset_ref(record)
+    elif path == "scenes[i].asset_references[i].reference_id":
+        _ensure_asset_ref(record)["reference_id"] = "ref-river-001"
+    elif path == "scenes[i].atmosphere":
+        record["scenes"][0]["atmosphere"] = "warm evening air"
+    elif path == "scenes[i].background_design":
+        record["scenes"][0]["background_design"] = \
+            "riverbank with moored boats"
+    elif path == "scenes[i].background_requirements":
+        record["scenes"][0]["background_requirements"] = \
+            "boats moored along the bank"
+    elif path == "scenes[i].environment_continuity":
+        record["scenes"][0]["environment_continuity"] = \
+            "the river stays on the left in every shot"
+    elif path == "scenes[i].foreground_requirements":
+        record["scenes"][0]["foreground_requirements"] = \
+            "reeds in the near foreground"
+    elif path == "scenes[i].important_props":
+        _ensure_prop(record)
+    elif path == "scenes[i].important_props[i].approved_prop_id":
+        _ensure_prop(record)["approved_prop_id"] = "prop-approved-001"
+    elif path == "scenes[i].important_props[i].approved_reference_ids":
+        _ensure_prop(record)["approved_reference_ids"] = ["ref-prop-01"]
+    elif path == ("scenes[i].important_props[i]."
+                  "continuity_restrictions"):
+        _ensure_prop(record)["continuity_restrictions"] = \
+            "the boat stays moored"
+    elif path == "scenes[i].important_props[i].design_brief":
+        _ensure_prop(record)["design_brief"] = \
+            "a small wooden fishing boat"
+    elif path == "scenes[i].important_props[i].physical_requirements":
+        _ensure_prop(record)["physical_requirements"] = \
+            "wooden, seats two"
+    elif path == "scenes[i].important_props[i].provenance_note":
+        _ensure_prop(record)["provenance_note"] = \
+            "seen in the user's photo"
+    elif path == "scenes[i].important_props[i].visual_requirements":
+        _ensure_prop(record)["visual_requirements"] = \
+            "weathered wood, red trim"
+    elif path == "scenes[i].midground_requirements":
+        record["scenes"][0]["midground_requirements"] = \
+            "the river midground"
+    elif path == "scenes[i].weather":
+        record["scenes"][0]["weather"] = "clear evening"
+    elif path == "sound_direction[i].beat_id":
+        record["sound_direction"][0]["beat_id"] = "b-01"
+    elif path == "sound_direction[i].cue_id":
+        record["sound_direction"][0]["cue_id"] = "cue-sc01-amb-001"
+    elif path == "sound_direction[i].distance":
+        record["sound_direction"][0]["distance"] = "near"
+    elif path == "sound_direction[i].duration_seconds":
+        record["sound_direction"][0]["duration_seconds"] = 3.0
+    elif path == "sound_direction[i].end_anchor":
+        record["sound_direction"][0]["end_anchor"] = "BEAT_START"
+    elif path == "sound_direction[i].intensity":
+        record["sound_direction"][0]["intensity"] = 5
+    elif path == "sound_direction[i].mixing_priority":
+        record["sound_direction"][0]["mixing_priority"] = \
+            "dialogue-first"
+    elif path == "sound_direction[i].perspective":
+        record["sound_direction"][0]["perspective"] = "on-screen"
+    elif path == "sound_direction[i].shot_id":
+        record["sound_direction"][0]["shot_id"] = "sh-01"
+    elif path == "sound_direction[i].start_anchor":
+        record["sound_direction"][0]["start_anchor"] = "SCENE_START"
+    elif path == "sound_direction[i].start_offset_seconds":
+        record["sound_direction"][0]["start_offset_seconds"] = 0.5
+    elif path == "sound_direction[i].sync_target":
+        record["sound_direction"][0]["sync_target"] = "the oar stroke"
     return record
 
 
@@ -375,15 +508,177 @@ def _null_group():
     check("CF-P1-004-ANALYSIS-NULL: declared matrix covers exactly "
           "the optional schema paths",
           set(exercised) == discovered
-          and len(NULL_CASES) == 24 and len(exercised) == 24,
+          and len(NULL_CASES) == 55 and len(exercised) == 55,
           f"declared={len(NULL_CASES)} exercised={len(exercised)} "
           f"discovered={len(discovered)} "
           f"missing={sorted(discovered - set(exercised))} "
           f"extra={sorted(set(exercised) - discovered)}")
 
 
+# ---------------------------------------------------------------------------
+# CF-P1-004-R1-A2-A4: character-resolution coverage and
+# analysis-level cross-reference integrity (R1 Tasks A2/A4).
+# ---------------------------------------------------------------------------
+
+def _narrator_script():
+    """The short S2P script plus a third dialogue line spoken by
+    a narrator who appears in no scene and no shot."""
+    script = T.script()
+    script["dialogue"].append({
+        "line_id": "l-03",
+        "character_id": "char-narrator-001",
+        "text": "Listen, and you will hear the river answer.",
+        "language": "en"})
+    return script
+
+
+def _narrator_analysis(role=None):
+    """The short analysis with 3/3 dialogue lines and a resolution
+    for the narrator. ``role`` is "supporting" (presence heuristic
+    only — the narrator speaks but appears in no scene and no
+    shot) or "narrator" (explicit role)."""
+    analysis = short_analysis()
+    analysis["dialogue_preservation"][
+        "source_dialogue_line_count"] = 3
+    analysis["dialogue_preservation"]["mapped_line_count"] = 3
+    resolution = {"character_ref": "char-narrator-001",
+                  "resolution": "approved",
+                  "registered_character_id": "char-narrator-001",
+                  "role": role if role is not None else "supporting",
+                  "provenance": "EXPLICIT_FROM_USER"}
+    analysis["character_resolutions"].append(resolution)
+    return analysis
+
+
+def _coverage_group():
+    script = T.script()
+
+    # Empty resolutions are valid only with no visible subjects.
+    empty = short_analysis()
+    empty["character_resolutions"] = []
+    empty["scenes"][0]["character_refs"] = []
+    empty["dialogue_preservation"]["source_dialogue_line_count"] = 0
+    empty["dialogue_preservation"]["mapped_line_count"] = 0
+    silent_script = {"id": "script-test-001", "dialogue": [],
+                     "shots": []}
+    check("CF-P1-004-R1-A2: empty character_resolutions validates "
+          "when the source has no visible character subjects",
+          validate_production_analysis(empty, silent_script) == [],
+          f"errors={validate_production_analysis(empty, silent_script)}")
+    check("CF-P1-004-R1-A2: empty character_resolutions fails when "
+          "the source has speaking characters",
+          validate_production_analysis(empty, script) != [])
+
+    # Missing / duplicate / unknown resolutions are rejected.
+    missing_one = short_analysis()
+    del missing_one["character_resolutions"][0]
+    check("CF-P1-004-R1-A2: a missing resolution for a required "
+          "identity fails",
+          validate_production_analysis(missing_one, script) != [])
+    duplicate = short_analysis()
+    duplicate["character_resolutions"].append(
+        clone(duplicate["character_resolutions"][0]))
+    check("CF-P1-004-R1-A2: a duplicate resolution for one identity "
+          "fails",
+          validate_production_analysis(duplicate, script) != [])
+    unknown = short_analysis()
+    unknown["character_resolutions"].append({
+        "character_ref": "char-ghost-001", "resolution": "approved",
+        "registered_character_id": "char-ghost-001",
+        "provenance": "EXPLICIT_FROM_USER"})
+    check("CF-P1-004-R1-A2: a resolution for an unknown identity "
+          "fails",
+          validate_production_analysis(unknown, script) != [])
+    scene_extra = short_analysis()
+    scene_extra["scenes"][0]["character_refs"].append("char-extra-001")
+    check("CF-P1-004-R1-A2: a character declared in a scene with "
+          "no resolution fails",
+          validate_production_analysis(scene_extra, script) != [])
+
+    # Narrator / voice-over is not a visible character.
+    narrator_script = _narrator_script()
+    check("CF-P1-004-R1-A2: a narrator marked by role needs no "
+          "visible-character resolution",
+          validate_production_analysis(
+              _narrator_analysis(role="narrator"),
+              narrator_script) == [],
+          f"errors={validate_production_analysis(_narrator_analysis(role='narrator'), narrator_script)}")
+    check("CF-P1-004-R1-A2: a speaking identity in no scene and "
+          "no shot is a voice-over, not a visible character",
+          validate_production_analysis(
+              _narrator_analysis(role=None),
+              narrator_script) == [],
+          f"errors={validate_production_analysis(_narrator_analysis(role=None), narrator_script)}")
+    voice_over_only = short_analysis()
+    voice_over_only["character_resolutions"].append({
+        "character_ref": "char-narrator-001",
+        "resolution": "approved",
+        "registered_character_id": "char-narrator-001",
+        "provenance": "EXPLICIT_FROM_USER"})
+    check("CF-P1-004-R1-A2: the same narrator WITHOUT a speaking "
+          "line is an unknown identity and fails",
+          validate_production_analysis(voice_over_only, script) != [])
+
+    # A needs-decision entry counts as a resolution at draft
+    # level (the bundle build refuses undecided characters).
+    undecided = short_analysis()
+    undecided["character_resolutions"][0]["resolution"] = \
+        "needs-decision"
+    check("CF-P1-004-R1-A2: a needs-decision entry still covers "
+          "its identity in the draft validator",
+          validate_production_analysis(undecided, script) == [],
+          f"errors={validate_production_analysis(undecided, script)}")
+
+    # Analysis-level cross-references (A4).
+    good_direction = short_analysis()
+    good_direction["shot_direction"] = [{
+        "shot_id": "sh-01", "scene_id": "sc-01",
+        "purpose": "the decision lands",
+        "size": "medium", "angle": "eye-level",
+        "movement": "static",
+        "lighting_intent": "soft morning light",
+        "provenance": "EXPLICIT_FROM_USER"}]
+    check("CF-P1-004-R1-A4: shot direction resolving to a known "
+          "scene validates",
+          validate_production_analysis(good_direction) == [],
+          f"errors={validate_production_analysis(good_direction)}")
+    bad_scene = short_analysis()
+    bad_scene["shot_direction"] = [{
+        "shot_id": "sh-01", "scene_id": "sc-99",
+        "purpose": "the decision lands",
+        "size": "medium", "angle": "eye-level",
+        "movement": "static",
+        "lighting_intent": "soft morning light",
+        "provenance": "EXPLICIT_FROM_USER"}]
+    check("CF-P1-004-R1-A4: shot direction naming an unknown "
+          "scene fails",
+          validate_production_analysis(bad_scene) != [])
+    duplicate_direction = clone(good_direction)
+    duplicate_direction["shot_direction"].append(
+        clone(good_direction["shot_direction"][0]))
+    check("CF-P1-004-R1-A4: duplicate shot-direction entries fail",
+          validate_production_analysis(duplicate_direction) != [])
+    good_cue = short_analysis()
+    good_cue["sound_direction"][0]["beat_id"] = "b-01"
+    check("CF-P1-004-R1-A4: a sound cue resolving to a known "
+          "scene and beat validates",
+          validate_production_analysis(good_cue) == [],
+          f"errors={validate_production_analysis(good_cue)}")
+    bad_cue_scene = short_analysis()
+    bad_cue_scene["sound_direction"][0]["scene_id"] = "sc-99"
+    check("CF-P1-004-R1-A4: a sound cue naming an unknown scene "
+          "fails",
+          validate_production_analysis(bad_cue_scene) != [])
+    bad_cue_beat = short_analysis()
+    bad_cue_beat["sound_direction"][0]["beat_id"] = "b-99"
+    check("CF-P1-004-R1-A4: a sound cue naming an unknown beat "
+          "in its scene fails",
+          validate_production_analysis(bad_cue_beat) != [])
+
+
 def main():
     _analysis_group()
+    _coverage_group()
     _null_group()
     for session in list(_sessions):
         try:

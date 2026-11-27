@@ -53,6 +53,27 @@ boundary. It is deliberately small and standard-library only:
   never persists anything. See
   ``docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md`` for the
   contract.
+- :mod:`runtime.production_store` — the local persistent
+  production job store (CF-WO-P1-004-R1, Task C): durable
+  JSON storage for production jobs and checkpoints under an
+  explicitly configured local workspace root, with atomic
+  writes, integrity hashes, strict path validation and
+  symlink containment. Standard-library only; it persists
+  production metadata only, never raw media, voice samples or
+  credentials. A stored session id is provenance only — resume
+  needs a new exact active session.
+- :mod:`runtime.identity_resolution` — persistent character and
+  voice identity selection, resolution and production binding
+  (CF-WO-P1-004-R1-ADDENDUM-IDENTITY): identity-selection
+  policies, authorized private-registry loading, name/ID
+  resolution, script-cast classification, voice-profile
+  resolution, frozen per-job identity snapshots, and the
+  structured identity/voice bindings the task compiler attaches
+  to image, video and voice packets. Standard-library only; it
+  wraps the P0 authorization in ``scripts/asset_policy.py``
+  (loaded lazily by file path) and never duplicates it. See
+  ``docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md`` for the
+  contract.
 
 This is a local application runtime, not a cryptographic identity
 provider and not a server: it operates inside the security boundary
@@ -64,4 +85,5 @@ for exactly what the boundary guarantees and what it does not.
 
 __all__ = ["local_session", "authorization", "skill_router",
            "script_to_performance", "task_compiler",
-           "production_orchestrator"]
+           "production_orchestrator", "production_store",
+           "identity_resolution"]

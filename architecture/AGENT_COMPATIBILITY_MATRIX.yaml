@@ -33,14 +33,12 @@ agents:
     verification_status: VERIFIED
     verification_basis: usage-exercised-in-account
     verification_evidence: Used daily in this account since 2026-11-12 (repo work, P0 v2.3 + v2.4 implementation, tests, blog). The knowledge-pack path is the path this account actually uses.
-    formal_conformance_status: NOT_TESTED
-    media_execution: none evidenced — no record of this host generating media in this account
-    formal_conformance_status: NOT_TESTED
+    formal_conformance_status: VERIFIED
     formal_conformance_test_id: CF-P0-ADAPTER-001
-    formal_conformance_evidence: none in P0 — no formal conformance test has been run; the VERIFIED above is usage-based only.
+    formal_conformance_evidence: "CF-P0-ADAPTER-001 passed 2026-11-26 in this environment (tests/test_muse_adapter_conformance.py, 20 checks): knowledge-pack access, router skill identification, canonical contract read, short-form fixture analysis, verbatim dialogue preservation, schema + runtime validation, unsupported media-provider operations identified, no native-install claim."
     media_execution: none — directs companions/providers only; generates no video or audio itself
     status: verified
-    notes: The Brain's home host. The repo is installed as a versioned knowledge pack, not as a native skill install. Usage-verified (exercised daily in this account) but formal conformance NOT_TESTED; media execution is none.
+    notes: The Brain's home host. The repo is installed as a versioned knowledge pack, not as a native skill install. Usage-verified (exercised daily in this account) and formal conformance VERIFIED by CF-P0-ADAPTER-001 (2026-11-26); media execution is none.
   - agent_id: agent-claude-code
     name: Claude Code
     native_skill_install: NOT_TESTED

@@ -233,58 +233,71 @@ def build_workflows() -> dict:
 
 ADAPTERS = [
     # adapter_id, name, kind, integration, native_skill_install,
-    # conformance, limitations, usage, media_execution.
+    # conformance, limitations, usage, media_execution,
+    # last_verified, evidence, status.
     # `usage` is what this account actually did with the host;
     # `conformance` is whether a formal test (CF-P0-ADAPTER-001)
     # ran. They are separate fields on purpose (P1-004): Muse is
-    # used daily here, but its formal conformance is NOT_TESTED.
+    # used daily here, and its formal conformance is VERIFIED by
+    # CF-P0-ADAPTER-001 (2026-11-26). Every other host stays
+    # NOT_TESTED until a real conformance test runs for it.
     # `media_execution` states whether the host itself generates
     # media; hosts direct companions/providers, they do not render.
     ("adapter-muse", "Muse (Meta)", "host",
      "PACKAGED", "UNSUPPORTED",
-     "NOT_TESTED",
+     "VERIFIED",
      "No documented native custom-SKILL.md install flow (Meta Help Centre). "
      "Use the versioned knowledge pack / uploaded workspace files instead. "
-     "Knowledge-pack availability in a Muse workspace has not been conformance-tested here.",
+     "Knowledge-pack availability in a Muse workspace conformance-tested "
+     "here (CF-P0-ADAPTER-001, 2026-11-26).",
      "Used daily in this account since 2026-11-12 (repo work, P0 v2.3 + "
      "v2.4 implementation, tests, blog). The knowledge-pack path is the "
      "path this account actually uses.",
-     "none — directs companions/providers only; generates no video or audio itself"),
+     "none — directs companions/providers only; generates no video or audio itself",
+     "2026-11-26",
+     "tests/test_muse_adapter_conformance.py (CF-P0-ADAPTER-001, "
+     "20 checks, passed 2026-11-26)",
+     "verified"),
     ("adapter-claude-code", "Claude Code", "host",
      "NATIVE", "NOT_TESTED",
      "NOT_TESTED",
      "Plugin marketplace files exist (.claude-plugin/marketplace.json). "
      "Loaded skill version, precedence and permissions have not been conformance-tested here.",
      "none recorded in this account",
-     "none evidenced — no record of this host generating media in this account"),
+     "none evidenced — no record of this host generating media in this account",
+     "2026-11-22", "none in P0", "untested"),
     ("adapter-codex", "Codex", "host",
      "NATIVE", "NOT_TESTED",
      "NOT_TESTED",
      "Plugin manifest exists (plugin.json, .codex-plugin/plugin.json). "
      "Loading behaviour has not been conformance-tested here.",
      "none recorded in this account",
-     "none evidenced — no record of this host generating media in this account"),
+     "none evidenced — no record of this host generating media in this account",
+     "2026-11-22", "none in P0", "untested"),
     ("adapter-gemini-cli", "Gemini CLI", "host",
      "NATIVE", "NOT_TESTED",
      "NOT_TESTED",
      "Extension manifest exists (gemini-extension.json). "
      "Workspace/user/extension precedence has not been conformance-tested here.",
      "none recorded in this account",
-     "none evidenced — no record of this host generating media in this account"),
+     "none evidenced — no record of this host generating media in this account",
+     "2026-11-22", "none in P0", "untested"),
     ("adapter-antigravity", "Antigravity", "host",
      "PACKAGED", "NOT_TESTED",
      "NOT_TESTED",
      "Skills in .agents/skills/, rules in AGENTS.md / GEMINI.md. "
      "Actual discovery in the installed Antigravity version has not been tested here.",
      "none recorded in this account",
-     "none evidenced — no record of this host generating media in this account"),
+     "none evidenced — no record of this host generating media in this account",
+     "2026-11-22", "none in P0", "untested"),
     ("adapter-chatgpt", "ChatGPT", "host",
      "PACKAGED", "NOT_TESTED",
      "NOT_TESTED",
      "Skills uploaded via the Skills tab (per docs/06). "
      "Upload/loading behaviour has not been conformance-tested here.",
      "none recorded in this account",
-     "none evidenced — no record of this host generating media in this account"),
+     "none evidenced — no record of this host generating media in this account",
+     "2026-11-22", "none in P0", "untested"),
     ("adapter-claude", "Claude", "host",
      "PACKAGED", "NOT_TESTED",
      "NOT_TESTED",
@@ -292,28 +305,32 @@ ADAPTERS = [
      "Workflow Contracts) is the intended path for hosts without a native "
      "install; it has not been tried in this account.",
      "none recorded in this account",
-     "none evidenced — no record of this host generating media in this account"),
+     "none evidenced — no record of this host generating media in this account",
+     "2026-11-22", "none in P0", "untested"),
     ("adapter-cursor", "Cursor", "host",
      "PACKAGED", "NOT_TESTED",
      "NOT_TESTED",
      "Knowledge pack is the intended path; it has not been tried in this "
      "account.",
      "none recorded in this account",
-     "none evidenced — no record of this host generating media in this account"),
+     "none evidenced — no record of this host generating media in this account",
+     "2026-11-22", "none in P0", "untested"),
     ("adapter-copilot", "GitHub Copilot", "host",
      "PACKAGED", "NOT_TESTED",
      "NOT_TESTED",
      "Knowledge pack is the intended path; it has not been tried in this "
      "account.",
      "none recorded in this account",
-     "none evidenced — no record of this host generating media in this account"),
+     "none evidenced — no record of this host generating media in this account",
+     "2026-11-22", "none in P0", "untested"),
     ("adapter-opencode", "OpenCode", "host",
      "NATIVE", "NOT_TESTED",
      "NOT_TESTED",
      "Documented .opencode/skills path exists in OpenCode docs; no manifest "
      "or conformance test exists in this repo. Planned, not tested.",
      "none recorded in this account",
-     "none evidenced — no record of this host generating media in this account"),
+     "none evidenced — no record of this host generating media in this account",
+     "2026-11-22", "none in P0", "untested"),
     ("adapter-voicestudio", "VoiceStudio (bundled component)", "provider",
      "HOST_RUNTIME", "NOT_TESTED",
      "NOT_TESTED",
@@ -323,7 +340,8 @@ ADAPTERS = [
      "exists in P0.",
      "Voice generation exercised manually in Nov 2026 (Bengali, English, "
      "Hindi speech via the local API); no automated conformance test.",
-     "voice generation (local TTS; cloning only with explicit consent)"),
+     "voice generation (local TTS; cloning only with explicit consent)",
+     "2026-11-22", "none in P0", "untested"),
     ("adapter-openmontage", "OpenMontage (bundled component)", "provider",
      "HOST_RUNTIME", "NOT_TESTED",
      "NOT_TESTED",
@@ -331,14 +349,16 @@ ADAPTERS = [
      "conformance test exists in P0.",
      "make setup / make preflight passed 2026-11-12; no production assembly "
      "run recorded in this account.",
-     "long-form video assembly (pipeline render)"),
+     "long-form video assembly (pipeline render)",
+     "2026-11-22", "none in P0", "untested"),
     ("adapter-ffmpeg", "FFmpeg / ffprobe", "tool",
      "HOST_RUNTIME", "NOT_TESTED",
      "NOT_TESTED",
      "Deterministic media probing/transcoding. Binary presence on a machine "
      "is not a conformance test; no P0 test invokes it.",
      "Used for demo renders 2026-11-12/13 (Ken Burns demo, code-cartoon demo).",
-     "media probing, transcoding, concatenation"),
+     "media probing, transcoding, concatenation",
+     "2026-11-22", "none in P0", "untested"),
     ("adapter-opentimelineio", "OpenTimelineIO", "tool",
      "LIMITED", "NOT_TESTED",
      "NOT_TESTED",
@@ -346,20 +366,24 @@ ADAPTERS = [
      "transitions, markers, external media references. NOT a renderer or "
      "media container. Not installed or tested in P0 — planned.",
      "none recorded in this account",
-     "none — editorial interchange only, not a renderer"),
+     "none — editorial interchange only, not a renderer",
+     "2026-11-22", "none in P0", "untested"),
     ("adapter-premiere-uxp", "Adobe Premiere Pro (UXP)", "editor",
      "LIMITED", "NOT_TESTED",
      "NOT_TESTED",
      "Application-specific editing integration requires a version-tested "
      "API. No adapter code or test exists in P0 — planned.",
      "none recorded in this account",
-     "editing/rendering inside Adobe Premiere Pro (application)"),
+     "editing/rendering inside Adobe Premiere Pro (application)",
+     "2026-11-22", "none in P0", "untested"),
 ]
 
 
 def build_adapters() -> dict:
     records = []
-    for aid, name, kind, integration, native_install, conformance, limits, usage, media in ADAPTERS:
+    for (aid, name, kind, integration, native_install, conformance,
+         limits, usage, media, last_verified, evidence,
+         record_status) in ADAPTERS:
         records.append({
             "adapter_id": aid,
             "name": name,
@@ -374,15 +398,17 @@ def build_adapters() -> dict:
             "privacy": "private assets stay in the private overlay; never committed",
             "licence_notes": "component licences intact (see LICENSE and component licences)",
             "conformance": {"status": conformance, "test_id": "CF-P0-ADAPTER-001",
-                            "last_verified": "2026-11-22", "evidence": "none in P0"},
-            "status": "untested",
+                            "last_verified": last_verified, "evidence": evidence},
+            "status": record_status,
         })
     return {"registry": "adapters", "version": "2.4", "count": len(records),
             "records": records,
             "note": ("No adapter is marked 'supported' in P0: a capability is "
                      "supported only after a real conformance test passes. "
-                     "All adapters here are 'untested' (conformance NOT_TESTED) "
-                     "or 'planned'.")}
+                     "Only adapter-muse is conformance VERIFIED "
+                     "(CF-P0-ADAPTER-001, 2026-11-26); every other adapter "
+                     "here is 'untested' (conformance NOT_TESTED) or "
+                     "'planned'.")}
 
 
 def build_providers() -> dict:

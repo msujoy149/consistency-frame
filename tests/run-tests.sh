@@ -130,6 +130,15 @@ run_one "CF-P1-003-R2-BUNDLE" python3 tests/test_script_to_performance_runtime.p
 run_one "CF-P1-004-ANALYSIS" python3 tests/test_production_analysis.py
 run_one "CF-P1-004-ORCHESTRATOR" python3 tests/test_production_orchestrator.py
 run_one "CF-P1-004-COMPILER" python3 tests/test_task_compiler.py
+run_one "CF-P1-004-R1-STORE" python3 tests/test_production_store.py
+run_one "CF-P1-004-R1-ADAPTER" python3 tests/test_muse_adapter_conformance.py
+run_one "CF-P1-004-R1-IDENTITY-RESOLUTION" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-IDENTITY-POLICY" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-IDENTITY-BINDING" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-IDENTITY-VOICE" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-IDENTITY-E2E" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-IDENTITY-NEWONLY" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-IDENTITY-PRIVACY" python3 tests/test_identity_resolution.py
 
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check

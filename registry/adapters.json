@@ -1,28 +1,28 @@
 {
   "count": 15,
-  "note": "No adapter is marked 'supported' in P0: a capability is supported only after a real conformance test passes. All adapters here are 'untested' (conformance NOT_TESTED) or 'planned'.",
+  "note": "No adapter is marked 'supported' in P0: a capability is supported only after a real conformance test passes. Only adapter-muse is conformance VERIFIED (CF-P0-ADAPTER-001, 2026-11-26); every other adapter here is 'untested' (conformance NOT_TESTED) or 'planned'.",
   "records": [
     {
       "adapter_id": "adapter-muse",
       "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
       "capabilities": [],
       "conformance": {
-        "evidence": "none in P0",
-        "last_verified": "2026-11-22",
-        "status": "NOT_TESTED",
+        "evidence": "tests/test_muse_adapter_conformance.py (CF-P0-ADAPTER-001, 20 checks, passed 2026-11-26)",
+        "last_verified": "2026-11-26",
+        "status": "VERIFIED",
         "test_id": "CF-P0-ADAPTER-001"
       },
       "integration": "PACKAGED",
       "kind": "host",
       "licence_notes": "component licences intact (see LICENSE and component licences)",
       "limitations": [
-        "No documented native custom-SKILL.md install flow (Meta Help Centre). Use the versioned knowledge pack / uploaded workspace files instead. Knowledge-pack availability in a Muse workspace has not been conformance-tested here."
+        "No documented native custom-SKILL.md install flow (Meta Help Centre). Use the versioned knowledge pack / uploaded workspace files instead. Knowledge-pack availability in a Muse workspace conformance-tested here (CF-P0-ADAPTER-001, 2026-11-26)."
       ],
       "media_execution": "none \u2014 directs companions/providers only; generates no video or audio itself",
       "name": "Muse (Meta)",
       "native_skill_install": "UNSUPPORTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested",
+      "status": "verified",
       "usage": "Used daily in this account since 2026-11-12 (repo work, P0 v2.3 + v2.4 implementation, tests, blog). The knowledge-pack path is the path this account actually uses."
     },
     {

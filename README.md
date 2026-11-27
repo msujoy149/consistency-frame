@@ -59,6 +59,13 @@ system, not a video generator. It keeps five roles separate:
   and provenance. The deterministic orchestration runtime is in
   `runtime/production_orchestrator.py` and `runtime/task_compiler.py`
   (see [`docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md`](docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md)).
+  Production jobs persist locally through
+  `runtime/production_store.py` (metadata only, integrity-hashed,
+  never raw media or credentials), and one entry point —
+  `plan_script_to_production` — runs the whole script-to-production
+  planning pipeline. FFmpeg matches only technical media
+  operations; creative editing and semantic QC have no verified
+  provider and compile as human handoffs.
 - **AI Reasoning Host.** The connected AI model (ChatGPT, Claude,
   Gemini, Muse, or another compatible host) does the creative and
   semantic reasoning — it reads the Brain's skills and contracts,
@@ -124,7 +131,7 @@ Per-platform install details are in
 | ChatGPT | Upload the `skills/` folder via the Skills tab |
 | Gemini CLI | Extension: `gemini-extension.json` |
 | Antigravity | Skills in `.agents/skills/`, rules in `AGENTS.md` / `GEMINI.md` |
-| Muse (Meta) | Knowledge pack: clone into the workspace and read the skills from there (no native custom-skill install is documented by Meta); `bash setup.sh` only syncs local `.agents/skills/` copies. Used daily in this account since 2026-11-12; formal conformance is still NOT_TESTED (test `CF-P0-ADAPTER-001` to be run) — see `docs/implementation/CF-WO-P1-004-corrections.md` §2. Muse directs providers and tools; it does not generate media itself. |
+| Muse (Meta) | Knowledge pack: clone into the workspace and read the skills from there (no native custom-skill install is documented by Meta); `bash setup.sh` only syncs local `.agents/skills/` copies. Used daily in this account since 2026-11-12; formal conformance VERIFIED by test `CF-P0-ADAPTER-001` (2026-11-26, `tests/test_muse_adapter_conformance.py`) — see `docs/implementation/CF-WO-P1-004-corrections.md` §2. Muse directs providers and tools; it does not generate media itself. |
 | Any other tool | `npx skills add msujoy149/consistency-frame` or `gh skill install msujoy149/consistency-frame` |
 
 ## Local install — Mac, Windows, Linux

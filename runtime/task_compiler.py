@@ -4,8 +4,23 @@
 Converts a validated production bundle (P1-003 Script-to-Performance
 bundle, plus the AI host's production analysis) into actionable task
 packets: one deterministic packet per unit of production work
-(character/reference preparation, image generation, video generation,
-voice generation, sound generation, editing and finishing, QC review).
+(character/reference preparation, environment and prop references,
+image generation, video generation, voice generation, sound
+generation, technical media operations, creative editing, semantic
+QC review).
+
+Provider matching is evidence-based and responsibility-aware (R1
+B4): a provider is matched only when its capability record
+(``registry/providers.json``, generated from
+``architecture/COMPANION_CAPABILITY_REGISTRY.yaml``) actually
+evidences the required operations and capabilities — and only to
+the responsibility the record proves. FFmpeg evidences technical
+media operations (probe, assemble, transcode) and matches
+``media-technical`` tasks; it does not evidence creative picture
+editing, creative colour review, narrative pacing review, or human
+semantic QC, so ``creative-editing`` and ``semantic-qc-review``
+tasks never match any provider and compile as handoffs for human
+work.
 
 The compiler is Layer B work: deterministic validation, binding and
 assembly. It never performs creative reasoning (that is the AI host's
@@ -124,15 +139,73 @@ TASK_PROVIDER_REQUIREMENTS = {
         "needs_audio": True,
     },
     "editing-finishing": {
+        # Retired as a compiler output in R1 (B4): the old packet
+        # bundled technical assembly with creative picture editing
+        # and colour finishing, and FFmpeg matched it on
+        # assemble-timeline alone. A provider may be matched only
+        # to the operations its capability record proves, so the
+        # compiler now emits media-technical (FFmpeg-matchable) and
+        # creative-editing (no verified provider) instead. The entry
+        # stays so already-compiled packages can still regenerate:
+        # an old editing-finishing packet re-matches as creative
+        # work and compiles as a handoff, never as an FFmpeg claim.
         "types": ("editing-rendering", "local-tool"),
-        "operations": ("assemble-timeline",),
+        "operations": ("creative-picture-editing",),
         "needs_reference_image": False,
         "needs_character_reference": False,
         "needs_audio": True,
     },
     "qc-review": {
+        # Retired as a compiler output in R1 (B4) for the same
+        # reason: the old packet bundled deterministic technical
+        # checks with human semantic QC, and FFmpeg matched it on
+        # probe-media alone. The compiler now emits media-technical
+        # (probe/validate) and semantic-qc-review (human review)
+        # instead. Kept so already-compiled packages can still
+        # regenerate as handoffs.
         "types": ("local-tool",),
-        "operations": ("probe-media",),
+        "operations": ("semantic-qc-review",),
+        "needs_reference_image": False,
+        "needs_character_reference": False,
+        "needs_audio": False,
+    },
+    "media-technical": {
+        # Technical media operations a provider can evidence:
+        # probe metadata, validate file technical properties, basic
+        # timeline assembly, transcode/export. FFmpeg evidences all
+        # three operations and is EXERCISED, so it matches. No
+        # creative or human-review activity lives in this type.
+        "types": ("local-tool", "editing-rendering"),
+        "operations": ("probe-media", "assemble-timeline",
+                       "transcode-media"),
+        "needs_reference_image": False,
+        "needs_character_reference": False,
+        "needs_audio": True,
+    },
+    "creative-editing": {
+        # Creative editorial work: picture editing, creative colour
+        # review, narrative pacing review. No provider in the
+        # registry evidences these operations, so this type never
+        # matches and always compiles as a provider-neutral handoff
+        # for human creative work.
+        "types": ("editing-rendering", "local-tool"),
+        "operations": ("creative-picture-editing",
+                       "creative-colour-review",
+                       "narrative-pacing-review"),
+        "needs_reference_image": False,
+        "needs_character_reference": False,
+        "needs_audio": True,
+    },
+    "semantic-qc-review": {
+        # Human semantic QC: character continuity assessment,
+        # physical realism assessment, semantic visual/audio
+        # review. No provider in the registry evidences these
+        # operations, so this type never matches and always compiles
+        # as a provider-neutral handoff for human review.
+        "types": ("local-tool",),
+        "operations": ("semantic-qc-review",
+                       "character-continuity-assessment",
+                       "physical-realism-assessment"),
         "needs_reference_image": False,
         "needs_character_reference": False,
         "needs_audio": False,
@@ -522,7 +595,9 @@ def _build_packet(*, packet_id, task_id, job_id, project_id, task_type,
                   restrictions, expected, qc_conditions, provenance,
                   authorization_action, providers, commercial_use,
                   needs_clone=False, translation_note=None,
-                  match_provider=True, match_task_type=None):
+                  match_provider=True, match_task_type=None,
+                  beat_id=None, cue_timing=None,
+                  identity_bindings=None, voice_binding=None):
     """Assemble one packet, match a provider, hash it, validate it.
 
     Matching never changes the canonical instruction: a matched
@@ -571,6 +646,19 @@ def _build_packet(*, packet_id, task_id, job_id, project_id, task_type,
         packet["scene_id"] = scene_id
     if shot_id is not None:
         packet["shot_id"] = shot_id
+    if beat_id is not None:
+        packet["beat_id"] = beat_id
+    if cue_timing is not None:
+        packet["cue_timing"] = cue_timing
+    # Identity bindings (CF-WO-P1-004-R1-ADDENDUM-IDENTITY, Tasks
+    # F/G/J): structured per-character references and the exact
+    # voice binding travel on the packet itself, so the packet
+    # hash covers them. A packet without them is unchanged.
+    if identity_bindings:
+        packet["identity_bindings"] = copy.deepcopy(
+            identity_bindings)
+    if voice_binding:
+        packet["voice_binding"] = copy.deepcopy(voice_binding)
     if provider_id is not None:
         packet["provider_translation"] = {
             "provider_id": provider_id,
@@ -589,7 +677,8 @@ def _build_packet(*, packet_id, task_id, job_id, project_id, task_type,
 def compile_task_package(session, job, bundle, analysis=None,
                          proposals=None, providers=None, *,
                          voice_consent=False, voice_kinds=None,
-                         providers_path=None) -> dict:
+                         providers_path=None, approved_props=None,
+                         identity_snapshot=None) -> dict:
     """Compile a deterministic production task package from a
     validated S2P bundle and the AI host's production analysis.
 
@@ -599,8 +688,18 @@ def compile_task_package(session, job, bundle, analysis=None,
     is a validated production analysis (may be None for bundles built
     without one). ``proposals`` are validated character-design
     proposal records for every task-local proposal the analysis
-    references. ``providers`` is a validated provider list; when
-    None, the compiled ``registry/providers.json`` is loaded.
+    references. ``approved_props`` are approved permanent prop
+    records (schemas/prop.json, status ``approved``) for every
+    approved prop the analysis references; an approved prop is
+    reused, never redesigned, and a referenced approved prop with
+    no supplied record fails closed. ``providers`` is a validated
+    provider list; when None, the compiled ``registry/providers.json``
+    is loaded. ``identity_snapshot`` is a validated identity
+    snapshot from ``runtime.identity_resolution`` (may be None for
+    jobs built without one): when present, every image/video packet
+    for a shot carries structured identity bindings for the shot's
+    characters, and every voice packet for a registered speaking
+    character carries the exact voice binding from the snapshot.
 
     Voice cloning needs two things: the voice kind must be declared
     ``clone`` for that voice profile, and ``voice_consent`` must be
@@ -644,12 +743,46 @@ def compile_task_package(session, job, bundle, analysis=None,
         errors = validate_provider_record(provider)
         if errors:
             raise TaskCompilerError(errors)
+    approved_props_by_id = {}
+    for prop in (approved_props or []):
+        if not isinstance(prop, dict):
+            raise TaskCompilerError(
+                "approved_props: every approved prop must be an object")
+        prop_errors = schema_errors("prop", prop, "approved_prop")
+        if prop_errors:
+            raise TaskCompilerError(prop_errors)
+        if prop.get("status") != "approved":
+            raise TaskCompilerError(
+                f"approved prop {prop.get('id')!r} has status "
+                f"{prop.get('status')!r}, not 'approved'; only approved "
+                "permanent props may be supplied as approved props")
+        approved_props_by_id[prop["id"]] = prop
+    # Identity snapshot (lazy import: identity_resolution imports
+    # this module, so a top-level import would be circular).
+    identity_resolution = None
+    if identity_snapshot is not None:
+        from . import identity_resolution as _identity_resolution
+        identity_resolution = _identity_resolution
+        snapshot_errors = identity_resolution \
+            .validate_identity_snapshot(identity_snapshot)
+        if snapshot_errors:
+            raise TaskCompilerError(snapshot_errors)
+        identity_snapshot = copy.deepcopy(identity_snapshot)
 
     job = copy.deepcopy(job)
     bundle = copy.deepcopy(bundle)
     analysis = copy.deepcopy(analysis) if analysis is not None else None
-    proposals = {p.get("proposal_id"): p
-                 for p in (proposals or []) if isinstance(p, dict)}
+    # Proposals arrive as a list of records — or as the
+    # orchestrator's {proposal_id: record} mapping. Both are
+    # normalized here; a mapping's keys are ids, not records,
+    # so iterating it as a list would silently drop every
+    # proposal (found by the identity suite's mixed-cast test).
+    if isinstance(proposals, dict):
+        proposals = {pid: rec for pid, rec in proposals.items()
+                     if isinstance(rec, dict)}
+    else:
+        proposals = {p.get("proposal_id"): p
+                     for p in (proposals or []) if isinstance(p, dict)}
 
     scene_plan = bundle.get("scene_plan") or {}
     shot_plan = bundle.get("shot_plan") or {}
@@ -751,10 +884,33 @@ def compile_task_package(session, job, bundle, analysis=None,
                 match_provider=False)
             add(packet, miss)
             if proposal.get("status") == "approved-for-job":
+                # A non-visible cast member (narrator, off-screen
+                # speaker, mentioned-only) gets no visual reference
+                # sheet: it has no image identity. When the
+                # analysis names no cast class, the sheet is built
+                # as before.
+                cast_class = resolution.get("cast_class")
+                if cast_class is not None \
+                        and cast_class != "VISIBLE_CHARACTER":
+                    continue
                 packet_id, task_id = next_ids("reference-sheet")
                 refs = ", ".join(
                     proposal.get("approved_reference_ids") or []) \
                     or "no approved references yet"
+                # Identity binding for the task-local character's
+                # reference sheet (front view anchors the
+                # turnaround). No snapshot: no binding.
+                ref_binding = None
+                if identity_snapshot is not None:
+                    try:
+                        ref_binding = identity_resolution \
+                            .identity_binding_for_character(
+                                character_id=proposal_id,
+                                snapshot=identity_snapshot,
+                                role="front")
+                    except identity_resolution.IdentityResolutionError \
+                            as exc:
+                        raise TaskCompilerError(exc.errors) from exc
                 packet, miss = _build_packet(
                     packet_id=packet_id, task_id=task_id, job_id=job_id,
                     project_id=project_id, task_type="reference-sheet",
@@ -794,10 +950,18 @@ def compile_task_package(session, job, bundle, analysis=None,
                                 "approved-for-job proposal",
                     },
                     authorization_action="use_in_production",
-                    providers=providers, commercial_use=commercial_use)
+                    providers=providers, commercial_use=commercial_use,
+                    identity_bindings=(
+                        [ref_binding] if ref_binding else None))
                 add(packet, miss)
 
     # -- 2. Environment reference packets, one per scene. --
+    # B1: every validated scene-environment detail the analysis
+    # carries is included — location, time of day, weather,
+    # atmosphere, background design, foreground / midground /
+    # background requirements, lighting context, environment
+    # continuity, approved reference ids. The background supports
+    # the main story action; it must not be unnecessarily busy.
     analysis_scenes = {}
     if analysis is not None:
         for entry in _as_list(analysis.get("scenes")):
@@ -807,9 +971,42 @@ def compile_task_package(session, job, bundle, analysis=None,
         if not isinstance(scene, dict) or not scene.get("scene_id"):
             continue
         scene_id = scene["scene_id"]
-        location = (analysis_scenes.get(scene_id) or {}).get(
-            "location_brief") or scene.get("location_id") \
+        entry = analysis_scenes.get(scene_id) or {}
+        location = entry.get("location_brief") \
+            or scene.get("location_id") \
             or "location as described in the scene plan"
+        details = []
+        if entry.get("time_of_day"):
+            details.append(f"time of day: {entry['time_of_day']}")
+        if entry.get("weather"):
+            details.append(f"weather: {entry['weather']}")
+        if entry.get("atmosphere"):
+            details.append(f"atmosphere: {entry['atmosphere']}")
+        if entry.get("background_design"):
+            details.append(
+                f"background design: {entry['background_design']}")
+        if entry.get("foreground_requirements"):
+            details.append("foreground: "
+                           f"{entry['foreground_requirements']}")
+        if entry.get("midground_requirements"):
+            details.append("midground: "
+                           f"{entry['midground_requirements']}")
+        if entry.get("background_requirements"):
+            details.append("background: "
+                           f"{entry['background_requirements']}")
+        if entry.get("environment_continuity"):
+            details.append("continuity: "
+                           f"{entry['environment_continuity']}")
+        detail_text = ("; ".join(details) + ". ") if details else ""
+        env_inputs = [{"input_ref": scene_id, "kind": "plan",
+                       "required": True}]
+        approved_refs = []
+        for ref in _as_list(entry.get("asset_references")):
+            if isinstance(ref, dict) and ref.get("asset_id"):
+                approved_refs.append(ref["asset_id"])
+                env_inputs.append({
+                    "input_ref": ref["asset_id"],
+                    "kind": "approved-asset", "required": True})
         packet_id, task_id = next_ids("environment-reference")
         packet, miss = _build_packet(
             packet_id=packet_id, task_id=task_id, job_id=job_id,
@@ -817,10 +1014,13 @@ def compile_task_package(session, job, bundle, analysis=None,
             scene_id=scene_id, shot_id=None,
             instruction=(
                 f"Prepare the environment reference for scene "
-                f"{scene_id}: {location}. The background supports the "
-                "main story action; it must not be unnecessarily busy."),
-            inputs=[{"input_ref": scene_id, "kind": "plan",
-                     "required": True}],
+                f"{scene_id}: {location}. {detail_text}The background "
+                "supports the main story action; it must not be "
+                "unnecessarily busy."
+                + (f" Approved references: "
+                   f"{', '.join(approved_refs)}."
+                   if approved_refs else "")),
+            inputs=env_inputs,
             requirements=["generate-image"],
             restrictions=[
                 "background supports the action, never overwhelms it",
@@ -839,9 +1039,155 @@ def compile_task_package(session, job, bundle, analysis=None,
                 "brief",
             ],
             provenance={
-                "source": (analysis_scenes.get(scene_id) or {}).get(
+                "source": entry.get(
                     "provenance", "INFERRED_FOR_PRODUCTION"),
                 "note": "environment intelligence for the scene",
+            },
+            authorization_action="use_in_production",
+            providers=providers, commercial_use=commercial_use)
+        add(packet, miss)
+
+    # -- 2b. Prop reference packets, one per distinct prop (B2). --
+    # The missing path in P1-004: the compiler defined a
+    # prop-reference provider requirement but never created
+    # prop-reference packets. Props come from the analysis scenes'
+    # important_props; each distinct prop gets exactly one packet,
+    # keyed by its approved prop id when approved, else by its
+    # task-local prop id — so an approved recurring prop never gets
+    # duplicate generation tasks. Approved props are prepared from
+    # their approved record (never redesigned); a prop with no
+    # approved record gets a task-local design proposal. Nothing
+    # here permanently registers any prop.
+    prop_entries: dict[str, dict] = {}
+    prop_scenes: dict[str, list] = {}
+    if analysis is not None:
+        for entry in _as_list(analysis.get("scenes")):
+            if not isinstance(entry, dict):
+                continue
+            for prop in _as_list(entry.get("important_props")):
+                if not isinstance(prop, dict) \
+                        or not prop.get("prop_id"):
+                    continue
+                key = prop.get("approved_prop_id") \
+                    or prop["prop_id"]
+                if key not in prop_entries:
+                    prop_entries[key] = prop
+                prop_scenes.setdefault(key, []).append(
+                    entry.get("scene_id"))
+    for key in sorted(prop_entries):
+        prop = prop_entries[key]
+        scenes_for_prop = sorted({s for s in prop_scenes[key] if s})
+        approved_id = prop.get("approved_prop_id")
+        if approved_id is not None:
+            approved = approved_props_by_id.get(approved_id)
+            if approved is None:
+                raise TaskCompilerError(
+                    "analysis references approved prop "
+                    f"{approved_id!r} but no approved prop record "
+                    "was supplied")
+            prop_inputs = [{
+                "input_ref": approved_id, "kind": "approved-asset",
+                "required": True}]
+            for ref_id in _as_list(
+                    prop.get("approved_reference_ids")):
+                prop_inputs.append({
+                    "input_ref": ref_id, "kind": "approved-asset",
+                    "required": True})
+            packet_id, task_id = next_ids("prop-reference")
+            packet, miss = _build_packet(
+                packet_id=packet_id, task_id=task_id, job_id=job_id,
+                project_id=project_id, task_type="prop-reference",
+                scene_id=scenes_for_prop[0]
+                if scenes_for_prop else None,
+                shot_id=None,
+                instruction=(
+                    f"Prepare the approved prop {prop.get('name')!r} "
+                    f"({approved_id}) for use in "
+                    f"{', '.join(scenes_for_prop) or 'the job'}: use "
+                    "the approved prop record and its approved "
+                    "references; do not redesign it. "
+                    f"{prop.get('continuity_restrictions') or ''}"),
+                inputs=prop_inputs,
+                requirements=["generate-image"],
+                restrictions=[
+                    "approved prop: prepare the existing record, "
+                    "never redesign it",
+                    "continuity restrictions from the analysis must "
+                    "hold across every scene that uses the prop",
+                    "never permanently register a prop from this "
+                    "packet",
+                ],
+                expected={
+                    "description": "Approved prop prepared for use",
+                    "format": "png",
+                    "acceptance_checks": [
+                        "prop matches the approved record",
+                        "continuity restrictions hold",
+                    ],
+                },
+                qc_conditions=[
+                    "Major: prepared prop must match the approved "
+                    "record",
+                ],
+                provenance={
+                    "source": prop.get(
+                        "provenance", "FROM_APPROVED_PROJECT_CANON"),
+                    "note": "approved prop from the production "
+                            "analysis",
+                },
+                authorization_action="use_in_production",
+                providers=providers, commercial_use=commercial_use,
+                match_provider=False)
+            add(packet, miss)
+            continue
+        brief = prop.get("design_brief")
+        if not brief:
+            raise TaskCompilerError(
+                "prop "
+                f"{prop.get('prop_id')!r} has no approved_prop_id and "
+                "no design_brief; a task-local prop proposal needs a "
+                "design brief")
+        packet_id, task_id = next_ids("prop-reference")
+        packet, miss = _build_packet(
+            packet_id=packet_id, task_id=task_id, job_id=job_id,
+            project_id=project_id, task_type="prop-reference",
+            scene_id=scenes_for_prop[0] if scenes_for_prop else None,
+            shot_id=None,
+            instruction=(
+                f"Prepare the task-local prop {prop.get('name')!r} "
+                f"(proposal {prop['prop_id']}) for use in "
+                f"{', '.join(scenes_for_prop) or 'the job'}: "
+                f"{brief} "
+                f"Visual: {prop.get('visual_requirements') or 'as briefed'}. "
+                f"Physical: {prop.get('physical_requirements') or 'as briefed'}. "
+                f"{prop.get('continuity_restrictions') or ''} This "
+                "proposal is for this job only."),
+            inputs=[{"input_ref": prop["prop_id"], "kind": "plan",
+                     "required": True}],
+            requirements=["generate-image"],
+            restrictions=[
+                "task-local proposal only: never register permanently "
+                "without explicit authorisation",
+                "continuity restrictions from the analysis must hold "
+                "across every scene that uses the prop",
+            ],
+            expected={
+                "description": "Task-local prop design and reference",
+                "format": "png",
+                "acceptance_checks": [
+                    "prop matches the design brief",
+                    "continuity restrictions hold",
+                    "no permanent registration was created",
+                ],
+            },
+            qc_conditions=[
+                "Major: prop must match the design brief",
+            ],
+            provenance={
+                "source": prop.get(
+                    "provenance", "INFERRED_FOR_PRODUCTION"),
+                "note": "task-local prop proposal from the "
+                        "production analysis",
             },
             authorization_action="use_in_production",
             providers=providers, commercial_use=commercial_use)
@@ -861,6 +1207,36 @@ def compile_task_package(session, job, bundle, analysis=None,
         scene_id = shot.get("scene_id")
         direction = shot_direction.get(shot_id) or {}
         framing = shot.get("framing") or shot.get("shot_size") or ""
+        # Identity bindings for this shot (Tasks F/G): one per
+        # visible character, from the snapshot. No snapshot: the
+        # packet keeps its text-only consistency instruction.
+        shot_bindings = None
+        if identity_snapshot is not None and shot.get("character_ids"):
+            # Expression refs come from the lines spoken in THIS
+            # shot only: the s2p voice bindings map each dialogue
+            # line to its shot.
+            binding_shot = {}
+            for b in bindings:
+                if isinstance(b, dict) \
+                        and b.get("dialogue_line_id") \
+                        and b.get("shot_id"):
+                    binding_shot[b["dialogue_line_id"]] = b["shot_id"]
+            shot_lines = [ln for ln in lines
+                          if isinstance(ln, dict)
+                          and binding_shot.get(
+                              ln.get("dialogue_line_id")) == shot_id]
+            try:
+                shot_bindings, missing = identity_resolution \
+                    .identity_bindings_for_shot(
+                        shot=shot, snapshot=identity_snapshot,
+                        lines=shot_lines, analysis=analysis)
+            except identity_resolution.IdentityResolutionError as exc:
+                raise TaskCompilerError(exc.errors) from exc
+            if missing:
+                raise TaskCompilerError(
+                    f"shot {shot_id!r} references characters with no "
+                    "resolved identity binding: "
+                    + ", ".join(missing))
         if stills_first:
             packet_id, task_id = next_ids("image-generation")
             packet, miss = _build_packet(
@@ -903,7 +1279,14 @@ def compile_task_package(session, job, bundle, analysis=None,
                     "note": "starting still for the shot",
                 },
                 authorization_action="use_in_production",
-                providers=providers, commercial_use=commercial_use)
+                providers=providers, commercial_use=commercial_use,
+                identity_bindings=shot_bindings)
+            if shot_bindings and miss is not None:
+                miss["reason"] += (
+                    "; identity-critical task: no provider with an "
+                    "evidenced character-reference capability was "
+                    "matched, so the structured identity bindings "
+                    "are attached as a provider-neutral handoff")
             add(packet, miss)
             image_task_by_shot[shot_id] = task_id
         packet_id, task_id = next_ids("video-generation")
@@ -964,10 +1347,38 @@ def compile_task_package(session, job, bundle, analysis=None,
                 "note": "video generation for the shot",
             },
             authorization_action="use_in_production",
-            providers=providers, commercial_use=commercial_use)
+            providers=providers, commercial_use=commercial_use,
+            identity_bindings=shot_bindings)
+        if shot_bindings and miss is not None:
+            miss["reason"] += (
+                "; identity-critical task: no provider with an "
+                "evidenced character-reference capability was "
+                "matched, so the structured identity bindings "
+                "are attached as a provider-neutral handoff")
         add(packet, miss)
 
     # -- 4. Voice packets, one per speaking line (exact dialogue). --
+    # With an identity snapshot, a registered speaking character
+    # must have a resolved voice selection (fail closed); a
+    # task-local character keeps its bundle voice profile.
+    approved_voice_ids: set = set()
+    approved_voice_refs: dict = {}
+    snapshot_voice_ids: set = set()
+    if identity_snapshot is not None:
+        for entry in identity_snapshot.get("resolved_characters") or []:
+            if not isinstance(entry, dict):
+                continue
+            if entry.get("resolution") == "approved" \
+                    and entry.get("character_id"):
+                approved_voice_ids.add(entry["character_id"])
+                if entry.get("character_ref"):
+                    approved_voice_refs[entry["character_ref"]] = \
+                        entry["character_id"]
+        for selection in identity_snapshot.get("voice_selections") \
+                or []:
+            if isinstance(selection, dict) \
+                    and selection.get("character_id"):
+                snapshot_voice_ids.add(selection["character_id"])
     for line in sorted(lines, key=lambda ln: ln.get("line_id", "")):
         if not isinstance(line, dict) or not line.get("line_id"):
             continue
@@ -1004,6 +1415,26 @@ def compile_task_package(session, job, bundle, analysis=None,
                     or binding.get("delivery") or "")
         emotion = (line.get("emotion") or binding.get("emotion") or "")
         language = line.get("language") or "unspecified"
+        # Exact voice binding (Task J) for a registered speaking
+        # character; task-local speakers keep the bundle profile.
+        line_voice_binding = None
+        if identity_snapshot is not None:
+            canonical_voice_id = approved_voice_refs.get(
+                character_id, character_id)
+            if canonical_voice_id in approved_voice_ids \
+                    and canonical_voice_id not in snapshot_voice_ids:
+                raise TaskCompilerError(
+                    f"speaking line {line_id!r} (registered character "
+                    f"{canonical_voice_id!r}) has no resolved voice "
+                    "selection in the identity snapshot")
+            if canonical_voice_id in snapshot_voice_ids:
+                try:
+                    line_voice_binding = identity_resolution \
+                        .voice_binding_for_line(
+                            line=line, snapshot=identity_snapshot)
+                except identity_resolution.IdentityResolutionError \
+                        as exc:
+                    raise TaskCompilerError(exc.errors) from exc
         packet_id, task_id = next_ids("voice-generation")
         packet, miss = _build_packet(
             packet_id=packet_id, task_id=task_id, job_id=job_id,
@@ -1050,40 +1481,91 @@ def compile_task_package(session, job, bundle, analysis=None,
             },
             authorization_action="use_in_production",
             providers=providers, commercial_use=commercial_use,
-            needs_clone=(kind == "clone"))
+            needs_clone=(kind == "clone"),
+            voice_binding=line_voice_binding)
         add(packet, miss)
 
     # -- 5. Sound packets from the analysis, else the bundle plan. --
+    # B3: every generated sound packet preserves its structured cue
+    # timing (scene / shot / beat ids, start anchor and offset,
+    # duration or end anchor, intent, distance, perspective,
+    # intensity, sync target, mixing priority) in the packet's
+    # cue_timing field, with timing_status "planned". A plan never
+    # claims an audio file was already generated: actual rendered
+    # clip timing lives in execution results, never in a compiled
+    # packet. Intentional silence generates no sound-generation
+    # request; not every layer is forced into every shot;
+    # dialogue-first mixing is preserved.
     cues = []
     if analysis is not None:
         for cue in _as_list(analysis.get("sound_direction")):
             if isinstance(cue, dict) and cue.get("cue_type"):
-                cues.append((cue.get("scene_id"),
-                             cue.get("cue_type"),
-                             cue.get("intent") or "",
-                             cue.get("provenance",
-                                     "INFERRED_FOR_PRODUCTION")))
+                cues.append(cue)
     if not cues:
         audio_plan = s2p.get("audio_plan") or {}
         for kind in ("ambience", "music", "sfx"):
             for item in _as_list(audio_plan.get(kind)):
                 if isinstance(item, dict) and item.get("cue"):
-                    cues.append((None, kind, _cue_text(item),
-                                 "INFERRED_FOR_PRODUCTION"))
-    for scene_id, cue_type, intent, provenance in sorted(
-            cues, key=lambda c: (c[0] or "", c[1], c[2])):
+                    cues.append({"cue_type": kind,
+                                 "intent": _cue_text(item),
+                                 "provenance":
+                                     "INFERRED_FOR_PRODUCTION"})
+    for cue in sorted(
+            cues,
+            key=lambda c: (c.get("scene_id") or "",
+                           c.get("shot_id") or "",
+                           c.get("beat_id") or "",
+                           c.get("cue_id") or "",
+                           c.get("cue_type") or "",
+                           c.get("intent") or "")):
+        cue_type = cue.get("cue_type")
         if cue_type == "intentional-silence":
             continue
+        scene_id = cue.get("scene_id")
+        shot_id = cue.get("shot_id")
+        beat_id = cue.get("beat_id")
+        intent = cue.get("intent") or ""
+        provenance = cue.get("provenance", "INFERRED_FOR_PRODUCTION")
+        cue_timing: dict = {"timing_status": "planned"}
+        for field in ("cue_id", "start_anchor", "end_anchor",
+                      "start_offset_seconds", "duration_seconds",
+                      "distance", "perspective", "intensity",
+                      "sync_target", "mixing_priority"):
+            if cue.get(field) is not None:
+                cue_timing[field] = cue[field]
+        timing_text = ""
+        if cue.get("start_anchor"):
+            timing_text = (f" Start: {cue['start_anchor']}"
+                           + (f" +{cue['start_offset_seconds']}s"
+                              if cue.get("start_offset_seconds")
+                              is not None else "")
+                           + (f", duration "
+                              f"{cue['duration_seconds']}s"
+                              if cue.get("duration_seconds")
+                              is not None else "")
+                           + (f", end: {cue['end_anchor']}"
+                              if cue.get("end_anchor") else "")
+                           + ".")
+        if cue.get("sync_target"):
+            timing_text += f" Sync with: {cue['sync_target']}."
+        if cue.get("mixing_priority"):
+            timing_text += (f" Mixing priority: "
+                            f"{cue['mixing_priority']}.")
         packet_id, task_id = next_ids("sound-generation")
         packet, miss = _build_packet(
             packet_id=packet_id, task_id=task_id, job_id=job_id,
             project_id=project_id, task_type="sound-generation",
-            scene_id=scene_id, shot_id=None,
+            scene_id=scene_id, shot_id=shot_id, beat_id=beat_id,
+            cue_timing=cue_timing,
             instruction=(
                 f"Generate the {cue_type} sound cue"
                 + (f" for scene {scene_id}" if scene_id else "")
-                + f": {intent}. Sync with the visible action; mix "
-                  "dialogue-first."),
+                + (f", shot {shot_id}" if shot_id else "")
+                + (f", beat {beat_id}" if beat_id else "")
+                + f": {intent}.{timing_text} Sync with the visible "
+                  "action; mix dialogue-first. This is planned "
+                  "timing from the production plan, not a rendered "
+                  "clip timeline."),
             inputs=[{"input_ref": job_id, "kind": "plan",
                      "required": True}],
             requirements=["generate-sound"],
@@ -1091,6 +1573,8 @@ def compile_task_package(session, job, bundle, analysis=None,
                 "dialogue-first mixing: never drown the dialogue",
                 "intentional silence is a creative decision, never a "
                 "missing-audio defect",
+                "planned timing only: never claim a rendered clip "
+                "already exists",
             ],
             expected={
                 "description": f"{cue_type} cue audio",
@@ -1109,39 +1593,89 @@ def compile_task_package(session, job, bundle, analysis=None,
             providers=providers, commercial_use=commercial_use)
         add(packet, miss)
 
-    # -- 6. Editing + finishing packet (one per job). --
+    # -- 6. Technical media operations + creative editing (B4). --
+    # The old single editing-finishing packet bundled technical
+    # assembly with creative picture editing and colour finishing,
+    # and FFmpeg matched it on assemble-timeline alone — but
+    # FFmpeg evidences only technical operations, not the complete
+    # creative editing workflow. The responsibilities are now
+    # separate: a media-technical packet (assemble, transcode,
+    # export — FFmpeg-matchable) and a creative-editing packet
+    # (picture editing, creative colour, narrative pacing — no
+    # verified provider, always a handoff for human creative work).
     editing = s2p.get("editing_plan") or {}
-    packet_id, task_id = next_ids("editing-finishing")
+    packet_id, task_id = next_ids("media-technical")
     packet, miss = _build_packet(
         packet_id=packet_id, task_id=task_id, job_id=job_id,
-        project_id=project_id, task_type="editing-finishing",
+        project_id=project_id, task_type="media-technical",
         scene_id=None, shot_id=None,
         instruction=(
-            "Assemble the final timeline in shot order with the "
-            "editing plan: reaction holds "
+            "Assemble the final timeline in shot order and export "
+            "per the delivery profile: reaction holds "
             f"{len(_as_list(editing.get('reaction_holds')))}; rhythm "
-            f"{editing.get('rhythm') or 'as directed'}. Sync audio to "
-            "picture, apply colour finishing, export per the delivery "
-            "profile."),
+            f"{editing.get('rhythm') or 'as directed'}. Technical "
+            "operations only — probe, assemble, transcode, export."),
         inputs=[{"input_ref": job_id, "kind": "plan", "required": True}],
-        requirements=["assemble-timeline"],
+        requirements=["assemble-timeline", "transcode-media"],
         restrictions=[
             "shot order is the shot plan order",
+            "technical operations only: this packet claims no "
+            "creative editing judgement",
             "never regenerate an approved neighbouring shot to fix "
             "one defective shot",
         ],
         expected={
-            "description": "Finished timeline and export",
+            "description": "Assembled timeline and export",
             "format": "mp4",
             "acceptance_checks": [
                 "shots in shot-plan order",
-                "audio synced to picture",
                 "export matches the delivery profile",
             ],
         },
         qc_conditions=[
             "Critical: shot order must match the shot plan",
+        ],
+        provenance={"source": "FROM_APPROVED_PROJECT_CANON",
+                    "note": "editing plan from the validated bundle"},
+        authorization_action="use_in_production",
+        providers=providers, commercial_use=commercial_use)
+    add(packet, miss)
+    packet_id, task_id = next_ids("creative-editing")
+    packet, miss = _build_packet(
+        packet_id=packet_id, task_id=task_id, job_id=job_id,
+        project_id=project_id, task_type="creative-editing",
+        scene_id=None, shot_id=None,
+        instruction=(
+            "Do the creative edit on the assembled timeline: picture "
+            "editing, creative colour review and finishing, "
+            "narrative pacing review. Sync audio to picture. "
+            "Human creative work — no provider in the registry "
+            "evidences these operations, so this packet is a "
+            "handoff for a human editor."),
+        inputs=[{"input_ref": job_id, "kind": "plan", "required": True}],
+        requirements=["creative-picture-editing",
+                      "creative-colour-review",
+                      "narrative-pacing-review"],
+        restrictions=[
+            "human creative work: no automated provider claim",
+            "shot order is the shot plan order",
+            "never regenerate an approved neighbouring shot to fix "
+            "one defective shot",
+        ],
+        expected={
+            "description": "Creatively edited and colour-finished "
+                           "timeline",
+            "format": "mp4",
+            "acceptance_checks": [
+                "audio synced to picture",
+                "colour finishing matches the production direction",
+                "pacing matches the editing plan",
+            ],
+        },
+        qc_conditions=[
             "Major: audio must be synced to picture",
+            "Major: colour finishing must match the production "
+            "direction",
         ],
         provenance={"source": "FROM_APPROVED_PROJECT_CANON",
                     "note": "editing plan from the validated bundle"},
@@ -1149,31 +1683,73 @@ def compile_task_package(session, job, bundle, analysis=None,
         providers=providers, commercial_use=commercial_use)
     add(packet, miss)
 
-    # -- 7. QC review packet (one per job). --
-    packet_id, task_id = next_ids("qc-review")
+    # -- 7. Technical QC + semantic QC review (B4). --
+    # Same split for QC: deterministic technical checks (probe,
+    # validate file properties — FFmpeg-matchable) vs human
+    # semantic review (character continuity, physical realism,
+    # semantic visual/audio QC — no verified reviewer, always a
+    # handoff for human review).
+    packet_id, task_id = next_ids("media-technical")
     packet, miss = _build_packet(
         packet_id=packet_id, task_id=task_id, job_id=job_id,
-        project_id=project_id, task_type="qc-review",
+        project_id=project_id, task_type="media-technical",
         scene_id=None, shot_id=None,
         instruction=(
-            "Run QC on the assembled output: file existence, "
-            "resolution, duration, frame rate, audio presence, "
-            "audio/video sync where measurable, file and export "
-            "integrity, plus human review for semantic defects. "
-            "Grade defects Critical / Major / Minor / Polish."),
+            "Run deterministic technical QC on the assembled output: "
+            "file existence, resolution, duration, frame rate, audio "
+            "presence, audio/video sync where measurable, file and "
+            "export integrity. Technical checks only — no semantic "
+            "judgement is claimed."),
         inputs=[{"input_ref": job_id, "kind": "plan",
                  "required": True}],
         requirements=["probe-media"],
         restrictions=[
-            "a model claiming a scene looks good is not sufficient "
-            "evidence every frame is correct",
-            "deterministic checks first, human review for semantics",
+            "deterministic checks only: a technical pass never "
+            "claims a scene looks right",
+            "every deterministic check ran and is recorded",
         ],
         expected={
-            "description": "QC report with severity-graded defects",
+            "description": "Technical QC report",
             "format": "json",
             "acceptance_checks": [
                 "every deterministic check ran and is recorded",
+            ],
+        },
+        qc_conditions=[
+            "Critical: no Critical defect may ship unwaived",
+        ],
+        provenance={"source": "FROM_APPROVED_PROJECT_CANON",
+                    "note": "QC rules from the Addendum-01 systems"},
+        authorization_action="use_in_production",
+        providers=providers, commercial_use=commercial_use)
+    add(packet, miss)
+    packet_id, task_id = next_ids("semantic-qc-review")
+    packet, miss = _build_packet(
+        packet_id=packet_id, task_id=task_id, job_id=job_id,
+        project_id=project_id, task_type="semantic-qc-review",
+        scene_id=None, shot_id=None,
+        instruction=(
+            "Run human semantic QC on the assembled output: "
+            "character continuity assessment, physical realism "
+            "assessment, semantic visual/audio review. Grade defects "
+            "Critical / Major / Minor / Polish. Human review — no "
+            "provider in the registry evidences semantic review, so "
+            "this packet is a handoff for a human reviewer."),
+        inputs=[{"input_ref": job_id, "kind": "plan",
+                 "required": True}],
+        requirements=["semantic-qc-review",
+                      "character-continuity-assessment",
+                      "physical-realism-assessment"],
+        restrictions=[
+            "human review: a model claiming a scene looks good is "
+            "not sufficient evidence every frame is correct",
+            "deterministic checks first, human review for semantics",
+        ],
+        expected={
+            "description": "Semantic QC report with severity-graded "
+                           "defects",
+            "format": "json",
+            "acceptance_checks": [
                 "defects carry severity and shot ids",
             ],
         },
@@ -1201,7 +1777,8 @@ def compile_task_package(session, job, bundle, analysis=None,
 
 
 def compile_regeneration_packets(session, job, qc_report, providers=None,
-                                 *, providers_path=None) -> dict:
+                                 *, providers_path=None,
+                                 identity_snapshot=None) -> dict:
     """Compile correction task packets for a QC report's failed shots.
 
     Only defects that need repair get packets: Critical and Major
@@ -1212,6 +1789,14 @@ def compile_regeneration_packets(session, job, qc_report, providers=None,
     matching, so a failed video shot is re-matched as video work —
     never silently re-typed. Approved neighbouring shots are never
     touched: packets are built only for the shots the report names.
+
+    A regeneration packet reuses the original packet's identity
+    bindings and voice binding verbatim — the same approved
+    anchors, never a fresh interpretation (CF-WO-P1-004-R1-
+    ADDENDUM-IDENTITY, Task H). ``identity_snapshot`` (when
+    supplied) is validated for integrity; the bindings themselves
+    are copied from the original packet, which was compiled
+    against that snapshot.
 
     The job must already carry a compiled task package (see
     :func:`compile_task_package`); the correction round is taken
@@ -1254,6 +1839,16 @@ def compile_regeneration_packets(session, job, qc_report, providers=None,
         errors = validate_provider_record(provider)
         if errors:
             raise TaskCompilerError(errors)
+    # Identity snapshot integrity check (lazy import: see
+    # compile_task_package). Bindings are copied from the
+    # original packet below; the snapshot itself is never
+    # rebuilt here.
+    if identity_snapshot is not None:
+        from . import identity_resolution as _identity_resolution
+        snapshot_errors = _identity_resolution \
+            .validate_identity_snapshot(identity_snapshot)
+        if snapshot_errors:
+            raise TaskCompilerError(snapshot_errors)
 
     job = copy.deepcopy(job)
     qc_report = copy.deepcopy(qc_report)
@@ -1354,7 +1949,9 @@ def compile_regeneration_packets(session, job, qc_report, providers=None,
             },
             authorization_action="use_in_production",
             providers=providers, commercial_use=commercial_use,
-            match_task_type=original_type)
+            match_task_type=original_type,
+            identity_bindings=original.get("identity_bindings"),
+            voice_binding=original.get("voice_binding"))
         packets.append(packet)
         if miss is not None:
             unmatched.append(miss)

@@ -8,7 +8,8 @@
     "schema_version": {
       "type": "string",
       "enum": [
-        "2.3"
+        "2.3",
+        "2.5"
       ]
     },
     "id": {
@@ -62,6 +63,11 @@
     },
     "default_loudness_profile_id": {
       "type": "string"
+    },
+    "identity_policy_id": {
+      "description": "Identity-selection policy for this project (CF-WO-P1-004-R1-ADDENDUM-IDENTITY, Task B/C): id of the identity-selection-policy record (schemas/identity-selection-policy.json) that governs which registered characters and voices this project may use. Optional; a project without one has no identity policy and resolves identities only through an explicit per-job policy. A v2.3 project record without this field remains valid.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"
     },
     "owner": {
       "type": "string"

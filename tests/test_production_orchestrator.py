@@ -29,6 +29,7 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "tests"))
 import test_script_to_performance_runtime as T  # noqa: E402
 from runtime import local_session  # noqa: E402
+from runtime import production_store  # noqa: E402
 from runtime.local_session import (  # noqa: E402
     close_session, is_active_session, load_or_create_profile,
     start_session)
@@ -36,8 +37,10 @@ from runtime.production_orchestrator import (  # noqa: E402
     ProductionOrchestratorError, create_production_job,
     build_production_bundle, build_qc_correction_tasks,
     compile_provider_tasks, evaluate_production_gate, job_hash,
-    record_execution_result, resolve_character, transition_job,
-    validate_format_profile, validate_gate_state, validate_job)
+    plan_script_to_production, record_execution_result,
+    resolve_character, transition_job,
+    validate_analysis_bundle_references, validate_format_profile,
+    validate_gate_state, validate_job)
 
 failures = []
 _checks = [0]
@@ -78,6 +81,181 @@ def load_fixture(name):
 
 def short_analysis():
     return load_fixture("production-analysis-short.json")
+
+
+def long_analysis():
+    return load_fixture("production-analysis-long.json")
+
+
+def voice_kinds():
+    kinds = load_fixture("voice-kinds-test.json")
+    kinds["voice-narrator-001"] = "existing-profile"
+    return kinds
+
+
+def long_script():
+    """The long-form source script: 4 dialogue lines, 4 shots,
+    3 scenes, beats b-01..b-04 — mirroring the long analysis
+    fixture. The fisherman speaks in no line and appears in no
+    shot; he exists only in the analysis scenes (a task-local
+    proposal), which the analysis layer resolves."""
+    script = T.script()
+    script["id"] = "script-long-001"
+    script["dialogue"] = [
+        {"line_id": "l-01", "character_id": "char-001",
+         "text": "I will help. Let us go together.", "language": "en"},
+        {"line_id": "l-02", "character_id": "char-kiki-001",
+         "text": "Hello, Mira! I heard you coming.", "language": "en"},
+        {"line_id": "l-03", "character_id": "char-001",
+         "text": "We will ask the fisherman. He knows the river.",
+         "language": "en"},
+        {"line_id": "l-04", "character_id": "char-kiki-001",
+         "text": "The river is wide, but the boat is ready.",
+         "language": "en"},
+    ]
+    script["beats"] = ["b-01", "b-02", "b-03", "b-04"]
+    script["shots"] = [
+        {"shot_id": "sh-01", "duration_seconds": 4.5,
+         "framing": "medium-close-up", "camera": "eye-level",
+         "character_ids": ["char-001"]},
+        {"shot_id": "sh-02", "duration_seconds": 3.0,
+         "framing": "medium", "camera": "low",
+         "character_ids": ["char-001", "char-kiki-001"]},
+        {"shot_id": "sh-03", "duration_seconds": 5.0,
+         "framing": "medium", "camera": "eye-level",
+         "character_ids": ["char-001", "char-kiki-001"]},
+        {"shot_id": "sh-04", "duration_seconds": 6.0,
+         "framing": "wide", "camera": "eye-level",
+         "character_ids": ["char-001", "char-kiki-001"]},
+    ]
+    return script
+
+
+def long_profile():
+    profile = T.profile()
+    profile["production_profile_id"] = "prod-long-001"
+    profile["name"] = "Test long-form river story"
+    return profile
+
+
+def long_draft():
+    """The long-form S2P draft: 3 scenes, 4 shots, 4 performance
+    lines, mirroring the long analysis fixture's scene/beat/shot
+    structure. The fisherman appears in no S2P plan — he is an
+    analysis-layer task-local proposal only."""
+    draft = T.draft()
+    base_scene = draft["scene_plan"]["scenes"][0]
+    scene_two = clone(base_scene)
+    scene_two["scene_id"] = "sc-02"
+    scene_two["title"] = "The fisherman"
+    scene_two["dramatic_intent"] = "The fisherman tells his story."
+    scene_two["beats"] = [clone(base_scene["beats"][0])]
+    scene_two["beats"][0]["beat_id"] = "b-03"
+    scene_two["beats"][0]["description"] = \
+        "The fisherman tells his story."
+    scene_three = clone(base_scene)
+    scene_three["scene_id"] = "sc-03"
+    scene_three["title"] = "The promise"
+    scene_three["dramatic_intent"] = "The promise at dusk."
+    scene_three["beats"] = [clone(base_scene["beats"][1])]
+    scene_three["beats"][0]["beat_id"] = "b-04"
+    scene_three["beats"][0]["description"] = \
+        "The promise is made at dusk."
+    draft["scene_plan"]["scenes"] = [base_scene, scene_two,
+                                     scene_three]
+    base_shot = draft["shot_plan"]["shots"][0]
+    shot_three = clone(base_shot)
+    shot_three.update({"shot_id": "sh-03", "scene_id": "sc-02",
+                       "beat_id": "b-03",
+                       "action": "The fisherman mends his net.",
+                       "character_ids": ["char-001", "char-kiki-001"],
+                       "subjects": [clone(T.SUBJECT_HUMAN),
+                                    clone(T.SUBJECT_BIRD)]})
+    shot_four = clone(base_shot)
+    shot_four.update({"shot_id": "sh-04", "scene_id": "sc-03",
+                      "beat_id": "b-04", "framing": "wide",
+                      "shot_size": "wide",
+                      "action": "They stand at the river at dusk.",
+                      "character_ids": ["char-001", "char-kiki-001"],
+                      "subjects": [clone(T.SUBJECT_HUMAN),
+                                   clone(T.SUBJECT_BIRD)]})
+    draft["shot_plan"]["shots"] = draft["shot_plan"]["shots"] + [
+        shot_three, shot_four]
+    line_three = clone(draft["performance_plan"]["lines"][0])
+    line_three.update({
+        "line_id": "l-03", "dialogue_line_id": "d-03",
+        "dialogue": {"text": "We will ask the fisherman. He knows "
+                             "the river.",
+                     "rewrite_permitted": False}})
+    line_four = clone(draft["performance_plan"]["lines"][1])
+    line_four.update({
+        "line_id": "l-04", "dialogue_line_id": "d-04",
+        "dialogue": {"text": "The river is wide, but the boat is "
+                             "ready.",
+                     "rewrite_permitted": False}})
+    draft["performance_plan"]["lines"] = \
+        draft["performance_plan"]["lines"] + [line_three, line_four]
+    return draft
+
+
+def narrator_script():
+    """The short script plus a third line spoken by a narrator
+    who appears in no scene and no shot."""
+    script = T.script()
+    script["dialogue"].append({
+        "line_id": "l-03", "character_id": "char-narrator-001",
+        "text": "Listen, and you will hear the river answer.",
+        "language": "en"})
+    return script
+
+
+def narrator_profile():
+    profile = T.profile()
+    profile["per_subject_overrides"].append(
+        {"character_id": "char-narrator-001",
+         "subject_kind": "non-character"})
+    return profile
+
+
+def narrator_draft():
+    """The short draft plus a non-character narrator performance
+    line and a voice binding for it."""
+    draft = T.draft()
+    line = clone(draft["performance_plan"]["lines"][0])
+    line.update({
+        "line_id": "l-03", "dialogue_line_id": "d-03",
+        "character_id": "char-narrator-001",
+        "speaker_identity": "char-narrator-001, calm narrator",
+        "subject_kind": "non-character", "species": "narrator",
+        "dialogue": {"text": "Listen, and you will hear the river "
+                             "answer.",
+                     "rewrite_permitted": False}})
+    draft["performance_plan"]["lines"].append(line)
+    draft["character_voice_bindings"].append({
+        "character_id": "char-narrator-001",
+        "dialogue_line_id": "d-03",
+        "voice_profile_id": "voice-narrator-001",
+        "audio_asset_id": "audio-narrator-l03",
+        "reference_asset_ids": ["asset-narrator-001"],
+        "shot_id": "sh-01", "speaking_state": "speaking",
+        "emotion": "calm", "delivery": "steady, warm",
+        "articulation": "human-mouth-lips"})
+    return draft
+
+
+def narrator_analysis():
+    """The short analysis with 3/3 dialogue lines and a narrator
+    resolution (role narrator)."""
+    analysis = short_analysis()
+    analysis["dialogue_preservation"][
+        "source_dialogue_line_count"] = 3
+    analysis["dialogue_preservation"]["mapped_line_count"] = 3
+    analysis["character_resolutions"].append({
+        "character_ref": "char-narrator-001",
+        "resolution": "approved",
+        "registered_character_id": "char-narrator-001",
+        "role": "narrator", "provenance": "EXPLICIT_FROM_USER"})
+    return analysis
 
 
 def expect_error(label, fn):
@@ -844,7 +1022,7 @@ def _compile_guard_group(delivered):
     check("CF-P1-004-ORCHESTRATOR: compile_provider_tasks works in "
           "PLAN_READY and stores the package on the job",
           job["task_package"]["package_id"] == package["package_id"]
-          and len(package["packets"]) == 10)
+          and len(package["packets"]) == 12)
     valid_job("CF-P1-004-ORCHESTRATOR: job with a task package "
               "validates", job)
     expect_error(
@@ -1010,6 +1188,312 @@ def _determinism_group():
                   for p in package_a["packets"]))
 
 
+# ---------------------------------------------------------------------------
+# CF-P1-004-R1-A4: analysis-to-plan cross-reference integrity
+# (against the actual built bundle)
+# ---------------------------------------------------------------------------
+
+def _r1_bundle_refs_group():
+    session = fresh_session()
+    job = analyzing_job(session, "job-refs-001")
+    bundle, job = build_bundle(session, job)
+
+    check("CF-P1-004-R1-A4: the short analysis resolves cleanly "
+          "against its built bundle",
+          validate_analysis_bundle_references(
+              short_analysis(), bundle) == [],
+          f"errors={validate_analysis_bundle_references(short_analysis(), bundle)}")
+
+    orphan_scene = short_analysis()
+    orphan_scene["scenes"].append(clone(orphan_scene["scenes"][0]))
+    orphan_scene["scenes"][1]["scene_id"] = "sc-99"
+    check("CF-P1-004-R1-A4: an analysis scene that does not "
+          "resolve to the Scene Plan is reported",
+          any("sc-99" in e for e in
+              validate_analysis_bundle_references(
+                  orphan_scene, bundle)))
+    expect_error(
+        "CF-P1-004-R1-A4: bundle build refuses an orphan analysis "
+        "scene",
+        lambda: build_bundle(
+            session, analyzing_job(session, "job-refs-002"),
+            analysis=orphan_scene, bundle_id="bundle-refs-002"))
+
+    orphan_beat = short_analysis()
+    orphan_beat["scenes"][0]["beats"].append(
+        clone(orphan_beat["scenes"][0]["beats"][0]))
+    orphan_beat["scenes"][0]["beats"][1]["beat_id"] = "b-99"
+    check("CF-P1-004-R1-A4: an analysis beat that does not "
+          "resolve within its scene is reported",
+          any("b-99" in e for e in
+              validate_analysis_bundle_references(
+                  orphan_beat, bundle)))
+    expect_error(
+        "CF-P1-004-R1-A4: bundle build refuses an orphan beat",
+        lambda: build_bundle(
+            session, analyzing_job(session, "job-refs-003"),
+            analysis=orphan_beat, bundle_id="bundle-refs-003"))
+
+    direction = {"shot_id": "sh-99", "scene_id": "sc-01",
+                 "purpose": "a shot that does not exist",
+                 "provenance": "EXPLICIT_FROM_USER"}
+    orphan_shot = short_analysis()
+    orphan_shot["shot_direction"] = [direction]
+    check("CF-P1-004-R1-A4: a shot-direction entry that does not "
+          "resolve to the Shot Plan is reported",
+          any("sh-99" in e for e in
+              validate_analysis_bundle_references(
+                  orphan_shot, bundle)))
+    expect_error(
+        "CF-P1-004-R1-A4: bundle build refuses an orphan "
+        "shot-direction entry",
+        lambda: build_bundle(
+            session, analyzing_job(session, "job-refs-004"),
+            analysis=orphan_shot, bundle_id="bundle-refs-004"))
+
+    good_direction = short_analysis()
+    good_direction["shot_direction"] = [{
+        "shot_id": "sh-01", "scene_id": "sc-01",
+        "purpose": "the decision lands",
+        "provenance": "EXPLICIT_FROM_USER"}]
+    duplicate_direction = clone(good_direction)
+    duplicate_direction["shot_direction"].append(
+        clone(good_direction["shot_direction"][0]))
+    check("CF-P1-004-R1-A4: duplicate shot-direction entries are "
+          "reported",
+          any("duplicate" in e for e in
+              validate_analysis_bundle_references(
+                  duplicate_direction, bundle)))
+    mismatched_bundle = clone(bundle)
+    mismatched_bundle["s2p_bundle"]["shot_plan"]["shots"][0][
+        "scene_id"] = "sc-02"
+    check("CF-P1-004-R1-A4: a shot-direction entry whose scene "
+          "disagrees with the Shot Plan is reported",
+          any("sc-02" in e for e in
+              validate_analysis_bundle_references(
+                  good_direction, mismatched_bundle)))
+
+    bad_cue_scene = short_analysis()
+    bad_cue_scene["sound_direction"][0]["scene_id"] = "sc-99"
+    check("CF-P1-004-R1-A4: a sound cue naming an unknown scene "
+          "is reported",
+          any("sc-99" in e for e in
+              validate_analysis_bundle_references(
+                  bad_cue_scene, bundle)))
+    bad_cue_shot = short_analysis()
+    bad_cue_shot["sound_direction"][0]["shot_id"] = "sh-99"
+    check("CF-P1-004-R1-A4: a sound cue naming an unknown shot "
+          "is reported",
+          any("sh-99" in e for e in
+              validate_analysis_bundle_references(
+                  bad_cue_shot, bundle)))
+    bad_cue_beat = short_analysis()
+    bad_cue_beat["sound_direction"][0]["beat_id"] = "b-99"
+    check("CF-P1-004-R1-A4: a sound cue naming an unknown beat "
+          "in its scene is reported",
+          any("b-99" in e for e in
+              validate_analysis_bundle_references(
+                  bad_cue_beat, bundle)))
+    expect_error(
+        "CF-P1-004-R1-A4: bundle build refuses a sound cue with "
+        "an unknown scene",
+        lambda: build_bundle(
+            session, analyzing_job(session, "job-refs-005"),
+            analysis=bad_cue_scene, bundle_id="bundle-refs-005"))
+
+    missing_character = short_analysis()
+    del missing_character["character_resolutions"][0]
+    check("CF-P1-004-R1-A4: a required identity with no "
+          "resolution is reported against the bundle",
+          any("char-001" in e for e in
+              validate_analysis_bundle_references(
+                  missing_character, bundle)))
+    expect_error(
+        "CF-P1-004-R1-A4: bundle build refuses a missing "
+        "character resolution",
+        lambda: build_bundle(
+            session, analyzing_job(session, "job-refs-006"),
+            analysis=missing_character, bundle_id="bundle-refs-006"))
+    check("CF-P1-004-R1-A4: a non-object analysis or bundle is "
+          "reported, not silently accepted",
+          validate_analysis_bundle_references(None, bundle) != []
+          and validate_analysis_bundle_references(
+              short_analysis(), None) != [])
+
+
+# ---------------------------------------------------------------------------
+# CF-P1-004-R1-D: the unified script-to-production entry point
+# ---------------------------------------------------------------------------
+
+def _r1_plan_entry_group():
+    session = fresh_session()
+
+    # Short-form end-to-end, in memory (no store).
+    job = analyzing_job(session, "job-plan-001")
+    plan = T.fresh_routing_plan(session)
+    result = plan_script_to_production(
+        session, job, T.script(), T.profile(), T.draft(),
+        short_analysis(), plan, "bundle-plan-001",
+        voice_kinds=voice_kinds())
+    check("CF-P1-004-R1-D: short-form planning returns the bundle, "
+          "the job and the task package",
+          result["production_bundle"]["bundle_id"] == "bundle-plan-001"
+          and result["job"]["state"] == "PLAN_READY"
+          and len(result["task_package"]["packets"]) == 12
+          and result["persisted"] is False)
+    check("CF-P1-004-R1-D: the planned short-form package has 3 "
+          "voice packets matched to OmniVoice with verbatim text",
+          len([p for p in result["task_package"]["packets"]
+               if p["task_type"] == "voice-generation"]) == 2
+          and all("I will help. Let us go together." in p[
+              "canonical_instruction"]
+              or "Hello, Mira! I heard you coming." in p[
+                  "canonical_instruction"]
+              for p in result["task_package"]["packets"]
+              if p["task_type"] == "voice-generation"))
+    valid_job("CF-P1-004-R1-D: the planned job validates",
+              result["job"])
+
+    # Short-form end-to-end with persistence + resume under a new
+    # session. Both sessions come from ONE installation profile
+    # (same owner/workspace); only the session object is new.
+    store_root = tempfile.mkdtemp(prefix="cf-p1-004-r1-store-")
+    profile_root = tempfile.mkdtemp(prefix="cf-p1-004-r1-prof-")
+    profile = load_or_create_profile(profile_root)
+    session = start_session(profile, profile.workspace_id)
+    _sessions.append(session)
+    job = analyzing_job(session, "job-plan-002")
+    result = plan_script_to_production(
+        session, job, T.script(), T.profile(), T.draft(),
+        short_analysis(), T.fresh_routing_plan(session),
+        "bundle-plan-002",
+        voice_kinds=voice_kinds(), store_root=store_root)
+    check("CF-P1-004-R1-D: planning with a store_root persists "
+          "the job and a plan checkpoint",
+          result["persisted"] is True
+          and result["job_path"] is not None
+          and os.path.isfile(result["job_path"])
+          and result["checkpoint_id"] == "plan-bundle-plan-002"
+          and os.path.isfile(result["checkpoint_path"]))
+    stored = production_store.load_production_job(
+        store_root, "job-plan-002", "proj-test-001")
+    check("CF-P1-004-R1-D: the stored job round-trips with its "
+          "state and hashes",
+          stored["job"]["state"] == "PLAN_READY"
+          and stored["job"]["job_hash"]
+          == result["job"]["job_hash"])
+    close_session(session)
+    session2 = start_session(profile, profile.workspace_id)
+    _sessions.append(session2)
+    resumed = production_store.resume_production_job(
+        session2, store_root, "job-plan-002", "proj-test-001")
+    check("CF-P1-004-R1-D: resume under a new session rebinds "
+          "the job to the new session and keeps PLAN_READY",
+          resumed["session_id"] == session2.session_id
+          and resumed["state"] == "PLAN_READY"
+          and resumed["job_hash"] == job_hash(resumed))
+    session = session2
+
+    # Planning refuses a job that is not ANALYZING, a bad
+    # analysis, and a foreign session.
+    intake = new_job(session, "job-plan-003")
+    expect_error(
+        "CF-P1-004-R1-D: planning refuses a job that is not "
+        "ANALYZING",
+        lambda: plan_script_to_production(
+            session, intake, T.script(), T.profile(), T.draft(),
+            short_analysis(), T.fresh_routing_plan(session),
+            "bundle-plan-003", voice_kinds=voice_kinds()))
+    bad_analysis = short_analysis()
+    del bad_analysis["character_resolutions"][0]
+    expect_error(
+        "CF-P1-004-R1-D: planning refuses an analysis with a "
+        "missing character resolution",
+        lambda: plan_script_to_production(
+            session, analyzing_job(session, "job-plan-004"),
+            T.script(), T.profile(), T.draft(), bad_analysis,
+            T.fresh_routing_plan(session), "bundle-plan-004",
+            voice_kinds=voice_kinds()))
+    foreign = fresh_session()
+    expect_error(
+        "CF-P1-004-R1-D: planning refuses a job from another "
+        "session",
+        lambda: plan_script_to_production(
+            foreign, analyzing_job(session, "job-plan-005"),
+            T.script(), T.profile(), T.draft(), short_analysis(),
+            T.fresh_routing_plan(foreign), "bundle-plan-005",
+            voice_kinds=voice_kinds()))
+
+    # Narrator / voice-over-only planning: the narrator needs no
+    # visible-character resolution and gets a voice packet with
+    # verbatim text.
+    job = analyzing_job(session, "job-plan-006")
+    result = plan_script_to_production(
+        session, job, narrator_script(), narrator_profile(),
+        narrator_draft(), narrator_analysis(),
+        T.fresh_routing_plan(session), "bundle-plan-006",
+        voice_kinds=voice_kinds())
+    voice = [p for p in result["task_package"]["packets"]
+             if p["task_type"] == "voice-generation"]
+    check("CF-P1-004-R1-D: narrator planning compiles 3 voice "
+          "packets (13 packets total) with the narrator line "
+          "verbatim",
+          len(result["task_package"]["packets"]) == 13
+          and len(voice) == 3
+          and any("Listen, and you will hear the river answer." in
+                  p["canonical_instruction"] for p in voice),
+          f"packets={len(result['task_package']['packets'])} "
+          f"voice={len(voice)}")
+
+    # Long-form end-to-end with the fisherman task-local proposal.
+    job = new_job(session, "job-plan-007",
+                  profile={"delivery_profile": "story-5-15min"})
+    job = transition_job(session, job, "ANALYZING")
+    fisherman = load_fixture(
+        "character-design-proposal-fisherman-approved.json")
+    result = plan_script_to_production(
+        session, job, long_script(), long_profile(), long_draft(),
+        long_analysis(), T.fresh_routing_plan(session),
+        "bundle-plan-007", proposals=[fisherman],
+        voice_kinds=voice_kinds())
+    counts = {}
+    for packet in result["task_package"]["packets"]:
+        counts[packet["task_type"]] = \
+            counts.get(packet["task_type"], 0) + 1
+    check("CF-P1-004-R1-D: long-form planning compiles 21 "
+          "packets (1 character-design, 1 reference-sheet, 3 env, "
+          "4 video, 4 voice, 4 sound, 2 media-technical, 1 "
+          "creative-editing, 1 semantic-qc-review)",
+          len(result["task_package"]["packets"]) == 21
+          and counts == {"character-design": 1,
+                         "reference-sheet": 1,
+                         "environment-reference": 3,
+                         "video-generation": 4,
+                         "voice-generation": 4,
+                         "sound-generation": 4,
+                         "media-technical": 2,
+                         "creative-editing": 1,
+                         "semantic-qc-review": 1},
+          f"counts={counts}")
+    check("CF-P1-004-R1-D: the long-form package has 14 "
+          "unmatched handoffs and 6 matched packets",
+          len(result["task_package"]["unmatched_tasks"]) == 14,
+          f"got {len(result['task_package']['unmatched_tasks'])}")
+    check("CF-P1-004-R1-D: the long-form dialogue is preserved "
+          "verbatim in the voice packets",
+          all(text in " ".join(
+              p["canonical_instruction"]
+              for p in result["task_package"]["packets"]
+              if p["task_type"] == "voice-generation")
+              for text in (
+                  "I will help. Let us go together.",
+                  "Hello, Mira! I heard you coming.",
+                  "We will ask the fisherman. He knows the river.",
+                  "The river is wide, but the boat is ready.")))
+    valid_job("CF-P1-004-R1-D: the planned long-form job validates",
+              result["job"])
+
+
 def main():
     _creation_group()
     delivered = _lifecycle_group()
@@ -1024,6 +1508,8 @@ def main():
     _compile_guard_group(delivered)
     _qc_group()
     _determinism_group()
+    _r1_bundle_refs_group()
+    _r1_plan_entry_group()
     for session in list(_sessions):
         try:
             if is_active_session(session):
