@@ -763,6 +763,19 @@ step-by-step order for every video, in §7).
   attribute, write through the store and the helper directly,
   verify the record validates and no temp file is left on
   failure). Full record: corrections doc §9.
+- **R2 Windows path fix (2026-11-27):** the CI run on the R1 head
+  failed both `windows-compat` jobs again, this time in the
+  timeline delivery suite — one check,
+  `artifact-absolute-refused`: the delivery validator rejected
+  absolute paths with a POSIX-only `startswith("/")` test, which
+  accepts `D:\...` on Windows. The same pattern existed in the
+  execution-artifact validator (its test used `/tmp/...`, so it
+  passed on Windows while the hole stayed open). Both validators
+  now share one host-independent predicate,
+  `is_safe_relative_path` (`ntpath.splitdrive` + `ntpath.isabs`
+  + `..` under either separator), pinned by Windows-style path
+  cases that fail pre-fix on Linux too. Full record: corrections
+  doc §10.
 
 ## Rules that always apply
 

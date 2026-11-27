@@ -41,7 +41,7 @@ import sys
 
 from . import local_session
 from . import task_compiler
-from .media_execution import MediaExecutionError
+from .media_execution import MediaExecutionError, is_safe_relative_path
 
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -87,8 +87,7 @@ def validate_delivery_artifact(artifact, delivery_root,
     if not isinstance(artifact, dict):
         raise TimelineDeliveryError("artifact must be an object")
     path = artifact.get("path")
-    if not isinstance(path, str) or not path \
-            or path.startswith("/") or ".." in path.split("/"):
+    if not is_safe_relative_path(path):
         raise TimelineDeliveryError(
             f"artifact path {path!r} is not a safe relative path")
     real = os.path.realpath(os.path.join(delivery_root, path))

@@ -259,6 +259,24 @@ def run_checks():
     expect_error("CF-P1-005-DELIVERY-artifact-escape-refused",
                  lambda: td.validate_delivery_artifact(
                      escape, delivery_root))
+    # CF-WO-P1-005-R2: the host-native absolute path above is refused
+    # on Linux but was ACCEPTED on Windows (CI run #266), because the
+    # old check was POSIX-only. These predicate cases pin the
+    # host-independent rule directly, so they fail pre-fix on every
+    # host — including Linux, where a full-artifact case with a
+    # Windows path would fail for the wrong reason (missing file).
+    for bad in ("C:/escape.mp4", "C:\\escape.mp4",
+                "\\\\server\\share\\escape.mp4", "C:escape.mp4",
+                "..\\escape.mp4", "sub\\..\\escape.mp4",
+                "/abs/escape.mp4", ""):
+        check("CF-P1-005-DELIVERY-path-unsafe: " + (bad or "<empty>"),
+              not td.is_safe_relative_path(bad))
+    for good in ("clip.mp4", "sub/clip.mp4", "sub\\clip.mp4"):
+        check("CF-P1-005-DELIVERY-path-safe: " + good,
+              td.is_safe_relative_path(good))
+    check("CF-P1-005-DELIVERY-path-non-string-refused",
+          not td.is_safe_relative_path(None)
+          and not td.is_safe_relative_path(42))
     expect_error("CF-P1-005-DELIVERY-artifact-not-object",
                  lambda: td.validate_delivery_artifact(
                      "not-an-artifact", delivery_root))

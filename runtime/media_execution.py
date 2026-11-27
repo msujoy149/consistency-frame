@@ -70,6 +70,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import ntpath
 import re
 
 from . import local_session
@@ -208,6 +209,32 @@ def validate_execution_failure(failure) -> list[str]:
     return errors
 
 
+def is_safe_relative_path(path) -> bool:
+    """Host-independent relative-path check (CF-WO-P1-005-R2).
+
+    A delivery/execution artifact path must be relative with no
+    parent references, on every host. A POSIX-only check
+    (``startswith("/")`` plus ``split("/")``) accepts Windows
+    absolute paths on a Windows host — ``D:\\...``,
+    ``\\\\server\\share``, drive-relative ``C:relative`` — and a
+    ``split("/")`` parent check misses backslash separators
+    (``..\\escape``). So: any drive letter, any absolute form on
+    either platform, and any ``..`` segment under either separator,
+    is unsafe. ``ntpath`` is used deliberately: it recognises both
+    platforms' absolute forms on any host, so the check is the
+    same on Linux and Windows.
+    """
+    if not isinstance(path, str) or not path:
+        return False
+    if ntpath.splitdrive(path)[0]:
+        return False
+    if ntpath.isabs(path):
+        return False
+    if ".." in path.replace("\\", "/").split("/"):
+        return False
+    return True
+
+
 def validate_execution_artifact(artifact) -> list[str]:
     """Validated-output artifact errors (empty list = valid)."""
     errors: list[str] = []
@@ -217,7 +244,7 @@ def validate_execution_artifact(artifact) -> list[str]:
             or not artifact["path"]:
         errors.append("execution.output.path must be a non-empty "
                       "string")
-    elif artifact["path"].startswith("/") or ".." in artifact["path"].split("/"):
+    elif not is_safe_relative_path(artifact["path"]):
         errors.append("execution.output.path must be a relative path "
                       "without parent references")
     if not isinstance(artifact.get("sha256"), str) \

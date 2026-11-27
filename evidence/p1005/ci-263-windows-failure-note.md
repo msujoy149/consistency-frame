@@ -3,7 +3,6 @@
 Run: #263, ID 45994910588, workflow P0 CI, PR #5, head
 `a6fa1e14664583dfe4217cf2e9910e13627c7201` (P1-005 final head).
 Overall: Failure, 1m 52s.
-
 - p0-validate (Linux): Success, 1m 49s.
 - windows-compat (Python 3.10): Failed, 1m 12s.
 - windows-compat (Python 3.12): Failed, 31s.
@@ -61,3 +60,67 @@ same `AttributeError`. Full record: corrections doc §9.
 Both files are kept in `ci-evidence-p1-005/` with the extracted logs
 under `logs-extracted/` (per-step files; the Windows per-step files end
 at step 11, then 32/33 post steps).
+
+---
+
+# CI run #266 — Windows failure note (P1-005-R2)
+
+Run: #266, ID 45997891103, workflow P0 CI, PR #5, head
+`b97f6718b4e1e259f1966608214255554f15c274` (P1-005-R1 final head).
+Overall: Failure, 1m 38s.
+
+- p0-validate (Linux): Success, 1m 36s.
+- windows-compat (Python 3.10): Failed, 1m 12s.
+- windows-compat (Python 3.12): Failed, 28s.
+
+## Failing step (both Windows jobs, identical)
+
+Step 16, "Run timeline delivery suite", with exactly one failure:
+
+```
+--- CF-P1-005-DELIVERY: 23 checks, 1 failures ---
+FAILURES: CF-P1-005-DELIVERY-artifact-absolute-refused
+```
+
+The R1 fix had worked: steps 11 (identity) and 12 (production
+store) now ran, as did steps 13–15 — media execution 68 checks,
+FFmpeg skipped (no ffmpeg installed), media adapters 50 checks —
+all passing. (The lower counts vs local — 85/56/26 — are the
+ffmpeg-dependent groups and symlink cases skipping on Windows, by
+design; no conformance is claimed for them there.)
+
+## Root cause
+
+`validate_delivery_artifact` rejected absolute paths with a
+POSIX-only test (`path.startswith("/")` plus `".." in
+path.split("/")`). The test builds its absolute case with
+`os.path.join(delivery_root, video_rel)`: on Linux that is
+`/tmp/...` (refused), on Windows it is `D:\...` (accepted — no
+leading `/`, no `/`-separated `..`), so the file verified and the
+operation succeeded instead of refusing. The same POSIX-only
+pattern existed in `validate_execution_artifact`; its test used a
+hardcoded `/tmp/out.mp4`, so it passed on Windows while the hole
+stayed open.
+
+## Fix
+
+One shared host-independent predicate, `is_safe_relative_path`
+in `runtime/media_execution.py`, used by both validators. It
+refuses any drive letter (`ntpath.splitdrive`), any absolute form
+on either platform (`ntpath.isabs`), and any `..` segment under
+either separator. Regression: seven new execution checks and
+twelve new delivery predicate checks; the execution cases fail
+pre-fix on Linux. Full record: corrections doc §10.
+
+## Downloaded evidence
+
+- Log archive `logs_124440581509.zip`, SHA-256
+  `386488e3a060bc55ce7e96a411242f7ba44ca88b597cba2afd9eb6a8b9a9c8a4`
+  (run-wide archive, suite endpoint `suites/124440581509/logs`).
+- Artifact `p0-test-results.zip`, SHA-256
+  `611ea945c21c8a392dbbdcdbc5047f66974b96d0f9efe38fe54d58f19a0d0b0d`
+  (artifact ID 15196582473; matches the digest shown on the run page).
+
+Both files are kept in `ci-evidence-p1-005/` with the extracted logs
+under `logs-extracted-266/` (per-step files; the Windows jobs ran
+all 16 steps this time).

@@ -328,3 +328,53 @@ suite crashes with the same `AttributeError` the CI logs show.
 
 No previous check was removed or weakened; the store suite grows by
 the six new checks. No generated values are quoted in this section.
+
+## 10. R2 — Windows absolute paths accepted by the POSIX-only path check (2026-11-27)
+
+The CI run on the R1 final head failed both `windows-compat` jobs
+again (p0-validate passed) at the same step: step 16, the timeline
+delivery suite, with exactly one failure on each job —
+`CF-P1-005-DELIVERY-artifact-absolute-refused` ("operation succeeded
+instead of refusing"). The R1 fix had worked: steps 11 (identity)
+and 12 (production store) now ran, as did steps 13–15 (media
+execution 68 checks, FFmpeg skipped with no ffmpeg installed, media
+adapters 50 checks — all passing).
+
+Root cause: `validate_delivery_artifact`
+(`runtime/timeline_delivery.py`) rejected absolute paths with a
+POSIX-only test — `path.startswith("/")` plus `".." in
+path.split("/")`. The test builds its absolute case with
+`os.path.join(delivery_root, video_rel)`, which on Linux is
+`/tmp/...` (refused) but on Windows is `D:\...` (accepted: no
+leading `/`, no `/`-separated `..`), so the file verified and the
+operation succeeded. The same POSIX-only pattern existed in
+`validate_execution_artifact` (`runtime/media_execution.py`): its
+test used a hardcoded `/tmp/out.mp4`, which the POSIX check catches
+on every host, so the execution suite passed on Windows while the
+hole stayed open. A repository-wide grep confirmed these two were
+the only `startswith("/")` path checks in `runtime/`.
+(`runtime/media_adapters.py` `_contained_path` uses `os.path.isabs`
+and only refuses escapes, which is its design — absolute paths
+under the root are allowed there; not the same hole.)
+
+Fix: one shared host-independent predicate,
+`is_safe_relative_path` in `runtime/media_execution.py`, used by
+both validators (the delivery module already imports from the
+execution module, so there is no new coupling). It refuses any
+drive letter (`ntpath.splitdrive`), any absolute form on either
+platform (`ntpath.isabs`, which recognises both separators on any
+host), and any `..` segment under either separator. `ntpath` is
+used deliberately so the check is identical on Linux and Windows.
+
+Regression: seven new execution checks (six Windows-style paths —
+`C:/`, `C:\`, UNC, drive-relative, backslash `..` — plus a
+relative-subdirectory control) and twelve new delivery predicate
+checks (eight unsafe forms including empty and non-string, three
+safe forms, one non-string case). The execution cases reproduce
+the defect pre-fix on Linux: with the runtime fix stashed, all six
+Windows-path checks fail. The delivery predicate is new code, so
+there is no pre-fix function to call — its pre-fix reproduction is
+the CI run #266 failure itself. The execution suite grows by the
+seven new checks; the delivery suite by the twelve new checks. No
+previous check was removed or weakened. No generated values are
+quoted in this section.

@@ -291,6 +291,24 @@ def validation_group():
           len(validate_execution_artifact(
               {"path": "/tmp/out.mp4", "sha256": "c" * 64, "bytes": 10,
                "format": "mp4"})) > 0)
+    # CF-WO-P1-005-R2: Windows absolute/drive-relative paths must be
+    # refused on EVERY host, not only on Windows. The old POSIX-only
+    # check (startswith("/") + split("/")) accepted all of these,
+    # which CI run #266 proved on Windows (the delivery suite's
+    # artifact-absolute-refused check failed there); these cases
+    # fail pre-fix on Linux too.
+    for bad in ("C:/out.mp4", "C:\\out.mp4",
+                "\\\\server\\share\\out.mp4", "C:out.mp4",
+                "..\\out.mp4", "sub\\..\\out.mp4"):
+        check("CF-P1-005-EXECUTION-artifact-windows-path-refused: "
+              + bad,
+              len(validate_execution_artifact(
+                  {"path": bad, "sha256": "c" * 64, "bytes": 10,
+                   "format": "mp4"})) > 0)
+    check("CF-P1-005-EXECUTION-artifact-relative-subdir-ok",
+          validate_execution_artifact(
+              {"path": "sub/out.mp4", "sha256": "c" * 64, "bytes": 10,
+               "format": "mp4"}) == [])
     # The new schema validates a real record.
     check("CF-P1-005-EXECUTION-schema-valid",
           task_compiler.schema_errors(
