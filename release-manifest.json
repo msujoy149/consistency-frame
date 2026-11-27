@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-004-universal-production-brain",
-  "commit": "9cb7485935936db5bbe0a7a354f9e311063f44e9",
-  "github_branch_head": "5a8878dd43360e265df251eabe054721e9d4b261",
+  "commit": "2d020150205d01a0ee3b977be1cd9ff8c3cc847a",
+  "github_branch_head": "a4d1d8c4b14f24066564789b2be287464aa051b8",
   "files": [
     {
       "path": ".gitattributes",
@@ -142,7 +142,7 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "bcc0515f2f433d4aae6981e3d897f4596a2c9131c580e74614242e25e80b5c18",
+      "sha256": "169f13f19d178f84c26a32ef94618d3a0c65294f5475e7adebfc565d001ad402",
       "bytes": 33087
     },
     {
@@ -152,8 +152,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "4b38bcfb5d9f1f356b4ba8efee0a1c49b5b2d40121a77c4ea34add966a8c80d8",
-      "bytes": 70958
+      "sha256": "83fb4ec0c6c78e8e134aef5c5f72a146c5cde48cdb7aa32e4fac551eae7e7939",
+      "bytes": 71215
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -247,8 +247,8 @@
     },
     {
       "path": "docs/implementation/CF-WO-P1-005-corrections.md",
-      "sha256": "963c056ebd0c563bd82b1631c39c9cdb1af93f7271c0571f6acd574f4029d309",
-      "bytes": 36171
+      "sha256": "40d440a23b03627ee0b1c30361da0a9119e55bd339a816826d77dab8a2b9cd26",
+      "bytes": 38441
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
@@ -257,7 +257,7 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "485e177be6ba3b29fe3122bac5cb2ef8b09ba4ca721df916e5d85c9e99a9e143",
+      "sha256": "8d6e95695f28d89717128ca77e9df964dff1d5a13829fddc599938330ff92753",
       "bytes": 33448
     },
     {
@@ -1142,8 +1142,8 @@
     },
     {
       "path": "tests/test_provider_url_security.py",
-      "sha256": "0d07ec3f5ae12058cbb0218c8870e41202c142409cad63b2909c82130ad4785d",
-      "bytes": 42205
+      "sha256": "85d799f9e203c2d5d531ad88e949b1cf4baeb80b2e63a253b1ada829b9474f66",
+      "bytes": 43305
     },
     {
       "path": "tests/test_registries.py",
@@ -1608,5 +1608,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-27T14:45:59Z"
+  "generated_at_utc": "2026-11-27T15:11:23Z"
 }
