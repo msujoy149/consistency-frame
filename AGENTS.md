@@ -680,6 +680,79 @@ step-by-step order for every video, in §7).
 - **NEW_ONLY is adversarially hardened.** `validate_new_only_inputs` fails closed on any approved registered resolution, any proposal reusing a registered reference asset, or any bundle voice binding naming a registered voice — naming only caller-supplied references. The adversarial test uses the original script/cast references against populated registries and scans the whole package, bundle and snapshot for registered content; old registry records are never modified.
 - **Test-found defect (F5):** the voice binding copied the performance line's `pauses` list verbatim, but the task-packet schema types it as one string — the binding now joins a list with `"; "`. Full record: `docs/implementation/CF-WO-P1-004-corrections.md` §17; regression matrix F1–F6 in `tests/test_identity_resolution.py` (entries `CF-P1-004-R1-F1-*` in `tests/run-tests.sh`).
 
+## P1-005 Real media execution runtime, provider adapters & timeline delivery (2026-11-27)
+
+- **A compiled packet is never proof of execution.** The execution
+  runtime (`runtime/media_execution.py`, `runtime/media_adapters.py`,
+  `runtime/execution_orchestrator.py`, `runtime/timeline_delivery.py`)
+  is the seventh P1 runtime component. Only a genuine adapter result
+  moves an execution to SUCCEEDED, and only after independent
+  re-verification (SHA-256, byte count, ffprobe duration agreement).
+  Execution state rides on the production job (`job["executions"]`)
+  and persists through the existing production store — no second job
+  database.
+- **The state machine is deterministic.** Twelve states
+  (`PLANNED` → … → `SUCCEEDED` / `FAILED` / `CANCELLED` /
+  `NEEDS_USER_ACTION` / `BLOCKED`); SUCCEEDED only from
+  `VALIDATING_OUTPUT` with a validated artifact; FAILED always
+  carries a failure classification; terminal records never
+  transition; `BLOCKED` resumes to its previous state. Stable
+  execution ids + idempotency keys
+  (SHA-256 of `job_id|task_id|provider_id|packet_hash|attempt`); a
+  retry is an explicit new attempt; an uncertain submission goes to
+  `NEEDS_USER_ACTION` and is never auto-resubmitted.
+- **Authorization and identity locks gate every submission.**
+  Provider matching reuses the P1-004 rule (VERIFIED then EXERCISED;
+  NOT_TESTED and FAILED never match); authorizations are explicit
+  per-task approvals (`{task_id: True}`, nothing implicit); packet
+  bindings are checked against the frozen identity snapshot before
+  submitting. One task failing never aborts the others.
+- **Technical QC is deterministic; semantic QC is human.**
+  Technical checks (readability, corrupt frames, fps, resolution,
+  codec, duration, audio presence, peak levels) carry Critical /
+  Major / Minor / Polish and pass only with no Critical or Major —
+  but a passing technical report is NOT a G6 PASS. Semantic checks
+  need a named human reviewer through a handoff that is never
+  auto-approved (`automated` is refused).
+- **Only validated artifacts enter the timeline.** The delivery
+  manifest is built from SUCCEEDED executions only, re-verifying
+  every artifact against the real file; no fabricated path or
+  placeholder output. Format is always `editor_neutral_v1`;
+  resolution comes from the first delivered video artifact when
+  probed, otherwise 1920x1080 (the production format profile
+  carries no media geometry).
+- **Local providers, exercised 2026-11-27.** FFmpeg 8.1.2
+  (probe/transcode/assembly, `CF-P1-005-FFMPEG`); VoiceStudio /
+  OmniVoice (one real Bengali generation, 1.98 s, audio id
+  `1faa2e3e`; CC-BY-NC — commercial voice tasks are refused);
+  OpenMontage (demo `animated-reel-20s` rendered and validated;
+  production assembly NOT exercised). OpenTimelineIO is not
+  installed and has no adapter — the canonical timeline manifest
+  covers interchange.
+- **External providers: eight live specs, all NOT_TESTED, Sora
+  FAILED.** OpenAI / Gemini / fal.ai image, Veo / Kling / LTX
+  video, ElevenLabs voice, Lyria music — spec-driven HTTP adapters
+  over mock transports in tests; no live paid call without explicit
+  user authorization. Sora was shut down 2026-09-24 (no
+  replacement API). Credentials come only from allow-listed
+  environment variables; never in Git, logs, reports or packets.
+  Full matrix: `docs/runtime/PROVIDER_ADAPTERS.md`.
+- **Test-found defects (P1-005):** `load_schema` called without
+  `.json`; `validate_instance` called with the wrong arity;
+  `VALIDATING_OUTPUT` dropped the output artifact; `SUCCEEDED`
+  was unreachable (missing transition-table entry); a sync
+  completion with a provider job id stalled in RUNNING; the
+  delivery manifest used schema-invalid defaults; ffprobe JSON was
+  truncated by error-text redaction; the HTTP adapter did not
+  resolve output paths; `duration_limits` was a string where the
+  schema wants an object; a re-render was invisible to the
+  OpenMontage adapter; schemas used explicit nulls the repo
+  validator rejects; `registry_from_job` built invalid ownership;
+  the VoiceStudio adapter could never warm a cold backend. Full
+  record: `docs/implementation/CF-WO-P1-005-corrections.md`;
+  suites `CF-P1-005-EXECUTION` (85), `CF-P1-005-FFMPEG` (28),
+  `CF-P1-005-ADAPTERS` (56), `CF-P1-005-DELIVERY` (26).
+
 ## Rules that always apply
 
 - A character's identity (face, eyes, nose, mouth, hands, feet) is

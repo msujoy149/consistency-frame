@@ -1,6 +1,6 @@
 {
   "count": 15,
-  "note": "No adapter is marked 'supported' in P0: a capability is supported only after a real conformance test passes. Only adapter-muse is conformance VERIFIED (CF-P0-ADAPTER-001, 2026-11-26); every other adapter here is 'untested' (conformance NOT_TESTED) or 'planned'.",
+  "note": "No adapter is marked 'supported' in P0: a capability is supported only after a real conformance test passes. adapter-muse is conformance VERIFIED (CF-P0-ADAPTER-001, 2026-11-26) and adapter-ffmpeg is conformance VERIFIED (CF-P1-005-FFMPEG, 2026-11-27); adapter-openmontage is conformance VERIFIED by a manual adapter run 2026-11-27 (no automated test id); every other adapter here is 'untested' (conformance NOT_TESTED) or 'planned'.",
   "records": [
     {
       "adapter_id": "adapter-muse",
@@ -33,7 +33,7 @@
         "evidence": "none in P0",
         "last_verified": "2026-11-22",
         "status": "NOT_TESTED",
-        "test_id": "CF-P0-ADAPTER-001"
+        "test_id": ""
       },
       "integration": "NATIVE",
       "kind": "host",
@@ -56,7 +56,7 @@
         "evidence": "none in P0",
         "last_verified": "2026-11-22",
         "status": "NOT_TESTED",
-        "test_id": "CF-P0-ADAPTER-001"
+        "test_id": ""
       },
       "integration": "NATIVE",
       "kind": "host",
@@ -79,7 +79,7 @@
         "evidence": "none in P0",
         "last_verified": "2026-11-22",
         "status": "NOT_TESTED",
-        "test_id": "CF-P0-ADAPTER-001"
+        "test_id": ""
       },
       "integration": "NATIVE",
       "kind": "host",
@@ -102,7 +102,7 @@
         "evidence": "none in P0",
         "last_verified": "2026-11-22",
         "status": "NOT_TESTED",
-        "test_id": "CF-P0-ADAPTER-001"
+        "test_id": ""
       },
       "integration": "PACKAGED",
       "kind": "host",
@@ -125,7 +125,7 @@
         "evidence": "none in P0",
         "last_verified": "2026-11-22",
         "status": "NOT_TESTED",
-        "test_id": "CF-P0-ADAPTER-001"
+        "test_id": ""
       },
       "integration": "PACKAGED",
       "kind": "host",
@@ -148,7 +148,7 @@
         "evidence": "none in P0",
         "last_verified": "2026-11-22",
         "status": "NOT_TESTED",
-        "test_id": "CF-P0-ADAPTER-001"
+        "test_id": ""
       },
       "integration": "PACKAGED",
       "kind": "host",
@@ -171,7 +171,7 @@
         "evidence": "none in P0",
         "last_verified": "2026-11-22",
         "status": "NOT_TESTED",
-        "test_id": "CF-P0-ADAPTER-001"
+        "test_id": ""
       },
       "integration": "PACKAGED",
       "kind": "host",
@@ -194,7 +194,7 @@
         "evidence": "none in P0",
         "last_verified": "2026-11-22",
         "status": "NOT_TESTED",
-        "test_id": "CF-P0-ADAPTER-001"
+        "test_id": ""
       },
       "integration": "PACKAGED",
       "kind": "host",
@@ -217,7 +217,7 @@
         "evidence": "none in P0",
         "last_verified": "2026-11-22",
         "status": "NOT_TESTED",
-        "test_id": "CF-P0-ADAPTER-001"
+        "test_id": ""
       },
       "integration": "NATIVE",
       "kind": "host",
@@ -240,7 +240,7 @@
         "evidence": "none in P0",
         "last_verified": "2026-11-22",
         "status": "NOT_TESTED",
-        "test_id": "CF-P0-ADAPTER-001"
+        "test_id": ""
       },
       "integration": "HOST_RUNTIME",
       "kind": "provider",
@@ -260,46 +260,46 @@
       "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
       "capabilities": [],
       "conformance": {
-        "evidence": "none in P0",
-        "last_verified": "2026-11-22",
-        "status": "NOT_TESTED",
-        "test_id": "CF-P0-ADAPTER-001"
+        "evidence": "manual adapter run 2026-11-27 (no automated test id): OpenMontageAdapter.submit rendered animated-reel-20s, output evidence/p1005/om-adapter-run/outputs/exec-om-test-001.mp4",
+        "last_verified": "2026-11-27",
+        "status": "VERIFIED",
+        "test_id": ""
       },
       "integration": "HOST_RUNTIME",
       "kind": "provider",
       "licence_notes": "component licences intact (see LICENSE and component licences)",
       "limitations": [
-        "Long-form video assembly component (AGPL-3.0). No automated conformance test exists in P0."
+        "Long-form video assembly component (AGPL-3.0). The adapter submits only the verified render entry (render_demo.py for a named demo composition); a production pipeline render has no verified entry and fails closed. No automated conformance test exists \u2014 verification is a manual adapter run, see evidence."
       ],
       "media_execution": "long-form video assembly (pipeline render)",
       "name": "OpenMontage (bundled component)",
       "native_skill_install": "NOT_TESTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested",
-      "usage": "make setup / make preflight passed 2026-11-12; no production assembly run recorded in this account."
+      "status": "verified",
+      "usage": "make setup / make preflight passed 2026-11-12; demo composition animated-reel-20s rendered 2026-11-27 through OpenMontageAdapter.submit (re-render, output copied to the workspace and verified: 21.056 s, 1920x1080, h264 + aac)."
     },
     {
       "adapter_id": "adapter-ffmpeg",
       "authentication": "none (local files) \u2014 provider keys, where needed, are never set by setup.sh",
       "capabilities": [],
       "conformance": {
-        "evidence": "none in P0",
-        "last_verified": "2026-11-22",
-        "status": "NOT_TESTED",
-        "test_id": "CF-P0-ADAPTER-001"
+        "evidence": "tests/test_ffmpeg_adapter.py (CF-P1-005-FFMPEG, 28 checks, passed 2026-11-27)",
+        "last_verified": "2026-11-27",
+        "status": "VERIFIED",
+        "test_id": "CF-P1-005-FFMPEG"
       },
       "integration": "HOST_RUNTIME",
       "kind": "tool",
       "licence_notes": "component licences intact (see LICENSE and component licences)",
       "limitations": [
-        "Deterministic media probing/transcoding. Binary presence on a machine is not a conformance test; no P0 test invokes it."
+        "Deterministic media probing/transcoding (technical operations only \u2014 probe, transcode, concat). Conformance-tested in P1-005 (CF-P1-005-FFMPEG, 2026-11-27); binary presence alone is not a conformance test."
       ],
       "media_execution": "media probing, transcoding, concatenation",
       "name": "FFmpeg / ffprobe",
       "native_skill_install": "NOT_TESTED",
       "privacy": "private assets stay in the private overlay; never committed",
-      "status": "untested",
-      "usage": "Used for demo renders 2026-11-12/13 (Ken Burns demo, code-cartoon demo)."
+      "status": "verified",
+      "usage": "Used for demo renders 2026-11-12/13 (Ken Burns demo, code-cartoon demo); probe/transcode/assembly exercised by tests/test_ffmpeg_adapter.py (CF-P1-005-FFMPEG, 2026-11-27)."
     },
     {
       "adapter_id": "adapter-opentimelineio",
@@ -309,7 +309,7 @@
         "evidence": "none in P0",
         "last_verified": "2026-11-22",
         "status": "NOT_TESTED",
-        "test_id": "CF-P0-ADAPTER-001"
+        "test_id": ""
       },
       "integration": "LIMITED",
       "kind": "tool",
@@ -332,7 +332,7 @@
         "evidence": "none in P0",
         "last_verified": "2026-11-22",
         "status": "NOT_TESTED",
-        "test_id": "CF-P0-ADAPTER-001"
+        "test_id": ""
       },
       "integration": "LIMITED",
       "kind": "editor",

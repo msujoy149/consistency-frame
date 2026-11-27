@@ -344,21 +344,38 @@ ADAPTERS = [
      "2026-11-22", "none in P0", "untested"),
     ("adapter-openmontage", "OpenMontage (bundled component)", "provider",
      "HOST_RUNTIME", "NOT_TESTED",
-     "NOT_TESTED",
-     "Long-form video assembly component (AGPL-3.0). No automated "
-     "conformance test exists in P0.",
-     "make setup / make preflight passed 2026-11-12; no production assembly "
-     "run recorded in this account.",
+     "VERIFIED",
+     "Long-form video assembly component (AGPL-3.0). The adapter "
+     "submits only the verified render entry (render_demo.py for a "
+     "named demo composition); a production pipeline render has no "
+     "verified entry and fails closed. No automated conformance "
+     "test exists — verification is a manual adapter run, see "
+     "evidence.",
+     "make setup / make preflight passed 2026-11-12; demo "
+     "composition animated-reel-20s rendered 2026-11-27 through "
+     "OpenMontageAdapter.submit (re-render, output copied to the "
+     "workspace and verified: 21.056 s, 1920x1080, h264 + aac).",
      "long-form video assembly (pipeline render)",
-     "2026-11-22", "none in P0", "untested"),
+     "2026-11-27",
+     "manual adapter run 2026-11-27 (no automated test id): "
+     "OpenMontageAdapter.submit rendered animated-reel-20s, output "
+     "evidence/p1005/om-adapter-run/outputs/exec-om-test-001.mp4",
+     "verified"),
     ("adapter-ffmpeg", "FFmpeg / ffprobe", "tool",
      "HOST_RUNTIME", "NOT_TESTED",
-     "NOT_TESTED",
-     "Deterministic media probing/transcoding. Binary presence on a machine "
-     "is not a conformance test; no P0 test invokes it.",
-     "Used for demo renders 2026-11-12/13 (Ken Burns demo, code-cartoon demo).",
+     "VERIFIED",
+     "Deterministic media probing/transcoding (technical operations "
+     "only — probe, transcode, concat). Conformance-tested in P1-005 "
+     "(CF-P1-005-FFMPEG, 2026-11-27); binary presence alone is not "
+     "a conformance test.",
+     "Used for demo renders 2026-11-12/13 (Ken Burns demo, "
+     "code-cartoon demo); probe/transcode/assembly exercised by "
+     "tests/test_ffmpeg_adapter.py (CF-P1-005-FFMPEG, 2026-11-27).",
      "media probing, transcoding, concatenation",
-     "2026-11-22", "none in P0", "untested"),
+     "2026-11-27",
+     "tests/test_ffmpeg_adapter.py (CF-P1-005-FFMPEG, 28 checks, "
+     "passed 2026-11-27)",
+     "verified"),
     ("adapter-opentimelineio", "OpenTimelineIO", "tool",
      "LIMITED", "NOT_TESTED",
      "NOT_TESTED",
@@ -397,18 +414,31 @@ def build_adapters() -> dict:
             "authentication": "none (local files) — provider keys, where needed, are never set by setup.sh",
             "privacy": "private assets stay in the private overlay; never committed",
             "licence_notes": "component licences intact (see LICENSE and component licences)",
-            "conformance": {"status": conformance, "test_id": "CF-P0-ADAPTER-001",
-                            "last_verified": last_verified, "evidence": evidence},
+            "conformance": {"status": conformance,
+                            "test_id": ADAPTER_TEST_IDS.get(aid, ""),
+                            "last_verified": last_verified,
+                            "evidence": evidence},
             "status": record_status,
         })
     return {"registry": "adapters", "version": "2.4", "count": len(records),
             "records": records,
             "note": ("No adapter is marked 'supported' in P0: a capability is "
                      "supported only after a real conformance test passes. "
-                     "Only adapter-muse is conformance VERIFIED "
-                     "(CF-P0-ADAPTER-001, 2026-11-26); every other adapter "
-                     "here is 'untested' (conformance NOT_TESTED) or "
-                     "'planned'.")}
+                     "adapter-muse is conformance VERIFIED "
+                     "(CF-P0-ADAPTER-001, 2026-11-26) and adapter-ffmpeg "
+                     "is conformance VERIFIED (CF-P1-005-FFMPEG, "
+                     "2026-11-27); adapter-openmontage is conformance "
+                     "VERIFIED by a manual adapter run 2026-11-27 (no "
+                     "automated test id); every other adapter here is "
+                     "'untested' (conformance NOT_TESTED) or 'planned'.")}
+
+
+#: Conformance test id per adapter (empty = no conformance test).
+#: Only adapters with a real passing test carry one.
+ADAPTER_TEST_IDS = {
+    "adapter-muse": "CF-P0-ADAPTER-001",
+    "adapter-ffmpeg": "CF-P1-005-FFMPEG",
+}
 
 
 def build_providers() -> dict:

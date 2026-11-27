@@ -319,8 +319,8 @@ providers:
     conformance:
       status: EXERCISED
       test_id: ""
-      evidence: "OmniVoice TTS runs via the local API on 127.0.0.1:3900 (Bengali, English, Hindi speech generated 2026-11-12/13); user verdict recorded in the project record."
-      last_verified: "2026-11-13"
+      evidence: "OmniVoice TTS runs via the local API on 127.0.0.1:3900 (Bengali, English, Hindi speech generated 2026-11-12/13); user verdict recorded in the project record. Re-verified 2026-11-27: one Bengali generation via /generate (instruct child/female/high-pitch, seed 11, engine omnivoice), 1.98 s WAV, audio id 1faa2e3e, independently verified (wave probe + SHA-256)."
+      last_verified: "2026-11-27"
     evidence: "components/voicestudio/backend/main.py; recorded runs 2026-11-12/13"
   - provider_id: provider-openmontage-assembly
     schema_version: "2.5"
@@ -341,11 +341,11 @@ providers:
     commercial_use_reason: "local AGPL-3.0 tool; commercial use of the application is permitted; output commercial status depends on the asset providers"
     adapter_version: "0.5.8"
     conformance:
-      status: NOT_TESTED
+      status: EXERCISED
       test_id: ""
-      evidence: "make preflight passed 2026-11-12; no production assembly run recorded in this account"
-      last_verified: "2026-11-12"
-    evidence: "components/openmontage/Makefile (setup, preflight); no rendered video produced in this account"
+      evidence: "demo composition animated-reel-20s rendered 2026-11-27 via the verified render_demo.py entry (Remotion, 630 frames) and independently validated with ffprobe: 21.056 s, 1920x1080, h264 + aac, SHA-256 b1d5c6cd0f4a0f2e7458ce9cb022f6c73053b593e6028e6d5a55a1bc29d8bbd3; the same render repeated through OpenMontageAdapter.submit and copied into the workspace outputs; make preflight passed 2026-11-27; production pipeline assembly is NOT exercised"
+      last_verified: "2026-11-27"
+    evidence: "components/openmontage/projects/demos/renders/animated-reel-20s.mp4 (rendered 2026-11-27, validated with ffprobe); evidence/p1005/om-adapter-run/outputs/exec-om-test-001.mp4 (adapter submit copy)"
   - provider_id: provider-ffmpeg
     schema_version: "2.5"
     provider_type: local-tool
@@ -366,10 +366,10 @@ providers:
     adapter_version: "8.1.2"
     conformance:
       status: EXERCISED
-      test_id: ""
-      evidence: "ffmpeg 8.1.2 used for demo renders 2026-11-12/13 (Ken Burns demo, code-cartoon demo)"
-      last_verified: "2026-11-13"
-    evidence: "ffmpeg 8.1.2 on this machine; demo renders in ~/workspace/demo-video"
+      test_id: "CF-P1-005-FFMPEG"
+      evidence: "ffmpeg 8.1.2 probe/transcode/assembly exercised by tests/test_ffmpeg_adapter.py (CF-P1-005-FFMPEG) and the end-to-end execution pipeline (CF-P1-005-EXECUTION), 2026-11-27; earlier demo renders 2026-11-12/13"
+      last_verified: "2026-11-27"
+    evidence: "ffmpeg 8.1.2 on this machine; tests/test_ffmpeg_adapter.py; demo renders in ~/workspace/demo-video"
   - provider_id: provider-opentimelineio
     schema_version: "2.5"
     provider_type: local-tool
@@ -391,15 +391,15 @@ providers:
     conformance:
       status: NOT_TESTED
       test_id: ""
-      evidence: "planned; not installed or tested in this account"
-      last_verified: "never"
-    evidence: "adapter-opentimelineio record; candidate for editorial interchange only"
+      evidence: "probed 2026-11-27: not installed in this account (probe_opentimelineio reports unavailable); no adapter built — the canonical timeline manifest covers editorial interchange"
+      last_verified: "2026-11-27"
+    evidence: "probe_opentimelineio in runtime/media_adapters.py; candidate for editorial interchange only"
   - provider_id: provider-fal-image
     schema_version: "2.5"
     provider_type: image-generation
     operations: [generate-image]
     input_constraints: ["text prompt; optional reference image"]
-    output_constraints: ["image; resolution and limits unverified here"]
+    output_constraints: ["image; limits per endpoint"]
     reference_image_capability: true
     character_reference_capability: true
     audio_capability: false
@@ -411,19 +411,29 @@ providers:
     licence: proprietary-paid
     commercial_use_approved: false
     commercial_use_reason: unverified
-    adapter_version: ""
+    adapter_version: "fal Model APIs (queue + direct)"
+    documentation_url: "https://fal.ai/llms-full.txt"
+    documentation_status: "official"
+    api_version: "fal Model APIs (queue + direct)"
+    async_behaviour: "asynchronous queue with polling (direct endpoints synchronous)"
+    cancellation_support: "PUT cancel_url — cancellation supported"
+    output_retrieval: "fal.media CDN URL, available 7 days or more"
+    charge_behaviour: "per output from prepaid credits; server errors (HTTP 500+) never charged; queue-wait time never charged"
+    aspect_ratios: ["per-model"]
+    audio_support: false
+    character_reference_limits: "per-endpoint (up to 10 on some)"
     conformance:
       status: NOT_TESTED
       test_id: ""
-      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
-      last_verified: "never"
-    evidence: "documented-only; no live paid call made in this account"
+      evidence: "audited against the current official fal.ai docs 2026-11-27 (queue + direct endpoints); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited against the current official fal.ai docs 2026-11-27 (queue + direct endpoints); no live paid call made"
   - provider_id: provider-openai-image
     schema_version: "2.5"
     provider_type: image-generation
     operations: [generate-image]
-    input_constraints: ["text prompt; optional reference image"]
-    output_constraints: ["image; resolution and limits unverified here"]
+    input_constraints: ["text prompt; optional reference image (up to 10 on edits)"]
+    output_constraints: ["image; sizes 1024x1024 / 1536x1024 / 1024x1536 / auto"]
     reference_image_capability: true
     character_reference_capability: true
     audio_capability: false
@@ -435,19 +445,29 @@ providers:
     licence: proprietary-paid
     commercial_use_approved: false
     commercial_use_reason: unverified
-    adapter_version: ""
+    adapter_version: "Images API (2026)"
+    documentation_url: "https://developers.openai.com/api/reference/ruby/resources/images/methods/generate"
+    documentation_status: "official"
+    api_version: "Images API (2026)"
+    async_behaviour: "synchronous"
+    cancellation_support: "none — synchronous"
+    output_retrieval: "base64 b64_json in the response"
+    charge_behaviour: "per token/request; current per-model pricing UNCONFIRMED (only gpt-image-1 rates were verified, and that model is shut down)"
+    aspect_ratios: ["1024x1024", "1536x1024", "1024x1536", "auto"]
+    audio_support: false
+    character_reference_limits: "up to 10 reference images on edits"
     conformance:
       status: NOT_TESTED
       test_id: ""
-      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
-      last_verified: "never"
-    evidence: "documented-only; no live paid call made in this account"
+      evidence: "audited against the current official Images API docs 2026-11-27 (gpt-image-1 shut down 2026-10-23; current family gpt-image-1.5/2/2.5/2.6); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited against the current official Images API docs 2026-11-27 (gpt-image-1 shut down 2026-10-23; current family gpt-image-1.5/2/2.5/2.6); no live paid call made"
   - provider_id: provider-gemini-image
     schema_version: "2.5"
     provider_type: image-generation
     operations: [generate-image]
-    input_constraints: ["text prompt; optional reference image"]
-    output_constraints: ["image; resolution and limits unverified here"]
+    input_constraints: ["text prompt; optional reference image (up to 14; 4 character max on 2.1)"]
+    output_constraints: ["image; aspect ratios 1:1 to 21:9"]
     reference_image_capability: true
     character_reference_capability: true
     audio_capability: false
@@ -459,19 +479,29 @@ providers:
     licence: proprietary-paid
     commercial_use_approved: false
     commercial_use_reason: unverified
-    adapter_version: ""
+    adapter_version: "Interactions API (Api-Revision 2026-05-20)"
+    documentation_url: "https://aistudio.google.com/docs/image-generation"
+    documentation_status: "official"
+    api_version: "Interactions API (Api-Revision 2026-05-20)"
+    async_behaviour: "synchronous"
+    cancellation_support: "none — synchronous"
+    output_retrieval: "base64 in the response"
+    charge_behaviour: "per image/token; Nano Banana 2.1 approx $0.0336 (1K) / $0.0504 (2K) / $0.113 (4K) per image (secondary-quoted)"
+    aspect_ratios: ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]
+    audio_support: false
+    character_reference_limits: "up to 14 reference images (4 character max on 2.1)"
     conformance:
       status: NOT_TESTED
       test_id: ""
-      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
-      last_verified: "never"
-    evidence: "documented-only; no live paid call made in this account"
+      evidence: "audited against the current official image-generation docs 2026-11-27 (Nano Banana / Interactions API); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited against the current official image-generation docs 2026-11-27 (Nano Banana / Interactions API); no live paid call made"
   - provider_id: provider-veo-video
     schema_version: "2.5"
     provider_type: video-generation
     operations: [generate-video]
-    input_constraints: ["text prompt; optional starting reference image"]
-    output_constraints: ["video; duration and resolution limits unverified here"]
+    input_constraints: ["text prompt; optional starting reference image (up to 3 Standard/Fast; Lite: none)"]
+    output_constraints: ["video; 4/6/8 s; 720p/1080p (4K on 8 s Standard/Fast); native audio"]
     reference_image_capability: true
     character_reference_capability: true
     audio_capability: false
@@ -483,19 +513,30 @@ providers:
     licence: proprietary-paid
     commercial_use_approved: false
     commercial_use_reason: unverified
-    adapter_version: ""
+    adapter_version: "Veo 3.1 (Gemini API preview IDs; Vertex GA IDs)"
+    documentation_url: "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/video/generate-videos-from-text"
+    documentation_status: "official"
+    api_version: "Veo 3.1 (Gemini API preview IDs; Vertex GA IDs)"
+    async_behaviour: "asynchronous long-running operation with polling"
+    cancellation_support: "UNCONFIRMED — no cancel operation found in the official docs"
+    output_retrieval: "download URL / GCS URI on completion"
+    charge_behaviour: "per second of output, success only; Lite $0.05/s (720p), Fast $0.10/s (720p), Standard $0.40/s (720p) (secondary-quoted)"
+    aspect_ratios: ["16:9", "9:16"]
+    audio_support: true
+    character_reference_limits: "up to 3 reference images (Standard/Fast; Lite: none)"
+    duration_limits: {min_seconds: 4, max_seconds: 8}
     conformance:
       status: NOT_TESTED
       test_id: ""
-      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
-      last_verified: "never"
-    evidence: "documented-only; no live paid call made in this account"
+      evidence: "audited against the current official Veo 3.1 docs 2026-11-27 (async long-running operation, native audio); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited against the current official Veo 3.1 docs 2026-11-27 (async long-running operation, native audio); no live paid call made"
   - provider_id: provider-kling-video
     schema_version: "2.5"
     provider_type: video-generation
     operations: [generate-video]
-    input_constraints: ["text prompt; optional starting reference image"]
-    output_constraints: ["video; duration and resolution limits unverified here"]
+    input_constraints: ["text prompt; optional starting reference image (keyframes / multi-image / Omni)"]
+    output_constraints: ["video; 3-30 s (4.0); 3-15 s (3.0)"]
     reference_image_capability: true
     character_reference_capability: true
     audio_capability: false
@@ -507,19 +548,30 @@ providers:
     licence: proprietary-paid
     commercial_use_approved: false
     commercial_use_reason: unverified
-    adapter_version: ""
+    adapter_version: "Kling AI Open Platform (legacy + model-in-path)"
+    documentation_url: "https://app.klingai.com/global/dev/document-api"
+    documentation_status: "secondary-quoting-official"
+    api_version: "Kling AI Open Platform (legacy + model-in-path)"
+    async_behaviour: "asynchronous task_id with polling and callback_url"
+    cancellation_support: "UNCONFIRMED — no cancel operation found in the official docs"
+    output_retrieval: "result URL, 30 days"
+    charge_behaviour: "prepaid resource packages (units); failed tasks do not consume credits"
+    aspect_ratios: ["16:9", "9:16", "1:1"]
+    audio_support: true
+    character_reference_limits: "keyframes / multi-image / Omni"
+    duration_limits: {min_seconds: 3, max_seconds: 30}
     conformance:
       status: NOT_TESTED
       test_id: ""
-      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
-      last_verified: "never"
-    evidence: "documented-only; no live paid call made in this account"
+      evidence: "audited 2026-11-27 from sources quoting the official Kling docs (official docs are login/JS-gated and could not be read directly); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited 2026-11-27 from sources quoting the official Kling docs (official docs are login/JS-gated and could not be read directly); no live paid call made"
   - provider_id: provider-sora-video
     schema_version: "2.5"
     provider_type: video-generation
     operations: [generate-video]
     input_constraints: ["text prompt; optional starting reference image"]
-    output_constraints: ["video; duration and resolution limits unverified here"]
+    output_constraints: ["video; service shut down 2026-09-24 — no output"]
     reference_image_capability: true
     character_reference_capability: true
     audio_capability: false
@@ -531,19 +583,29 @@ providers:
     licence: proprietary-paid
     commercial_use_approved: false
     commercial_use_reason: unverified
-    adapter_version: ""
+    adapter_version: "Videos API (shut down 2026-09-24)"
+    documentation_url: "https://developers.openai.com/api/docs/models/sora-2-pro"
+    documentation_status: "official"
+    api_version: "Videos API (shut down 2026-09-24)"
+    async_behaviour: "shut down — no execution"
+    cancellation_support: "n/a — service shut down"
+    output_retrieval: "n/a — service shut down"
+    charge_behaviour: "n/a — service shut down"
+    aspect_ratios: []
+    audio_support: false
+    character_reference_limits: "n/a — service shut down"
     conformance:
-      status: NOT_TESTED
+      status: FAILED
       test_id: ""
-      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
-      last_verified: "never"
-    evidence: "documented-only; no live paid call made in this account"
+      evidence: "Sora 2 models and the Videos API were shut down 2026-09-24 (OpenAI docs: no longer available, no one-to-one replacement API); no adapter exists and none will be built"
+      last_verified: "2026-11-27"
+    evidence: "Sora 2 models and the Videos API were shut down 2026-09-24 (OpenAI docs: no longer available, no one-to-one replacement API); no adapter exists and none will be built"
   - provider_id: provider-ltx-video
     schema_version: "2.5"
     provider_type: video-generation
     operations: [generate-video]
-    input_constraints: ["text prompt; optional starting reference image"]
-    output_constraints: ["video; duration and resolution limits unverified here"]
+    input_constraints: ["text prompt; optional first-frame image"]
+    output_constraints: ["video; 6-20 s (Fast); 6/8/10 s (Pro)"]
     reference_image_capability: true
     character_reference_capability: true
     audio_capability: false
@@ -555,13 +617,24 @@ providers:
     licence: proprietary-paid
     commercial_use_approved: false
     commercial_use_reason: unverified
-    adapter_version: ""
+    adapter_version: "LTX API v2 (async; V1 retired 2026-10-26)"
+    documentation_url: "https://docs.ltx.io/welcome"
+    documentation_status: "secondary-quoting-official"
+    api_version: "LTX API v2 (async; V1 retired 2026-10-26)"
+    async_behaviour: "asynchronous only (V2) with job ID polling"
+    cancellation_support: "UNCONFIRMED — no cancel operation found in the official docs"
+    output_retrieval: "video_url, available under 24 hours"
+    charge_behaviour: "per second of output video (per second of input audio for audio-to-video); Fast $0.09/s (720p); failed-task charging UNCONFIRMED"
+    aspect_ratios: ["16:9", "9:16", "1:1"]
+    audio_support: true
+    character_reference_limits: "one first-frame image"
+    duration_limits: {min_seconds: 6, max_seconds: 20}
     conformance:
       status: NOT_TESTED
       test_id: ""
-      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
-      last_verified: "never"
-    evidence: "documented-only; no live paid call made in this account"
+      evidence: "audited 2026-11-27 from sources quoting the official LTX docs (direct read not completed); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited 2026-11-27 from sources quoting the official LTX docs (direct read not completed); no live paid call made"
   - provider_id: provider-elevenlabs-voice
     schema_version: "2.5"
     provider_type: voice-tts
@@ -579,19 +652,29 @@ providers:
     licence: proprietary-paid
     commercial_use_approved: false
     commercial_use_reason: unverified
-    adapter_version: ""
+    adapter_version: "ElevenLabs REST v1"
+    documentation_url: "https://elevenlabs.io/docs/api-reference"
+    documentation_status: "secondary-quoting-official"
+    api_version: "ElevenLabs REST v1"
+    async_behaviour: "synchronous"
+    cancellation_support: "none — synchronous"
+    output_retrieval: "response bytes (audio)"
+    charge_behaviour: "per character: $0.08/1,000 chars (v4/v3/multilingual v2); $0.04/1,000 chars (turbo/flash) (secondary-quoted); free tier 10,000 credits/mo, non-commercial only"
+    aspect_ratios: []
+    audio_support: true
+    character_reference_limits: "n/a (voice sample for cloning)"
     conformance:
       status: NOT_TESTED
       test_id: ""
-      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
-      last_verified: "never"
-    evidence: "documented-only; no live paid call made in this account"
+      evidence: "audited 2026-11-27 from sources quoting the official ElevenLabs docs (direct fetch blocked here); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited 2026-11-27 from sources quoting the official ElevenLabs docs (direct fetch blocked here); no live paid call made"
   - provider_id: provider-lyria-music
     schema_version: "2.5"
     provider_type: music
     operations: [generate-sound]
     input_constraints: ["text prompt describing the music"]
-    output_constraints: ["audio; duration and limits unverified here"]
+    output_constraints: ["audio; full song up to ~3 minutes"]
     reference_image_capability: false
     character_reference_capability: false
     audio_capability: true
@@ -603,10 +686,21 @@ providers:
     licence: proprietary-paid
     commercial_use_approved: false
     commercial_use_reason: unverified
-    adapter_version: ""
+    adapter_version: "Lyria 3.5 via Interactions API (Api-Revision 2026-05-20)"
+    documentation_url: "https://aistudio.google.com/docs/music-generation"
+    documentation_status: "official"
+    api_version: "Lyria 3.5 via Interactions API (Api-Revision 2026-05-20)"
+    async_behaviour: "synchronous"
+    cancellation_support: "none — synchronous"
+    output_retrieval: "base64 MP3 in the response"
+    charge_behaviour: "flat $0.08 per generated song, including failed takes (secondary-quoted)"
+    aspect_ratios: []
+    audio_support: true
+    character_reference_limits: "images as inspiration only (up to 10)"
+    duration_limits: {max_seconds: 180}
     conformance:
       status: NOT_TESTED
       test_id: ""
-      evidence: "documented-only in components/openmontage/docs/PROVIDERS.md; no live paid call made"
-      last_verified: "never"
-    evidence: "documented-only; no live paid call made in this account"
+      evidence: "audited against the current official music-generation docs 2026-11-27 (Lyria 3.5, SynthID watermark); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited against the current official music-generation docs 2026-11-27 (Lyria 3.5, SynthID watermark); no live paid call made"

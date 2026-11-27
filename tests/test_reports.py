@@ -117,7 +117,18 @@ def errors_for(schema, value):
 # file, and docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md). Every other
 # file this round touched was already in the manifest from an earlier
 # round.
-MANIFEST_EXPECTED_COUNT = 216
+# 232 since CF-WO-P1-005 (2026-11-27): sixteen genuinely new files —
+# four runtime modules (media_execution, media_adapters,
+# execution_orchestrator, timeline_delivery), two schemas
+# (execution-record, human-review-handoff), four test files
+# (test_media_execution, test_ffmpeg_adapter, test_media_adapters,
+# test_timeline_delivery), two runtime docs
+# (MEDIA_EXECUTION_RUNTIME, PROVIDER_ADAPTERS), the corrections
+# record (CF-WO-P1-005-corrections), and three evidence records
+# (evidence/p1005/gap-map, evidence/p1005/local-execution-evidence,
+# evidence/p1005/vs-headers). Every other file this round touched
+# was already in the manifest from an earlier round.
+MANIFEST_EXPECTED_COUNT = 232
 MANIFEST_EXCLUDED = ("release-manifest.json",
                      "docs/implementation/CHECKSUMS.txt")
 

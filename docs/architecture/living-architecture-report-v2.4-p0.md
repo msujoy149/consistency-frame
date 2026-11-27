@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-27 07:39 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-27 09:27 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-004-universal-production-brain`
-**Head commit:** `ef85343b1bcd484de01ff75b317240a6514a5585`
-**GitHub branch head:** `9cbe2c59e34894cb916022040f0368efab64fbed` (remote head of `feat/cf-p1-004-universal-production-brain` at
+**Head commit:** `345c9b2b3b59a577a3ebfa380ca2a975445713ae`
+**GitHub branch head:** `21b293df9e97a096397cd49d35defcd88755a560` (remote head of `feat/cf-p1-004-universal-production-brain` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -38,7 +38,7 @@ head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §
 | Features (`registry/features.json`) | 173 |
 | Workflows / intent modes (`registry/workflows.json`) | 13 |
 | Adapters (`registry/adapters.json`) | 15 |
-| JSON Schemas (`schemas/*.json`) | 35 |
+| JSON Schemas (`schemas/*.json`) | 37 |
 | Routing matrix entries (`architecture/SKILL_ROUTING_MATRIX.yaml`) | 15 |
 | Workflow graph nodes / edges (`architecture/WORKFLOW_GRAPH.yaml`) | 15 / 42 |
 | Companion capabilities (`architecture/COMPANION_CAPABILITY_REGISTRY.yaml`) | 20 (3 exercised_recorded_run, 16 present_locally, 1 upstream_inspected_pinned_commit, 0 production_verified) |
@@ -108,8 +108,8 @@ deferred P1 work.
 | GitHub Copilot | PACKAGED | NOT_TESTED | NOT_TESTED | untested |
 | OpenCode | NATIVE | NOT_TESTED | NOT_TESTED | untested |
 | VoiceStudio (bundled component) | HOST_RUNTIME | NOT_TESTED | NOT_TESTED | untested |
-| OpenMontage (bundled component) | HOST_RUNTIME | NOT_TESTED | NOT_TESTED | untested |
-| FFmpeg / ffprobe | HOST_RUNTIME | NOT_TESTED | NOT_TESTED | untested |
+| OpenMontage (bundled component) | HOST_RUNTIME | NOT_TESTED | VERIFIED | verified |
+| FFmpeg / ffprobe | HOST_RUNTIME | NOT_TESTED | VERIFIED | verified |
 | OpenTimelineIO | LIMITED | NOT_TESTED | NOT_TESTED | untested |
 | Adobe Premiere Pro (UXP) | LIMITED | NOT_TESTED | NOT_TESTED | untested |
 
@@ -215,14 +215,20 @@ docs/implementation/CF-WO-P1-001-corrections.md
 docs/implementation/CF-WO-P1-002-corrections.md
 docs/implementation/CF-WO-P1-003-corrections.md
 docs/implementation/CF-WO-P1-004-corrections.md
+docs/implementation/CF-WO-P1-005-corrections.md
 docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
 docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md
 docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md
+docs/runtime/MEDIA_EXECUTION_RUNTIME.md
 docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md
+docs/runtime/PROVIDER_ADAPTERS.md
 docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md
 docs/runtime/SKILL_ROUTING_RUNTIME.md
+evidence/p1005/gap-map.md
+evidence/p1005/local-execution-evidence.md
+evidence/p1005/vs-headers.txt
 registry/adapters.json
 registry/features.json
 registry/providers.json
@@ -232,13 +238,17 @@ registry/workflows.json
 release-manifest.json
 runtime/__init__.py
 runtime/authorization.py
+runtime/execution_orchestrator.py
 runtime/identity_resolution.py
 runtime/local_session.py
+runtime/media_adapters.py
+runtime/media_execution.py
 runtime/production_orchestrator.py
 runtime/production_store.py
 runtime/script_to_performance.py
 runtime/skill_router.py
 runtime/task_compiler.py
+runtime/timeline_delivery.py
 schemas/README.md
 schemas/approval.json
 schemas/build-report.json
@@ -247,7 +257,9 @@ schemas/character-registration.json
 schemas/character.json
 schemas/episode-state.json
 schemas/evidence.json
+schemas/execution-record.json
 schemas/gate-state.json
+schemas/human-review-handoff.json
 schemas/identity-selection-policy.json
 schemas/identity-snapshot.json
 schemas/installer-result.json
@@ -360,6 +372,7 @@ tests/last-run.json
 tests/run-tests.sh
 tests/test_atomic_write.py
 tests/test_character_registration.py
+tests/test_ffmpeg_adapter.py
 tests/test_identity_resolution.py
 tests/test_installer.sh
 tests/test_installer_manifest_security.sh
@@ -367,6 +380,8 @@ tests/test_installer_metadata_failure.sh
 tests/test_installer_security.sh
 tests/test_installer_status.sh
 tests/test_local_session_runtime.py
+tests/test_media_adapters.py
+tests/test_media_execution.py
 tests/test_modes.py
 tests/test_muse_adapter_conformance.py
 tests/test_performance_semantics.py
@@ -384,6 +399,7 @@ tests/test_script_to_performance_runtime.py
 tests/test_session_authorization.py
 tests/test_skill_router.py
 tests/test_task_compiler.py
+tests/test_timeline_delivery.py
 tests/test_timeline_manifest.py
 ```
 
@@ -484,6 +500,10 @@ tests/test_timeline_manifest.py
 - `CF-P1-004-R1-F1-MULTI` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
 - `CF-P1-004-R1-F1-LONGSHORT` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
 - `CF-P1-004-R1-F1-PERSISTENT` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-005-EXECUTION` — python3 tests/test_media_execution.py — **PASS** (exit 0)
+- `CF-P1-005-FFMPEG` — python3 tests/test_ffmpeg_adapter.py — **PASS** (exit 0)
+- `CF-P1-005-ADAPTERS` — python3 tests/test_media_adapters.py — **PASS** (exit 0)
+- `CF-P1-005-DELIVERY` — python3 tests/test_timeline_delivery.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
 - `CF-P0-REPORT-001` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-002` — python3 tests/test_reports.py — **PASS** (exit 0)
@@ -579,4 +599,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-27 07:39 UTC.
+- Report generated: 2026-11-27 09:27 UTC.

@@ -65,7 +65,19 @@ system, not a video generator. It keeps five roles separate:
   `plan_script_to_production` — runs the whole script-to-production
   planning pipeline. FFmpeg matches only technical media
   operations; creative editing and semantic QC have no verified
-  provider and compile as human handoffs.
+  provider and compile as human handoffs. Compiled packets are
+  executed by the media execution runtime
+  (`runtime/media_execution.py`, `runtime/media_adapters.py`,
+  `runtime/execution_orchestrator.py`,
+  `runtime/timeline_delivery.py` — see
+  [`docs/runtime/MEDIA_EXECUTION_RUNTIME.md`](docs/runtime/MEDIA_EXECUTION_RUNTIME.md)
+  and
+  [`docs/runtime/PROVIDER_ADAPTERS.md`](docs/runtime/PROVIDER_ADAPTERS.md)):
+  a deterministic execution state machine with stable execution
+  ids and idempotency keys, explicit per-task authorization,
+  identity-lock checks, independent output verification before
+  any execution can succeed, and timeline delivery from validated
+  artifacts only. A compiled packet is never proof of execution.
 - **AI Reasoning Host.** The connected AI model (ChatGPT, Claude,
   Gemini, Muse, or another compatible host) does the creative and
   semantic reasoning — it reads the Brain's skills and contracts,
@@ -78,7 +90,16 @@ system, not a video generator. It keeps five roles separate:
   The Brain matches a task to a provider only on evidenced
   capabilities (`registry/providers.json`); an unmatched task
   compiles as a complete provider-neutral handoff, never as a
-  pretended execution.
+  pretended execution. Local providers exercised 2026-11-27:
+  FFmpeg 8.1.2 (probe/transcode/assembly), VoiceStudio / OmniVoice
+  (non-commercial only — CC-BY-NC weights), OpenMontage (demo-render
+  entry only; production assembly not exercised). Eight external
+  providers (OpenAI / Gemini / fal.ai image, Veo / Kling / LTX
+  video, ElevenLabs voice, Lyria music) have spec-driven adapters
+  and are conformance NOT_TESTED — no live paid call without
+  explicit authorization. Sora is shut down (2026-09-24) and has
+  no adapter. Credentials come only from allow-listed environment
+  variables, never from files or the repo.
 - **Production and Editing Tools.** VoiceStudio, OpenMontage,
   FFmpeg, OpenTimelineIO and compatible editors, directed by the
   Brain through verified interfaces.

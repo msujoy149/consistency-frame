@@ -572,6 +572,30 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-005-EXECUTION",
+      "command": "python3 tests/test_media_execution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-FFMPEG",
+      "command": "python3 tests/test_ffmpeg_adapter.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-ADAPTERS",
+      "command": "python3 tests/test_media_adapters.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-DELIVERY",
+      "command": "python3 tests/test_timeline_delivery.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "command": "git diff --check",
       "exit_code": 0,

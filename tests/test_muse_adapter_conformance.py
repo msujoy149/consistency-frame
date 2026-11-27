@@ -255,10 +255,25 @@ def _unsupported_operations_group():
     openmontage = [r for r in records
                    if r["provider_id"]
                    == "provider-openmontage-assembly"]
-    check("CF-P0-ADAPTER-001: OpenMontage stays NOT_TESTED — no "
-          "verified assembly provider is claimed",
+    # P1-005 (2026-11-27): the demo-render entry was exercised with
+    # a real output (animated-reel-20s, ffprobe-validated), so the
+    # provider is EXERCISED for that entry only. The intent of this
+    # check is unchanged — no verified PRODUCTION assembly provider
+    # is claimed: the evidence must still say production pipeline
+    # assembly is NOT exercised, and the provider must not match a
+    # media-technical task (it evidences only assemble-timeline,
+    # not probe-media or transcode-media).
+    check("CF-P0-ADAPTER-001: OpenMontage is EXERCISED for the "
+          "demo-render entry only — no verified production "
+          "assembly provider is claimed",
           len(openmontage) == 1
-          and openmontage[0]["conformance"]["status"] == "NOT_TESTED")
+          and openmontage[0]["conformance"]["status"] == "EXERCISED"
+          and "production pipeline assembly is NOT exercised"
+          in openmontage[0]["conformance"]["evidence"])
+    check("CF-P0-ADAPTER-001: OpenMontage does not match a "
+          "media-technical task",
+          tc.match_provider_for_task(
+              "media-technical", records)[0] == "provider-ffmpeg")
 
 
 def _no_native_install_group():

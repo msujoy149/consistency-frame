@@ -146,6 +146,14 @@ run_one "CF-P1-004-R1-F1-MULTI" python3 tests/test_identity_resolution.py
 run_one "CF-P1-004-R1-F1-LONGSHORT" python3 tests/test_identity_resolution.py
 run_one "CF-P1-004-R1-F1-PERSISTENT" python3 tests/test_identity_resolution.py
 
+# Media execution runtime (CF-WO-P1-005): execution state machine +
+# orchestration + pipeline, FFmpeg adapter (real local execution),
+# provider adapters (mock transports only), timeline delivery.
+run_one "CF-P1-005-EXECUTION" python3 tests/test_media_execution.py
+run_one "CF-P1-005-FFMPEG" python3 tests/test_ffmpeg_adapter.py
+run_one "CF-P1-005-ADAPTERS" python3 tests/test_media_adapters.py
+run_one "CF-P1-005-DELIVERY" python3 tests/test_timeline_delivery.py
+
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check
 

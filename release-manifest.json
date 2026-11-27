@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-004-universal-production-brain",
-  "commit": "ef85343b1bcd484de01ff75b317240a6514a5585",
-  "github_branch_head": "9cbe2c59e34894cb916022040f0368efab64fbed",
+  "commit": "345c9b2b3b59a577a3ebfa380ca2a975445713ae",
+  "github_branch_head": "21b293df9e97a096397cd49d35defcd88755a560",
   "files": [
     {
       "path": ".gitattributes",
@@ -12,8 +12,8 @@
     },
     {
       "path": ".github/workflows/p0-ci.yml",
-      "sha256": "94026dbd1fb74f4246dab112b06270941b86054634f4937bffd3caafe020bc3e",
-      "bytes": 6082
+      "sha256": "c2ed37a6b6ce3f83165c20d944afb686cc6a685c6cec8abd10ef3e078db1d0d7",
+      "bytes": 7509
     },
     {
       "path": ".gitignore",
@@ -22,8 +22,8 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "b823d0c27d96ae7720d75f1f2fe38eda5b815d88ac20bec06064a5d24922256d",
-      "bytes": 54983
+      "sha256": "ab97feb5979a977495b6e474102895cd4db2267690fbe1674afe54585b484a8a",
+      "bytes": 59322
     },
     {
       "path": "CHANGELOG.md",
@@ -32,8 +32,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "79d653b5dfed79a7f840ae927c93ccf072b4cd6fb9b7bdc569521babe24601c7",
-      "bytes": 44517
+      "sha256": "1eac27c647f126d6bcc939523193b5eaf03ca396e9ebeb7fc940b44c42243c6c",
+      "bytes": 45818
     },
     {
       "path": "architecture/AGENT_COMPATIBILITY_MATRIX.yaml",
@@ -42,8 +42,8 @@
     },
     {
       "path": "architecture/COMPANION_CAPABILITY_REGISTRY.yaml",
-      "sha256": "26909f3154cc49127c518f5b66233d34d712a2c418b887bbf43ade9cad8eab42",
-      "bytes": 40881
+      "sha256": "39c1f79207a00680afaba2cae9073d50318462c38bc4c1a83c4d453d2c837312",
+      "bytes": 49197
     },
     {
       "path": "architecture/SKILL_ROUTING_MATRIX.yaml",
@@ -97,8 +97,8 @@
     },
     {
       "path": "docs/06-installation.md",
-      "sha256": "755f612dd13e2b8da5085dc1411a8f64c63cd93473cdad3c5c5f585f064924a9",
-      "bytes": 18485
+      "sha256": "dba86c4e9ee03e53c657b336047e66fa30a9f153a1451f8ac406f259ff7cf108",
+      "bytes": 20608
     },
     {
       "path": "docs/07-character-registry.md",
@@ -142,8 +142,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "9c5484fd8332268395470ea84c1858c98bda27cafb65136561393ed5fbb9861a",
-      "bytes": 31508
+      "sha256": "72ff7fafec6c6355998d8f0f0746aba8e65c2aace9e2ad89313ba6e8a829a898",
+      "bytes": 32372
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -152,8 +152,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "1d81ebbdfad05d88a06398455f293c05c0924c171a09fb802fca7957310e55f4",
-      "bytes": 66068
+      "sha256": "a08c8e10d528e6166e30831306741b8501ab7bc9943fbe5eda79852e9e9c536e",
+      "bytes": 67463
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -246,14 +246,19 @@
       "bytes": 37169
     },
     {
+      "path": "docs/implementation/CF-WO-P1-005-corrections.md",
+      "sha256": "4d39752a61168948ee8cf9f178152ba234e948b620b505f320b0cd617f932266",
+      "bytes": 13657
+    },
+    {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
       "sha256": "23bb2a5aa29fde3bbacbec7996625c52b25e9d67106c278da8bb35ed0f855099",
       "bytes": 27096
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "c0ee50c62e5917a4b79d8f340c47b3190f6837f0f5bc791153b40320113ccd67",
-      "bytes": 30761
+      "sha256": "08bdaa5e43b13684a152b7f8e69394dd6a64198f36fb16dc41bdd0682dfe3ba9",
+      "bytes": 32157
     },
     {
       "path": "docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md",
@@ -266,9 +271,19 @@
       "bytes": 12639
     },
     {
+      "path": "docs/runtime/MEDIA_EXECUTION_RUNTIME.md",
+      "sha256": "8d95cc10637d6ae65fe111a0ce30eb69851392dc1f7398b47bbd62ee5111490f",
+      "bytes": 12195
+    },
+    {
       "path": "docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md",
       "sha256": "c5b8664734d73f8f7b87b7bd247ed11973aa3591693a1a437f7ed5554868ecfe",
       "bytes": 21992
+    },
+    {
+      "path": "docs/runtime/PROVIDER_ADAPTERS.md",
+      "sha256": "d75e03214d376945f5dc59825e0be95f62619639d1d63a763617a42d3e95f021",
+      "bytes": 9452
     },
     {
       "path": "docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md",
@@ -281,9 +296,24 @@
       "bytes": 24408
     },
     {
+      "path": "evidence/p1005/gap-map.md",
+      "sha256": "f941ccc66cd27ec1b5b486ff42cca3d551c6d2c04145aa310fcec428c29fb881",
+      "bytes": 13034
+    },
+    {
+      "path": "evidence/p1005/local-execution-evidence.md",
+      "sha256": "3bb40c185dbf153ae5e61bacc8b1fc889b3a5966174c83a1fb08b94b5551a4ac",
+      "bytes": 3599
+    },
+    {
+      "path": "evidence/p1005/vs-headers.txt",
+      "sha256": "2a186d66dd51f584ff369beb4ec2286441fb5a0bbfa757a93a8db4452b471a60",
+      "bytes": 242
+    },
+    {
       "path": "registry/adapters.json",
-      "sha256": "43bdfb2796199d67dadfcb1c9142f1ccdaa47f4191447c12ab96e1b74e944561",
-      "bytes": 16075
+      "sha256": "c69d2d0179135f4af0e00956c99f9809e8c9e11cef8c7c81cbcf6d64853db3d0",
+      "bytes": 16787
     },
     {
       "path": "registry/features.json",
@@ -292,12 +322,12 @@
     },
     {
       "path": "registry/providers.json",
-      "sha256": "bef23de91e370c2b4e51c66d08024b7bd665c343537730beb37b24e1b4800182",
-      "bytes": 16232
+      "sha256": "89c9c6911372a5a9b4b62a9f7d248ddca6787b9891fffd8d5c93ae9bd02ca649",
+      "bytes": 25397
     },
     {
       "path": "registry/routing-catalog.json",
-      "sha256": "5dd28e0e3394c65406e51858f2aa831bd1aff17783faeac1a6320b4b3e2aed6a",
+      "sha256": "e32133b7ff9bd94444ebb1b71e964f19b9ab22f88e976f2ea9a9d4a8ebe27ec7",
       "bytes": 134145
     },
     {
@@ -321,6 +351,11 @@
       "bytes": 13663
     },
     {
+      "path": "runtime/execution_orchestrator.py",
+      "sha256": "8dd994e647ac4146115c5418bf3cf71470f5a2168b324311e47d388288478540",
+      "bytes": 34281
+    },
+    {
       "path": "runtime/identity_resolution.py",
       "sha256": "da8bef1bbed7eea68b7106bd9a2d02a48008c6dd253b4dff1a4451e56a0d49d0",
       "bytes": 91282
@@ -329,6 +364,16 @@
       "path": "runtime/local_session.py",
       "sha256": "48953d24431425a006c9fb15605a78c668c094264e331e46c2c56fa159830d74",
       "bytes": 33412
+    },
+    {
+      "path": "runtime/media_adapters.py",
+      "sha256": "5c690c3f1d7d679f7d647e9af530f976919a8caf48119f737fcc7d9d487fea5b",
+      "bytes": 66489
+    },
+    {
+      "path": "runtime/media_execution.py",
+      "sha256": "54ace23ab0b511f8a1c6b9e77f5f43e3820bb289ffc83c81804d5a865745a81e",
+      "bytes": 31336
     },
     {
       "path": "runtime/production_orchestrator.py",
@@ -354,6 +399,11 @@
       "path": "runtime/task_compiler.py",
       "sha256": "95f4aa4b694e18dadb8734a125e31facc31ac22fce6aefc04beea1c9c99425ab",
       "bytes": 90910
+    },
+    {
+      "path": "runtime/timeline_delivery.py",
+      "sha256": "203da2ec9fdb52af0eb7413593a2cbbc4c83a4566a81838f82ec959d9500aa3e",
+      "bytes": 16780
     },
     {
       "path": "schemas/README.md",
@@ -396,9 +446,19 @@
       "bytes": 1408
     },
     {
+      "path": "schemas/execution-record.json",
+      "sha256": "1d42d49cf6f796f4878d8c0a4b090fad8f18ab283c8ae5e88fb555073f35cd55",
+      "bytes": 5006
+    },
+    {
       "path": "schemas/gate-state.json",
       "sha256": "9156eadb1bef9dca60eea801cac512581db6434f6851241610212d466ffbc689",
       "bytes": 2562
+    },
+    {
+      "path": "schemas/human-review-handoff.json",
+      "sha256": "8f9ef49d854f8ac6b0c2878d79b8cda3d2fc293988f2c02adc59d1ebc1671afa",
+      "bytes": 2029
     },
     {
       "path": "schemas/identity-selection-policy.json",
@@ -452,8 +512,8 @@
     },
     {
       "path": "schemas/provider-capability.json",
-      "sha256": "616d6e36bcb8fadcc5190284d0d32a76a95ff4a6bcbdaa72710145ea16b7773d",
-      "bytes": 5510
+      "sha256": "e8d8e17ab26ceb172ee423531c35242817fd781473f05422fa418827cb9556e7",
+      "bytes": 7509
     },
     {
       "path": "schemas/reference-learning.json",
@@ -552,8 +612,8 @@
     },
     {
       "path": "scripts/generate-registries.py",
-      "sha256": "72bb96694989c530524fb52ea0c2782cd8b9eb74b6a49c0d99d08debd87ad680",
-      "bytes": 23084
+      "sha256": "02a5d11010239903f4fa173eec88ee99b481106995cc4f2d14a93353fc96a395",
+      "bytes": 24501
     },
     {
       "path": "scripts/generate-report.py",
@@ -942,13 +1002,13 @@
     },
     {
       "path": "tests/last-run.json",
-      "sha256": "477807fadd606f212fa027f76b46e6642679d416112f43569bc0542935c41530",
-      "bytes": 15963
+      "sha256": "5dd5926e2e044b2984ee858647b00e837e037a671c96396ce91d0d3b61ebd5a6",
+      "bytes": 16562
     },
     {
       "path": "tests/run-tests.sh",
-      "sha256": "3b2ab3d08628ba3f554bd514f0c7c506882f9f1354dd90b5aad826e58ee0e783",
-      "bytes": 10056
+      "sha256": "f1a1259150fe2563ec285488c3c5552d9a77c444ac04dd823923e0728b825427",
+      "bytes": 10522
     },
     {
       "path": "tests/test_atomic_write.py",
@@ -959,6 +1019,11 @@
       "path": "tests/test_character_registration.py",
       "sha256": "be8e6862dd3f21fd50d138c4785e63f72666afd406b44925f0c752312101410f",
       "bytes": 54096
+    },
+    {
+      "path": "tests/test_ffmpeg_adapter.py",
+      "sha256": "d5ea6a90c57ac44c4c1e2868f1ef452ba4f0480e1c754c80af2f6a360c7e7fc3",
+      "bytes": 9772
     },
     {
       "path": "tests/test_identity_resolution.py",
@@ -996,14 +1061,24 @@
       "bytes": 36604
     },
     {
+      "path": "tests/test_media_adapters.py",
+      "sha256": "a23cc19eb67251ad6b3c75487ce35f16a3bce44a69c40727fec47b91a3396a48",
+      "bytes": 22394
+    },
+    {
+      "path": "tests/test_media_execution.py",
+      "sha256": "e272f8c723f1c8f0072d5cdffb37143cb2f97271e736d3d343f92fbb33fbceba",
+      "bytes": 37053
+    },
+    {
       "path": "tests/test_modes.py",
       "sha256": "d5adf757a9340b3d42433423195196d935a24af3ff670a34c9d1863a767c7fbe",
       "bytes": 7410
     },
     {
       "path": "tests/test_muse_adapter_conformance.py",
-      "sha256": "82c99ec0540ea4ad6866f77abcb5c4762b69e3e24fbbc1fd557018af33d689b1",
-      "bytes": 13527
+      "sha256": "945dfb5acd056c5451cae95b12d8417e69238b56cf155f2fbe6d3ac7eed4757f",
+      "bytes": 14408
     },
     {
       "path": "tests/test_performance_semantics.py",
@@ -1047,8 +1122,8 @@
     },
     {
       "path": "tests/test_reports.py",
-      "sha256": "ee98c2ec8c93849f79b5429b17b91234a50df4d06b61155272858f861dad0c91",
-      "bytes": 29114
+      "sha256": "8ca187bec507a6f613e737b991d0d6ae04ec4a3c102c8afb90d47e743628a922",
+      "bytes": 29786
     },
     {
       "path": "tests/test_routing.py",
@@ -1079,6 +1154,11 @@
       "path": "tests/test_task_compiler.py",
       "sha256": "3e17ea955005a9b215c9f15940ed14bd013bd070e86f84ac3562b6d8ed669e69",
       "bytes": 48621
+    },
+    {
+      "path": "tests/test_timeline_delivery.py",
+      "sha256": "a56659180541e059a3a10d40d65f021fe44b4dccfdad30127759f8f2b615b25a",
+      "bytes": 15699
     },
     {
       "path": "tests/test_timeline_manifest.py",
@@ -1432,6 +1512,22 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-005-ADAPTERS",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-DELIVERY",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-EXECUTION",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-FFMPEG",
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "result": "PASS"
     },
@@ -1452,5 +1548,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-27T07:39:20Z"
+  "generated_at_utc": "2026-11-27T09:27:11Z"
 }
