@@ -752,6 +752,17 @@ step-by-step order for every video, in §7).
   record: `docs/implementation/CF-WO-P1-005-corrections.md`;
   suites `CF-P1-005-EXECUTION` (85), `CF-P1-005-FFMPEG` (28),
   `CF-P1-005-ADAPTERS` (56), `CF-P1-005-DELIVERY` (26).
+- **R1 Windows fix (2026-11-27):** the first CI run on the P1-005
+  head failed both `windows-compat` jobs in the identity suite's
+  e2e group — `scripts/atomic_write.py` called `os.fchmod`
+  unconditionally, which does not exist on Windows Python
+  3.10-3.12. P1-001-R2 had fixed the same hole in
+  `runtime/local_session.py` but left this helper untouched. The
+  helper now capability-checks `os.fchmod` (same pattern); the
+  store suite pins it with a Windows simulation (hide the
+  attribute, write through the store and the helper directly,
+  verify the record validates and no temp file is left on
+  failure). Full record: corrections doc §9.
 
 ## Rules that always apply
 

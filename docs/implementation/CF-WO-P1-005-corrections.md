@@ -285,3 +285,46 @@ blank line at end of file. The parent normalized the file to LF endings
 with a single trailing newline — header values unchanged, no evidence
 altered — and regenerated the reports. The file is a header record, not
 media; the audio it evidences is not in the repo.
+
+## 9. R1 — Windows `os.fchmod` defect in the atomic-write helper (2026-11-27)
+
+The first CI run on the P1-005 final head failed both `windows-compat`
+jobs (p0-validate passed) at the same step: step 11, the identity
+resolution suite, in its end-to-end group at
+`store.save_production_job` → `runtime/production_store.py`
+`_write_record` → `atomic_write_json` → `scripts/atomic_write.py`
+`atomic_write` → `os.fchmod(fd, mode)`, which raised `AttributeError:
+module 'os' has no attribute 'fchmod'` on Windows Python 3.10 and 3.12.
+The job stopped there, so the production-store step and the four
+P1-005 suite steps never ran on Windows.
+
+Root cause: the helper called `os.fchmod` unconditionally. P1-001-R2
+had fixed the identical hole in `runtime/local_session.py`
+(`_publish_profile_atomic`, capability-checked with `hasattr(os,
+"fchmod")`) but explicitly left `scripts/atomic_write.py` untouched,
+and the production store — unlike the profile publisher — writes
+through this helper. The identity suite only started exercising that
+path on Windows in this round, because the identity and store steps
+were added to `windows-compat` by P1-005. A repository-wide grep
+confirmed this helper was the only remaining unconditional `os.fchmod`
+call outside the components.
+
+Fix (one line of behaviour, same pattern as R2): `atomic_write`
+applies the mode only when `os.fchmod` exists and skips it on Windows,
+where the file inherits the parent directory's ACL behaviour; no POSIX
+mode-bit equivalence is claimed there. The module docstring records
+the Windows behaviour.
+
+Regression: a new group in `tests/test_production_store.py`
+(`CF-P1-005-R1-STORE`, six checks) simulates the Windows absence by
+hiding `os.fchmod` (the `test_local_session_runtime.py` pattern) and
+verifies: `save_production_job` succeeds and the loaded record
+validates; `atomic_write_json` writes exact bytes; a failed
+`atomic_write` leaves the target unchanged with no temporary file
+behind; `os.fchmod` is restored after the simulation; and, POSIX-only,
+the requested mode is still applied when `os.fchmod` exists. The
+group was verified to reproduce the defect: with the fix stashed, the
+suite crashes with the same `AttributeError` the CI logs show.
+
+No previous check was removed or weakened; the store suite grows by
+the six new checks. No generated values are quoted in this section.

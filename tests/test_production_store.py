@@ -346,9 +346,95 @@ def _resume_group():
             session2, root, "job-store-011", "proj-test-001"))
 
 
+def _windows_atomic_write_group():
+    # CF-WO-P1-005-R1: Windows CI run #263 failed both windows-compat
+    # jobs in the identity suite's e2e group at
+    # store.save_production_job -> atomic_write_json -> atomic_write
+    # -> os.fchmod, which does not exist on Windows Python 3.10-3.12
+    # (AttributeError). P1-001-R2 fixed the same hole in
+    # runtime/local_session.py but left scripts/atomic_write.py
+    # untouched. The fix capability-checks os.fchmod in the helper;
+    # these checks simulate the Windows absence by hiding the
+    # attribute, the same pattern as tests/test_local_session_runtime.py.
+    import contextlib
+
+    @contextlib.contextmanager
+    def _without_fchmod():
+        had = hasattr(os, "fchmod")
+        saved = getattr(os, "fchmod", None)
+        if had:
+            del os.fchmod
+        try:
+            yield had
+        finally:
+            if had:
+                os.fchmod = saved
+
+    profile, session = fresh_profile()
+    root = store_root()
+    job = planned_job(session, "job-store-win-001")
+    with _without_fchmod():
+        store.save_production_job(session, root, job)
+    loaded = store.load_production_job(
+        root, "job-store-win-001", "proj-test-001")
+    check("CF-P1-005-R1-STORE: save_production_job succeeds with "
+          "os.fchmod hidden (Windows simulation)",
+          loaded["job"]["job_id"] == "job-store-win-001"
+          and loaded["job"]["job_hash"] == job_hash(loaded["job"]))
+    check("CF-P1-005-R1-STORE: the record written without fchmod "
+          "validates",
+          validate_job(loaded["job"]) == [])
+
+    # Direct helper path, same simulation.
+    helper = store._load_atomic_write()
+    target = os.path.join(tempfile.mkdtemp(prefix="cf-p1-005-r1-aw-"),
+                          "out.json")
+    payload = {"alpha": [1, 2, 3], "beta": "x"}
+    with _without_fchmod():
+        helper.atomic_write_json(target, payload)
+    with open(target, encoding="utf-8") as handle:
+        written = handle.read()
+    check("CF-P1-005-R1-STORE: atomic_write_json writes exact bytes "
+          "with os.fchmod hidden",
+          json.loads(written) == payload
+          and written.endswith("\n"))
+
+    # Failure cleanup still holds without fchmod: bad input raises,
+    # the target is unchanged, and no temporary file is left behind.
+    before = written
+    with _without_fchmod():
+        try:
+            helper.atomic_write(target, "not-bytes")
+            raised = False
+        except TypeError:
+            raised = True
+    leftovers = [n for n in os.listdir(os.path.dirname(target))
+                 if n.startswith(".cf-atomic-")]
+    with open(target, encoding="utf-8") as handle:
+        after = handle.read()
+    check("CF-P1-005-R1-STORE: atomic_write failure without fchmod "
+          "leaves the target unchanged and no temp file behind",
+          raised and after == before and leftovers == [])
+
+    # fchmod is restored after the simulation.
+    check("CF-P1-005-R1-STORE: os.fchmod is restored after the "
+          "Windows simulation",
+          hasattr(os, "fchmod") == (os.name == "posix"))
+
+    # POSIX only: with fchmod present the requested mode is applied.
+    if os.name == "posix" and hasattr(os, "fchmod"):
+        mode_target = os.path.join(
+            tempfile.mkdtemp(prefix="cf-p1-005-r1-aw-"), "mode.bin")
+        helper.atomic_write(mode_target, b"mode", mode=0o600)
+        check("CF-P1-005-R1-STORE: atomic_write applies the requested "
+              "mode when os.fchmod exists",
+              stat.S_IMODE(os.stat(mode_target).st_mode) == 0o600)
+
+
 def main():
     _store_group()
     _resume_group()
+    _windows_atomic_write_group()
     for session in list(_sessions):
         try:
             if is_active_session(session):

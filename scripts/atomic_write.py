@@ -31,6 +31,14 @@ write. The temporary file keeps the target's existing mode when the
 target is a regular file, else 0o666 & ~umask — matching what a plain
 ``open()`` would have produced, so installs do not change file
 permissions unexpectedly.
+
+Windows note (CF-WO-P1-005-R1): Windows Python 3.10-3.12 does not
+expose ``os.fchmod``, so the mode is applied only when the call
+exists (``hasattr(os, "fchmod")``) and skipped there — the file
+instead inherits the parent directory's Windows security/ACL
+behaviour. No POSIX mode-bit equivalence is claimed on Windows
+(the P1-001-R2 pattern, which fixed the same hole in
+``runtime/local_session.py`` but left this helper untouched).
 """
 
 import json
@@ -75,7 +83,12 @@ def atomic_write(path, data, mode=None):
     fd, tmp = tempfile.mkstemp(dir=parent, prefix=".cf-atomic-",
                                suffix=".tmp")
     try:
-        os.fchmod(fd, mode)
+        # Windows Python 3.10-3.12 has no os.fchmod (CF-WO-P1-005-R1):
+        # the call is capability-checked and skipped there. The
+        # file inherits the parent directory's Windows ACL
+        # behaviour; no POSIX mode-bit equivalence is claimed.
+        if hasattr(os, "fchmod"):
+            os.fchmod(fd, mode)
         try:
             f = os.fdopen(fd, "wb")
         except BaseException:
