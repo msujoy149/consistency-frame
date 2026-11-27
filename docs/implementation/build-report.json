@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p1-004-universal-production-brain",
-  "head_commit": "85ff43be9fd5a9c96daaed425c3b63ca60aaf065",
-  "github_branch_head": "a68b46d94a313176a2e3fc8071f8bc392098da6d",
+  "head_commit": "9cb7485935936db5bbe0a7a354f9e311063f44e9",
+  "github_branch_head": "5a8878dd43360e265df251eabe054721e9d4b261",
   "status": "PASS",
   "changed_files": [
     ".gitattributes",
@@ -90,6 +90,8 @@
     "runtime/media_execution.py",
     "runtime/production_orchestrator.py",
     "runtime/production_store.py",
+    "runtime/provider_contracts.py",
+    "runtime/provider_url_policy.py",
     "runtime/script_to_performance.py",
     "runtime/skill_router.py",
     "runtime/task_compiler.py",
@@ -217,6 +219,7 @@
     "tests/run-tests.sh",
     "tests/test_atomic_write.py",
     "tests/test_character_registration.py",
+    "tests/test_e2e_local.py",
     "tests/test_ffmpeg_adapter.py",
     "tests/test_identity_resolution.py",
     "tests/test_installer.sh",
@@ -236,6 +239,8 @@
     "tests/test_production_direction.py",
     "tests/test_production_orchestrator.py",
     "tests/test_production_store.py",
+    "tests/test_provider_contracts.py",
+    "tests/test_provider_url_security.py",
     "tests/test_registries.py",
     "tests/test_reports.py",
     "tests/test_routing.py",
@@ -245,7 +250,9 @@
     "tests/test_skill_router.py",
     "tests/test_task_compiler.py",
     "tests/test_timeline_delivery.py",
-    "tests/test_timeline_manifest.py"
+    "tests/test_timeline_geometry.py",
+    "tests/test_timeline_manifest.py",
+    "tests/test_voicestudio_controls.py"
   ],
   "ci": {
     "head": "33dc78b88bba9cc83ecfc35c7b28a3ef3de7f90b",
@@ -883,6 +890,41 @@
     {
       "id": "CF-P1-005-FFMPEG",
       "command": "python3 tests/test_ffmpeg_adapter.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-005-R4-CONTRACTS",
+      "command": "python3 tests/test_provider_contracts.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-005-R4-E2E",
+      "command": "python3 tests/test_e2e_local.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-005-R4-GEOMETRY",
+      "command": "python3 tests/test_timeline_geometry.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-005-R4-SEC",
+      "command": "python3 tests/test_provider_url_security.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-005-R4-VOICE",
+      "command": "python3 tests/test_voicestudio_controls.py",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"

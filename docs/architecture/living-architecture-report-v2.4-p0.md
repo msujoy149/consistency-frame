@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-27 12:48 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-27 14:45 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-004-universal-production-brain`
-**Head commit:** `85ff43be9fd5a9c96daaed425c3b63ca60aaf065`
-**GitHub branch head:** `a68b46d94a313176a2e3fc8071f8bc392098da6d` (remote head of `feat/cf-p1-004-universal-production-brain` at
+**Head commit:** `9cb7485935936db5bbe0a7a354f9e311063f44e9`
+**GitHub branch head:** `5a8878dd43360e265df251eabe054721e9d4b261` (remote head of `feat/cf-p1-004-universal-production-brain` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -246,6 +246,8 @@ runtime/media_adapters.py
 runtime/media_execution.py
 runtime/production_orchestrator.py
 runtime/production_store.py
+runtime/provider_contracts.py
+runtime/provider_url_policy.py
 runtime/script_to_performance.py
 runtime/skill_router.py
 runtime/task_compiler.py
@@ -373,6 +375,7 @@ tests/last-run.json
 tests/run-tests.sh
 tests/test_atomic_write.py
 tests/test_character_registration.py
+tests/test_e2e_local.py
 tests/test_ffmpeg_adapter.py
 tests/test_identity_resolution.py
 tests/test_installer.sh
@@ -392,6 +395,8 @@ tests/test_production_analysis.py
 tests/test_production_direction.py
 tests/test_production_orchestrator.py
 tests/test_production_store.py
+tests/test_provider_contracts.py
+tests/test_provider_url_security.py
 tests/test_registries.py
 tests/test_reports.py
 tests/test_routing.py
@@ -401,7 +406,9 @@ tests/test_session_authorization.py
 tests/test_skill_router.py
 tests/test_task_compiler.py
 tests/test_timeline_delivery.py
+tests/test_timeline_geometry.py
 tests/test_timeline_manifest.py
+tests/test_voicestudio_controls.py
 ```
 
 ## Tests and CI evidence — status: PASS
@@ -505,6 +512,11 @@ tests/test_timeline_manifest.py
 - `CF-P1-005-FFMPEG` — python3 tests/test_ffmpeg_adapter.py — **PASS** (exit 0)
 - `CF-P1-005-ADAPTERS` — python3 tests/test_media_adapters.py — **PASS** (exit 0)
 - `CF-P1-005-DELIVERY` — python3 tests/test_timeline_delivery.py — **PASS** (exit 0)
+- `CF-P1-005-R4-SEC` — python3 tests/test_provider_url_security.py — **PASS** (exit 0)
+- `CF-P1-005-R4-CONTRACTS` — python3 tests/test_provider_contracts.py — **PASS** (exit 0)
+- `CF-P1-005-R4-GEOMETRY` — python3 tests/test_timeline_geometry.py — **PASS** (exit 0)
+- `CF-P1-005-R4-VOICE` — python3 tests/test_voicestudio_controls.py — **PASS** (exit 0)
+- `CF-P1-005-R4-E2E` — python3 tests/test_e2e_local.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
 - `CF-P0-REPORT-001` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-002` — python3 tests/test_reports.py — **PASS** (exit 0)
@@ -600,4 +612,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-27 12:48 UTC.
+- Report generated: 2026-11-27 14:45 UTC.

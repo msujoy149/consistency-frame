@@ -3,6 +3,6 @@
 # generated (before commit). The source-ZIP hash is NOT listed
 # here: the ZIP is built from the final head after commit, so
 # its hash lives in the delivery message only.
-039c06c7221c526596f976a09ddbf044c852211ffad8c8716f83d1a82d7aa2d0  46889  release-manifest.json
-7508b23e88fd658c44a6b0c39d49a4f1f27a726f3ab870850663c5721540585f  32210  docs/implementation/build-report.json
-78b4e6ea09e61803c06a219bb99d3fc5a238ce5ffe5c7b05132ece7bf407640e  68719  docs/implementation/BUILD_REPORT_P0.md
+471ec1a4db0b0513a2f4e7ed3114b89dc1939654bf934fb64a90f13d73c995f1  48410  release-manifest.json
+485e177be6ba3b29fe3122bac5cb2ef8b09ba4ca721df916e5d85c9e99a9e143  33448  docs/implementation/build-report.json
+4b38bcfb5d9f1f356b4ba8efee0a1c49b5b2d40121a77c4ea34add966a8c80d8  70958  docs/implementation/BUILD_REPORT_P0.md
