@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-004-universal-production-brain",
-  "commit": "d690902b643471391443d93271204e67a691a9e2",
-  "github_branch_head": "8d047ce0be48d1f7f8bfd5f542c46246659c3a43",
+  "commit": "ef85343b1bcd484de01ff75b317240a6514a5585",
+  "github_branch_head": "9cbe2c59e34894cb916022040f0368efab64fbed",
   "files": [
     {
       "path": ".gitattributes",
@@ -22,8 +22,8 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "8a606650943f70fafb14cebc58a090c0d6ed72bda571796f6cc8d5b7eae90956",
-      "bytes": 52803
+      "sha256": "b823d0c27d96ae7720d75f1f2fe38eda5b815d88ac20bec06064a5d24922256d",
+      "bytes": 54983
     },
     {
       "path": "CHANGELOG.md",
@@ -142,8 +142,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "1dcdfe8550b075cef8d20ffcb9a110a50f929c426018a08ec873d5d4cc83efb7",
-      "bytes": 30915
+      "sha256": "9c5484fd8332268395470ea84c1858c98bda27cafb65136561393ed5fbb9861a",
+      "bytes": 31508
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -152,8 +152,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "ba284f87608cfcd254b0e51c143b6d2a731839815d2cabadc3596a682d52ea74",
-      "bytes": 64988
+      "sha256": "1d81ebbdfad05d88a06398455f293c05c0924c171a09fb802fca7957310e55f4",
+      "bytes": 66068
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -242,8 +242,8 @@
     },
     {
       "path": "docs/implementation/CF-WO-P1-004-corrections.md",
-      "sha256": "e75d7b2f5f341fe4364db4f2930d9088b4a441973b30ead15bc184e0cc7f083a",
-      "bytes": 30003
+      "sha256": "ad18193b77c90a16f19a0f479dd7c3bb6978cf79aa9ebb1c705672c35b2ef358",
+      "bytes": 37169
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
@@ -252,13 +252,13 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "393668e2fb2b82c3b3bb9c1f7992b8848e4d9a28e4d8c64e1cc9df5a90a38788",
-      "bytes": 29544
+      "sha256": "c0ee50c62e5917a4b79d8f340c47b3190f6837f0f5bc791153b40320113ccd67",
+      "bytes": 30761
     },
     {
       "path": "docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md",
-      "sha256": "aff76861566f6a4660a3ede10f1824ac54c6be29099fd853646804a88e6f06bb",
-      "bytes": 11206
+      "sha256": "5d638350cde45f915e78e47ab9394ff1a4739b376802df8753c34435d72e5d27",
+      "bytes": 13283
     },
     {
       "path": "docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md",
@@ -267,8 +267,8 @@
     },
     {
       "path": "docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md",
-      "sha256": "4971136c14884c108838ecc0c4bb899893e5ac7d7a4bfb639638b45229cae399",
-      "bytes": 20953
+      "sha256": "c5b8664734d73f8f7b87b7bd247ed11973aa3591693a1a437f7ed5554868ecfe",
+      "bytes": 21992
     },
     {
       "path": "docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md",
@@ -322,8 +322,8 @@
     },
     {
       "path": "runtime/identity_resolution.py",
-      "sha256": "bb4b3c2e93cb032335aa32a437bd2b9d7d582a8b11a6bb516de94a68756b80e4",
-      "bytes": 66446
+      "sha256": "da8bef1bbed7eea68b7106bd9a2d02a48008c6dd253b4dff1a4451e56a0d49d0",
+      "bytes": 91282
     },
     {
       "path": "runtime/local_session.py",
@@ -332,8 +332,8 @@
     },
     {
       "path": "runtime/production_orchestrator.py",
-      "sha256": "01743f23d35e3ee220a28eb293036642b89fdeca0aff4421448f938663103620",
-      "bytes": 77460
+      "sha256": "042b8267be452ce6dcec6cf154421da2f3e3a86da2c8d7fa9b8aa4422e241598",
+      "bytes": 86655
     },
     {
       "path": "runtime/production_store.py",
@@ -402,8 +402,8 @@
     },
     {
       "path": "schemas/identity-selection-policy.json",
-      "sha256": "db0d041c6e3c13caf646c34b1ef8d3e95cd86297b29cf1e07aea83d2c02baf4e",
-      "bytes": 3565
+      "sha256": "dd15a529564a973a41edf2d3fdeb0d9f6e057017267a63d3d0315dc31d49e784",
+      "bytes": 4312
     },
     {
       "path": "schemas/identity-snapshot.json",
@@ -942,13 +942,13 @@
     },
     {
       "path": "tests/last-run.json",
-      "sha256": "868765e01ead6b07500cdc446a560811ff52ee4c090efb84da056ded030e123c",
-      "bytes": 14992
+      "sha256": "477807fadd606f212fa027f76b46e6642679d416112f43569bc0542935c41530",
+      "bytes": 15963
     },
     {
       "path": "tests/run-tests.sh",
-      "sha256": "ae4a7f73d547b266f5165970090b15800b8af931e7294d6bcb9406d034b911c4",
-      "bytes": 9583
+      "sha256": "3b2ab3d08628ba3f554bd514f0c7c506882f9f1354dd90b5aad826e58ee0e783",
+      "bytes": 10056
     },
     {
       "path": "tests/test_atomic_write.py",
@@ -962,8 +962,8 @@
     },
     {
       "path": "tests/test_identity_resolution.py",
-      "sha256": "8704b1c28f81ee0304362f1d90a93837636c7a1725d5342af6fbffed31bd11c7",
-      "bytes": 82241
+      "sha256": "6636b96f77785a29dc8a8e5c76f3ad7acd11adb7e8ab81e93752643fdcc80178",
+      "bytes": 131400
     },
     {
       "path": "tests/test_installer.sh",
@@ -1376,6 +1376,30 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-004-R1-F1-LONGSHORT",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-MULTI",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-NEWONLY-ADVERSARIAL",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-PERSISTENT",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-SELECTION",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-UNIFIED",
+      "result": "PASS"
+    },
+    {
       "id": "CF-P1-004-R1-IDENTITY-BINDING",
       "result": "PASS"
     },
@@ -1428,5 +1452,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-27T05:54:08Z"
+  "generated_at_utc": "2026-11-27T07:39:20Z"
 }

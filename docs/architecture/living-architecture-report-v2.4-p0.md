@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-27 05:54 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-27 07:39 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-004-universal-production-brain`
-**Head commit:** `d690902b643471391443d93271204e67a691a9e2`
-**GitHub branch head:** `8d047ce0be48d1f7f8bfd5f542c46246659c3a43` (remote head of `feat/cf-p1-004-universal-production-brain` at
+**Head commit:** `ef85343b1bcd484de01ff75b317240a6514a5585`
+**GitHub branch head:** `9cbe2c59e34894cb916022040f0368efab64fbed` (remote head of `feat/cf-p1-004-universal-production-brain` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -478,6 +478,12 @@ tests/test_timeline_manifest.py
 - `CF-P1-004-R1-IDENTITY-E2E` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
 - `CF-P1-004-R1-IDENTITY-NEWONLY` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
 - `CF-P1-004-R1-IDENTITY-PRIVACY` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-F1-UNIFIED` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-F1-SELECTION` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-F1-NEWONLY-ADVERSARIAL` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-F1-MULTI` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-F1-LONGSHORT` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-F1-PERSISTENT` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
 - `CF-P0-REPORT-001` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-002` — python3 tests/test_reports.py — **PASS** (exit 0)
@@ -573,4 +579,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-27 05:54 UTC.
+- Report generated: 2026-11-27 07:39 UTC.

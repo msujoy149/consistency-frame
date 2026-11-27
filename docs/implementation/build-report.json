@@ -7,8 +7,8 @@
   "base_branch": "main",
   "base_commit": "e1571db68ed87fb973c45960a4a3e27e09ba0d06",
   "branch": "feat/cf-p1-004-universal-production-brain",
-  "head_commit": "d690902b643471391443d93271204e67a691a9e2",
-  "github_branch_head": "8d047ce0be48d1f7f8bfd5f542c46246659c3a43",
+  "head_commit": "ef85343b1bcd484de01ff75b317240a6514a5585",
+  "github_branch_head": "9cbe2c59e34894cb916022040f0368efab64fbed",
   "status": "PASS",
   "changed_files": [
     ".gitattributes",
@@ -740,6 +740,48 @@
     {
       "id": "CF-P1-004-R1-ADAPTER",
       "command": "python3 tests/test_muse_adapter_conformance.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-LONGSHORT",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-MULTI",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-NEWONLY-ADVERSARIAL",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-PERSISTENT",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-SELECTION",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": "tests/last-run.json"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-UNIFIED",
+      "command": "python3 tests/test_identity_resolution.py",
       "exit_code": 0,
       "result": "PASS",
       "evidence": "tests/last-run.json"
