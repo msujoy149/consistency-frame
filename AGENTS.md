@@ -801,6 +801,62 @@ step-by-step order for every video, in §7).
 - Never claim a check you did not perform. Run the QC checklist
   (`skills/production-systems/`) before delivering.
 
+## P1-006 First complete vertical video production & delivery (2026-11-27)
+
+- **One workflow, intake to delivery.** The vertical production
+  runtime (`runtime/vertical_production.py`,
+  `runtime/production_assets.py`, `runtime/production_voice.py`,
+  `runtime/production_audio.py`, `runtime/production_timeline.py`,
+  `runtime/production_qc.py`, `runtime/production_delivery.py`)
+  is the eighth P1 runtime component. It connects project
+  validation, visual assets, voice, sound design, canonical
+  timeline, FFmpeg assembly, QC and delivery into one
+  reproducible job, on the P1-001 session, P1-004 orchestrator /
+  store / identity workflow, and P1-005 execution runtime. The
+  reference driver is `scripts/run-p1006-reference-render.py`;
+  the reference project is
+  `examples/p1006-vertical-explainer/` (source only — no media
+  binaries are committed; generated media lives in the delivery
+  archive with hashes).
+- **The state machine is strictly linear.** `INTAKE →
+  PROJECT_VALIDATED → ASSETS_PENDING → ASSETS_READY →
+  VOICE_PENDING → VOICE_READY → SOUND_PENDING → SOUND_READY →
+  TIMELINE_READY → ASSEMBLY_RUNNING → ASSEMBLY_COMPLETED →
+  QC_RUNNING → QC_PASSED → DELIVERY_READY → DELIVERED`, plus
+  `FAILED` / `CANCELLED` / `NEEDS_USER_DECISION` / `BLOCKED`.
+  Each state transitions only from its immediate predecessor.
+  Stages are idempotent via input-hash checkpoints
+  (`stage_checkpoint` / `stage_is_done`); mid-render
+  cancellation is not supported (a closed session refuses to
+  start assembly).
+- **One rendering path: FFmpeg.** The canonical timeline
+  (`editor_neutral_v1`) is assembled by FFmpeg only; OpenMontage
+  production assembly stays NOT_TESTED and is refused. Geometry
+  comes from the validated output profile, never hardcoded. The
+  reference render is 9:16, 1080x1920, 30 FPS, H.264/AAC, MP4,
+  30–60 s.
+- **Voice is real VoiceStudio/OmniVoice, non-commercial.**
+  Narration is generated locally, seed-fixed, line by line, each
+  WAV verified; only `instruct` / `speed` / `seed` are forwarded.
+  The valid instruct tag for the reference narrator is
+  `middle-aged, moderate pitch` — `narrator` is not in
+  OmniVoice's fixed vocabulary and the backend rejects it. The
+  CI render synthesizes deterministic tone narration at the
+  planned line durations (same pipeline, geometry and QC) and
+  records `voice_source: synthesized-tone`.
+- **QC blocks delivery; the review package is honest.** Technical
+  QC (ffprobe, exact geometry, rational frame rate, full decode,
+  black/freeze detection), visual QC (contact sheet, keyframes,
+  human review always required) and audio QC (loudness, true
+  peak, clipping, silence) must pass, and `DELIVERY_READY`
+  needs a named human reviewer — `automated` is refused. A
+  review package (`review_package=True`) is built while that
+  approval is still missing; its manifest records the true
+  decision (`BLOCKED`), the reasons, and `package_purpose:
+  review`, and never claims `DELIVERY_READY`. Full record:
+  `docs/implementation/CF-WO-P1-006-corrections.md`, runtime
+  contract in `docs/runtime/VERTICAL_PRODUCTION_RUNTIME.md`.
+
 ## Docs
 
 Full system documentation lives in `docs/`. The core systems are in

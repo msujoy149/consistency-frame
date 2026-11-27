@@ -1,0 +1,53 @@
+{
+  "schema_version": "2.5",
+  "voice_id": "p1006-narrator",
+  "project_id": "p1006-vertical-explainer",
+  "language": "en-US",
+  "engine": "omnivoice",
+  "provider": "provider-voicestudio-omnivoice",
+  "commercial_use": "non-commercial-only",
+  "seed": 42,
+  "instruct": "middle-aged, moderate pitch",
+  "speed": 1.0,
+  "pause_after_seconds": 0.5,
+  "lead_in_seconds": 1.0,
+  "tail_out_seconds": 1.5,
+  "lines": [
+    {
+      "line_id": "l1",
+      "shot_id": "s1",
+      "text": "One character. Every scene. Exactly the same face, every time.",
+      "planned_duration_seconds": 3.726
+    },
+    {
+      "line_id": "l2",
+      "shot_id": "s2",
+      "text": "Most tools redraw the character in every shot. The eyes drift, the hair changes, and the story breaks.",
+      "planned_duration_seconds": 6.201
+    },
+    {
+      "line_id": "l3",
+      "shot_id": "s3",
+      "text": "Consistency Frame locks the design first: face, proportions, colours, and voice.",
+      "planned_duration_seconds": 4.984
+    },
+    {
+      "line_id": "l4",
+      "shot_id": "s4",
+      "text": "Every shot is checked against that one approved reference, before it is ever rendered.",
+      "planned_duration_seconds": 5.343
+    },
+    {
+      "line_id": "l5",
+      "shot_id": "s5",
+      "text": "The same character, the same voice. Scene after scene, episode after episode.",
+      "planned_duration_seconds": 4.771
+    },
+    {
+      "line_id": "l6",
+      "shot_id": "s6",
+      "text": "One character. One voice. Every scene. That is Consistency Frame.",
+      "planned_duration_seconds": 3.937
+    }
+  ]
+}

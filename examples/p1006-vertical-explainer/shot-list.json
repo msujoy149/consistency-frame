@@ -1,0 +1,48 @@
+{
+  "schema_version": "2.5",
+  "project_id": "p1006-vertical-explainer",
+  "shots": [
+    {
+      "shot_id": "s1", "line_id": "l1", "keyword": "SAME FACE",
+      "subtext": "One character. Every scene.",
+      "min_duration_seconds": 3.0,
+      "visual_direction": "Deep blue gradient, one slow horizontal band drifting down, keyword centred.",
+      "visual": {"kind": "gradient-band", "colors": ["1a2b4c", "3d6e9e"], "accent_color": "ffffff", "text_color": "ffffff"}
+    },
+    {
+      "shot_id": "s2", "line_id": "l2", "keyword": "DRIFT",
+      "subtext": "Eyes drift. Hair changes. Story breaks.",
+      "min_duration_seconds": 3.0,
+      "visual_direction": "Teal gradient split by a vertical line; two bands slide in opposite directions, showing drift.",
+      "visual": {"kind": "gradient-split", "colors": ["0f3d3e", "2a7f7f"], "accent_color": "ffd166", "text_color": "ffffff"}
+    },
+    {
+      "shot_id": "s3", "line_id": "l3", "keyword": "LOCKED",
+      "subtext": "Face. Proportions. Colours. Voice.",
+      "min_duration_seconds": 3.0,
+      "visual_direction": "Dark violet gradient; concentric square outlines expand slowly from the centre, keyword centred.",
+      "visual": {"kind": "gradient-rings", "colors": ["241a4c", "5b3d9e"], "accent_color": "ffffff", "text_color": "ffffff"}
+    },
+    {
+      "shot_id": "s4", "line_id": "l4", "keyword": "CHECKED",
+      "subtext": "Against one approved reference.",
+      "min_duration_seconds": 3.0,
+      "visual_direction": "Dark slate gradient; a bright scan line sweeps from top to bottom, keyword centred.",
+      "visual": {"kind": "gradient-scan", "colors": ["1c2733", "4a6b8a"], "accent_color": "7fd1ff", "text_color": "ffffff"}
+    },
+    {
+      "shot_id": "s5", "line_id": "l5", "keyword": "EVERY SCENE",
+      "subtext": "Scene after scene, episode after episode.",
+      "min_duration_seconds": 3.0,
+      "visual_direction": "Deep green gradient; three outlined frames stacked vertically, a highlight box steps from one to the next.",
+      "visual": {"kind": "gradient-frames", "colors": ["123527", "2e7d4f"], "accent_color": "ffffff", "text_color": "ffffff"}
+    },
+    {
+      "shot_id": "s6", "line_id": "l6", "keyword": "CONSISTENCY FRAME",
+      "subtext": "One character. One voice. Every scene.",
+      "min_duration_seconds": 3.0,
+      "visual_direction": "Near-black blue gradient; title keyword large and centred, subtext below, slow fade-in.",
+      "visual": {"kind": "gradient-title", "colors": ["0b1220", "1e3a5f"], "accent_color": "ffd166", "text_color": "ffffff", "fontsize": 64}
+    }
+  ]
+}

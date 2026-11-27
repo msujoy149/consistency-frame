@@ -140,7 +140,19 @@ def errors_for(schema, value):
 # test_provider_contracts, test_timeline_geometry,
 # test_voicestudio_controls, test_e2e_local). Every other file this
 # round touched was already in the manifest from an earlier round.
-MANIFEST_EXPECTED_COUNT = 240
+# 266 since CF-WO-P1-006 (2026-11-27): twenty-six genuinely new
+# files — seven runtime modules (vertical_production,
+# production_assets, production_voice, production_audio,
+# production_timeline, production_qc, production_delivery), eight
+# test files (test_p1006_project, test_p1006_assets,
+# test_p1006_voice, test_p1006_audio, test_p1006_timeline,
+# test_p1006_assembly, test_p1006_delivery, test_p1006_e2e), the
+# reference driver (scripts/run-p1006-reference-render.py), eight
+# reference-project files (examples/p1006-vertical-explainer), and
+# two docs (CF-WO-P1-006-corrections,
+# VERTICAL_PRODUCTION_RUNTIME). Every other file this round
+# touched was already in the manifest from an earlier round.
+MANIFEST_EXPECTED_COUNT = 266
 MANIFEST_EXCLUDED = ("release-manifest.json",
                      "docs/implementation/CHECKSUMS.txt")
 

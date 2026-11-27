@@ -163,6 +163,19 @@ run_one "CF-P1-005-R4-GEOMETRY" python3 tests/test_timeline_geometry.py
 run_one "CF-P1-005-R4-VOICE" python3 tests/test_voicestudio_controls.py
 run_one "CF-P1-005-R4-E2E" python3 tests/test_e2e_local.py
 
+# Vertical production runtime (CF-WO-P1-006): complete production
+# project model, visual assets, voice, sound design, canonical
+# timeline + FFmpeg assembly, QC, delivery, end-to-end reference
+# render through the real driver.
+run_one "CF-P1-006-PROJECT" python3 tests/test_p1006_project.py
+run_one "CF-P1-006-ASSETS" python3 tests/test_p1006_assets.py
+run_one "CF-P1-006-VOICE" python3 tests/test_p1006_voice.py
+run_one "CF-P1-006-AUDIO" python3 tests/test_p1006_audio.py
+run_one "CF-P1-006-TIMELINE" python3 tests/test_p1006_timeline.py
+run_one "CF-P1-006-ASSEMBLY" python3 tests/test_p1006_assembly.py
+run_one "CF-P1-006-QC-DELIVERY" python3 tests/test_p1006_delivery.py
+run_one "CF-P1-006-E2E" python3 tests/test_p1006_e2e.py
+
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check
 

@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-004-universal-production-brain",
-  "commit": "2d020150205d01a0ee3b977be1cd9ff8c3cc847a",
-  "github_branch_head": "a4d1d8c4b14f24066564789b2be287464aa051b8",
+  "commit": "b167cef460e842deafde12e9008aaf98502064fd",
+  "github_branch_head": "b167cef460e842deafde12e9008aaf98502064fd",
   "files": [
     {
       "path": ".gitattributes",
@@ -12,8 +12,8 @@
     },
     {
       "path": ".github/workflows/p0-ci.yml",
-      "sha256": "e3035d7691bd0e72cdf0a51338665caeb71e298aac4bcc6b3258ce39212ca276",
-      "bytes": 9735
+      "sha256": "33c374445afd63f40d45abf84ed9721dedeeae2d80418e025b5a52f974a009c3",
+      "bytes": 14268
     },
     {
       "path": ".gitignore",
@@ -22,8 +22,8 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "d30a973f42767802bde03fd9b2f5d1216fb522587ca1541aa55ac93bf9a838f7",
-      "bytes": 61320
+      "sha256": "b290393762ef514152f365620857fa806892ae90b63f4f9a4540d2ba5d3898b4",
+      "bytes": 64464
     },
     {
       "path": "CHANGELOG.md",
@@ -142,8 +142,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "169f13f19d178f84c26a32ef94618d3a0c65294f5475e7adebfc565d001ad402",
-      "bytes": 33087
+      "sha256": "af12f49303c28410dd0a4b48d833b84a5d3b5c9e8148d09658aaf3409bc626ed",
+      "bytes": 34701
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -152,8 +152,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "83fb4ec0c6c78e8e134aef5c5f72a146c5cde48cdb7aa32e4fac551eae7e7939",
-      "bytes": 71215
+      "sha256": "e2f9b9b7c92d88cb473b1c3fc45342b789b050f35734e74e94555afe00f61c99",
+      "bytes": 71002
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -251,14 +251,19 @@
       "bytes": 38441
     },
     {
+      "path": "docs/implementation/CF-WO-P1-006-corrections.md",
+      "sha256": "39666caa46e6958ca92341b102073bbac48c23a32fb778c5c5aa908eae878455",
+      "bytes": 13591
+    },
+    {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
       "sha256": "23bb2a5aa29fde3bbacbec7996625c52b25e9d67106c278da8bb35ed0f855099",
       "bytes": 27096
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "8d6e95695f28d89717128ca77e9df964dff1d5a13829fddc599938330ff92753",
-      "bytes": 33448
+      "sha256": "143bd4b30eb8d19a359e94d10c55dd23cc3e450acf46a40811b3d1065b41e5a3",
+      "bytes": 36076
     },
     {
       "path": "docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md",
@@ -296,6 +301,11 @@
       "bytes": 24408
     },
     {
+      "path": "docs/runtime/VERTICAL_PRODUCTION_RUNTIME.md",
+      "sha256": "981d0e214bb38127dbc984266c9893c1d167826d7f7616b4e373058bbaa5b3e7",
+      "bytes": 10793
+    },
+    {
       "path": "evidence/p1005/ci-263-windows-failure-note.md",
       "sha256": "02576b1124ec53eb55b24272752092453c496db660760c761797ad54684e4b1b",
       "bytes": 7514
@@ -314,6 +324,46 @@
       "path": "evidence/p1005/vs-headers.txt",
       "sha256": "2a186d66dd51f584ff369beb4ec2286441fb5a0bbfa757a93a8db4452b471a60",
       "bytes": 242
+    },
+    {
+      "path": "examples/p1006-vertical-explainer/README.md",
+      "sha256": "24c3523a5b6cea5af351a2529d4b29346f1b20636250a9b745e63b060ff12912",
+      "bytes": 2780
+    },
+    {
+      "path": "examples/p1006-vertical-explainer/assembly-config.json",
+      "sha256": "667f98e6a8f3ad63e84ede00998b9f394b3a7efaa9070eef337118e2afc9cdda",
+      "bytes": 477
+    },
+    {
+      "path": "examples/p1006-vertical-explainer/production-analysis.json",
+      "sha256": "b64cbdbb9dc84bea1af817c8e6a851470ea65558bc3e393b8fb51db948dc8aa0",
+      "bytes": 2656
+    },
+    {
+      "path": "examples/p1006-vertical-explainer/project.json",
+      "sha256": "eadecb3edd970f0efd94a9d72a65148fea9ea84739e8bf1413de830d615bb9d5",
+      "bytes": 1204
+    },
+    {
+      "path": "examples/p1006-vertical-explainer/script.md",
+      "sha256": "e47a3ff0ff2d38e12ef488c155f5bfab0917636bee101d86fcebf4811e4fbb01",
+      "bytes": 1129
+    },
+    {
+      "path": "examples/p1006-vertical-explainer/shot-list.json",
+      "sha256": "bddc19fd7c0b62210ff71e42776c2d656ab2d2cc6ab41e150eca3f5972abcf3e",
+      "bytes": 2587
+    },
+    {
+      "path": "examples/p1006-vertical-explainer/sound-plan.json",
+      "sha256": "3e648520239f1988986559f93726dd08ea7361fea1a73015f5422a47aaf8ccf9",
+      "bytes": 1718
+    },
+    {
+      "path": "examples/p1006-vertical-explainer/voice-config.json",
+      "sha256": "d9a7cb971635d72918906004d64d69b3e7c646aa92b7c9fab85e6e034fa2486f",
+      "bytes": 1593
     },
     {
       "path": "registry/adapters.json",
@@ -381,14 +431,44 @@
       "bytes": 33045
     },
     {
+      "path": "runtime/production_assets.py",
+      "sha256": "570e1117d860151ebd5095d28136d4db09a9696f92ca2e8ad0c88b8f6aa74c56",
+      "bytes": 28695
+    },
+    {
+      "path": "runtime/production_audio.py",
+      "sha256": "23b9b2af9406a1ddd6dbdd097fd6ac22f4f3033b8212320fd747f9ba4e2809d6",
+      "bytes": 43962
+    },
+    {
+      "path": "runtime/production_delivery.py",
+      "sha256": "c16237b04218c6e308a7a910b46561292fc18497b6ca47f113fba13638d838cd",
+      "bytes": 29620
+    },
+    {
       "path": "runtime/production_orchestrator.py",
       "sha256": "3db180eb68f35c65bbc63b2be690c9bf85342725f8d9312cf681b6d5c0449aca",
       "bytes": 87115
     },
     {
+      "path": "runtime/production_qc.py",
+      "sha256": "f4197548932c757b85b9dd29408ffc02449557ad76376c42973e86237f92323e",
+      "bytes": 46337
+    },
+    {
       "path": "runtime/production_store.py",
       "sha256": "ececaeb16b4aa7b3b96665378aeecec6b2f5cbe63cf21d6dd9456398ebe42e99",
       "bytes": 18266
+    },
+    {
+      "path": "runtime/production_timeline.py",
+      "sha256": "1a2a12f8411b50de8e1ac3b530fce032aa2e2c3fb6dd8e0c4c67b36e97af97e0",
+      "bytes": 29085
+    },
+    {
+      "path": "runtime/production_voice.py",
+      "sha256": "d3c67fde7efddc419795baf7d40424908fee166614344fb5b23cd88bf7f85b30",
+      "bytes": 23024
     },
     {
       "path": "runtime/provider_contracts.py",
@@ -419,6 +499,11 @@
       "path": "runtime/timeline_delivery.py",
       "sha256": "0bfc375c828840a07070994e3268bf40b3a485784c7865e2d2523a8e1daff1ae",
       "bytes": 32581
+    },
+    {
+      "path": "runtime/vertical_production.py",
+      "sha256": "a8fc0861bda799b462baa5d4e5e5f20510f9897216e1ac7133f9f0e360a30aa9",
+      "bytes": 40537
     },
     {
       "path": "schemas/README.md",
@@ -639,6 +724,11 @@
       "path": "scripts/generate-routing-catalog.py",
       "sha256": "a07337538bb669589218a3fced3cce4b8f29e8068aa23d62e179caeef5f3bca4",
       "bytes": 20053
+    },
+    {
+      "path": "scripts/run-p1006-reference-render.py",
+      "sha256": "e44dea232280502c43aa607214c7020fb702479e2d0c36f50145becf7bb4a047",
+      "bytes": 23589
     },
     {
       "path": "scripts/sync-skills.sh",
@@ -1017,13 +1107,13 @@
     },
     {
       "path": "tests/last-run.json",
-      "sha256": "bf5315211401e08247e325253a7ec22c74bfcac0abb2daae14634c3aa91969a3",
-      "bytes": 17325
+      "sha256": "3e7c0f0d028e37da19930f1cee2b04669b4796ceca9013f2060b7730f814c0a1",
+      "bytes": 18492
     },
     {
       "path": "tests/run-tests.sh",
-      "sha256": "d678eb72db9267836f222e33088cde361656c7ec515fbcfebd3d0074cb52b1cd",
-      "bytes": 11023
+      "sha256": "02d86d7367da88b082aedbd73268cc6739e5a6cdbc1a7cbf2c7aff06dd6361b0",
+      "bytes": 11755
     },
     {
       "path": "tests/test_atomic_write.py",
@@ -1101,6 +1191,46 @@
       "bytes": 14408
     },
     {
+      "path": "tests/test_p1006_assembly.py",
+      "sha256": "452749b947bd1cbc369a7d044da663eaeb5ae5c17442aa2c302fe6fb8d89e7b6",
+      "bytes": 12667
+    },
+    {
+      "path": "tests/test_p1006_assets.py",
+      "sha256": "ec308cb32c2b3e1185ab229544881540c5554bde38910cc103db036a8b8a6be9",
+      "bytes": 14278
+    },
+    {
+      "path": "tests/test_p1006_audio.py",
+      "sha256": "7cd362f5ee5321ab33e73a3c90c9cfa50515787ded7994d83fe1dbfd9ed3c101",
+      "bytes": 26231
+    },
+    {
+      "path": "tests/test_p1006_delivery.py",
+      "sha256": "256f3df961bd1dc72a2dcb5a6648e296717f9a23a9ea0b814ff67d25b17f5304",
+      "bytes": 42531
+    },
+    {
+      "path": "tests/test_p1006_e2e.py",
+      "sha256": "52b830a3048ec1cd77f120ee563408a262efe2af4a2dff25d3cba975f33e18e1",
+      "bytes": 9600
+    },
+    {
+      "path": "tests/test_p1006_project.py",
+      "sha256": "f13771bf0afaa5964b3f103d034294b655206a458308cfced8e917daaef51895",
+      "bytes": 18819
+    },
+    {
+      "path": "tests/test_p1006_timeline.py",
+      "sha256": "a9b23747b75e6bbe03e5c0eac859901fcba96c3c6c485dd99155963f9e607765",
+      "bytes": 12940
+    },
+    {
+      "path": "tests/test_p1006_voice.py",
+      "sha256": "733a3e55f7048110c5d18663ba541bf0a4061b4cc867f8e737b9d4613352b14f",
+      "bytes": 20534
+    },
+    {
       "path": "tests/test_performance_semantics.py",
       "sha256": "9584cc95a2c35a17f0a3524bc691e6da2e0d8ade1ab83ca7d8125c100997fd15",
       "bytes": 10243
@@ -1152,8 +1282,8 @@
     },
     {
       "path": "tests/test_reports.py",
-      "sha256": "0b8c988563bbb92f32fd3a2ef113f0772736a36cf381546be96875fba3bebe3c",
-      "bytes": 30550
+      "sha256": "eb8ea1f646e9ac6a8f96f5edf4cca0de5c47c5b8315fa8e37cee562827889d9c",
+      "bytes": 31262
     },
     {
       "path": "tests/test_routing.py",
@@ -1588,6 +1718,38 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-006-ASSEMBLY",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-ASSETS",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-AUDIO",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-E2E",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-PROJECT",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-QC-DELIVERY",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-TIMELINE",
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-VOICE",
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "result": "PASS"
     },
@@ -1608,5 +1770,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-27T15:11:23Z"
+  "generated_at_utc": "2026-11-27T18:14:28Z"
 }

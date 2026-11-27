@@ -626,6 +626,54 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-006-PROJECT",
+      "command": "python3 tests/test_p1006_project.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-ASSETS",
+      "command": "python3 tests/test_p1006_assets.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-VOICE",
+      "command": "python3 tests/test_p1006_voice.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-AUDIO",
+      "command": "python3 tests/test_p1006_audio.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-TIMELINE",
+      "command": "python3 tests/test_p1006_timeline.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-ASSEMBLY",
+      "command": "python3 tests/test_p1006_assembly.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-QC-DELIVERY",
+      "command": "python3 tests/test_p1006_delivery.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-E2E",
+      "command": "python3 tests/test_p1006_e2e.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "command": "git diff --check",
       "exit_code": 0,
