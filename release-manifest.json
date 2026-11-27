@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-004-universal-production-brain",
-  "commit": "6b9df31fd1d2d151fa74e2f29ae97e74342d5672",
-  "github_branch_head": "92bd038569989412c52e26ba80287f1c7a991daa",
+  "commit": "6d20105b32eee02908c10f703e4297a4da05017c",
+  "github_branch_head": "d45e38def6a9897153a9d334dd57493d69ff7538",
   "files": [
     {
       "path": ".gitattributes",
@@ -22,8 +22,8 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "703b2d1c98123c2f03e5d15516d875580c12043021737fe092edddc7cec60785",
-      "bytes": 59974
+      "sha256": "07c71d358dcf4c0175e96e145cefdc9b89eece4af3540a7475c11bcc9c8d2aa7",
+      "bytes": 60709
     },
     {
       "path": "CHANGELOG.md",
@@ -142,7 +142,7 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "4d7bbb68b9ae1cafc681caeae6c02e6cfd9d2efaacf53a4301eed06e40569857",
+      "sha256": "f5fca8f19401bde75ca5126a7b66e351185a503ffa70fdf35ed1ac6249148ed8",
       "bytes": 32418
     },
     {
@@ -152,8 +152,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "fd06d5f8d2cda03d1f7b494bc087b8bd6214ac84e8585adfac938436a3dd1454",
-      "bytes": 68157
+      "sha256": "d1696095df478dda631074cd47989c9ea85e89862351edde8c4a4ff8e02d1d2d",
+      "bytes": 68426
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -247,8 +247,8 @@
     },
     {
       "path": "docs/implementation/CF-WO-P1-005-corrections.md",
-      "sha256": "7510521b752c7e401841baac2721c62d9ed83bcab63c81556a4caec808cda9d3",
-      "bytes": 16028
+      "sha256": "2f0d88056a088e867ab527a71bc207c28f29d4b3e11e762ee86fc9a5cb0a51d7",
+      "bytes": 18825
     },
     {
       "path": "docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md",
@@ -257,7 +257,7 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "f41a46e11ab787304ff733344882beb1ac131821a81414b1c2bccde5ebd049b2",
+      "sha256": "0ddb0ff8ff8aa905e6242abc66904368437ffae7bdf05ccbc5c328c7bb0d3b6d",
       "bytes": 32210
     },
     {
@@ -297,8 +297,8 @@
     },
     {
       "path": "evidence/p1005/ci-263-windows-failure-note.md",
-      "sha256": "d32b8d107872828f2a31e11cf80d9e94a8c316e9e648fdbe00b4b297714395af",
-      "bytes": 2653
+      "sha256": "6ce24cae1c7446f9aca02dc0c8637281e1fac6e88b4283ee0fabca5618c81380",
+      "bytes": 5173
     },
     {
       "path": "evidence/p1005/gap-map.md",
@@ -377,8 +377,8 @@
     },
     {
       "path": "runtime/media_execution.py",
-      "sha256": "54ace23ab0b511f8a1c6b9e77f5f43e3820bb289ffc83c81804d5a865745a81e",
-      "bytes": 31336
+      "sha256": "c96b61be1fe525680ce35465c598052ea432a36e12fd804199bbde9e1eba7363",
+      "bytes": 32354
     },
     {
       "path": "runtime/production_orchestrator.py",
@@ -407,8 +407,8 @@
     },
     {
       "path": "runtime/timeline_delivery.py",
-      "sha256": "203da2ec9fdb52af0eb7413593a2cbbc4c83a4566a81838f82ec959d9500aa3e",
-      "bytes": 16780
+      "sha256": "271ba7af9f2747476c5afd25affb9e53b98e08b35ed2f5f6df52af138b53630a",
+      "bytes": 16732
     },
     {
       "path": "schemas/README.md",
@@ -1072,8 +1072,8 @@
     },
     {
       "path": "tests/test_media_execution.py",
-      "sha256": "e272f8c723f1c8f0072d5cdffb37143cb2f97271e736d3d343f92fbb33fbceba",
-      "bytes": 37053
+      "sha256": "da48296bda3d7c9b3fe46ccf6285da32e9dab7dcee5274d719f78d1ac73465f5",
+      "bytes": 38030
     },
     {
       "path": "tests/test_modes.py",
@@ -1162,8 +1162,8 @@
     },
     {
       "path": "tests/test_timeline_delivery.py",
-      "sha256": "a56659180541e059a3a10d40d65f021fe44b4dccfdad30127759f8f2b615b25a",
-      "bytes": 15699
+      "sha256": "10fc92e032b5658e1da243cee89e919a36416d465ffbfe640241d12a9e356d74",
+      "bytes": 16748
     },
     {
       "path": "tests/test_timeline_manifest.py",
@@ -1553,5 +1553,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-27T12:15:53Z"
+  "generated_at_utc": "2026-11-27T12:32:40Z"
 }
