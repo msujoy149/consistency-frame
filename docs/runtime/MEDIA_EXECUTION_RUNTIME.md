@@ -129,7 +129,7 @@ database, and a compiled packet is still never proof of execution.
   interface. Schema: `schemas/execution-record.json`.
 - `runtime/media_adapters.py` — the local adapters (FFmpeg,
   VoiceStudio, OpenMontage), the OpenTimelineIO probe, the
-  spec-driven HTTP provider adapter, the eight live provider
+  spec-driven HTTP provider adapter, the nine live provider
   specs, and the `get_adapter` factory. See
   `docs/runtime/PROVIDER_ADAPTERS.md`.
 - `runtime/provider_contracts.py` — one exact request builder +

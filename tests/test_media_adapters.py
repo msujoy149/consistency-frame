@@ -561,8 +561,8 @@ def factory_group(tmpdir):
     check("CF-P1-005-ADAPTERS-specs-complete",
           all(not fields for fields in missing.values()),
           json.dumps(missing))
-    check("CF-P1-005-ADAPTERS-specs-eight-live",
-          len(PROVIDER_SPECS) == 8, str(len(PROVIDER_SPECS)))
+    check("CF-P1-005-ADAPTERS-specs-nine-live",
+          len(PROVIDER_SPECS) == 9, str(len(PROVIDER_SPECS)))
     check("CF-P1-005-ADAPTERS-no-sora-spec",
           "provider-sora-video" not in PROVIDER_SPECS)
 

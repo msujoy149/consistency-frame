@@ -504,6 +504,16 @@ def visual_argv(recipe, duration_seconds, output_path, *,
     if not isinstance(recipe, dict):
         raise AssetError("visual recipe: expected an object")
     kind = recipe.get("kind")
+    if kind == "i2v-clip":
+        # An image-to-video clip is a real provider generation
+        # from a verified keyframe — it is never built locally.
+        # FFmpeg stays for conversion/assembly only; a still
+        # animation is not a substitute for I2V motion.
+        raise AssetError(
+            "visual recipe 'i2v-clip' must come from an authorized "
+            "provider image-to-video execution "
+            "(runtime.image_to_video); the local asset stage "
+            "never generates it")
     colors = recipe.get("colors") or []
     if len(colors) != 2:
         raise AssetError(f"visual recipe {kind!r} needs exactly two "

@@ -442,6 +442,40 @@ providers:
       evidence: "audited against the current official fal.ai docs 2026-11-27 (queue + direct endpoints); no live paid call made"
       last_verified: "2026-11-27"
     evidence: "audited against the current official fal.ai docs 2026-11-27 (queue + direct endpoints); no live paid call made"
+  - provider_id: provider-fal-video
+    schema_version: "2.5"
+    provider_type: video-generation
+    operations: [generate-video-from-image]
+    input_constraints: ["text prompt (<=2500 chars); start_image_url required (public URL or base64 data URI, <=50 MB, >=300x300 px, aspect 0.40-2.50); optional end_image_url; duration string 3-15 s; generate_audio bool"]
+    output_constraints: ["video/mp4; output follows the start image aspect (9:16 keyframe yields 9:16) at up to 1080p; native audio when generate_audio is true"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: true
+    native_camera_controls: []
+    native_motion_controls: ["prompt-described subject/face/body/hand/prop/hair/cloth/environment/camera motion"]
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: true
+    commercial_use_reason: "Commercial use badge on the official fal.ai model page (read 2026-11-28); fal.ai FAQ: each model has its own license and models marked Commercial use are available for commercial use"
+    adapter_version: "fal Model APIs (queue); Kling Video v3 Pro image-to-video"
+    documentation_url: "https://fal.ai/models/fal-ai/kling-video/v3/pro/image-to-video"
+    documentation_status: "official"
+    api_version: "fal Model APIs (queue); Kling Video v3 Pro image-to-video"
+    async_behaviour: "asynchronous queue with polling (IN_QUEUE / IN_PROGRESS / COMPLETED; result via a second GET on response_url)"
+    cancellation_support: "PUT cancel_url — cancellation supported"
+    output_retrieval: "fal.media CDN URL, available 7 days or more"
+    charge_behaviour: "per second of output from prepaid credits; Kling 3.0 Pro 1080p $0.168/s with audio, $0.112/s without (fal.ai list prices, read 2026-11-28); server errors (HTTP 500+) never charged; a 422 may be charged if GPU time was spent"
+    aspect_ratios: ["follows the start image (9:16 keyframe yields 9:16)"]
+    audio_support: true
+    character_reference_limits: "start image only; elements (extra reference images) refused by the contract"
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "audited against the official fal.ai OpenAPI schema for fal-ai/kling-video/v3/pro/image-to-video, read 2026-11-28; no live paid call made; mock contract tests only (CF-P1-006-R2-I2V)"
+      last_verified: "2026-11-28"
+    evidence: "audited against the official fal.ai OpenAPI schema for fal-ai/kling-video/v3/pro/image-to-video, read 2026-11-28; no live paid call made"
   - provider_id: provider-openai-image
     schema_version: "2.5"
     provider_type: image-generation

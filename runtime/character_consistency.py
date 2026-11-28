@@ -198,13 +198,18 @@ def validate_character_bible(bible) -> list:
     return errors
 
 
-def validate_scene_binding(bible, shot) -> list:
+def validate_scene_binding(bible, shot, *,
+                           motion_kind="still") -> list:
     """Scene-to-bible binding errors (empty list = valid).
 
     The shot's character id must be the bible's character id;
     its reference ids must resolve to bible references; its
     expression (when given) must resolve to a bible expression;
-    its motion must be a known still motion; environment and
+    its motion must be a known still motion — or, when
+    ``motion_kind`` is ``"i2v"``, its motion prompt must be a
+    structured prompt the canonical I2V validator accepts and
+    its visual kind must be ``"i2v-clip"`` (a real provider
+    generation, never a locally animated still); environment and
     prop ids must be non-empty strings.
     """
     errors: list[str] = []
@@ -238,7 +243,32 @@ def validate_scene_binding(bible, shot) -> list:
                 f"{expression!r} does not resolve to a bible "
                 "expression")
     motion = (shot.get("visual") or {}).get("motion")
-    if motion is not None and motion not in assets_mod.STILL_MOTIONS:
+    if motion_kind == "i2v":
+        # Image-to-video motion: the shot carries a structured
+        # motion prompt validated by the canonical I2V validator
+        # (lazy import: this module must not pull the I2V runtime
+        # in at import time), and the visual kind must be the
+        # provider-generation kind — never a still motion.
+        from . import image_to_video as i2v_mod
+        visual = shot.get("visual") or {}
+        if visual.get("kind") != "i2v-clip":
+            errors.append(
+                f"shot {shot.get('shot_id')!r} motion kind is "
+                f"'i2v' but visual.kind is "
+                f"{visual.get('kind')!r}: an I2V shot must use "
+                "'i2v-clip'")
+        for err in i2v_mod.validate_motion_prompt(
+                shot.get("motion_prompt")):
+            errors.append(
+                f"shot {shot.get('shot_id')!r} motion prompt: "
+                f"{err}")
+        if motion is not None:
+            errors.append(
+                f"shot {shot.get('shot_id')!r} carries a still "
+                f"motion {motion!r} with motion kind 'i2v': an "
+                "I2V shot moves by provider generation, never "
+                "by still animation")
+    elif motion is not None and motion not in assets_mod.STILL_MOTIONS:
         errors.append(
             f"shot {shot.get('shot_id')!r} motion {motion!r} is not "
             "a known still motion")

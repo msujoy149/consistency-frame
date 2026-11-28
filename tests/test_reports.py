@@ -164,7 +164,20 @@ def errors_for(schema, value):
 # no new entry. (docs/implementation/CHECKSUMS.txt and
 # release-manifest.json are in the diff but intentionally
 # excluded from the manifest.)
-MANIFEST_EXPECTED_COUNT = 280
+# 296 since CF-WO-P1-006-R2 (2026-11-28): sixteen genuinely
+# new files — one runtime module (image_to_video), one runtime
+# doc (IMAGE_TO_VIDEO_RUNTIME), two records (CF-WO-P1-006-R2-
+# corrections, CF-WO-P1-006-R2-authorization-request), the R2
+# driver (scripts/run-p1006-r2-photorealistic-render.py), one
+# test file (test_p1006_r2_image_to_video), and ten
+# reference-project files
+# (examples/p1006-r2-photorealistic-image-to-video). Every other
+# file this round touched was already in the manifest from an
+# earlier round; this file itself was already in the diff, so it
+# adds no new entry. (docs/implementation/CHECKSUMS.txt and
+# release-manifest.json are in the diff but intentionally
+# excluded from the manifest.)
+MANIFEST_EXPECTED_COUNT = 296
 MANIFEST_EXCLUDED = ("release-manifest.json",
                      "docs/implementation/CHECKSUMS.txt")
 
@@ -457,12 +470,12 @@ def main():
     # the negative cases tamper in-memory copies without touching the
     # committed manifest on disk.
     manifest_errors = verify_manifest_entries(manifest, ROOT)
-    check("CF-P1-003-R2-MANIFEST: all 209 entries verify "
+    check("CF-P1-003-R2-MANIFEST: all 296 entries verify "
           "(existence + SHA-256 + byte count)",
           not manifest_errors, "; ".join(manifest_errors[:5]))
     manifest_paths = [f["path"] for f in manifest.get("files", [])]
     check("CF-P1-003-R2-MANIFEST: manifest scope is exactly the "
-          "209 managed files",
+          "296 managed files",
           len(manifest_paths) == MANIFEST_EXPECTED_COUNT
           and len(set(manifest_paths)) == MANIFEST_EXPECTED_COUNT,
           f"entries={len(manifest_paths)}")

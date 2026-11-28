@@ -1370,8 +1370,8 @@ def crosscutting_group(tmpdir):
 
     # Registry consistency: one contract per live spec, same
     # async shape, and Sora stays without a contract.
-    check("CF-P1-005-R4-CONTRACTS-eight-contracts",
-          len(CONTRACTS) == 8, str(sorted(CONTRACTS)))
+    check("CF-P1-005-R4-CONTRACTS-nine-contracts",
+          len(CONTRACTS) == 9, str(sorted(CONTRACTS)))
     for provider_id, contract in sorted(CONTRACTS.items()):
         spec = PROVIDER_SPECS.get(provider_id)
         check("CF-P1-005-R4-CONTRACTS-spec-exists:" + provider_id,

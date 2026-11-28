@@ -901,6 +901,60 @@ step-by-step order for every video, in §7).
   contract in `docs/runtime/CHARACTER_CONSISTENCY_RUNTIME.md`,
   provider row in `docs/runtime/PROVIDER_ADAPTERS.md`.
 
+## P1-006-R2 Mandatory photorealistic image-to-video & real motion (2026-11-27/28)
+
+- **Script-first, no fixed counts.** The addendum removed the
+  fixed six-scene plan: counts come from the script analysis
+  only (`runtime/image_to_video.py::derive_project_counts`).
+  The script "Nadia and the River Light" is a DRAFT awaiting
+  user approval — no reference image, keyframe, or voice
+  recording has been generated from it, and none may be until
+  he approves it. Ten draft images generated under the original
+  brief were deleted; prompts and verdicts are preserved in the
+  delivery folder's `work/superseded-draft-keyframes.md`.
+- **Selected provider: fal.ai Kling Video v3 Pro
+  image-to-video** (`fal-ai/kling-video/v3/pro/image-to-video`,
+  provider id `provider-fal-video`, 14 providers now). I2V
+  confirmed against the official OpenAPI schema (read
+  2026-11-28); 9:16 via the start image's aspect; 3–15 s clips;
+  native audio; Commercial-use badge; 1080p $0.168/s with
+  audio, $0.112/s without. The R2 plan (8 clips × 6 s) estimates
+  $8.06. Runner-up: fal.ai Veo 3.1 Fast.
+- **The I2V runtime** (`runtime/image_to_video.py`) validates
+  the source image (hash, codec, size, aspect), gates every
+  paid submission on an explicit authorization record (exact
+  provider/model/operation, generation budget, scope covering
+  every transmitted asset, expiry), never auto-resubmits an
+  uncertain submission, verifies the returned clip (MP4, H.264,
+  duration ±1.0 s, geometry), and motion-validates it by frame
+  sampling (static and camera-only rejected; only
+  subject-motion/mixed pass). Text overlay is prohibited by all
+  six flags False plus a prohibition clause in every prompt;
+  text detection is human review only, never OCR. Motion
+  prompts carry seven fields (subject/face/body/hand/prop/
+  hair/cloth/environment/camera); camera alone is never motion.
+- **No still animation is ever an I2V substitute.**
+  `VISUAL_RECIPE_KINDS` gained `"i2v-clip"`, and
+  `visual_argv` refuses it outright — the local asset stage
+  never generates it. `validate_scene_binding` takes
+  `motion_kind="i2v"` (structured motion prompt via the
+  canonical validator, kind must be `i2v-clip`, no still
+  motion); default still behaviour is unchanged. The R2 driver
+  (`scripts/run-p1006-r2-photorealistic-render.py`) fails
+  closed: plan BLOCKED, no provider call, no MP4, exit 2.
+  The voice script (`work/voice/generate-r2-voice.py`) refuses
+  to run while the script is DRAFT. The R1 audio-mix fix
+  (explicit `asplit=2`) is preserved.
+- **Known limitation, stated plainly:** pixel-diff motion
+  classification cannot reliably distinguish every zoom from
+  subject motion; the architectural guards (local refusal,
+  provider-only execution, human review) carry that case.
+  Full record: `docs/implementation/CF-WO-P1-006-R2-corrections.md`,
+  runtime contract in `docs/runtime/IMAGE_TO_VIDEO_RUNTIME.md`,
+  authorization request in
+  `docs/implementation/CF-WO-P1-006-R2-authorization-request.md`.
+  Suite `CF-P1-006-R2-I2V` (90 checks).
+
 ## Docs
 
 Full system documentation lives in `docs/`. The core systems are in

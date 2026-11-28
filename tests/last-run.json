@@ -680,6 +680,12 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-006-R2-I2V",
+      "command": "python3 tests/test_p1006_r2_image_to_video.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "command": "git diff --check",
       "exit_code": 0,

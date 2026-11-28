@@ -182,6 +182,13 @@ SUPPORTED_RENDER_PATHS = ("ffmpeg",)
 # generate_still_clip for the "ai-still" kind — an AI-generated
 # still image animated locally with FFmpeg zoompan; the clip is
 # built by generate_still_clip, never by visual_argv).
+#
+# "i2v-clip" is a recipe kind the asset stage can NEVER
+# generate locally: it is a real provider image-to-video
+# generation from a verified keyframe (runtime.image_to_video),
+# produced only under an explicit authorization record. The
+# local asset stage refuses it (see visual_argv) and the R2
+# driver fails closed instead of substituting a still animation.
 VISUAL_RECIPE_KINDS = (
     "gradient-band",
     "gradient-split",
@@ -190,6 +197,7 @@ VISUAL_RECIPE_KINDS = (
     "gradient-frames",
     "gradient-title",
     "ai-still",
+    "i2v-clip",
 )
 
 

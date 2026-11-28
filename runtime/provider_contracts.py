@@ -949,6 +949,181 @@ class FalImageContract(ProviderContract):
 
 
 # ---------------------------------------------------------------------
+# fal.ai Kling Video v3 Pro — image-to-video (official fal.ai
+# OpenAPI schema, read 2026-11-28)
+# ---------------------------------------------------------------------
+
+_FAL_VIDEO_MODELS = (
+    "fal-ai/kling-video/v3/pro/image-to-video",
+)
+_FAL_VIDEO_DURATIONS = tuple(str(n) for n in range(3, 16))
+_FAL_VIDEO_START_IMAGE_MAX_BYTES = 50 * 1024 * 1024
+
+
+class FalVideoContract(ProviderContract):
+    """fal.ai Kling Video v3 Pro image-to-video over the queue API.
+
+    POST https://queue.fal.run/fal-ai/kling-video/v3/pro/
+    image-to-video with ``Authorization: Key``. Submit returns
+    ``{request_id, status_url, response_url, cancel_url}``; GET
+    status_url returns ``IN_QUEUE`` / ``IN_PROGRESS`` /
+    ``COMPLETED``; GET response_url returns the result
+    (``video: {url, content_type, file_size, file_name}``); PUT
+    cancel_url cancels. Output URLs live on fal.media and are
+    kept at least 7 days. Server errors (HTTP 500+) are never
+    charged; a 422 may be charged if GPU time was spent;
+    ``content_policy_violation`` is a non-retryable 422.
+
+    Request schema (fal.ai OpenAPI for this endpoint, read
+    2026-11-28): ``start_image_url`` is the only required field
+    (public URL or base64 data URI, <=50 MB, >=300x300 px,
+    aspect 0.40-2.50); ``prompt`` <=2500 chars (either prompt or
+    multi_prompt, never both); ``duration`` is a string enum
+    "3"-"15" (default "5"); ``generate_audio`` defaults true
+    (native audio; Chinese and English voice output — other
+    languages are auto-translated to English); ``end_image_url``
+    optional; ``negative_prompt`` <=2500 chars (default "blur,
+    distort, and low quality"); ``cfg_scale`` 0-1 (default 0.5);
+    ``enable_safety_checker`` defaults true. There is NO
+    aspect_ratio or resolution field: the output follows the
+    start image's aspect (a 9:16 keyframe yields a 9:16 clip)
+    at up to 1080p. The ``elements`` (character/object)
+    mechanism is NOT used by this contract: it would transmit
+    extra reference images and bind voices, and no first
+    production has been authorized for it — a context carrying
+    ``elements`` is refused with a precise error instead of
+    being silently sent.
+    """
+
+    provider_id = "provider-fal-video"
+    is_async = True
+    supports_cancel = True
+    cancel_method = "PUT"
+
+    def build_request(self, packet, context, model):
+        model = _validate_enum(model, "model", _FAL_VIDEO_MODELS)
+        prompt = _prompt(packet)
+        if len(prompt) > 2500:
+            _fail("fal video prompt must be at most 2500 "
+                  "characters")
+        context = context or {}
+        if context.get("elements") is not None:
+            _fail("fal video contract does not support elements: "
+                  "the character/object element mechanism would "
+                  "transmit extra reference images and is not "
+                  "authorized for this production")
+        if context.get("multi_prompt") is not None:
+            _fail("fal video contract does not support "
+                  "multi_prompt: one prompt per clip")
+        start_image_url = context.get("start_image_url")
+        if not isinstance(start_image_url, str) \
+                or not start_image_url:
+            _fail("fal video request needs start_image_url: the "
+                  "verified keyframe as a public URL or a base64 "
+                  "data URI")
+        body = {"prompt": prompt,
+                "start_image_url": start_image_url}
+        duration = context.get("duration")
+        if duration is not None:
+            body["duration"] = _validate_enum(
+                str(duration), "duration", _FAL_VIDEO_DURATIONS)
+        audio = context.get("generate_audio")
+        if audio is not None:
+            body["generate_audio"] = _validate_bool(
+                audio, "generate_audio")
+        end_image_url = context.get("end_image_url")
+        if end_image_url is not None:
+            if not isinstance(end_image_url, str) \
+                    or not end_image_url:
+                _fail("fal video end_image_url must be a "
+                      "non-empty string")
+            body["end_image_url"] = end_image_url
+        negative = context.get("negative_prompt")
+        if negative is not None:
+            negative = _require_text(negative, "negative_prompt",
+                                     max_len=2500)
+            body["negative_prompt"] = negative
+        cfg = context.get("cfg_scale")
+        if cfg is not None:
+            body["cfg_scale"] = _validate_number(
+                cfg, "cfg_scale", minimum=0, maximum=1)
+        checker = context.get("enable_safety_checker")
+        if checker is not None:
+            body["enable_safety_checker"] = _validate_bool(
+                checker, "enable_safety_checker")
+        return {"model": model, "body": body,
+                "content_type": "application/json",
+                "url_values": {"endpoint": model}, "query": {},
+                "headers": {}, "url": None, "context_updates": {}}
+
+    def parse_submit_response(self, data, status, context=None):
+        request_id = data.get("request_id")
+        if not isinstance(request_id, str) or not request_id:
+            _fail("fal video submit response carried no "
+                  "request_id", code="malformed-output")
+        for key in ("status_url", "response_url", "cancel_url"):
+            value = data.get(key)
+            if not isinstance(value, str) or not value:
+                _fail(f"fal video submit response carried no {key}",
+                      code="malformed-output")
+        return {"job_id": request_id,
+                "status_url": data["status_url"],
+                "cancel_url": data["cancel_url"],
+                "response_url": data["response_url"],
+                "output": None}
+
+    def parse_poll_response(self, data):
+        status = data.get("status")
+        if status in ("IN_QUEUE", "IN_PROGRESS"):
+            return {"state": "running", "output_url": None,
+                    "response_url": None, "error": None}
+        if status == "COMPLETED":
+            # The result is a second GET on response_url (carried
+            # by the status response; the adapter also accepts a
+            # context-carried response_url as a fallback).
+            return {"state": "done", "output_url": None,
+                    "response_url": data.get("response_url"),
+                    "error": None}
+        # The documented status values are only the three above;
+        # anything else is not a state this contract understands.
+        _fail(f"fal video poll returned unknown status {status!r}",
+              code="malformed-output")
+
+    def parse_result_response(self, data):
+        detail = _error_detail(data)
+        if detail is not None:
+            return {"output_url": None, "error": detail}
+        video = data.get("video")
+        if not isinstance(video, dict):
+            _fail("fal video result carried no video object",
+                  code="malformed-output")
+        url = video.get("url")
+        if not isinstance(url, str) or not url:
+            _fail("fal video result carried no output URL",
+                  code="malformed-output")
+        return {"output_url": url, "error": None}
+
+    def parse_error_response(self, status, body):
+        detail = None
+        try:
+            data = json.loads(body.decode("utf-8"))
+            detail = _error_detail(data)
+        except (ValueError, UnicodeDecodeError):
+            detail = None
+        text = body.decode("utf-8", "replace")
+        if status == 422 and "content_policy_violation" in text:
+            return ("validation-failed",
+                    detail or "fal content policy violation", False)
+        if status == 422:
+            # A 422 may be charged if GPU time was spent.
+            return ("provider-error",
+                    detail or "fal rejected the request (HTTP 422)",
+                    False)
+        return _http_error(status, body, self.provider_id,
+                           detail=detail)
+
+
+# ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
 # Veo 3.1 via Vertex AI / Gemini Enterprise Agent Platform
 # (official Vertex docs, 2026-11-27 — see PROVIDER_ADAPTERS.md)
@@ -1862,6 +2037,7 @@ CONTRACTS = {
     "provider-openai-image": OpenAIImageContract(),
     "provider-gemini-image": GeminiImageContract(),
     "provider-fal-image": FalImageContract(),
+    "provider-fal-video": FalVideoContract(),
     "provider-veo-video": VeoVideoContract(),
     "provider-kling-video": KlingVideoContract(),
     "provider-ltx-video": LTXVideoContract(),
@@ -1887,6 +2063,7 @@ __all__ = [
     "OpenAIImageContract",
     "GeminiImageContract",
     "FalImageContract",
+    "FalVideoContract",
     "VeoVideoContract",
     "KlingVideoContract",
     "LTXVideoContract",

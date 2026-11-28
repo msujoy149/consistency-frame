@@ -216,9 +216,9 @@ def _packet_schema_group():
 
 def _provider_records_group():
     records = tc.load_provider_registry()
-    check("CF-P1-004-COMPILER: the default registry loads 13 "
+    check("CF-P1-004-COMPILER: the default registry loads 14 "
           "records",
-          len(records) == 13, f"got {len(records)}")
+          len(records) == 14, f"got {len(records)}")
     check("CF-P1-004-COMPILER: every registry record validates",
           all(tc.validate_provider_record(r) == [] for r in records),
           "a registry record failed validation")
@@ -834,8 +834,8 @@ def _regeneration_group():
 def _registry_group():
     records = tc.load_provider_registry()
     check("CF-P1-004-COMPILER: load_provider_registry() with the "
-          "default path returns 13 records",
-          len(records) == 13)
+          "default path returns 14 records",
+          len(records) == 14)
     expect_error(
         "CF-P1-004-COMPILER: a missing registry file raises "
         "TaskCompilerError",

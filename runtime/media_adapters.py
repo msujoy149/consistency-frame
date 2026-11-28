@@ -210,6 +210,7 @@ PROVIDER_SECRET_ENV = {
     "provider-openai-image": "OPENAI_API_KEY",
     "provider-gemini-image": "GEMINI_API_KEY",
     "provider-fal-image": "FAL_KEY",
+    "provider-fal-video": "FAL_KEY",
     "provider-veo-video": "VERTEX_ACCESS_TOKEN",
     "provider-kling-video": "KLING_API_KEY",
     "provider-ltx-video": "LTX_API_KEY",
@@ -1227,6 +1228,57 @@ PROVIDER_SPECS = {
         "aspect_ratios": ["per-model"],
         "audio_support": False,
     },
+    "provider-fal-video": {
+        "adapter_id": "adapter-fal-video",
+        "api_version": "fal Model APIs (queue); Kling Video v3 Pro "
+                       "image-to-video",
+        "models": ["fal-ai/kling-video/v3/pro/image-to-video"],
+        "documentation_url": "https://fal.ai/models/fal-ai/"
+                             "kling-video/v3/pro/image-to-video",
+        "documentation_status": "official",
+        "submit": {"method": "POST",
+                   "url": "https://queue.fal.run/{endpoint}"},
+        # R2: output is a video URL on the fal.media CDN (same
+        # queue contract as fal image). Poll/cancel URLs come
+        # from the submit response and are validated against
+        # api_origins before use.
+        "api_origins": ["queue.fal.run"],
+        "output_origins": ["fal.media"],
+        "auth": {"env_var": "FAL_KEY", "header": "Authorization",
+                 "scheme": "Key"},
+        "async": True,
+        "cancel": {"method": "PUT", "url_from_submit": "cancel_url"},
+        "retrieval": "cdn-url",
+        "charge_behaviour": "per second of output from prepaid "
+                            "credits; Kling 3.0 Pro 1080p $0.168/s "
+                            "with audio, $0.112/s without "
+                            "(fal.ai list prices, read 2026-11-28); "
+                            "server errors (HTTP 500+) never "
+                            "charged; queue-wait time never "
+                            "charged; a 422 may be charged if GPU "
+                            "time was spent",
+        "reference_images": "start_image_url (required: the "
+                            "verified keyframe as a public URL or "
+                            "base64 data URI, <=50 MB, >=300x300 "
+                            "px, aspect 0.40-2.50) + optional "
+                            "end_image_url; elements (extra "
+                            "reference images) refused by the "
+                            "contract",
+        "async_behaviour": "asynchronous queue with polling "
+                           "(IN_QUEUE / IN_PROGRESS / COMPLETED; "
+                           "result via a second GET on "
+                           "response_url)",
+        "cancellation_support": "PUT cancel_url — cancellation "
+                                "supported",
+        "output_retrieval": "fal.media CDN URL, available 7 days "
+                            "or more",
+        "character_reference_limits":
+            "start image only; elements refused (see "
+            "reference_images)",
+        "aspect_ratios": ["follows the start image "
+                          "(9:16 keyframe yields 9:16)"],
+        "audio_support": True,
+    },
     "provider-veo-video": {
         "adapter_id": "adapter-veo-video",
         "api_version": "Veo 3.1 (Vertex AI / Gemini Enterprise Agent Platform; -001 IDs)",
@@ -1841,7 +1893,14 @@ class HttpProviderAdapter(MediaAdapter):
                     "completed": True, "output": artifact,
                     "failure": None}
         return {"provider_job_id": result.get("job_id"),
-                "completed": False, "output": None, "failure": None}
+                "completed": False, "output": None, "failure": None,
+                # The submit response carries the queue URLs the
+                # poll path needs (fal.ai has no poll template:
+                # its status_url comes from here). Dropping them
+                # would make the job unpollable.
+                "status_url": result.get("status_url"),
+                "response_url": result.get("response_url"),
+                "cancel_url": result.get("cancel_url")}
 
     def _save_output_bytes(self, raw, ext, ctx) -> str:
         """Write verified output bytes under outputs/; return the

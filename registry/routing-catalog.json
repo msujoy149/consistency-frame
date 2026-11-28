@@ -1094,7 +1094,7 @@
   },
   "integrity": {
     "algorithm": "sha256-canonical-json-v1",
-    "fingerprint": "224727ff92b02a415dff8fa775cfb94def131ae6c6c116e32713f97692a35776"
+    "fingerprint": "b70200c7227f55df2f2a86b4f53ff96b8be4c542e2bc57aa0f33703e9243bb1c"
   },
   "intent_modes": {
     "EDIT_EXISTING_MEDIA": {
@@ -2686,7 +2686,7 @@
       "version": "2.4"
     },
     "architecture/COMPANION_CAPABILITY_REGISTRY.yaml": {
-      "sha256": "22df6f084680f82886c751b028c1033c1707c89b0843acd4db3f8d7f64fcf543",
+      "sha256": "4c6698a973bc56d64ec70791dbff3b98fb260dd9f68cc4974fe67046683fd418",
       "version": "2.4"
     },
     "architecture/SKILL_ROUTING_MATRIX.yaml": {
