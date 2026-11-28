@@ -1,3 +1,26 @@
+# SUPERSEDED — see the Gate B sheet
+
+> **This authorization request is SUPERSEDED by
+> `docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-gate-b-authorization.md`
+> (Gate B sheet, CF-WO-P1-006-R2-PREFLIGHT, 2026-11-28).** Reason:
+> audio on -> audio off (external narration is handled separately
+> by the existing voice pipeline; the provider must not generate
+> unintended audio), and the 8-clip / $8.06 estimate is replaced
+> by the dynamic storyboard cost plan (same 8 clips and 48 s,
+> audio OFF, WITH elements, $10.75 — see
+> `examples/p1006-r2-photorealistic-image-to-video/cost-plan.json`).
+> The $10.75 figure corrects the earlier preflight $5.38 figure,
+> which priced every shot at the without-elements $0.112/s rate:
+> fal.ai charges a separate, higher tier for image-to-video with
+> elements ($0.224/s audio off), and every shot uses the Nadia
+> character element. The counts are unchanged; the rate changed.
+> Do NOT approve or
+> act on this document: approve the Gate B sheet instead, after
+> Gate A passes. The full original text is kept below, unchanged,
+> for history.
+
+---
+
 # Authorization request — CF-WO-P1-006-R2 image-to-video execution
 
 **This is a written request for approval, NOT an executed call.

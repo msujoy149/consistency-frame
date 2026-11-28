@@ -46,13 +46,25 @@ required field (public URL or base64 data URI, ≤ 50 MB,
 ≥ 300×300 px, aspect 0.40–2.50); `prompt` ≤ 2500 chars;
 `duration` is a string enum "3"–"15"; `generate_audio`
 defaults true (native audio); `end_image_url` optional;
+`elements` is a list of KlingV3ComboElementInput — one
+element per character, in prompt-reference order
+(`frontal_image_url` required, `reference_image_urls` 1–3
+additional angles, at least one image per element; the
+prompt references them as `@Element1`, `@Element2`, ...;
+`video_url` only on one element per request — refused here,
+this production uses image elements only; `voice_id`
+unused — generation runs with `generate_audio` false);
 `negative_prompt` ≤ 2500; `cfg_scale` 0–1;
 `enable_safety_checker` defaults true. There is NO
-aspect-ratio or resolution field: the output follows the start
-image's aspect (a 9:16 keyframe yields a 9:16 clip) at up to
-1080p. The `elements` mechanism is refused by the contract —
-it would transmit extra reference images and bind voices, and
-no production has authorized it.
+aspect-ratio or resolution field: the output follows the
+start image's aspect (a 9:16 keyframe yields a 9:16 clip) at
+up to 1080p.
+
+`multi_prompt` is intentionally unused by design: the
+provider documents it, but this production builds one shot
+per generation with a single prompt (see
+`docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-corrections.md`
+§4).
 
 The queue lifecycle: submit POST to
 `https://queue.fal.run/<endpoint>`; the submit response carries
@@ -60,16 +72,33 @@ The queue lifecycle: submit POST to
 status endpoint returns IN_QUEUE / IN_PROGRESS / COMPLETED; a
 completed job's result is a second GET on `response_url`
 (`video: {url, content_type, file_size, file_name}`); cancel is
-PUT on `cancel_url`. Output URLs live on `*.fal.media` for at
-least 7 days. Server errors (HTTP 500+) are never charged; a
+PUT on `cancel_url`. Output URLs for this endpoint land on
+Google Cloud Storage under `storage.googleapis.com/falserverless/`
+(per the model page's own output example,
+`https://storage.googleapis.com/falserverless/example_outputs/kling-v3/pro-i2v/out.mp4`) —
+the fal CDN v3 origin (`v3b.fal.media`) is also permitted
+where actually used, and fal CDN files are kept at least 7
+days. Server errors (HTTP 500+) are never charged; a
 422 may be charged if GPU time was spent. A failed job reports
 COMPLETED at the status endpoint with the error in the result
 payload — a literal `FAILED` status value is not part of the
 documented API and the contract refuses it as malformed.
 
-Pricing (fal.ai list prices, read 2026-11-28): Kling 3.0 Pro
-1080p $0.168/s with audio, $0.112/s without. The R2 plan (8
-clips × 6 s, with audio) estimates $8.06.
+Pricing (fal.ai list prices, checked 2026-11-28:
+https://fal.ai/learn/tools/kling-3-0-pro-vs-sora-2-pro
+and
+https://fal.ai/learn/tools/seedance-2-0-vs-kling-3-0;
+the official API schema page lists no pricing): Kling 3.0 Pro
+1080p — without elements $0.112/s audio off, $0.168/s audio
+on, $0.196/s voice control; with elements $0.224/s audio off,
+$0.336/s audio on, $0.392/s voice control. The $0.112/s rate
+applies ONLY WITHOUT elements. The runtime prices per-shot by
+elements usage: a shot carrying an `elements` array is priced
+at the with-elements rate, a shot without elements at the
+without-elements rate. The preflight plan (8 clips × 6 s,
+audio off, with elements) estimates $10.75 (48 s × $0.224/s,
+$1.344 per 6 s shot). The R2 plan (8 clips × 6 s, with audio,
+without elements) estimated $8.06.
 
 ## Source image validation
 
@@ -152,6 +181,97 @@ context must carry the queue URLs from the submit response
 (`status_url`, `response_url`, `cancel_url`) — fal.ai has no
 poll template, and the adapter's async submit return carries
 them for exactly that reason.
+
+## Elements conditioning
+
+One element per recurring character, built from the approved
+identity binding (`schemas/character-identity.json`):
+`frontal_image_url` (the main frontal view) plus 1–3
+additional angle references (`reference_image_urls`). The
+contract (`validate_fal_video_elements`) requires every
+element to carry its frontal image and 1–3 references, and
+the prompt to reference exactly `@Element1`..`@ElementN`;
+`video_url` and `voice_id` are refused.
+
+Roles are separate by design:
+
+- The keyframe (`start_image_url`) is the COMPOSITION and
+  scene context for one shot. It is shot-specific and stays
+  separate from `elements`.
+- An elements entry is IDENTITY PRESERVATION for one
+  recurring character: the SAME approved references on every
+  shot containing that character.
+- A shot without that character gets NO elements entry —
+  never an unrelated reference.
+
+`validate_reference_asset` checks each reference before
+transmission (file exists, size within the provider limit,
+SHA-256 matches the asset manifest, decodes as a supported
+image with known dimensions, identity approved at project
+level, transmission permission recorded). A missing or
+pending reference BLOCKS the plan — never a silent
+substitution, never a skipped element. `build_execution_plan`
+takes optional `identity_bindings` (shot id → bindings);
+when supplied, every character shot must carry a valid
+approved binding, its reference asset ids join the
+authorization scope, and a prompt/elements mismatch blocks
+the plan at plan time. When no bindings are supplied the
+legacy path is unchanged.
+
+No identity preservation is claimed to be perfect: elements
+conditioning is a provider input, and whether the generated
+frames kept the identity is decided afterwards by human
+review of real frames
+(`record_character_drift_review`: per-frame pass/fail/
+not-checked checks; the overall verdict is derived, and
+there is no verdict at all until frames have actually been
+checked). No generated frames exist yet, so no review is
+completed.
+
+## GCS output policy
+
+For this provider/model contract only, the URL policy
+permits exactly these output origins:
+
+- `https://storage.googleapis.com/falserverless/...` —
+  path prefix `/falserverless/` only;
+- `https://v3b.fal.media/...` — the fal CDN v3 origin,
+  where actually used;
+- `https://fal.media/...` — the legacy fal CDN host, kept
+  for the existing mock-tested path.
+
+Any other GCS path or bucket, any other host, localhost,
+private IP, link-local, reserved, metadata, and disallowed
+destinations are rejected, and every redirect hop is
+validated against the same policy before it is followed.
+The fal CDN ACL does NOT protect a
+`storage.googleapis.com` output URL: for this endpoint the
+model page's own output example is GCS, so GCS outputs are
+public-by-link — that discrepancy (retention page says fal
+CDN, model page shows GCS) is recorded in
+`docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-corrections.md`
+§2. No authorization header is sent to a result-download
+URL. Downloads are validated as `video/mp4` (content type
+plus MP4 `ftyp` magic bytes); an HTML error page in place
+of media is refused with no partial file left behind. The
+original provider result URL is recorded in redacted form
+only (`scheme://host/path`, no query string).
+
+## Retention headers
+
+Every fal-video request carries `X-Fal-Store-IO: 0`
+(disables request-history payload storage) and
+`X-Fal-Object-Lifecycle-Preference` (JSON:
+`{"expiration_duration_seconds": 604800, "initial_acl":
+{"default": "forbid"}}` by default). Scope limits,
+recorded in the code and in the truth table
+(`fal_retention_truth_table`): the lifecycle/ACL header
+applies to fal CDN v3 outputs ONLY — it does NOT protect
+GCS outputs; `X-Fal-Store-IO: 0` does NOT equal ZDR; ZDR
+is UNCONFIRMED for this endpoint and is never claimed.
+The full truth table is in
+`docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-corrections.md`
+§3.
 
 ## Clip verification
 
@@ -270,7 +390,12 @@ generation count, and every transmitted asset. Otherwise the
 plan is BLOCKED with the exact reasons, plus the per-shot
 generation entries (idempotency key, composed prompt,
 duration, audio flag), the derived counts, the documented
-rate, and the estimated cost.
+rate, and the estimated cost. With `identity_bindings`
+supplied, a character shot also needs a valid approved
+binding (its generation entry carries the built `elements`
+array); a missing, pending, or prompt-mismatched binding
+blocks the plan. The plan records `zdr_status:
+UNCONFIRMED` — ZDR is never claimed.
 
 ## Execution
 
@@ -297,5 +422,8 @@ from a failed clip.
 - It never claims a real execution that did not happen. Tests
   use mock transports and a mock adapter, labelled mock.
 - It never performs OCR or claims an automated text check.
+- It never claims ZDR, and never claims identity preservation
+  is perfect — the drift review of real generated frames
+  decides that, and no such review is completed.
 - It never registers a character: Nadia (DEMO-CHAR-002) is
   project-local, and the R2 driver checks the isolation.

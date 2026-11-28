@@ -959,6 +959,242 @@ _FAL_VIDEO_MODELS = (
 _FAL_VIDEO_DURATIONS = tuple(str(n) for n in range(3, 16))
 _FAL_VIDEO_START_IMAGE_MAX_BYTES = 50 * 1024 * 1024
 
+# fal.ai platform headers attached to every fal-video request
+# (CF-WO-P1-006-R2-PREFLIGHT; fal.ai platform headers doc,
+# https://fal.ai/docs/documentation/model-apis/common-parameters,
+# and retention / file-access docs, updated 2026-11-17).
+#
+# - ``X-Fal-Store-IO: 0`` disables request-history payload
+#   storage (request payloads are otherwise stored 90 days by
+#   default). It does NOT equal ZDR: ZDR is NOT enabled by
+#   default, requires sales-team confirmation of availability /
+#   coverage, is NOT a single setting, and does NOT disable
+#   application logging or app-managed persistent storage.
+# - ``X-Fal-Object-Lifecycle-Preference`` is a JSON object
+#   ``{"expiration_duration_seconds": <seconds>, "initial_acl":
+#   {"default": "allow"|"forbid"|"hide", "rules": [...]}}``.
+#   SCOPE: it applies ONLY to files produced on the fal CDN v3
+#   (https://v3b.fal.media/...). It does NOT protect a
+#   storage.googleapis.com output URL: for this endpoint the
+#   model page's own output example is GCS
+#   (https://storage.googleapis.com/falserverless/
+#   example_outputs/kling-v3/pro-i2v/out.mp4), and GCS outputs
+#   are public-by-link.
+# - ZDR status for this endpoint: UNCONFIRMED. This runtime
+#   never claims ZDR.
+FAL_STORE_IO_HEADER = "X-Fal-Store-IO"
+FAL_STORE_IO_DISABLED = "0"
+FAL_LIFECYCLE_HEADER = "X-Fal-Object-Lifecycle-Preference"
+# 7 days, matching the documented fal CDN retention floor
+# (>= 7 days). Overridable per request via the context keys
+# ``lifecycle_expiration_seconds`` / ``lifecycle_initial_acl``.
+FAL_LIFECYCLE_DEFAULT_EXPIRATION_SECONDS = 604800
+FAL_LIFECYCLE_DEFAULT_INITIAL_ACL = {"default": "forbid"}
+FAL_LIFECYCLE_ACL_DECISIONS = ("allow", "forbid", "hide")
+FAL_ZDR_STATUS = "UNCONFIRMED"
+FAL_VIDEO_GCS_OUTPUT_EXAMPLE = (
+    "https://storage.googleapis.com/falserverless/"
+    "example_outputs/kling-v3/pro-i2v/out.mp4")
+
+
+def fal_retention_headers(context=None):
+    """The fal retention headers for one fal-video request.
+
+    Returns ``{header: value}``: ``X-Fal-Store-IO: 0`` plus the
+    JSON ``X-Fal-Object-Lifecycle-Preference`` (expiration +
+    initial ACL). The caller may override the expiration
+    (``lifecycle_expiration_seconds``, a positive integer) and
+    the ACL (``lifecycle_initial_acl``, a dict with a
+    ``default`` decision of allow/forbid/hide and optional
+    ``rules`` of ``{"user", "decision"}``). The header values
+    are validated here, never passed through unchecked.
+    """
+    context = context or {}
+    expiration = context.get("lifecycle_expiration_seconds")
+    if expiration is None:
+        expiration = FAL_LIFECYCLE_DEFAULT_EXPIRATION_SECONDS
+    expiration = _validate_int(
+        expiration, "lifecycle_expiration_seconds", minimum=1)
+    acl = context.get("lifecycle_initial_acl")
+    if acl is None:
+        acl = dict(FAL_LIFECYCLE_DEFAULT_INITIAL_ACL)
+    if not isinstance(acl, dict):
+        _fail("lifecycle_initial_acl must be an object with a "
+              "'default' decision")
+    default = acl.get("default")
+    if default not in FAL_LIFECYCLE_ACL_DECISIONS:
+        _fail("lifecycle_initial_acl.default must be one of "
+              "allow/forbid/hide")
+    for key in acl:
+        if key not in ("default", "rules"):
+            _fail(f"lifecycle_initial_acl carries unknown key "
+                  f"{key!r}")
+    rules = acl.get("rules")
+    if rules is not None:
+        if not isinstance(rules, list):
+            _fail("lifecycle_initial_acl.rules must be a list")
+        for rule in rules:
+            if not isinstance(rule, dict) \
+                    or not isinstance(rule.get("user"), str) \
+                    or not rule.get("user") \
+                    or rule.get("decision") \
+                    not in FAL_LIFECYCLE_ACL_DECISIONS:
+                _fail("lifecycle_initial_acl.rules entries must "
+                      "be objects with a non-empty 'user' and a "
+                      "'decision' of allow/forbid/hide")
+    preference = {"expiration_duration_seconds": expiration,
+                  "initial_acl": acl}
+    return {FAL_STORE_IO_HEADER: FAL_STORE_IO_DISABLED,
+            FAL_LIFECYCLE_HEADER: json.dumps(preference)}
+
+
+def fal_retention_truth_table():
+    """The retention / ACL / ZDR truth table for this endpoint.
+
+    One dict per item: ``item``, ``status`` and ``scope``. The
+    runtime never claims more than this table states.
+    """
+    return [
+        {"item": "X-Fal-Store-IO: 0",
+         "status": "sent on every fal-video request",
+         "scope": "disables request-history payload storage "
+                  "(otherwise stored 90 days by default); does "
+                  "NOT equal ZDR"},
+        {"item": "X-Fal-Object-Lifecycle-Preference "
+                 "(expiration + initial_acl)",
+         "status": "sent on every fal-video request "
+                  "(expiration 7 days, initial_acl default "
+                  "forbid, unless overridden per request)",
+         "scope": "fal CDN v3 outputs only "
+                  "(https://v3b.fal.media/...); does NOT "
+                  "protect storage.googleapis.com outputs"},
+        {"item": "fal CDN v3 file ACL",
+         "status": "controlled per request by initial_acl "
+                  "(default forbid: 403 to anyone but the owner)",
+         "scope": "fal CDN v3 URLs only; input files uploaded "
+                  "before the call keep the account default ACL "
+                  "and are NOT covered by the request header"},
+        {"item": "GCS output URL "
+                 "(storage.googleapis.com/falserverless/...)",
+         "status": "public-by-link; no ACL applies",
+         "scope": "the model page's own output example for this "
+                  "endpoint is GCS, so the fal CDN ACL does NOT "
+                  "protect it"},
+        {"item": "ZDR (zero data retention)",
+         "status": "UNCONFIRMED for this endpoint",
+         "scope": "not enabled by default; requires sales-team "
+                  "confirmation; is not a single setting; does "
+                  "not disable application logging or "
+                  "app-managed persistent storage"},
+    ]
+
+
+# KlingV3ComboElementInput fields (official OpenAPI schema for
+# this endpoint, read 2026-11-28). ``frontal_image_url`` is the
+# main frontal view; ``reference_image_urls`` are additional
+# angles (1-3 supported, at least one image required per
+# element). ``video_url`` is allowed by the provider on only
+# ONE element per request — this production uses image elements
+# only, so it is refused here. ``voice_id`` is not used:
+# generation runs with ``generate_audio`` false, so there is no
+# voice control to bind.
+_FAL_VIDEO_ELEMENT_FIELDS = (
+    "frontal_image_url", "reference_image_urls", "video_url",
+    "voice_id",
+)
+_FAL_VIDEO_ELEMENT_MAX_REFERENCES = 3
+_FAL_VIDEO_ELEMENT_MIN_REFERENCES = 1
+_ELEMENT_REF_RE = re.compile(r"@Element(\d+)")
+
+
+def validate_fal_video_elements(elements, prompt):
+    """Validate the ``elements`` array for one fal-video request.
+
+    Returns the exact payload list (one dict per element, in
+    prompt-reference order). Public: the I2V runtime reuses this
+    validator at plan time so a prompt/elements mismatch blocks
+    the plan instead of failing at submission. Every element needs its frontal
+    image URL and 1-3 additional reference image URLs; an
+    element with neither a frontal nor a reference image is
+    refused; ``video_url`` elements and ``voice_id`` are
+    refused. The prompt must reference exactly
+    ``@Element1``..``@ElementN`` — every element referenced
+    once, no reference beyond the array.
+    """
+    if not isinstance(elements, list) or not elements:
+        _fail("fal video elements must be a non-empty list: one "
+              "element per character, in prompt-reference order")
+    validated = []
+    for index, element in enumerate(elements, start=1):
+        if not isinstance(element, dict):
+            _fail(f"fal video element {index} must be an object")
+        for key in element:
+            if key not in _FAL_VIDEO_ELEMENT_FIELDS:
+                _fail(f"fal video element {index} carries unknown "
+                      f"field {key!r}")
+        if element.get("video_url") is not None:
+            _fail(f"fal video element {index} carries video_url: "
+                  "this production uses image elements only — "
+                  "the provider allows only one element with a "
+                  "video per request, and no video element is "
+                  "used here")
+        if element.get("voice_id") is not None:
+            _fail(f"fal video element {index} carries voice_id: "
+                  "voice control is not used — generation runs "
+                  "with generate_audio false, so no voice is "
+                  "bound to an element")
+        frontal = element.get("frontal_image_url")
+        references = element.get("reference_image_urls")
+        if (not isinstance(frontal, str) or not frontal) \
+                and not (isinstance(references, list)
+                         and references):
+            _fail(f"fal video element {index} has neither a "
+                  "frontal image nor a reference image: at least "
+                  "one image is required per element")
+        if not isinstance(frontal, str) or not frontal:
+            _fail(f"fal video element {index} needs "
+                  "frontal_image_url: the main frontal view of "
+                  "the character")
+        if not isinstance(references, list):
+            _fail(f"fal video element {index} needs "
+                  "reference_image_urls: a list of 1-3 additional "
+                  "angle references")
+        if len(references) < _FAL_VIDEO_ELEMENT_MIN_REFERENCES:
+            _fail(f"fal video element {index} needs at least "
+                  f"{_FAL_VIDEO_ELEMENT_MIN_REFERENCES} reference "
+                  "image URL: additional angles are required")
+        if len(references) > _FAL_VIDEO_ELEMENT_MAX_REFERENCES:
+            _fail(f"fal video element {index} carries "
+                  f"{len(references)} reference image URLs: at "
+                  "most "
+                  f"{_FAL_VIDEO_ELEMENT_MAX_REFERENCES} are "
+                  "supported")
+        for ref in references:
+            if not isinstance(ref, str) or not ref:
+                _fail(f"fal video element {index} carries an "
+                      "empty reference image URL")
+        validated.append(
+            {"frontal_image_url": frontal,
+             "reference_image_urls": list(references)})
+    referenced = {int(match) for match in
+                  _ELEMENT_REF_RE.findall(prompt or "")}
+    expected = set(range(1, len(validated) + 1))
+    if referenced != expected:
+        missing = sorted(expected - referenced)
+        extra = sorted(referenced - expected)
+        detail = []
+        if missing:
+            detail.append("unreferenced elements: " + ", ".join(
+                f"@Element{n}" for n in missing))
+        if extra:
+            detail.append("references beyond the elements array: "
+                          + ", ".join(f"@Element{n}" for n in extra))
+        _fail("fal video prompt element references do not match "
+              "the elements array (" + "; ".join(detail) + "): "
+              "the prompt must reference exactly @Element1.."
+              f"@Element{len(validated)}")
+    return validated
+
 
 class FalVideoContract(ProviderContract):
     """fal.ai Kling Video v3 Pro image-to-video over the queue API.
@@ -969,10 +1205,14 @@ class FalVideoContract(ProviderContract):
     status_url returns ``IN_QUEUE`` / ``IN_PROGRESS`` /
     ``COMPLETED``; GET response_url returns the result
     (``video: {url, content_type, file_size, file_name}``); PUT
-    cancel_url cancels. Output URLs live on fal.media and are
-    kept at least 7 days. Server errors (HTTP 500+) are never
-    charged; a 422 may be charged if GPU time was spent;
-    ``content_policy_violation`` is a non-retryable 422.
+    cancel_url cancels. Output URLs for this endpoint land on
+    Google Cloud Storage under ``/falserverless/`` (per the
+    model page's own output example) — the fal CDN origin
+    (``v3b.fal.media``) is also permitted where actually used;
+    fal CDN files are kept at least 7 days. Server errors
+    (HTTP 500+) are never charged; a 422 may be charged if GPU
+    time was spent; ``content_policy_violation`` is a
+    non-retryable 422.
 
     Request schema (fal.ai OpenAPI for this endpoint, read
     2026-11-28): ``start_image_url`` is the only required field
@@ -982,17 +1222,38 @@ class FalVideoContract(ProviderContract):
     "3"-"15" (default "5"); ``generate_audio`` defaults true
     (native audio; Chinese and English voice output — other
     languages are auto-translated to English); ``end_image_url``
-    optional; ``negative_prompt`` <=2500 chars (default "blur,
-    distort, and low quality"); ``cfg_scale`` 0-1 (default 0.5);
-    ``enable_safety_checker`` defaults true. There is NO
-    aspect_ratio or resolution field: the output follows the
-    start image's aspect (a 9:16 keyframe yields a 9:16 clip)
-    at up to 1080p. The ``elements`` (character/object)
-    mechanism is NOT used by this contract: it would transmit
-    extra reference images and bind voices, and no first
-    production has been authorized for it — a context carrying
-    ``elements`` is refused with a precise error instead of
-    being silently sent.
+    optional; ``elements`` is a list of KlingV3ComboElementInput
+    (``frontal_image_url`` required, ``reference_image_urls``
+    1-3 additional angles, at least one image per element; the
+    prompt references them as ``@Element1``, ``@Element2``, ...;
+    ``video_url`` only on one element per request — refused
+    here, this production uses image elements only;
+    ``voice_id`` unused — generation runs with
+    ``generate_audio`` false); ``negative_prompt`` <=2500 chars
+    (default "blur, distort, and low quality"); ``cfg_scale``
+    0-1 (default 0.5); ``enable_safety_checker`` defaults
+    true. There is NO aspect-ratio or resolution field: the
+    output follows the start image's aspect (a 9:16 keyframe
+    yields a 9:16 clip) at up to 1080p.
+
+    ``multi_prompt`` is a DESIGN RESTRICTION, not a provider
+    gap: the provider documents it, but this production builds
+    one shot per generation with a single prompt, so
+    ``multi_prompt`` is intentionally unused and a context
+    carrying it is refused with that reason.
+
+    Retention headers (every request): ``X-Fal-Store-IO: 0``
+    and ``X-Fal-Object-Lifecycle-Preference`` — see
+    :func:`fal_retention_headers` and
+    :func:`fal_retention_truth_table`. ZDR is UNCONFIRMED for
+    this endpoint and is never claimed.
+
+    Output URLs for this endpoint land on Google Cloud Storage
+    (``https://storage.googleapis.com/falserverless/...``, per
+    the model page's own output example), NOT on the fal CDN —
+    so the fal CDN ACL does not protect them and they are
+    public-by-link. The URL policy permits that one GCS path
+    prefix for this provider/model contract only.
     """
 
     provider_id = "provider-fal-video"
@@ -1007,14 +1268,15 @@ class FalVideoContract(ProviderContract):
             _fail("fal video prompt must be at most 2500 "
                   "characters")
         context = context or {}
-        if context.get("elements") is not None:
-            _fail("fal video contract does not support elements: "
-                  "the character/object element mechanism would "
-                  "transmit extra reference images and is not "
-                  "authorized for this production")
+        elements = context.get("elements")
+        if elements is not None:
+            elements = validate_fal_video_elements(elements, prompt)
         if context.get("multi_prompt") is not None:
-            _fail("fal video contract does not support "
-                  "multi_prompt: one prompt per clip")
+            _fail("fal video contract does not use multi_prompt: "
+                  "this is an intentional design restriction — "
+                  "one shot is one generation with a single "
+                  "prompt, so multi_prompt is unused even though "
+                  "the provider documents the field")
         start_image_url = context.get("start_image_url")
         if not isinstance(start_image_url, str) \
                 or not start_image_url:
@@ -1051,10 +1313,18 @@ class FalVideoContract(ProviderContract):
         if checker is not None:
             body["enable_safety_checker"] = _validate_bool(
                 checker, "enable_safety_checker")
+        if elements is not None:
+            body["elements"] = elements
         return {"model": model, "body": body,
                 "content_type": "application/json",
                 "url_values": {"endpoint": model}, "query": {},
-                "headers": {}, "url": None, "context_updates": {}}
+                # Retention headers, every request (see the
+                # module constants above for scope): Store-IO 0
+                # disables request-history payload storage; the
+                # lifecycle preference sets fal CDN v3 retention
+                # + ACL. Neither is ZDR, and ZDR is UNCONFIRMED.
+                "headers": fal_retention_headers(context),
+                "url": None, "context_updates": {}}
 
     def parse_submit_response(self, data, status, context=None):
         request_id = data.get("request_id")
@@ -2059,6 +2329,13 @@ def get_contract(provider_id):
 __all__ = [
     "CONTRACT_AUDIT_DATE",
     "API_REVISION_GEMINI",
+    "FAL_STORE_IO_HEADER",
+    "FAL_LIFECYCLE_HEADER",
+    "FAL_ZDR_STATUS",
+    "FAL_VIDEO_GCS_OUTPUT_EXAMPLE",
+    "fal_retention_headers",
+    "fal_retention_truth_table",
+    "validate_fal_video_elements",
     "ProviderContract",
     "OpenAIImageContract",
     "GeminiImageContract",

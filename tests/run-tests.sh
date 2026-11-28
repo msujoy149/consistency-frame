@@ -177,6 +177,8 @@ run_one "CF-P1-006-QC-DELIVERY" python3 tests/test_p1006_delivery.py
 run_one "CF-P1-006-E2E" python3 tests/test_p1006_e2e.py
 run_one "CF-P1-006-R1-CHARACTER" python3 tests/test_p1006_r1_character.py
 run_one "CF-P1-006-R2-I2V" python3 tests/test_p1006_r2_image_to_video.py
+run_one "CF-P1-006-R2-PREFLIGHT" python3 tests/test_p1006_r2_preflight.py
+run_one "CF-P1-006-R2-PREFLIGHT-STORYBOARD" python3 tests/test_p1006_r2_preflight_storyboard.py
 
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check

@@ -152,6 +152,8 @@ def main(argv=None):
         os.path.join(project_dir, "assembly-config.json"))
     bible = load_json(
         os.path.join(project_dir, "character-bible.json"))
+    appearance_map = load_json(os.path.join(
+        project_dir, "character-appearance-map.json"))
     script_lines = parse_script_lines(
         os.path.join(project_dir, "script.md"))
 
@@ -297,10 +299,44 @@ def main(argv=None):
         # is a DRAFT, and every keyframe is pending — the plan is
         # BLOCKED. Nothing is submitted, nothing is substituted,
         # and no final MP4 is assembled.
+        # PREFLIGHT (CF-WO-P1-006-R2-PREFLIGHT): this round sets
+        # generate_audio=False for every shot — external narration
+        # is handled separately by the existing voice pipeline, so
+        # the provider must not generate unintended audio. Nadia
+        # (DEMO-CHAR-002) appears in every shot, so every shot
+        # uses elements and the plan cost uses the audio-off
+        # WITH-ELEMENTS rate ($0.224/s): 48 s x $0.224/s =
+        # $10.75, not the without-elements $0.112/s rate.
+        # The references below are pending (no files exist), but
+        # the shots are keyframe-pending so elements are never
+        # built in this driver path — only elements-presence
+        # drives the per-shot cost.
+        characters = appearance_map.get("characters") or []
+        nadia = characters[0] if characters else {}
+        ref_plan = nadia.get("reference_plan") or {}
+        frontal_id = (ref_plan.get("front") or {}).get(
+            "asset_id") or "ref-nadia-front"
+        angle_id = (ref_plan.get("three_quarter") or {}).get(
+            "asset_id") or "ref-nadia-three-quarter"
+        pending_status = ("pending-generation-after-"
+                          "script-approval")
+        identity_bindings = {}
+        for appearance in appearance_map.get("appearances") or []:
+            if not appearance.get("present"):
+                continue
+            identity_bindings[appearance.get("shot_id")] = [{
+                "character_id": appearance.get("character_id")
+                or nadia.get("character_id"),
+                "frontal": {"asset_id": frontal_id,
+                            "status": pending_status},
+                "additional": [{"asset_id": angle_id,
+                                "status": pending_status}],
+            }]
         plan = iv.build_execution_plan(
             {**project_config,
              "voice_lines": voice_lines},
-            shots, authorization=None)
+            shots, authorization=None, generate_audio=False,
+            identity_bindings=identity_bindings)
         counts = iv.derive_project_counts(
             project_config, shots, voice_lines)
         print(f"execution plan: {plan['status']}")
@@ -316,6 +352,7 @@ def main(argv=None):
             "provider_id": iv.PROVIDER_ID,
             "model": iv.MODEL_ID,
             "operation": iv.OPERATION,
+            "generate_audio": False,
             "plan_status": plan["status"],
             "blocked_reasons": plan["blocked_reasons"],
             "estimated_cost_usd": plan["estimated_cost_usd"],

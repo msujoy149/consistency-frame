@@ -955,6 +955,78 @@ step-by-step order for every video, in §7).
   `docs/implementation/CF-WO-P1-006-R2-authorization-request.md`.
   Suite `CF-P1-006-R2-I2V` (90 checks).
 
+## P1-006-R2-PREFLIGHT Final storyboard, character-reference conditioning, provider security & cost authorization preparation (2026-11-28)
+
+- **No paid call, no credential, no generation.** This round prepares
+  the generation plan only. No provider request was submitted, no
+  API key was read or used, no image/video/voice was generated, and
+  the real I2V capability remains NOT_TESTED. Two human gates stand
+  between this round and any generation: Gate A (story/visual plan)
+  and Gate B (paid generation authorization).
+- **Contract revalidated live (2026-11-28).** Kling V3 Pro I2V:
+  `start_image_url` required; `duration` enum "3"–"15"; `prompt`
+  XOR `multi_prompt`; `elements` list of character/object elements,
+  referenced in the prompt as `@Element1`, `@Element2`, …;
+  `generate_audio` default true; `shot_type` customize/intelligent;
+  `negative_prompt` default "blur, distort, and low quality";
+  `cfg_scale` default 0.5. The official output example is a Google
+  Cloud Storage URL (`storage.googleapis.com/falserverless/...`) —
+  not the fal CDN. `multi_prompt` is an intentional design
+  restriction (one shot = one generation), not a provider gap.
+- **Character references via `elements`.** Each element carries
+  `frontal_image_url` (required, main frontal view) plus
+  `reference_image_urls` (1–3 additional angles, at least one
+  required); `video_url` and `voice_id` are refused for this
+  production. The scene keyframe (`start_image_url`) stays
+  separate — it is composition/scene context; the element is
+  identity preservation, the same approved references on every
+  shot containing that character, none on a shot without her. A
+  missing or pending reference BLOCKS the plan; nothing is
+  silently substituted. No perfect identity preservation is
+  claimed; drift review is a human-review record for real frames.
+- **GCS output retrieval is provider-specific, not a global
+  allow.** For `provider-fal-video` + `fal-ai/kling-video/v3/pro/image-to-video`
+  only: `storage.googleapis.com` with path prefix `/falserverless/`
+  and the fal CDN v3 origin where actually used. Every other GCS
+  bucket/path, every other host, localhost/private/link-local/
+  reserved/metadata, HTTP downgrades, and unvalidated redirects
+  are rejected. No authorization header reaches a download URL.
+  Downloads are validated as `video/mp4` (content type + `ftyp`
+  magic); HTML error pages are refused. Result URLs are recorded
+  redacted (query stripped). Full record:
+  `docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-corrections.md`.
+- **Retention, truthfully.** `X-Fal-Store-IO: 0` disables
+  request-history payload storage (otherwise 90 days) — it is
+  NOT ZDR. `X-Fal-Object-Lifecycle-Preference` controls CDN
+  expiration + initial ACL, but applies to fal CDN v3 outputs
+  only — it does NOT protect a GCS output URL. GCS outputs are
+  public-by-link. ZDR is UNCONFIRMED for this endpoint (not
+  enabled by default; needs sales-team confirmation). The
+  generation operation is therefore BLOCKED until the owner
+  accepts public-by-link outputs in writing (Gate B).
+- **Storyboard unchanged by analysis, cost changed by audio.**
+  Line-by-line analysis of all 8 narration lines confirms the R2
+  breakdown already covers every story beat: 6 scenes, 8 shots,
+  8 keyframes, 8 clips, 48 s — no shot added or removed. One
+  continuity correction: shot s2 now shows Nadia carrying the
+  lit lantern, as line l2 says. Five candidate extra shots were
+  considered and rejected with written reasons. **Cost is now
+  audio-off with elements: 48 s × $0.224 = $10.75** (the R2 $8.06 audio-on
+  figure is superseded, and so is the earlier preflight $5.38
+  figure, which priced every shot at the without-elements
+  $0.112/s rate — the elements tier was missed); keyframes $0 billed; retry budget max
+  $10.75 (one retry per failed shot, no second retry without new
+  approval); worst case $21.50; taxes/fees UNCONFIRMED.
+- **Gates.** Gate A checklist (14 unchecked items, evidence paths,
+  nothing approved) and Gate B authorization sheet (audio off,
+  with elements, $10.75, GCS public-by-link acceptance in the decision box) are
+  separate documents; the R2 authorization request is marked
+  SUPERSEDED with its full original text kept. The runtime
+  requires explicit, project-specific, task-level authorization
+  before any submission; no approval is inferred from any earlier
+  work order. Suites `CF-P1-006-R2-PREFLIGHT` (99 checks) and
+  `CF-P1-006-R2-PREFLIGHT-STORYBOARD` (55 checks).
+
 ## Docs
 
 Full system documentation lives in `docs/`. The core systems are in

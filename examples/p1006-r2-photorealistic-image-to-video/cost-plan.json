@@ -1,0 +1,119 @@
+{
+  "project_id": "p1006-r2-photorealistic-image-to-video",
+  "work_order": "CF-WO-P1-006-R2-PREFLIGHT",
+  "provider": "fal.ai",
+  "provider_id": "provider-fal-video",
+  "model": "fal-ai/kling-video/v3/pro/image-to-video",
+  "endpoint": "POST https://queue.fal.run/fal-ai/kling-video/v3/pro/image-to-video",
+  "pricing": {
+    "audio_setting": false,
+    "formula": "per-shot cost = shot_duration_seconds x 0.224",
+    "rate_audio_off_usd_per_second": 0.224,
+    "rate_audio_off_without_elements_usd_per_second": 0.112,
+    "rate_audio_on_usd_per_second": 0.336,
+    "rate_audio_on_without_elements_usd_per_second": 0.168,
+    "rate_source": "fal.ai list prices, re-verified live 2026-11-28 from https://fal.ai/learn/tools/kling-3-0-pro-vs-sora-2-pro (comparison table: per-second price with elements $0.224 audio off, $0.336 audio on; base $0.112 audio off, $0.168 audio on, $0.196 voice control) and https://fal.ai/learn/tools/seedance-2-0-vs-kling-3-0 (image-to-video with elements $0.224/second audio off, $0.336/second audio on, $0.392/second voice control; text-to-video and image-to-video without elements $0.112/second audio off, $0.168/second audio on, $0.196/second voice control). The base $0.112/s rate applies ONLY WITHOUT elements. The official API schema page https://fal.ai/models/fal-ai/kling-video/v3/pro/image-to-video/api lists no pricing. This round uses audio OFF with elements: every shot carries the Nadia character element (@Element1).",
+    "rate_voice_control_with_elements_usd_per_second": 0.392,
+    "rate_voice_control_without_elements_usd_per_second": 0.196,
+    "uses_elements": true
+  },
+  "shots": [
+    {
+      "audio": false,
+      "duration_seconds": 6,
+      "estimated_cost_usd": 1.344,
+      "rate_usd_per_second": 0.224,
+      "scene_id": "SC1",
+      "shot_id": "s1",
+      "uses_elements": true
+    },
+    {
+      "audio": false,
+      "duration_seconds": 6,
+      "estimated_cost_usd": 1.344,
+      "rate_usd_per_second": 0.224,
+      "scene_id": "SC2",
+      "shot_id": "s2",
+      "uses_elements": true
+    },
+    {
+      "audio": false,
+      "duration_seconds": 6,
+      "estimated_cost_usd": 1.344,
+      "rate_usd_per_second": 0.224,
+      "scene_id": "SC3",
+      "shot_id": "s3a",
+      "uses_elements": true
+    },
+    {
+      "audio": false,
+      "duration_seconds": 6,
+      "estimated_cost_usd": 1.344,
+      "rate_usd_per_second": 0.224,
+      "scene_id": "SC3",
+      "shot_id": "s3b",
+      "uses_elements": true
+    },
+    {
+      "audio": false,
+      "duration_seconds": 6,
+      "estimated_cost_usd": 1.344,
+      "rate_usd_per_second": 0.224,
+      "scene_id": "SC4",
+      "shot_id": "s4",
+      "uses_elements": true
+    },
+    {
+      "audio": false,
+      "duration_seconds": 6,
+      "estimated_cost_usd": 1.344,
+      "rate_usd_per_second": 0.224,
+      "scene_id": "SC5",
+      "shot_id": "s5",
+      "uses_elements": true
+    },
+    {
+      "audio": false,
+      "duration_seconds": 6,
+      "estimated_cost_usd": 1.344,
+      "rate_usd_per_second": 0.224,
+      "scene_id": "SC6",
+      "shot_id": "s6a",
+      "uses_elements": true
+    },
+    {
+      "audio": false,
+      "duration_seconds": 6,
+      "estimated_cost_usd": 1.344,
+      "rate_usd_per_second": 0.224,
+      "scene_id": "SC6",
+      "shot_id": "s6b",
+      "uses_elements": true
+    }
+  ],
+  "totals": {
+    "shot_count": 8,
+    "total_generated_seconds": 48,
+    "total_generation_cost_usd_exact": 10.752,
+    "total_generation_cost_usd_rounded": 10.75
+  },
+  "keyframe_generation_cost": {
+    "basis": "Keyframes and character references are generated with the platform built-in image generation, which is not a billed provider charge in this environment. Recorded as $0 billed / not-applicable rather than an invented number. No keyframe or reference has been generated yet: all are pending script approval.",
+    "cost_usd_billed": 0,
+    "keyframes": 8,
+    "reference_images": 5
+  },
+  "retry_budget": {
+    "max_retry_budget_usd": 10.752,
+    "max_retry_budget_usd_rounded": 10.75,
+    "rule": "One retry per failed shot, at that shot's own cost ($1.344 per 6 s shot). A retry is a new paid generation; a failed generation may still be charged if GPU time was spent (provider-documented 422 behaviour).",
+    "worst_case_note": "Worst case = every shot fails once and succeeds on its one retry: $10.752 + $10.752 = $21.504, rounded $21.50. No second retry is budgeted without a new approval.",
+    "worst_case_total_usd": 21.5
+  },
+  "other_charges": {
+    "taxes_fees": "UNCONFIRMED — no tax or fee is stated on the pricing page read.",
+    "upload_storage": "No upload or storage charge is stated for this endpoint's pricing; outputs are downloaded to the delivery folder. UNCONFIRMED as a separate line item — none is listed on the pricing page read."
+  },
+  "supersedes": "The R2 draft estimate of 8 clips x 6 s x $0.168/s = $8.06 (audio ON, without elements) and the preflight estimate of 8 clips x 6 s x $0.112/s = $5.38 (audio OFF, without elements) are BOTH SUPERSEDED by this plan: same 8 clips and 48 s, audio OFF, WITH elements, $10.75. The counts are unchanged; the rate changed. Reason: the elements pricing tier was missed — fal.ai charges a separate, higher tier for image-to-video with elements ($0.224/s audio off), and every shot in this production uses the Nadia character element (DEMO-CHAR-002, all 8 shots per character-appearance-map.json).",
+  "disclaimer": "Estimate only, not a guaranteed final bill. The provider charges at generation time from prepaid credits; a failed generation after GPU time may still cost up to its clip price, and server errors (HTTP 500+) are never charged."
+}

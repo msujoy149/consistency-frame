@@ -21,6 +21,17 @@ path lives:
   what came back),
 * generated-clip verification (file type, size, duration,
   resolution, codec, video stream present),
+* elements conditioning (one approved identity binding per
+  recurring character — frontal + 1-3 angle references, the
+  same references on every shot with that character, none on
+  a shot without it; a missing or pending reference BLOCKS
+  the plan), with the provider-specific GCS output policy
+  (``storage.googleapis.com/falserverless/`` only, plus the
+  fal CDN v3 origin where actually used) and the retention
+  headers (``X-Fal-Store-IO: 0`` + the fal CDN v3
+  lifecycle/ACL header; ZDR UNCONFIRMED, never claimed),
+* post-generation character-drift review records (human
+  review of real generated frames; no fake verdict),
 * motion validation by frame sampling (static repeated frames
   and camera-only movement are REJECTED — a zoom or pan over a
   still is not image-to-video),
@@ -55,22 +66,72 @@ import time
 from datetime import datetime, timezone
 
 from runtime import production_assets as pa
-from runtime.provider_contracts import get_contract
+from runtime.provider_contracts import (
+    FAL_ZDR_STATUS, fal_retention_truth_table, get_contract,
+    validate_fal_video_elements)
 
 PROVIDER_ID = "provider-fal-video"
 MODEL_ID = "fal-ai/kling-video/v3/pro/image-to-video"
 OPERATION = "image-to-video"
 
-# fal.ai Kling 3.0 Pro 1080p list prices, read 2026-11-28
-# (https://fal.ai/learn/devs/kling-4-0-vs-kling-3-0). Used ONLY
-# for the cost estimate in the execution plan and the written
+# ZDR status for this endpoint (fal.ai: ZDR is NOT enabled by
+# default, requires sales-team confirmation, is NOT a single
+# setting). This runtime never claims ZDR; see
+# runtime.provider_contracts.fal_retention_truth_table().
+ZDR_STATUS = FAL_ZDR_STATUS
+
+# fal.ai Kling 3.0 Pro 1080p list prices, checked 2026-11-28
+# (fal.ai learn pages — see RATE_SOURCE). Used ONLY for the
+# cost estimate in the execution plan and the written
 # authorization request — never billed, never charged here.
+# Image-to-video WITH elements is a separate, HIGHER tier
+# than without elements: $0.224/s audio off with elements,
+# against $0.112/s audio off without elements. Voice control
+# is recorded in the table but has no code path using it in
+# this production (generate_audio is false, no voice control).
 FAL_KLING_3_PRO_USD_PER_SECOND = {
-    "with_audio": 0.168,
-    "without_audio": 0.112,
+    # Without elements: audio off / audio on / voice control.
+    "without_elements": {
+        "audio_off": 0.112,
+        "audio_on": 0.168,
+        "voice_control": 0.196,
+    },
+    # With elements: audio off / audio on / voice control.
+    "with_elements": {
+        "audio_off": 0.224,
+        "audio_on": 0.336,
+        "voice_control": 0.392,
+    },
 }
-RATE_SOURCE = ("fal.ai list prices, read 2026-11-28 "
-               "(https://fal.ai/learn/devs/kling-4-0-vs-kling-3-0)")
+RATE_SOURCE = (
+    "fal.ai list prices, checked 2026-11-28: "
+    "https://fal.ai/learn/tools/kling-3-0-pro-vs-sora-2-pro "
+    "(comparison table: with elements $0.224/s audio off, "
+    "$0.336/s audio on; base without elements $0.112/s audio "
+    "off, $0.168/s audio on, $0.196/s with voice control) and "
+    "https://fal.ai/learn/tools/seedance-2-0-vs-kling-3-0 "
+    "(image-to-video with elements $0.224/$0.336/$0.392 per "
+    "second; without elements $0.112/$0.168/$0.196). The "
+    "official API schema page (https://fal.ai/models/fal-ai/"
+    "kling-video/v3/pro/image-to-video/api) lists no pricing.")
+
+
+def kling_3_pro_rate_usd_per_second(*, generate_audio,
+                                    with_elements,
+                                    voice_control=False):
+    """Kling 3.0 Pro per-second rate for one shot.
+
+    ``with_elements`` selects the with-elements tier
+    ($0.224/s audio off, $0.336/s audio on, $0.392/s voice
+    control) over the base tier ($0.112/s audio off, $0.168/s
+    audio on, $0.196/s voice control). Voice control is
+    recorded here but has no caller in this production.
+    """
+    tier = FAL_KLING_3_PRO_USD_PER_SECOND[
+        "with_elements" if with_elements else "without_elements"]
+    if voice_control:
+        return tier["voice_control"]
+    return tier["audio_on" if generate_audio else "audio_off"]
 
 # The six on-screen-text flags. Every one must be exactly False.
 TEXT_OVERLAY_FLAGS = (
@@ -316,6 +377,247 @@ def keyframe_data_uri(validated_image) -> str:
 
 
 # ------------------------------------------------------------------
+# Identity references and elements conditioning
+# (CF-WO-P1-006-R2-PREFLIGHT)
+#
+# Roles, kept separate by design:
+# - the keyframe (start_image_url) is the COMPOSITION / scene
+#   context for one shot: where the character is, what the
+#   scene looks like, the framing.
+# - an elements entry is IDENTITY PRESERVATION for one
+#   recurring character: the approved frontal view plus 1-3
+#   additional angle references, the same references on every
+#   shot containing that character. The prompt references them
+#   as @Element1, @Element2, ... in prompt-reference order.
+# A shot without the recurring character gets NO elements
+# entry — never an unrelated reference. A missing or pending
+# reference BLOCKS the plan; a different reference is never
+# silently substituted. No identity preservation is claimed to
+# be perfect: elements conditioning is a provider input, and
+# whether the generated frames kept the identity is decided
+# afterwards by human review (see record_character_drift_review).
+# ------------------------------------------------------------------
+
+# Reference-asset status values. Only "approved" may be
+# transmitted; "pending-generation-after-script-approval" (and
+# any other value) blocks the plan.
+REFERENCE_STATUS_APPROVED = "approved"
+REFERENCE_STATUS_PENDING = "pending-generation-after-script-approval"
+ELEMENT_MIN_REFERENCES = 1
+ELEMENT_MAX_REFERENCES = 3
+
+
+def _reference_file_path(record, workspace_root):
+    """Resolve a reference record's path (workspace-relative or
+    absolute) to a real filesystem path, or None."""
+    path = (record or {}).get("path")
+    if not isinstance(path, str) or not path:
+        return None
+    if os.path.isabs(path):
+        return path
+    if workspace_root:
+        return os.path.join(workspace_root, path)
+    return path
+
+
+def validate_reference_asset(record, *, workspace_root=None) -> list:
+    """Reference-asset validation errors (empty list = valid).
+
+    The record must name an asset id, point at a file that
+    exists, fit the provider's image size limit, match its
+    recorded SHA-256, decode as a supported image at or above
+    the provider minimum with known dimensions, be approved at
+    project level, and carry a recorded transmission permission.
+    A missing file, a hash mismatch, an undecodable file, a
+    pending approval, or a missing transmission permission is
+    an error — never a silent substitution.
+    """
+    errors: list[str] = []
+    if not isinstance(record, dict):
+        return ["identity reference must be an object"]
+    asset_id = record.get("asset_id")
+    if not isinstance(asset_id, str) or not asset_id:
+        errors.append("identity reference has no asset_id")
+    path = _reference_file_path(record, workspace_root)
+    if path is None:
+        errors.append(
+            f"identity reference {asset_id!r} has no path")
+        return errors
+    if not os.path.isfile(path):
+        errors.append(
+            f"identity reference {asset_id!r} file {path!r} "
+            "does not exist: a missing reference blocks "
+            "submission — it is never silently substituted")
+        return errors
+    expected_sha256 = record.get("sha256")
+    try:
+        info = validate_source_image(
+            path, expected_sha256=expected_sha256)
+    except ImageToVideoError as exc:
+        errors.append(
+            f"identity reference {asset_id!r}: {exc}")
+        return errors
+    mime = record.get("mime")
+    if mime is not None and mime != info["mime"]:
+        errors.append(
+            f"identity reference {asset_id!r} mime "
+            f"{mime!r} does not match the decoded image mime "
+            f"{info['mime']!r}")
+    if record.get("status") != REFERENCE_STATUS_APPROVED:
+        errors.append(
+            f"identity reference {asset_id!r} is not approved "
+            f"(status {record.get('status')!r}): a pending or "
+            "missing reference is a BLOCKED plan, not a "
+            "skipped element")
+    if record.get("transmission_permitted") is not True:
+        errors.append(
+            f"identity reference {asset_id!r} has no recorded "
+            "transmission permission: transmission permission "
+            "must be recorded before the reference is sent")
+    return errors
+
+
+def validate_identity_binding(binding, *, workspace_root=None) -> list:
+    """Identity-binding errors (empty list = valid).
+
+    One binding is one character's elements entry: a frontal
+    reference plus 1-3 additional angle references, all
+    validated by :func:`validate_reference_asset`. A binding
+    carrying a ``video_url`` or a ``voice_id`` is an error:
+    this production uses image elements only, and no voice is
+    bound to an element (generation runs with generate_audio
+    false).
+    """
+    errors: list[str] = []
+    if not isinstance(binding, dict):
+        return ["identity binding must be an object"]
+    character_id = binding.get("character_id")
+    if not isinstance(character_id, str) or not character_id:
+        errors.append("identity binding has no character_id")
+    if binding.get("video_url") is not None:
+        errors.append(
+            "identity binding carries video_url: this "
+            "production uses image elements only")
+    if binding.get("voice_id") is not None:
+        errors.append(
+            "identity binding carries voice_id: no voice is "
+            "bound to an element (generate_audio is false)")
+    frontal = binding.get("frontal")
+    if frontal is None:
+        errors.append(
+            "identity binding has no frontal reference: the "
+            "main frontal view is required")
+    else:
+        errors += [f"frontal: {err}" for err in
+                   validate_reference_asset(
+                       frontal, workspace_root=workspace_root)]
+    additional = binding.get("additional")
+    if not isinstance(additional, list):
+        errors.append(
+            "identity binding needs 'additional': a list of "
+            "1-3 additional angle references")
+    else:
+        if len(additional) < ELEMENT_MIN_REFERENCES:
+            errors.append(
+                "identity binding needs at least "
+                f"{ELEMENT_MIN_REFERENCES} additional reference "
+                "image: additional angles are required")
+        if len(additional) > ELEMENT_MAX_REFERENCES:
+            errors.append(
+                "identity binding carries "
+                f"{len(additional)} additional reference images: "
+                f"at most {ELEMENT_MAX_REFERENCES} are supported")
+        for position, ref in enumerate(additional, start=1):
+            errors += [f"additional[{position}]: {err}" for err in
+                       validate_reference_asset(
+                           ref, workspace_root=workspace_root)]
+    return errors
+
+
+def build_elements_payload(bindings, *, workspace_root=None) -> list:
+    """Build the provider ``elements`` array from identity bindings.
+
+    ``bindings`` is a list of identity bindings, one per
+    character, in prompt-reference order (element 1 is
+    ``@Element1``). Every binding is validated first; an
+    invalid, pending or missing reference raises instead of
+    producing a partial array. Each element carries the frontal
+    image URL and the 1-3 additional reference image URLs as
+    base64 data URIs built from the validated local files (the
+    same mechanism as the keyframe data URI). The keyframe /
+    start image is NOT part of this array: it stays separate as
+    ``start_image_url``.
+    """
+    if not isinstance(bindings, list) or not bindings:
+        _fail("elements payload needs a non-empty list of "
+              "identity bindings: one per character, in "
+              "prompt-reference order",
+              code="validation-failed")
+    payload = []
+    for binding in bindings:
+        errors = validate_identity_binding(
+            binding, workspace_root=workspace_root)
+        if errors:
+            raise ImageToVideoError(
+                ["identity binding invalid:"] + errors,
+                code="validation-failed")
+        frontal = validate_source_image(
+            _reference_file_path(binding["frontal"], workspace_root),
+            expected_sha256=binding["frontal"].get("sha256"))
+        frontal_url = keyframe_data_uri(frontal)
+        reference_urls = []
+        for ref in binding["additional"]:
+            info = validate_source_image(
+                _reference_file_path(ref, workspace_root),
+                expected_sha256=ref.get("sha256"))
+            reference_urls.append(keyframe_data_uri(info))
+        payload.append(
+            {"frontal_image_url": frontal_url,
+             "reference_image_urls": reference_urls})
+    return payload
+
+
+def build_shot_elements(shot, identity_bindings, *,
+                        workspace_root=None):
+    """The ``elements`` array for one shot, or None.
+
+    ``identity_bindings`` maps shot_id to a list of identity
+    bindings for that shot (or None when the production carries
+    no identity bindings at all — the legacy path, unchanged).
+    A shot with no ``character_id`` gets NO elements entry. A
+    shot with a character but no binding for it raises: a
+    missing reference blocks submission, it is never silently
+    substituted or skipped.
+    """
+    if identity_bindings is None:
+        return None
+    if not isinstance(shot, dict):
+        _fail("shot elements need a shot object",
+              code="validation-failed")
+    if not shot.get("character_id"):
+        return None
+    shot_id = shot.get("shot_id") or "unknown-shot"
+    bindings = identity_bindings.get(shot_id)
+    if bindings is None:
+        _fail(f"shot {shot_id}: character "
+              f"{shot.get('character_id')!r} has no identity "
+              "binding — a missing character reference blocks "
+              "submission",
+              code="validation-failed")
+    return build_elements_payload(
+        bindings, workspace_root=workspace_root)
+
+
+def retention_truth_table() -> list:
+    """The retention / ACL / ZDR truth table for this endpoint.
+
+    Delegates to the provider contract (the single source of
+    truth); see ``runtime.provider_contracts``.
+    """
+    return fal_retention_truth_table()
+
+
+# ------------------------------------------------------------------
 # Authorization gate
 # ------------------------------------------------------------------
 
@@ -481,12 +783,19 @@ class SubmissionLedger:
 def build_i2v_request(provider_id, model, *, prompt,
                       start_image_url, duration_seconds=6,
                       generate_audio=True, negative_prompt=None,
-                      cfg_scale=None) -> dict:
+                      cfg_scale=None, elements=None,
+                      lifecycle_expiration_seconds=None,
+                      lifecycle_initial_acl=None) -> dict:
     """Build the provider I2V request via the provider contract.
 
     Preparation only: no submission, no charge. The packet
     carries the motion prompt as the canonical instruction; the
     contract validates every field for its own provider.
+    ``elements`` (when given) is the validated provider
+    ``elements`` array — one element per character, built by
+    :func:`build_elements_payload`; the start image stays
+    separate as ``start_image_url``. Retention overrides are
+    passed through to the contract's retention headers.
     """
     contract = get_contract(provider_id)
     context = {"start_image_url": start_image_url,
@@ -496,6 +805,13 @@ def build_i2v_request(provider_id, model, *, prompt,
         context["negative_prompt"] = negative_prompt
     if cfg_scale is not None:
         context["cfg_scale"] = cfg_scale
+    if elements is not None:
+        context["elements"] = elements
+    if lifecycle_expiration_seconds is not None:
+        context["lifecycle_expiration_seconds"] = \
+            lifecycle_expiration_seconds
+    if lifecycle_initial_acl is not None:
+        context["lifecycle_initial_acl"] = lifecycle_initial_acl
     return contract.build_request(
         {"canonical_instruction": prompt}, context, model)
 
@@ -971,6 +1287,94 @@ def validate_human_text_reviews(reviews, clip_paths) -> list:
 
 
 # ------------------------------------------------------------------
+# Post-generation character-drift review
+# (CF-WO-P1-006-R2-PREFLIGHT)
+#
+# Elements conditioning is a provider input, not a guarantee:
+# whether the generated frames actually kept the character's
+# identity is decided AFTER generation, by a human reviewer
+# looking at real frames. This record type carries those frame
+# checks. It never carries a fake verdict: with no frame checks
+# the overall verdict is None and the status is "incomplete";
+# with checks it is "consistent" only when every check passed,
+# "drift-found" when any check failed. No generated frames
+# exist yet, so no review is completed.
+# ------------------------------------------------------------------
+
+DRIFT_REVIEW_VERDICTS = ("pass", "fail", "not-checked")
+
+
+def record_character_drift_review(shot_id, clip_path, *,
+                                  reviewer, frame_checks) -> dict:
+    """One character-drift review record for a generated clip.
+
+    ``frame_checks`` is a list of ``{"frame_time_seconds",
+    "attribute", "verdict", "notes"}`` — one entry per frame
+    the reviewer actually looked at. ``verdict`` is "pass",
+    "fail" or "not-checked". The overall verdict is derived,
+    never asserted: None ("incomplete") when there are no
+    checks or any check is "not-checked", "drift-found" when
+    any check failed, "consistent" only when every check
+    passed.
+    """
+    if not isinstance(shot_id, str) or not shot_id:
+        _fail("character drift review needs a shot_id",
+              code="validation-failed")
+    if not isinstance(clip_path, str) or not clip_path:
+        _fail("character drift review needs a clip path",
+              code="validation-failed")
+    if not isinstance(reviewer, str) or not reviewer:
+        _fail("character drift review needs a reviewer name",
+              code="validation-failed")
+    if not isinstance(frame_checks, list):
+        _fail("character drift review needs a list of frame "
+              "checks",
+              code="validation-failed")
+    checks = []
+    for check_entry in frame_checks:
+        if not isinstance(check_entry, dict):
+            _fail("character drift frame check must be an object",
+                  code="validation-failed")
+        seconds = check_entry.get("frame_time_seconds")
+        if isinstance(seconds, bool) \
+                or not isinstance(seconds, (int, float)) \
+                or seconds < 0:
+            _fail("character drift frame check needs a "
+                  "non-negative frame_time_seconds",
+                  code="validation-failed")
+        attribute = check_entry.get("attribute")
+        if not isinstance(attribute, str) or not attribute:
+            _fail("character drift frame check needs an "
+                  "attribute name",
+                  code="validation-failed")
+        verdict = check_entry.get("verdict")
+        if verdict not in DRIFT_REVIEW_VERDICTS:
+            _fail("character drift frame check verdict must be "
+                  "one of pass/fail/not-checked",
+                  code="validation-failed")
+        checks.append(
+            {"frame_time_seconds": seconds, "attribute": attribute,
+             "verdict": verdict,
+             "notes": check_entry.get("notes") or ""})
+    if not checks or any(c["verdict"] == "not-checked"
+                         for c in checks):
+        overall = None
+        status = "incomplete"
+    elif any(c["verdict"] == "fail" for c in checks):
+        overall = "drift-found"
+        status = "recorded"
+    else:
+        overall = "consistent"
+        status = "recorded"
+    return {"shot_id": shot_id, "clip": clip_path,
+            "reviewer": reviewer, "frame_checks": checks,
+            "overall_verdict": overall, "status": status,
+            "reviewed_at": datetime.now(timezone.utc).strftime(
+                "%Y-%m-%dT%H:%M:%SZ"),
+            "method": "human-visual-review of generated frames"}
+
+
+# ------------------------------------------------------------------
 # Script-derived counts (never fixed numbers)
 # ------------------------------------------------------------------
 
@@ -1013,7 +1417,9 @@ def derive_project_counts(project, shots, voice_lines) -> dict:
 
 def build_execution_plan(project, shots, *, authorization=None,
                          duration_seconds=6,
-                         generate_audio=True) -> dict:
+                         generate_audio=None,
+                         identity_bindings=None,
+                         workspace_root=None) -> dict:
     """Build the I2V execution plan for a project.
 
     The plan is READY only when the script is approved, every
@@ -1022,8 +1428,47 @@ def build_execution_plan(project, shots, *, authorization=None,
     operation, generation count and every transmitted asset.
     Otherwise the plan is BLOCKED with the exact reasons — and
     nothing is submitted, degraded, or substituted.
+
+    ``identity_bindings`` (optional) maps shot_id to a list of
+    identity bindings for that shot. When it is given, every
+    shot containing the recurring character must carry a valid
+    approved binding (its reference asset ids join the
+    authorization scope), and the generation entries carry the
+    built ``elements`` array; a shot without the character
+    carries no elements entry. A missing or pending reference
+    BLOCKS the plan. When it is None (legacy path) no elements
+    are built and the plan is unchanged.
+
+    ``generate_audio``: when None (the default) the plan takes
+    the project's own audio setting from
+    ``project["i2v"]["generate_audio"]`` (default True when the
+    key is absent or not a boolean). An explicit argument always
+    wins over the project setting. The resolved value drives
+    both the per-shot ``generate_audio`` flag and the pricing
+    rate. Pricing is per shot, by elements usage: a shot that
+    uses elements (a character identity binding) is priced at
+    the with-elements tier (audio off $0.224/s, audio on
+    $0.336/s, voice control $0.392/s); a shot without elements
+    is priced at the base tier (audio off $0.112/s, audio on
+    $0.168/s, voice control $0.196/s). Every generation entry
+    carries ``uses_elements``, ``rate_usd_per_second`` and
+    ``estimated_cost_usd``; the plan total is the sum of the
+    per-shot costs, rounded to 2 decimals. The plan-level
+    ``rate_usd_per_second`` is the single rate only when all
+    shots share one rate, otherwise None.
     """
     project = project or {}
+    if generate_audio is None:
+        # Take the project's own audio setting (project["i2v"]
+        # ["generate_audio"]); default True when the key is absent
+        # or not a boolean. An explicit argument always wins.
+        # (Preflight: the R2 project sets it false; the earlier
+        # default-True pricing ignored the project setting and
+        # priced the plan audio-on.)
+        _i2v = project.get("i2v") or {}
+        generate_audio = _i2v.get("generate_audio", True)
+        if not isinstance(generate_audio, bool):
+            generate_audio = True
     shots = shots or []
     project_id = project.get("project_id") or "unknown-project"
     counts = derive_project_counts(
@@ -1046,6 +1491,26 @@ def build_execution_plan(project, shots, *, authorization=None,
             blocked.append("shot list carries a non-object shot")
             continue
         shot_id = shot.get("shot_id") or "unknown-shot"
+        # Elements-aware pricing, computed here at the top of
+        # the loop — before any continue — so every generation
+        # entry, including blocked ones, carries its rate and
+        # cost. A shot uses elements iff the plan carries
+        # identity bindings AND this shot names a character AND
+        # that shot has a non-empty binding list. Per-shot cost
+        # is rounded to 3 decimals so the plan total (the sum,
+        # rounded to 2) matches the exact arithmetic.
+        shot_bindings = (identity_bindings.get(shot_id)
+                         if identity_bindings is not None
+                         else None)
+        uses_elements = (
+            identity_bindings is not None
+            and bool(shot.get("character_id"))
+            and isinstance(shot_bindings, list)
+            and len(shot_bindings) > 0)
+        shot_rate = kling_3_pro_rate_usd_per_second(
+            generate_audio=bool(generate_audio),
+            with_elements=uses_elements)
+        shot_cost = round(float(duration_seconds) * shot_rate, 3)
         for ref_id in shot.get("reference_ids") or []:
             scope_asset_ids.add(str(ref_id))
         visual = shot.get("visual") or {}
@@ -1058,7 +1523,10 @@ def build_execution_plan(project, shots, *, authorization=None,
                 "after script approval")
             generations.append(
                 {"shot_id": shot_id, "status": "blocked",
-                 "reason": "keyframe pending"})
+                 "reason": "keyframe pending",
+                 "uses_elements": uses_elements,
+                 "rate_usd_per_second": shot_rate,
+                 "estimated_cost_usd": shot_cost})
             continue
         motion_errors = validate_motion_prompt(
             shot.get("motion_prompt"))
@@ -1068,29 +1536,85 @@ def build_execution_plan(project, shots, *, authorization=None,
                 + "; ".join(motion_errors))
             generations.append(
                 {"shot_id": shot_id, "status": "blocked",
-                 "reason": "motion prompt invalid"})
+                 "reason": "motion prompt invalid",
+                 "uses_elements": uses_elements,
+                 "rate_usd_per_second": shot_rate,
+                 "estimated_cost_usd": shot_cost})
             continue
         prompt = build_i2v_motion_prompt(shot["motion_prompt"])
+        entry = {"shot_id": shot_id, "status": "ready",
+                 "keyframe_file": keyframe["file"],
+                 "keyframe_sha256": keyframe["sha256"],
+                 "prompt": prompt,
+                 "duration_seconds": duration_seconds,
+                 "generate_audio": bool(generate_audio),
+                 "uses_elements": uses_elements,
+                 "rate_usd_per_second": shot_rate,
+                 "estimated_cost_usd": shot_cost}
+        if identity_bindings is not None:
+            try:
+                elements = build_shot_elements(
+                    shot, identity_bindings,
+                    workspace_root=workspace_root)
+            except ImageToVideoError as exc:
+                blocked.append(f"shot {shot_id} identity: {exc}")
+                generations.append(
+                    {"shot_id": shot_id, "status": "blocked",
+                     "reason": "character reference missing or "
+                               "pending",
+                     "uses_elements": uses_elements,
+                     "rate_usd_per_second": shot_rate,
+                     "estimated_cost_usd": shot_cost})
+                continue
+            if elements is not None:
+                try:
+                    validate_fal_video_elements(elements, prompt)
+                except Exception as exc:
+                    blocked.append(
+                        f"shot {shot_id} prompt/elements: {exc}")
+                    generations.append(
+                        {"shot_id": shot_id, "status": "blocked",
+                         "reason": "prompt element references do "
+                                   "not match the elements array",
+                         "uses_elements": uses_elements,
+                         "rate_usd_per_second": shot_rate,
+                         "estimated_cost_usd": shot_cost})
+                    continue
+                entry["elements"] = elements
+                for binding in identity_bindings.get(shot_id) or []:
+                    if isinstance(binding, dict):
+                        frontal = binding.get("frontal") or {}
+                        if frontal.get("asset_id"):
+                            scope_asset_ids.add(
+                                str(frontal["asset_id"]))
+                        for ref in binding.get("additional") or []:
+                            if isinstance(ref, dict) \
+                                    and ref.get("asset_id"):
+                                scope_asset_ids.add(
+                                    str(ref["asset_id"]))
         key = idempotency_key(
             project_id, shot_id, PROVIDER_ID, MODEL_ID,
             keyframe["sha256"], prompt)
-        generations.append(
-            {"shot_id": shot_id, "status": "ready",
-             "keyframe_file": keyframe["file"],
-             "keyframe_sha256": keyframe["sha256"],
-             "prompt": prompt,
-             "duration_seconds": duration_seconds,
-             "generate_audio": bool(generate_audio),
-             "idempotency_key": key})
+        entry["idempotency_key"] = key
+        generations.append(entry)
     auth_errors = validate_authorization(
         authorization, provider_id=PROVIDER_ID, model=MODEL_ID,
         operation=OPERATION,
         required_generations=len(shots),
         scope_asset_ids=sorted(scope_asset_ids))
     blocked += [f"authorization: {err}" for err in auth_errors]
-    rate = FAL_KLING_3_PRO_USD_PER_SECOND[
-        "with_audio" if generate_audio else "without_audio"]
+    # Plan cost is the sum of the per-shot costs (each priced
+    # by its own elements usage), rounded to 2 decimals. The
+    # plan-level rate is the single rate only when all shots
+    # share one rate, otherwise None (a mixed plan has no
+    # single rate).
     total_seconds = len(shots) * float(duration_seconds)
+    plan_rates = {gen.get("rate_usd_per_second")
+                  for gen in generations}
+    plan_rate = plan_rates.pop() if len(plan_rates) == 1 else None
+    plan_cost = round(
+        sum(gen.get("estimated_cost_usd", 0.0)
+            for gen in generations), 2)
     plan = {"project_id": project_id,
             "provider_id": PROVIDER_ID, "model": MODEL_ID,
             "operation": OPERATION,
@@ -1099,9 +1623,14 @@ def build_execution_plan(project, shots, *, authorization=None,
             "counts": counts,
             "generations": generations,
             "total_seconds": total_seconds,
-            "rate_usd_per_second": rate,
+            "rate_usd_per_second": plan_rate,
             "rate_source": RATE_SOURCE,
-            "estimated_cost_usd": round(total_seconds * rate, 2)}
+            "estimated_cost_usd": plan_cost,
+            # Retention truth for this endpoint: ZDR is
+            # UNCONFIRMED and is never claimed; the request
+            # carries X-Fal-Store-IO: 0 and the fal CDN v3
+            # lifecycle/ACL headers (see retention_truth_table).
+            "zdr_status": ZDR_STATUS}
     return plan
 
 
@@ -1146,7 +1675,8 @@ def execute_i2v_plan(plan, *, adapter, delivery_root, ledger,
             PROVIDER_ID, MODEL_ID, prompt=generation["prompt"],
             start_image_url=start_image_url,
             duration_seconds=generation["duration_seconds"],
-            generate_audio=generation["generate_audio"])
+            generate_audio=generation["generate_audio"],
+            elements=generation.get("elements"))
         packet = {"model": MODEL_ID,
                   "canonical_instruction": generation["prompt"],
                   "task_id": f"{project_id}-{shot_id}",
@@ -1168,6 +1698,11 @@ def execute_i2v_plan(plan, *, adapter, delivery_root, ledger,
                    "start_image_url": start_image_url,
                    "duration": str(generation["duration_seconds"]),
                    "generate_audio": generation["generate_audio"]}
+        if generation.get("elements") is not None:
+            # Elements travel in the context too, so the
+            # adapter's contract rebuild matches the
+            # contract-built request exactly.
+            context["elements"] = generation["elements"]
         request = adapter.translate(packet, context)
         if request.get("contract_request") != built:
             _fail(f"shot {shot_id}: adapter translation does not "
@@ -1232,13 +1767,21 @@ def execute_i2v_plan(plan, *, adapter, delivery_root, ledger,
             "motion_classification": motion["classification"]}
         record = pa.verify_asset(record, os.path.dirname(clip_path))
         registry = pa.register_asset(registry, record)
-        executed.append(
-            {"shot_id": shot_id, "provider_job_id": job_id,
-             "clip_sha256": verified["sha256"],
-             "clip_bytes": verified["bytes"],
-             "native_width": verified["width"],
-             "native_height": verified["height"],
-             "duration_seconds": verified["duration_seconds"],
-             "motion_classification": motion["classification"]})
+        executed_entry = {
+            "shot_id": shot_id, "provider_job_id": job_id,
+            "clip_sha256": verified["sha256"],
+            "clip_bytes": verified["bytes"],
+            "native_width": verified["width"],
+            "native_height": verified["height"],
+            "duration_seconds": verified["duration_seconds"],
+            "motion_classification": motion["classification"]}
+        # The original provider result URL, recorded in redacted
+        # form only (scheme://host/path — the query string is
+        # never stored). The adapter records it during retrieve().
+        result_url = getattr(adapter, "last_result_url_record",
+                             None)
+        if isinstance(result_url, dict):
+            executed_entry["provider_result_url"] = result_url
+        executed.append(executed_entry)
     return {"project_id": project_id, "status": "completed",
             "generations": executed, "registry": registry}

@@ -29,6 +29,15 @@ What it enforces
   would interpret differently.
 - No encoded path trick: a path segment that percent-decodes to
   ``.`` or ``..`` (or to NUL) is refused.
+- Output origins may carry per-host path prefixes
+  (``output_path_prefixes``): a host listed there accepts only
+  output URLs whose path starts with one of its prefixes, so a
+  shared-host origin (for example ``storage.googleapis.com``,
+  permitted only under ``/falserverless/`` for the fal-video
+  contract) never becomes a blanket allow for every bucket on
+  that host. The prefix rule applies to the output purpose
+  only, and only on the policy instance built for that
+  provider/model contract.
 - Every resolved address must be a public address: loopback,
   private (RFC 1918 and carrier-grade NAT), link-local,
   multicast, reserved, unspecified and cloud-metadata
@@ -87,6 +96,31 @@ MAX_RESPONSE_BYTES = 16 * 1024 * 1024  # 16 MiB
 MAX_DOWNLOAD_BYTES = 512 * 1024 * 1024  # 512 MiB
 _DEFAULT_TIMEOUT_S = 120
 
+# Provider-specific output-origin path rules (CF-WO-P1-006-R2-PREFLIGHT).
+#
+# The fal.ai Kling Video v3 Pro model page documents its output
+# example on Google Cloud Storage, not on the fal CDN:
+# https://storage.googleapis.com/falserverless/example_outputs/
+# kling-v3/pro-i2v/out.mp4
+# (model page https://fal.ai/models/fal-ai/kling-video/v3/pro/
+# image-to-video/api). The retention page says generated outputs
+# go to the fal CDN, but for THIS endpoint the model-specific
+# page wins: outputs land on GCS, so the fal CDN ACL does NOT
+# protect a storage.googleapis.com output URL and GCS outputs
+# are public-by-link. The GCS rule below is therefore bound to
+# this one provider/model contract only (it lives on the
+# provider-fal-video adapter's policy instance, built from that
+# spec) and permits exactly one bucket path prefix — no broad
+# wildcard for Google or fal subdomains, and no global allow of
+# storage.googleapis.com for arbitrary downloads.
+FAL_VIDEO_GCS_HOST = "storage.googleapis.com"
+FAL_VIDEO_GCS_PATH_PREFIX = "/falserverless/"
+FAL_VIDEO_GCS_OUTPUT_EXAMPLE = (
+    "https://storage.googleapis.com/falserverless/"
+    "example_outputs/kling-v3/pro-i2v/out.mp4")
+FAL_VIDEO_MODEL = "fal-ai/kling-video/v3/pro/image-to-video"
+FAL_VIDEO_PROVIDER_ID = "provider-fal-video"
+
 # Provider job ids, operation names and endpoint segments travel
 # inside URLs the adapter constructs. They must be plain path
 # tokens — no "..", no leading slash, no query, no whitespace.
@@ -130,6 +164,39 @@ def safe_url_for_message(url: str) -> str:
         port = ""
     path = split.path or "/"
     return f"{split.scheme or '?'}://{host}{port}{path}"
+
+
+def redact_result_url(url: str) -> str:
+    """A provider result URL with sensitive query parameters removed.
+
+    The same ``scheme://host/path`` form as
+    :func:`safe_url_for_message`: the original result URL is
+    recorded in this redacted form only, so a signed download
+    URL's query authorization is never stored, logged or
+    reported.
+    """
+    return safe_url_for_message(url)
+
+
+def record_result_url(url: str) -> dict:
+    """A safe record of a provider result URL (no query string).
+
+    Returns ``{"url", "host", "path"}`` — the redacted URL plus
+    its host and path for audit. The query string (which may
+    carry signed-download authorization) is never recorded.
+    Raises MediaExecutionError on an unparseable URL.
+    """
+    if not isinstance(url, str) or not url:
+        _fail("provider result URL must be a non-empty string")
+    try:
+        split = urllib.parse.urlsplit(url)
+    except ValueError:
+        _fail("provider result URL is unparseable")
+    host = (split.hostname or "").lower()
+    if not host:
+        _fail("provider result URL has no host")
+    return {"url": safe_url_for_message(url), "host": host,
+            "path": split.path or "/"}
 
 
 def _is_prohibited_address(address) -> bool:
@@ -225,19 +292,32 @@ class ProviderURLPolicy:
     output/CDN download URLs — the two lists are separate on
     purpose, so a download URL can never be mistaken for an API
     call (and its query authorization is never sent an
-    Authorization header). ``resolver`` is an injectable
+    Authorization header). ``output_path_prefixes`` is an
+    optional mapping of output host to the path prefixes
+    permitted on that host (output purpose only): a host listed
+    here accepts only URLs whose path starts with one of its
+    prefixes, so an origin allowlist can never become a blanket
+    allow for every path on a shared host (for example
+    ``storage.googleapis.com`` permits only
+    ``/falserverless/`` for the fal-video contract — every other
+    GCS bucket/path is rejected). ``resolver`` is an injectable
     ``host -> [address, ...]`` callable; the default is the system
     resolver.
     """
 
     def __init__(self, *, api_origins=(), output_origins=(),
-                 resolver=None, max_redirects=MAX_REDIRECTS,
+                 output_path_prefixes=None, resolver=None,
+                 max_redirects=MAX_REDIRECTS,
                  max_response_bytes=MAX_RESPONSE_BYTES,
                  timeout_s=_DEFAULT_TIMEOUT_S):
         self.api_origins = frozenset(
             str(origin).lower() for origin in (api_origins or ()))
         self.output_origins = frozenset(
             str(origin).lower() for origin in (output_origins or ()))
+        self.output_path_prefixes = {
+            str(host).lower(): tuple(str(prefix) for prefix in prefixes)
+            for host, prefixes in
+            (output_path_prefixes or {}).items()}
         self.resolver = resolver or _default_resolver
         self.max_redirects = max_redirects
         self.max_response_bytes = max_response_bytes
@@ -330,6 +410,13 @@ class ProviderURLPolicy:
         if host not in allowed:
             _fail(f"provider URL host {host!r} is not an approved "
                   f"origin for {purpose} requests")
+        if purpose == "output":
+            prefixes = self.output_path_prefixes.get(host)
+            if prefixes is not None and not any(
+                    path.startswith(prefix) for prefix in prefixes):
+                _fail(f"provider URL path {path!r} on host "
+                      f"{host!r} is not a permitted output path "
+                      "for this provider contract")
         return {"scheme": "https", "host": host,
                 "port": port if port is not None else 443,
                 "path": path, "query": split.query or ""}
@@ -496,8 +583,15 @@ __all__ = [
     "MAX_RESPONSE_BYTES",
     "MAX_DOWNLOAD_BYTES",
     "AUTH_HEADER_NAMES",
+    "FAL_VIDEO_GCS_HOST",
+    "FAL_VIDEO_GCS_PATH_PREFIX",
+    "FAL_VIDEO_GCS_OUTPUT_EXAMPLE",
+    "FAL_VIDEO_MODEL",
+    "FAL_VIDEO_PROVIDER_ID",
     "ProviderURLPolicy",
     "safe_url_for_message",
+    "redact_result_url",
+    "record_result_url",
     "validate_resolved_addresses",
     "validate_provider_job_id",
     "validate_model_id",

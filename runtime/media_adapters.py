@@ -77,7 +77,7 @@ from .media_execution import (
 from .provider_contracts import get_contract
 from .provider_url_policy import (
     AUTH_HEADER_NAMES, MAX_DOWNLOAD_BYTES, MAX_RESPONSE_BYTES,
-    ProviderURLPolicy, safe_url_for_message,
+    ProviderURLPolicy, record_result_url, safe_url_for_message,
     validate_endpoint_segment, validate_model_id,
     validate_provider_job_id)
 
@@ -1242,8 +1242,27 @@ PROVIDER_SPECS = {
         # queue contract as fal image). Poll/cancel URLs come
         # from the submit response and are validated against
         # api_origins before use.
+        # PREFLIGHT (CF-WO-P1-006-R2-PREFLIGHT, checked
+        # 2026-11-28): for THIS endpoint the model page's own
+        # output example is Google Cloud Storage —
+        # https://storage.googleapis.com/falserverless/
+        # example_outputs/kling-v3/pro-i2v/out.mp4 — so outputs
+        # land on GCS, not on the fal CDN. The GCS rule permits
+        # ONLY the /falserverless/ path prefix on
+        # storage.googleapis.com, bound to this provider/model
+        # contract; the fal CDN v3 origin (v3b.fal.media) stays
+        # permitted where actually used, and the legacy fal.media
+        # host is kept for the existing mock-tested path. No
+        # broad wildcard for Google or fal subdomains, and no
+        # global allow of storage.googleapis.com. The fal CDN
+        # ACL does NOT protect a GCS output URL (public-by-link);
+        # ZDR is UNCONFIRMED for this endpoint.
         "api_origins": ["queue.fal.run"],
-        "output_origins": ["fal.media"],
+        "output_origins": ["fal.media", "v3b.fal.media",
+                           "storage.googleapis.com"],
+        "output_path_prefixes": {
+            "storage.googleapis.com": ["/falserverless/"]},
+        "output_content_type": "video/mp4",
         "auth": {"env_var": "FAL_KEY", "header": "Authorization",
                  "scheme": "Key"},
         "async": True,
@@ -1251,8 +1270,13 @@ PROVIDER_SPECS = {
         "retrieval": "cdn-url",
         "charge_behaviour": "per second of output from prepaid "
                             "credits; Kling 3.0 Pro 1080p $0.168/s "
-                            "with audio, $0.112/s without "
-                            "(fal.ai list prices, read 2026-11-28); "
+                            "with audio, $0.112/s without; with "
+                            "elements $0.336/s with audio, "
+                            "$0.224/s without (fal.ai list prices, "
+                            "read 2026-11-28; the official API "
+                            "schema page lists no pricing — the "
+                            "rates are from the fal.ai learn "
+                            "comparison pages); "
                             "server errors (HTTP 500+) never "
                             "charged; queue-wait time never "
                             "charged; a 422 may be charged if GPU "
@@ -1261,20 +1285,41 @@ PROVIDER_SPECS = {
                             "verified keyframe as a public URL or "
                             "base64 data URI, <=50 MB, >=300x300 "
                             "px, aspect 0.40-2.50) + optional "
-                            "end_image_url; elements (extra "
-                            "reference images) refused by the "
-                            "contract",
+                            "end_image_url + elements: one element "
+                            "per character (frontal_image_url "
+                            "required + 1-3 additional angle "
+                            "reference_image_urls; prompt "
+                            "references @Element1..@ElementN; "
+                            "video_url and voice_id refused; "
+                            "generate_audio false supported)",
         "async_behaviour": "asynchronous queue with polling "
                            "(IN_QUEUE / IN_PROGRESS / COMPLETED; "
                            "result via a second GET on "
                            "response_url)",
         "cancellation_support": "PUT cancel_url — cancellation "
                                 "supported",
-        "output_retrieval": "fal.media CDN URL, available 7 days "
-                            "or more",
+        "output_retrieval": "GCS URL under "
+                            "storage.googleapis.com/falserverless/ "
+                            "(per the model page's output example; "
+                            "public-by-link, fal CDN ACL does not "
+                            "apply) or fal CDN v3 URL "
+                            "(v3b.fal.media), available 7 days or "
+                            "more; download validated as video/mp4 "
+                            "with MP4 magic bytes; no authorization "
+                            "header is sent to a download URL",
         "character_reference_limits":
-            "start image only; elements refused (see "
-            "reference_images)",
+            "start image (keyframe) + one elements entry per "
+            "recurring character: frontal + 1-3 additional "
+            "angles; the same approved identity references on "
+            "every shot containing that character; a shot "
+            "without the character gets no elements entry",
+        "retention": "every request carries X-Fal-Store-IO: 0 "
+                     "(disables request-history payload storage; "
+                     "NOT ZDR) and X-Fal-Object-Lifecycle-"
+                     "Preference (expiration 7 days, initial_acl "
+                     "default forbid) — lifecycle/ACL applies to "
+                     "fal CDN v3 outputs ONLY, never to GCS "
+                     "outputs; ZDR UNCONFIRMED for this endpoint",
         "aspect_ratios": ["follows the start image "
                           "(9:16 keyframe yields 9:16)"],
         "audio_support": True,
@@ -1536,8 +1581,14 @@ class HttpProviderAdapter(MediaAdapter):
         self.url_policy = url_policy or ProviderURLPolicy(
             api_origins=spec.get("api_origins") or (),
             output_origins=spec.get("output_origins") or (),
+            output_path_prefixes=spec.get("output_path_prefixes")
+            or {},
             resolver=resolver, timeout_s=timeout_s,
             max_response_bytes=max_response_bytes)
+        # The last provider result URL, recorded in redacted form
+        # (scheme://host/path, no query string) by retrieve().
+        # None until a URL download has been attempted.
+        self.last_result_url_record = None
 
     def capabilities(self) -> dict:
         operations = []
@@ -2180,6 +2231,12 @@ class HttpProviderAdapter(MediaAdapter):
             # destination file — so a malicious output URL can
             # neither trigger a request nor create a file.
             self.url_policy.validate_url(output_ref, "output")
+            # Record the original provider result URL in redacted
+            # form only (scheme://host/path — the query string,
+            # which may carry signed-download authorization, is
+            # never stored, logged or reported).
+            self.last_result_url_record = record_result_url(
+                output_ref)
             execution_id = (context or {}).get("execution_id") \
                 or "output"
             out_rel = os.path.join("outputs", execution_id)
@@ -2187,7 +2244,7 @@ class HttpProviderAdapter(MediaAdapter):
             os.makedirs(os.path.dirname(out_real), exist_ok=True)
             try:
                 with open(out_real, "wb") as handle:
-                    status, _headers, _body = self._request(
+                    status, resp_headers, _body = self._request(
                         "GET", output_ref,
                         headers=self._auth_headers(),
                         purpose="output", stream_to=handle)
@@ -2215,6 +2272,45 @@ class HttpProviderAdapter(MediaAdapter):
                     f"{status} for "
                     f"{safe_url_for_message(output_ref)}",
                     code="provider-error")
+            # Output media validation (PREFLIGHT): when the spec
+            # declares an expected output content type, the
+            # download must arrive with that type, and an MP4
+            # must start with MP4 magic bytes — an HTML error
+            # page returned in place of media is refused and no
+            # partial file is left behind. No authorization
+            # header ever reaches a download URL: _request strips
+            # it for output downloads whose host is not one of
+            # the provider's API origins.
+            expected_type = (self.spec.get("output_content_type")
+                             or "")
+            if expected_type:
+                content_type = ((resp_headers or {}).get(
+                    "content-type") or "").split(";")[0].strip(
+                        ).lower()
+                if content_type != expected_type.lower():
+                    try:
+                        os.unlink(out_real)
+                    except OSError:
+                        pass
+                    raise MediaExecutionError(
+                        "output download content type is "
+                        f"{content_type!r}, expected "
+                        f"{expected_type!r} for "
+                        f"{safe_url_for_message(output_ref)}",
+                        code="malformed-output")
+                if expected_type.lower() == "video/mp4":
+                    with open(out_real, "rb") as handle:
+                        magic = handle.read(12)
+                    if len(magic) < 12 or magic[4:8] != b"ftyp":
+                        try:
+                            os.unlink(out_real)
+                        except OSError:
+                            pass
+                        raise MediaExecutionError(
+                            "output download is not MP4 media "
+                            "(missing ftyp magic) for "
+                            f"{safe_url_for_message(output_ref)}",
+                            code="malformed-output")
             return out_rel
         return _contained_path(self.workspace_root, output_ref)
 

@@ -83,7 +83,7 @@ mirrored by the sky lantern at the end.
 - Clip duration: **6 s** per clip (inside the provider's 3–15 s range)
 - Total video runtime: **8 × 6 s = 48 s** (inside the 30–60 s target)
 - Narration: ~39.3 s planned (l1 5.8, l2 5.2, l3 5.2, l4 4.1, l5 4.1, l6 4.5, l7 5.2, l8 5.2) + 7 × 0.5 s pauses + 1.0 s lead-in + 1.5 s tail-out ≈ **45.3 s** of audio timeline
-- Timing model: video-led. The 48 s of video leads; each narration line plays inside its 6 s shot; the remaining ~2.7 s across the film is ambient (river, rain, lantern glow, native clip audio, music). The final schedule is computed from the MEASURED narration durations at assembly time, after the authorized provider execution returns the real clips.
+- Timing model: video-led. The 48 s of video leads; each narration line plays inside its 6 s shot; the remaining ~2.7 s across the film is ambient (river, rain, lantern glow, music, synthesized room tone). Provider clips carry no native audio in this round (generate_audio is false for every shot; see cost-plan.json). The final schedule is computed from the MEASURED narration durations at assembly time, after the authorized provider execution returns the real clips.
 
 ## What is NOT in the breakdown
 

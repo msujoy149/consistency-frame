@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-28 06:51 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-28 10:44 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-004-universal-production-brain`
-**Head commit:** `3abf5cec1612ca6ed7d8b1a73ab771eba0b3af3b`
-**GitHub branch head:** `3abf5cec1612ca6ed7d8b1a73ab771eba0b3af3b` (remote head of `feat/cf-p1-004-universal-production-brain` at
+**Head commit:** `df741a2841724f31bc1279ba28f6030c482adf5d`
+**GitHub branch head:** `df741a2841724f31bc1279ba28f6030c482adf5d` (remote head of `feat/cf-p1-004-universal-production-brain` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -38,7 +38,7 @@ head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §
 | Features (`registry/features.json`) | 173 |
 | Workflows / intent modes (`registry/workflows.json`) | 13 |
 | Adapters (`registry/adapters.json`) | 15 |
-| JSON Schemas (`schemas/*.json`) | 37 |
+| JSON Schemas (`schemas/*.json`) | 39 |
 | Routing matrix entries (`architecture/SKILL_ROUTING_MATRIX.yaml`) | 15 |
 | Workflow graph nodes / edges (`architecture/WORKFLOW_GRAPH.yaml`) | 15 / 42 |
 | Companion capabilities (`architecture/COMPANION_CAPABILITY_REGISTRY.yaml`) | 20 (3 exercised_recorded_run, 16 present_locally, 1 upstream_inspected_pinned_commit, 0 production_verified) |
@@ -217,6 +217,10 @@ docs/implementation/CF-WO-P1-003-corrections.md
 docs/implementation/CF-WO-P1-004-corrections.md
 docs/implementation/CF-WO-P1-005-corrections.md
 docs/implementation/CF-WO-P1-006-R1-corrections.md
+docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-corrections.md
+docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-gate-a-checklist.md
+docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-gate-b-authorization.md
+docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-retention-assessment.md
 docs/implementation/CF-WO-P1-006-R2-authorization-request.md
 docs/implementation/CF-WO-P1-006-R2-corrections.md
 docs/implementation/CF-WO-P1-006-corrections.md
@@ -248,13 +252,21 @@ examples/p1006-r1-character-consistency/sound-plan.json
 examples/p1006-r1-character-consistency/voice-config.json
 examples/p1006-r2-photorealistic-image-to-video/README.md
 examples/p1006-r2-photorealistic-image-to-video/assembly-config.json
+examples/p1006-r2-photorealistic-image-to-video/character-appearance-map.json
 examples/p1006-r2-photorealistic-image-to-video/character-bible.json
+examples/p1006-r2-photorealistic-image-to-video/cost-plan.json
+examples/p1006-r2-photorealistic-image-to-video/cost-plan.md
+examples/p1006-r2-photorealistic-image-to-video/location-coverage.json
+examples/p1006-r2-photorealistic-image-to-video/motion-prompts.md
 examples/p1006-r2-photorealistic-image-to-video/production-analysis.json
 examples/p1006-r2-photorealistic-image-to-video/project.json
+examples/p1006-r2-photorealistic-image-to-video/scene-breakdown.json
 examples/p1006-r2-photorealistic-image-to-video/script-breakdown.md
 examples/p1006-r2-photorealistic-image-to-video/script.md
+examples/p1006-r2-photorealistic-image-to-video/shot-duration-plan.json
 examples/p1006-r2-photorealistic-image-to-video/shot-list.json
 examples/p1006-r2-photorealistic-image-to-video/sound-plan.json
+examples/p1006-r2-photorealistic-image-to-video/story-coverage-report.json
 examples/p1006-r2-photorealistic-image-to-video/voice-config.json
 examples/p1006-vertical-explainer/README.md
 examples/p1006-vertical-explainer/assembly-config.json
@@ -299,6 +311,7 @@ schemas/README.md
 schemas/approval.json
 schemas/build-report.json
 schemas/character-design-proposal.json
+schemas/character-identity.json
 schemas/character-registration.json
 schemas/character.json
 schemas/episode-state.json
@@ -308,6 +321,7 @@ schemas/gate-state.json
 schemas/human-review-handoff.json
 schemas/identity-selection-policy.json
 schemas/identity-snapshot.json
+schemas/image-to-video-job.json
 schemas/installer-result.json
 schemas/intake-job.json
 schemas/location.json
@@ -442,6 +456,8 @@ tests/test_p1006_e2e.py
 tests/test_p1006_project.py
 tests/test_p1006_r1_character.py
 tests/test_p1006_r2_image_to_video.py
+tests/test_p1006_r2_preflight.py
+tests/test_p1006_r2_preflight_storyboard.py
 tests/test_p1006_timeline.py
 tests/test_p1006_voice.py
 tests/test_performance_semantics.py
@@ -583,6 +599,8 @@ tests/test_voicestudio_controls.py
 - `CF-P1-006-E2E` — python3 tests/test_p1006_e2e.py — **PASS** (exit 0)
 - `CF-P1-006-R1-CHARACTER` — python3 tests/test_p1006_r1_character.py — **PASS** (exit 0)
 - `CF-P1-006-R2-I2V` — python3 tests/test_p1006_r2_image_to_video.py — **PASS** (exit 0)
+- `CF-P1-006-R2-PREFLIGHT` — python3 tests/test_p1006_r2_preflight.py — **PASS** (exit 0)
+- `CF-P1-006-R2-PREFLIGHT-STORYBOARD` — python3 tests/test_p1006_r2_preflight_storyboard.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
 - `CF-P0-REPORT-001` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-002` — python3 tests/test_reports.py — **PASS** (exit 0)
@@ -678,4 +696,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-28 06:51 UTC.
+- Report generated: 2026-11-28 10:44 UTC.

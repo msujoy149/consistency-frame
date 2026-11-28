@@ -1,0 +1,168 @@
+{
+  "project_id": "p1006-r2-photorealistic-image-to-video",
+  "work_order": "CF-WO-P1-006-R2-PREFLIGHT",
+  "script_status": "DRAFT — awaiting user approval",
+  "counts": {
+    "scenes": 6,
+    "shots": 8,
+    "total_video_seconds": 48
+  },
+  "scenes": [
+    {
+      "scene_id": "SC1",
+      "location": "rooftop terrace",
+      "environment": "rooftop at dawn",
+      "time_of_day": "dawn",
+      "narrative_function": "Establish: the light is kindled.",
+      "shot_ids": [
+        "s1"
+      ],
+      "narration_line_ids": [
+        "l1"
+      ],
+      "shots": [
+        {
+          "shot_id": "s1",
+          "line_id": "l1",
+          "action": "Nadia lights the round paper lantern on the rooftop terrace at dawn; the flame catches and the lantern glows warm.",
+          "narrative_purpose": "Establishing action: the light is kindled. Also the film's establishing shot — the rooftop terrace, the river and rooftops below, and the dawn light are all established inside this shot.",
+          "duration_seconds": 6
+        }
+      ],
+      "duration_seconds": 6
+    },
+    {
+      "scene_id": "SC2",
+      "location": "river (stone steps)",
+      "environment": "stone steps in morning light",
+      "time_of_day": "morning",
+      "narrative_function": "Journey: the light is carried to the water.",
+      "shot_ids": [
+        "s2"
+      ],
+      "narration_line_ids": [
+        "l2"
+      ],
+      "shots": [
+        {
+          "shot_id": "s2",
+          "line_id": "l2",
+          "action": "Nadia walks down the wide old stone steps toward the river, carrying the lit round lantern in one hand, one foot mid-step, hair and shirt moving with her stride.",
+          "narrative_purpose": "Journey: the light is carried to the water. Movement through the river-steps location — the full-body walk down the steps, ending at the water.",
+          "duration_seconds": 6
+        }
+      ],
+      "duration_seconds": 6
+    },
+    {
+      "scene_id": "SC3",
+      "location": "river (water's edge)",
+      "environment": "river's edge at golden hour",
+      "time_of_day": "golden hour",
+      "narrative_function": "Giving and watching: the lantern is set afloat, then watched drifting.",
+      "shot_ids": [
+        "s3a",
+        "s3b"
+      ],
+      "narration_line_ids": [
+        "l3",
+        "l4"
+      ],
+      "shots": [
+        {
+          "shot_id": "s3a",
+          "line_id": "l3",
+          "action": "Close-up on Nadia's hands: she kneels at the river's edge and sets the rectangular floating lantern on the water; the current takes it.",
+          "narrative_purpose": "Giving action — hands, water, release. Detail shot: a single wide shot cannot show both her hands on the lantern and her face, so the hands get their own close-up.",
+          "duration_seconds": 6
+        },
+        {
+          "shot_id": "s3b",
+          "line_id": "l4",
+          "action": "Nadia watches the floating lantern drift away on the river, chin near her folded hands, a soft hopeful expression.",
+          "narrative_purpose": "Reaction: hope on her face as the lantern leaves. A different shot from s3a, not a longer single shot, because the camera cannot be on her hands and her face at once.",
+          "duration_seconds": 6
+        }
+      ],
+      "duration_seconds": 12
+    },
+    {
+      "scene_id": "SC4",
+      "location": "market street",
+      "environment": "market street in morning",
+      "time_of_day": "morning",
+      "narrative_function": "Gathering: flowers for the evening.",
+      "shot_ids": [
+        "s4"
+      ],
+      "narration_line_ids": [
+        "l5"
+      ],
+      "shots": [
+        {
+          "shot_id": "s4",
+          "line_id": "l5",
+          "action": "Nadia reaches for the woven basket of marigolds on the market stall and lifts it gently with both hands.",
+          "narrative_purpose": "Gathering: flowers for the evening. The market street is established inside this shot — stall, hanging fabrics, shoppers — so no standalone market wide is needed.",
+          "duration_seconds": 6
+        }
+      ],
+      "duration_seconds": 6
+    },
+    {
+      "scene_id": "SC5",
+      "location": "market street",
+      "environment": "market street in rain",
+      "time_of_day": "rain (same morning, weather change)",
+      "narrative_function": "Weather: rain in the market; the day is endured.",
+      "shot_ids": [
+        "s5"
+      ],
+      "narration_line_ids": [
+        "l6"
+      ],
+      "shots": [
+        {
+          "shot_id": "s5",
+          "line_id": "l6",
+          "action": "Rain begins in the market; Nadia opens the bamboo umbrella above her head with one hand and stands under it as the rain falls.",
+          "narrative_purpose": "Weather endured: the same market street in its rain state. The day is endured, not stopped — the calm reaction in the rain is the beat.",
+          "duration_seconds": 6
+        }
+      ],
+      "duration_seconds": 6
+    },
+    {
+      "scene_id": "SC6",
+      "location": "rooftop terrace",
+      "environment": "rooftop at dusk",
+      "time_of_day": "dusk",
+      "narrative_function": "Release: the sky lantern is lifted and let go; the film closes.",
+      "shot_ids": [
+        "s6a",
+        "s6b"
+      ],
+      "narration_line_ids": [
+        "l7",
+        "l8"
+      ],
+      "shots": [
+        {
+          "shot_id": "s6a",
+          "line_id": "l7",
+          "action": "Nadia lifts the cylindrical sky lantern overhead with both hands, its flame already reaching for the dark.",
+          "narrative_purpose": "The lift — the climax begins in her arms. A separate shot from the release because the lift and the rise are two different movements.",
+          "duration_seconds": 6
+        },
+        {
+          "shot_id": "s6b",
+          "line_id": "l8",
+          "action": "Nadia releases the glowing sky lantern; it rises into the dusk sky as she watches it go, smiling.",
+          "narrative_purpose": "The release — the lantern leaves her hands and rises into the sky. The film's closing shot: she watches it go, smiling.",
+          "duration_seconds": 6
+        }
+      ],
+      "duration_seconds": 12
+    }
+  ]
+}

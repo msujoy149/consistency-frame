@@ -26,8 +26,17 @@ video target is 9:16, 1080x1920, 30 FPS, 30–60 s, H.264/AAC, MP4.
   authorized. The written authorization request is
   `docs/implementation/CF-WO-P1-006-R2-authorization-request.md`
   (8 generations, 6 s each, 1080p, with native audio — estimated
-  $8.06). Until the user explicitly approves it, I2V execution
-  stays BLOCKED and the driver produces no final video.
+  $8.06). **That request is SUPERSEDED** by the preflight Gate B
+  authorization sheet
+  (`docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-gate-b-authorization.md`):
+  same 8 generations and 48 s, but audio OFF — estimated **$10.75**
+  (with elements: 48 s x $0.224/s; see `cost-plan.json`). The $10.75
+  figure corrects the earlier preflight $5.38 figure, which priced
+  every shot at the without-elements $0.112/s rate. The old 8-shot / $8.06 figures are
+  superseded as a cost estimate, not as counts. Until the user
+  explicitly approves the script (Gate A) and the Gate B sheet,
+  I2V execution stays BLOCKED and the driver produces no final
+  video.
 - **Delivery:** `qc_status` is BLOCKED; the delivery manifest
   records that, and never claims a delivery.
 
@@ -39,8 +48,27 @@ video target is 9:16, 1080x1920, 30 FPS, 30–60 s, H.264/AAC, MP4.
   generation after script approval).
 - `shot-list.json` — 8 shots with structured motion prompts
   (subject/face/body/hand/prop/hair/cloth/environment/camera),
-  keyframe placeholders (pending), and empty provider-generation
-  provenance fields.
+  keyframe placeholders (pending), empty provider-generation
+  provenance fields, and per-shot preflight prompt records
+  (`prompt_record`: source script segment, character element
+  references, negative prompt, physical realism constraints,
+  `generate_audio: false`, text-overlay flags). Preflight
+  correction: shot s2 now shows Nadia carrying the lit round
+  lantern, as script line l2 requires (see
+  `story-coverage-report.json`).
+- `story-coverage-report.json`, `scene-breakdown.json`,
+  `location-coverage.json`, `character-appearance-map.json`,
+  `shot-duration-plan.json` — preflight storyboard outputs
+  (CF-WO-P1-006-R2-PREFLIGHT). Line-by-line analysis confirms the
+  counts: 6 scenes, 8 shots, 8 keyframes, 8 clips, 48 s — no shot
+  added, none removed vs the R2 draft.
+- `motion-prompts.md` — human-readable per-shot prompt records.
+- `cost-plan.json` + `cost-plan.md` — dynamic cost plan, audio
+  OFF, WITH elements: 8 shots x 6 s x $0.224/s = **$10.75**
+  (exact $10.752; $1.344 per 6 s shot). Keyframe generation
+  $0 billed (platform built-in image generation, not a billed
+  provider charge). Retry budget: one retry per failed shot,
+  maximum $10.75; worst case $21.50. Taxes/fees UNCONFIRMED.
 - `project.json` — output profile + text-overlay policy (all
   false) + I2V plan (8 clips × 6 s = 48 s).
 - `voice-config.json` — narrator voice (VoiceStudio/OmniVoice,

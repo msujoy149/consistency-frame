@@ -81,6 +81,39 @@ def load_json(path):
         return json.load(handle)
 
 
+def nadia_identity_bindings():
+    """Identity bindings for all 8 R2 shots, from the
+    character-appearance-map: Nadia (DEMO-CHAR-002) appears in
+    every shot, frontal ref-nadia-front + one angle reference
+    ref-nadia-three-quarter, both pending generation after
+    script approval. Same construction as the R2 driver, so
+    the plan genuinely uses elements and is priced at the
+    with-elements tier."""
+    appearance_map = load_json(os.path.join(
+        EXAMPLE, "character-appearance-map.json"))
+    characters = appearance_map.get("characters") or []
+    nadia = characters[0] if characters else {}
+    ref_plan = nadia.get("reference_plan") or {}
+    frontal_id = (ref_plan.get("front") or {}).get(
+        "asset_id") or "ref-nadia-front"
+    angle_id = (ref_plan.get("three_quarter") or {}).get(
+        "asset_id") or "ref-nadia-three-quarter"
+    pending = "pending-generation-after-script-approval"
+    bindings = {}
+    for appearance in appearance_map.get("appearances") or []:
+        if not appearance.get("present"):
+            continue
+        bindings[appearance.get("shot_id")] = [{
+            "character_id": appearance.get("character_id")
+            or nadia.get("character_id"),
+            "frontal": {"asset_id": frontal_id,
+                        "status": pending},
+            "additional": [{"asset_id": angle_id,
+                            "status": pending}],
+        }]
+    return bindings
+
+
 def run_ffmpeg(argv, label):
     proc = subprocess.run(argv, capture_output=True, text=True,
                           timeout=300)
@@ -764,9 +797,13 @@ def _run_checks(tmpdir):
           coverage == [])
 
     # ---- execution plan: BLOCKED (real project state) ----------
+    # The plan is built WITH the Nadia identity bindings (all 8
+    # shots use elements), so it is priced at the with-elements
+    # audio-off tier: 8 shots x 6 s x $0.224/s = $10.75.
     plan = iv.build_execution_plan(
         {**project_config, "voice_lines": voice_lines}, shots,
-        authorization=None)
+        authorization=None,
+        identity_bindings=nadia_identity_bindings())
     check("CF-P1-006-R2-I2V-plan-blocked",
           plan["status"] == "BLOCKED"
           and any("script approval pending" in r
@@ -776,9 +813,13 @@ def _run_checks(tmpdir):
           and any("authorization" in r
                   for r in plan["blocked_reasons"]))
     check("CF-P1-006-R2-I2V-plan-cost",
-          plan["estimated_cost_usd"] == 8.06
-          and plan["rate_usd_per_second"] == 0.168
-          and plan["total_seconds"] == 48.0,
+          plan["estimated_cost_usd"] == 10.75
+          and plan["rate_usd_per_second"] == 0.224
+          and plan["total_seconds"] == 48.0
+          and all(gen.get("uses_elements") is True
+                  and gen.get("rate_usd_per_second") == 0.224
+                  and gen.get("estimated_cost_usd") == 1.344
+                  for gen in plan["generations"]),
           str(plan.get("estimated_cost_usd")))
 
     # ---- execution plan: READY (approved script, real keyframe,
@@ -947,7 +988,8 @@ def _run_checks(tmpdir):
           and summary.get("plan_status") == "BLOCKED"
           and summary.get("counts", {}).get("shots") == 8
           and summary.get("counts", {}).get("clips") == 8
-          and summary.get("estimated_cost_usd") == 8.06,
+          and summary.get("estimated_cost_usd") == 10.75
+          and summary.get("rate_usd_per_second") == 0.224,
           str(summary.get("counts")))
     found_mp4 = []
     for base, _dirs, files in os.walk(driver_work):
