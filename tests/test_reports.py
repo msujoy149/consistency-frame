@@ -152,7 +152,19 @@ def errors_for(schema, value):
 # two docs (CF-WO-P1-006-corrections,
 # VERTICAL_PRODUCTION_RUNTIME). Every other file this round
 # touched was already in the manifest from an earlier round.
-MANIFEST_EXPECTED_COUNT = 266
+# 280 since CF-WO-P1-006-R1 (2026-11-27): fourteen genuinely
+# new files — one runtime module (character_consistency), one
+# runtime doc (CHARACTER_CONSISTENCY_RUNTIME), one corrections
+# record (CF-WO-P1-006-R1-corrections), the R1 driver
+# (scripts/run-p1006-r1-character-render.py), one test file
+# (test_p1006_r1_character), and nine reference-project files
+# (examples/p1006-r1-character-consistency). Every other file
+# this round touched was already in the manifest from an earlier
+# round; this file itself was already in the diff, so it adds
+# no new entry. (docs/implementation/CHECKSUMS.txt and
+# release-manifest.json are in the diff but intentionally
+# excluded from the manifest.)
+MANIFEST_EXPECTED_COUNT = 280
 MANIFEST_EXCLUDED = ("release-manifest.json",
                      "docs/implementation/CHECKSUMS.txt")
 

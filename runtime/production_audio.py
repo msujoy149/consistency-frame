@@ -775,11 +775,27 @@ def _mix_argv(timeline, asset_paths, audio_profile, output_path,
         operations.append(
             f"voice: gain {TRACK_GAINS_DB['dialogue']:.1f} dB "
             f"(priority), {len(voice_clips)} clip(s)")
+    # The voice bus feeds two consumers when ducking is on: the
+    # sidechaincompress sidechain and the final mix. A doubly
+    # referenced audio label must be split explicitly with
+    # ``asplit`` — FFmpeg's implicit split starves the final mix
+    # after the first voice clip (verified CF-WO-P1-006-R1: with
+    # six dialogue clips only the first survived in the mix; the
+    # remaining lines and, under load, the music bed were lost).
+    voice_mix_bus = voice_bus
     if music_bus:
         duck_db = audio_profile.get("music_duck_db")
         if voice_bus:
             filters.append(
-                f"[{music_bus}][{voice_bus}]sidechaincompress="
+                f"[{voice_bus}]asplit=2[voice_duck][voice_mix]")
+            voice_mix_bus = "voice_mix"
+            operations.append(
+                "voice bus split explicitly (asplit=2): one branch "
+                "drives the ducking sidechain, one branch feeds the "
+                "final mix — a doubly referenced audio label must "
+                "not rely on FFmpeg's implicit split")
+            filters.append(
+                f"[{music_bus}][voice_duck]sidechaincompress="
                 f"threshold={DUCK_THRESHOLD_LINEAR}:ratio={DUCK_RATIO}:"
                 f"attack={DUCK_ATTACK_MS}:release={DUCK_RELEASE_MS}:"
                 "makeup=1:mix=1[musicducked]")
@@ -801,7 +817,7 @@ def _mix_argv(timeline, asset_paths, audio_profile, output_path,
         operations.append(
             f"sfx: gain {TRACK_GAINS_DB['sfx']:.1f} dB, "
             f"{len(sfx_clips)} cue(s) at timeline positions")
-    final_inputs = [b for b in (voice_bus, music_bus, room_bus,
+    final_inputs = [b for b in (voice_mix_bus, music_bus, room_bus,
                                 sfx_bus) if b]
     if not final_inputs:
         raise AssetError("mix: the timeline has no audio clips to "

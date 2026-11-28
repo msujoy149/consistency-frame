@@ -175,6 +175,7 @@ run_one "CF-P1-006-TIMELINE" python3 tests/test_p1006_timeline.py
 run_one "CF-P1-006-ASSEMBLY" python3 tests/test_p1006_assembly.py
 run_one "CF-P1-006-QC-DELIVERY" python3 tests/test_p1006_delivery.py
 run_one "CF-P1-006-E2E" python3 tests/test_p1006_e2e.py
+run_one "CF-P1-006-R1-CHARACTER" python3 tests/test_p1006_r1_character.py
 
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check

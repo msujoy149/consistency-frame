@@ -24,6 +24,7 @@ says so instead of inventing it.
 | `provider-voicestudio-omnivoice` (VoiceStudio 0.5.8, OmniVoice) | EXERCISED | **never** — CC-BY-NC weights | Real generation 2026-11-27 (Bengali, 1.98 s, audio id `1faa2e3e`); Bengali/English/Hindi 2026-11-12/13 |
 | `provider-openmontage-assembly` (OpenMontage, pin `fecb9a1`) | EXERCISED (demo-render entry only) | approved (local tool; output status depends on asset providers) | Demo `animated-reel-20s` rendered 2026-11-27, ffprobe-validated (21.056 s, 1920x1080); same render through `OpenMontageAdapter.submit`. Production assembly NOT exercised |
 | `provider-opentimelineio` | NOT_TESTED | not approved (unverified) | Not installed; probe reports unavailable; no adapter — the canonical timeline manifest covers interchange |
+| `platform-builtin-image` (platform built-in image generation) | EXERCISED for stills only | UNCONFIRMED — no licence text verified in this environment; R1 deliverable is a non-commercial demonstration review package | CF-WO-P1-006-R1 (2026-11-27): five character references + six scene stills generated, all visually inspected against the bible. Image-to-video NOT_TESTED — motion is deterministic FFmpeg zoompan on stills, never AI-generated video. No paid call, no credentials |
 
 ## External providers — readiness matrix
 

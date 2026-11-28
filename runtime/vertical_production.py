@@ -178,7 +178,10 @@ from .media_execution import FAILURE_CODES  # noqa: E402
 SUPPORTED_RENDER_PATHS = ("ffmpeg",)
 
 # Visual recipe kinds the asset stage can generate (see
-# runtime.production_assets.generate_visual_asset).
+# runtime.production_assets.generate_visual_asset, and
+# generate_still_clip for the "ai-still" kind — an AI-generated
+# still image animated locally with FFmpeg zoompan; the clip is
+# built by generate_still_clip, never by visual_argv).
 VISUAL_RECIPE_KINDS = (
     "gradient-band",
     "gradient-split",
@@ -186,6 +189,7 @@ VISUAL_RECIPE_KINDS = (
     "gradient-scan",
     "gradient-frames",
     "gradient-title",
+    "ai-still",
 )
 
 

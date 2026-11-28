@@ -1,0 +1,49 @@
+{
+  "commercial_use": "non-commercial-only",
+  "engine": "omnivoice",
+  "instruct": "middle-aged, moderate pitch",
+  "language": "en-US",
+  "lines": [
+    {
+      "line_id": "l1",
+      "planned_duration_seconds": 7.2,
+      "shot_id": "s1",
+      "text": "Mara drew maps of places no one had ever seen \u2014 until her grandmother's compass pointed somewhere new."
+    },
+    {
+      "line_id": "l2",
+      "planned_duration_seconds": 6.8,
+      "shot_id": "s2",
+      "text": "It did not point north. It pointed through the old forest, past the blank edge of every map."
+    },
+    {
+      "line_id": "l3",
+      "planned_duration_seconds": 5.6,
+      "shot_id": "s3",
+      "text": "She had drawn a hundred imaginary worlds. She had never once stepped inside one."
+    },
+    {
+      "line_id": "l4",
+      "planned_duration_seconds": 6.4,
+      "shot_id": "s4",
+      "text": "The compass grew warm, and the map redrew itself \u2014 a stream, a stone, a door of flowers."
+    },
+    {
+      "line_id": "l5",
+      "planned_duration_seconds": 6.0,
+      "shot_id": "s5",
+      "text": "So Mara ran \u2014 past the meadow, past the last fence, past every reason to turn back."
+    },
+    {
+      "line_id": "l6",
+      "planned_duration_seconds": 7.6,
+      "shot_id": "s6",
+      "text": "And there it was: the garden from her grandmother's stories. One compass. One mapmaker. Every scene, the same Mara."
+    }
+  ],
+  "project_id": "p1006-r1-character-consistency",
+  "provider": "provider-voicestudio-omnivoice",
+  "schema_version": "2.5",
+  "seed": 42,
+  "voice_id": "p1006-r1-narrator"
+}

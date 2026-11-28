@@ -77,6 +77,42 @@ def timeline_hash(timeline) -> str:
     return sha256_hex(canonical_json(timeline))
 
 
+def validate_dialogue_coverage(voice_lines, shots) -> list:
+    """Dialogue coverage errors (empty list = fully covered).
+
+    Every voice line must map to exactly one shot, and every
+    shot must carry exactly one voice line: a line with no shot
+    would be narration without a scene, and a shot with no line
+    would be a scene without narration. A missing scene is an
+    error here, never a silent omission.
+    """
+    errors: list[str] = []
+    line_ids = [ln.get("line_id") for ln in (voice_lines or [])
+                if isinstance(ln, dict)]
+    shot_lines: list[str] = []
+    for shot in (shots or []):
+        if not isinstance(shot, dict):
+            errors.append("dialogue coverage: shot is not an object")
+            continue
+        line_id = shot.get("line_id")
+        if not line_id:
+            errors.append(
+                f"dialogue coverage: shot {shot.get('shot_id')!r} "
+                "carries no voice line")
+        shot_lines.append(line_id)
+    for line_id in line_ids:
+        if line_id not in shot_lines:
+            errors.append(
+                f"dialogue coverage: voice line {line_id!r} has no "
+                "shot")
+    for line_id in set(shot_lines):
+        if line_id is not None and shot_lines.count(line_id) > 1:
+            errors.append(
+                f"dialogue coverage: voice line {line_id!r} maps to "
+                f"{shot_lines.count(line_id)} shots")
+    return errors
+
+
 def compute_shot_schedule(voice_durations, shots,
                           min_durations, *, pause_after=PAUSE_AFTER_SECONDS,
                           lead_in=LEAD_IN_SECONDS,

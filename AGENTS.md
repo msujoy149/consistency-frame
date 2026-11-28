@@ -857,6 +857,50 @@ step-by-step order for every video, in §7).
   `docs/implementation/CF-WO-P1-006-corrections.md`, runtime
   contract in `docs/runtime/VERTICAL_PRODUCTION_RUNTIME.md`.
 
+## P1-006-R1 Character consistency, real visual production & human-gated delivery (2026-11-27)
+
+- **One character, six scenes, one honest verdict.** The R1
+  runtime (`runtime/character_consistency.py`) proves a
+  project-local fictional adult demonstration character (Mara,
+  DEMO-CHAR-001 — never Sarena, never any canonical user
+  character, never registered) stays the same character across
+  six independently produced scenes. The bible
+  (`examples/p1006-r1-character-consistency/character-bible.json`)
+  is the single source of truth: signature colour defined ONCE,
+  one outfit, one hairstyle, one accessory; CONFIRMED design
+  details distinguished from production inferences. The
+  consistency verdict is rule-based, never a numeric score:
+  any fail or unexplained change → `drift-found`; else any
+  review → `needs-human-review`; else `consistent`. Automated
+  evaluation is not editorial approval — `human_approval`
+  stays empty and the delivery manifest stays `BLOCKED`.
+- **AI stills, honestly labelled.** Scene visuals are
+  platform-built-in-image stills (EXERCISED for stills)
+  animated with deterministic FFmpeg zoompan
+  (`generate_still_clip`, `ai-still` recipe kind) — labelled
+  `ai-generated-still, locally animated`, never AI-generated
+  video. Image-to-video is NOT_TESTED; OpenMontage production
+  assembly stays NOT_TESTED. Reference and scene images are
+  media: never committed, delivery folder only, referenced by
+  path + SHA-256 + byte size.
+- **The audio-mix bug, found and fixed.** The P1-006 audio
+  mixer consumed the voice bus label twice (sidechaincompress
+  sidechain + final amix), starving the mix after the first
+  voice clip. Fix: explicit `asplit=2` before ducking. The same
+  defect is present in the already-delivered P1-006 MP4
+  (narration audible only for line 1); it is disclosed in
+  `docs/implementation/CF-WO-P1-006-R1-corrections.md` §12 and
+  in the R1 report — the P1-006 evidence itself is never
+  silently altered. A regression test covers the mix.
+- **Dialogue coverage is validated.** Every voice line must map
+  to exactly one shot and every shot to exactly one line
+  (`validate_dialogue_coverage` in
+  `runtime/production_timeline.py`); the R1 driver refuses to
+  render on any error. Full record:
+  `docs/implementation/CF-WO-P1-006-R1-corrections.md`, runtime
+  contract in `docs/runtime/CHARACTER_CONSISTENCY_RUNTIME.md`,
+  provider row in `docs/runtime/PROVIDER_ADAPTERS.md`.
+
 ## Docs
 
 Full system documentation lives in `docs/`. The core systems are in

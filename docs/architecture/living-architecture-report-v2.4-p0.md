@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-27 18:14 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-27 20:42 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -23,8 +23,8 @@ video production/editing). See
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
 **Feature branch:** `feat/cf-p1-004-universal-production-brain`
-**Head commit:** `2a9e6205a7e33818f9cc626b76e86d263568f2c3`
-**GitHub branch head:** `3cff200049aa3f6c5bf64c5e44e0c7e15cd841e0` (remote head of `feat/cf-p1-004-universal-production-brain` at
+**Head commit:** `7c39b2f15a3c60f0b92bf54aee70d41beb2b1c4e`
+**GitHub branch head:** `5362a8544eb7413edcae742e866f3ced217766bc` (remote head of `feat/cf-p1-004-universal-production-brain` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -216,10 +216,12 @@ docs/implementation/CF-WO-P1-002-corrections.md
 docs/implementation/CF-WO-P1-003-corrections.md
 docs/implementation/CF-WO-P1-004-corrections.md
 docs/implementation/CF-WO-P1-005-corrections.md
+docs/implementation/CF-WO-P1-006-R1-corrections.md
 docs/implementation/CF-WO-P1-006-corrections.md
 docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
+docs/runtime/CHARACTER_CONSISTENCY_RUNTIME.md
 docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md
 docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md
 docs/runtime/MEDIA_EXECUTION_RUNTIME.md
@@ -232,6 +234,15 @@ evidence/p1005/ci-263-windows-failure-note.md
 evidence/p1005/gap-map.md
 evidence/p1005/local-execution-evidence.md
 evidence/p1005/vs-headers.txt
+examples/p1006-r1-character-consistency/README.md
+examples/p1006-r1-character-consistency/assembly-config.json
+examples/p1006-r1-character-consistency/character-bible.json
+examples/p1006-r1-character-consistency/production-analysis.json
+examples/p1006-r1-character-consistency/project.json
+examples/p1006-r1-character-consistency/script.md
+examples/p1006-r1-character-consistency/shot-list.json
+examples/p1006-r1-character-consistency/sound-plan.json
+examples/p1006-r1-character-consistency/voice-config.json
 examples/p1006-vertical-explainer/README.md
 examples/p1006-vertical-explainer/assembly-config.json
 examples/p1006-vertical-explainer/production-analysis.json
@@ -249,6 +260,7 @@ registry/workflows.json
 release-manifest.json
 runtime/__init__.py
 runtime/authorization.py
+runtime/character_consistency.py
 runtime/execution_orchestrator.py
 runtime/identity_resolution.py
 runtime/local_session.py
@@ -313,6 +325,7 @@ scripts/generate-build-report.py
 scripts/generate-registries.py
 scripts/generate-report.py
 scripts/generate-routing-catalog.py
+scripts/run-p1006-r1-character-render.py
 scripts/run-p1006-reference-render.py
 scripts/sync-skills.sh
 scripts/timeline_policy.py
@@ -412,6 +425,7 @@ tests/test_p1006_audio.py
 tests/test_p1006_delivery.py
 tests/test_p1006_e2e.py
 tests/test_p1006_project.py
+tests/test_p1006_r1_character.py
 tests/test_p1006_timeline.py
 tests/test_p1006_voice.py
 tests/test_performance_semantics.py
@@ -551,6 +565,7 @@ tests/test_voicestudio_controls.py
 - `CF-P1-006-ASSEMBLY` — python3 tests/test_p1006_assembly.py — **PASS** (exit 0)
 - `CF-P1-006-QC-DELIVERY` — python3 tests/test_p1006_delivery.py — **PASS** (exit 0)
 - `CF-P1-006-E2E` — python3 tests/test_p1006_e2e.py — **PASS** (exit 0)
+- `CF-P1-006-R1-CHARACTER` — python3 tests/test_p1006_r1_character.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
 - `CF-P0-REPORT-001` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-002` — python3 tests/test_reports.py — **PASS** (exit 0)
@@ -646,4 +661,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-27 18:14 UTC.
+- Report generated: 2026-11-27 20:42 UTC.

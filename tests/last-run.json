@@ -674,6 +674,12 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-006-R1-CHARACTER",
+      "command": "python3 tests/test_p1006_r1_character.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "command": "git diff --check",
       "exit_code": 0,

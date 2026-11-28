@@ -670,3 +670,190 @@ def generate_visual_asset(recipe, duration_seconds, output_path, *,
     record["frame_rate"] = probe["frame_rate"]
     record["status"] = "VERIFIED"
     return record
+
+
+# ------------------------------------------------------------------
+# Still-image animation (CF-WO-P1-006-R1 "ai-still" recipe kind)
+# ------------------------------------------------------------------
+
+# Camera motions for animating one still image into a shot clip.
+# The motion is a slow, controlled zoompan move — a locally
+# animated still, NOT AI-generated video. ``motion_rate`` is the
+# zoom change per second (a rate of 0.02 over a 6 s shot is a 12%
+# total zoom). Motions are deterministic: same still, same
+# parameters, same bytes.
+STILL_MOTIONS = (
+    "zoom-in",
+    "zoom-out",
+    "pan-left",
+    "pan-right",
+    "static",
+)
+
+
+def still_animation_argv(still_path, motion, duration_seconds,
+                         output_path, *, motion_rate=0.02,
+                         width=1080, height=1920, frame_rate=30,
+                         crf=20, preset="veryfast") -> list:
+    """FFmpeg argument array animating one still into a shot clip.
+
+    Pure function — no subprocess runs. The still is scaled to
+    cover the output geometry (centre-cropped), then a zoompan
+    move runs for the whole shot at the output frame rate. The
+    clip is exactly the requested geometry and duration.
+    """
+    if not isinstance(still_path, str) or not still_path:
+        raise AssetError("still animation: still_path is missing")
+    if motion not in STILL_MOTIONS:
+        raise AssetError(
+            f"still animation: motion {motion!r} is not a known "
+            f"still motion (known: {', '.join(STILL_MOTIONS)})")
+    if not _is_number(duration_seconds) \
+            or float(duration_seconds) <= 0:
+        raise AssetError("still animation: duration must be a "
+                         "positive number")
+    if not _is_number(motion_rate) or float(motion_rate) < 0:
+        raise AssetError("still animation: motion_rate must be a "
+                         "non-negative number")
+    duration = float(duration_seconds)
+    total_frames = max(1, int(round(duration * frame_rate)))
+    zoom_span = float(motion_rate) * duration
+    if motion == "zoom-in":
+        zoom = f"1+{float(motion_rate)}*on/{frame_rate}"
+        x_expr = "(iw-iw/zoom)/2"
+        y_expr = "(ih-ih/zoom)/2"
+    elif motion == "zoom-out":
+        zoom = f"{1.0 + zoom_span}-{float(motion_rate)}*on/{frame_rate}"
+        x_expr = "(iw-iw/zoom)/2"
+        y_expr = "(ih-ih/zoom)/2"
+    elif motion == "pan-right":
+        zoom = f"{1.0 + zoom_span}"
+        x_expr = f"(iw-iw/zoom)*on/{total_frames}"
+        y_expr = "(ih-ih/zoom)/2"
+    elif motion == "pan-left":
+        zoom = f"{1.0 + zoom_span}"
+        x_expr = f"(iw-iw/zoom)*(1-on/{total_frames})"
+        y_expr = "(ih-ih/zoom)/2"
+    else:  # static
+        zoom = "1"
+        x_expr = "0"
+        y_expr = "0"
+    filters = (
+        f"scale={width}:{height}:force_original_aspect_ratio=increase,"
+        f"crop={width}:{height},"
+        f"zoompan=z='{zoom}':x='{x_expr}':y='{y_expr}':d=1:"
+        f"s={width}x{height}:fps={frame_rate},format=yuv420p")
+    return ["ffmpeg", "-y", "-v", "error",
+            "-loop", "1", "-framerate", str(frame_rate),
+            "-t", str(duration), "-i", still_path,
+            "-vf", filters,
+            "-r", str(frame_rate),
+            "-c:v", "libx264", "-crf", str(crf), "-preset", preset,
+            "-pix_fmt", "yuv420p",
+            "-metadata", "creation_time=1970-01-01T00:00:00Z",
+            "-t", str(duration), output_path]
+
+
+def generate_still_clip(*, still_path, expected_sha256, motion,
+                        motion_rate, duration_seconds, output_path,
+                        asset_id, project_id, shot_id,
+                        ffmpeg="ffmpeg", ffprobe="ffprobe",
+                        timeout_s=300) -> dict:
+    """Animate one verified still image into a shot clip and verify it.
+
+    The still's SHA-256 must match ``expected_sha256`` — a still
+    that changed since the bible recorded it is refused, never
+    animated silently. The clip must be exactly the requested
+    geometry (1080x1920, 30 FPS) and duration, or the generation
+    is a failure with diagnostics. Returns the verified asset
+    record. The record's generation method is honest:
+    ``ai-generated-still, locally animated`` — the still came
+    from the platform's built-in image generation, the motion is
+    FFmpeg zoompan, and this is NOT AI-generated video.
+    """
+    if not os.path.isfile(still_path):
+        raise AssetError(
+            f"still animation for shot {shot_id!r}: still file "
+            f"{still_path!r} does not exist")
+    sha, _size = hash_file(still_path)
+    if expected_sha256 is not None and sha != expected_sha256:
+        raise AssetError(
+            f"still animation for shot {shot_id!r}: still SHA-256 "
+            "mismatch — the file changed since it was recorded")
+    still_probe = probe_media_file(still_path, ffprobe=ffprobe)
+    if still_probe["width"] is None or still_probe["height"] is None:
+        raise AssetError(
+            f"still animation for shot {shot_id!r}: still file "
+            f"{still_path!r} is not a readable image")
+    argv = still_animation_argv(
+        still_path, motion, duration_seconds, output_path,
+        motion_rate=motion_rate)
+    if argv[0] != ffmpeg:
+        argv = [ffmpeg] + argv[1:]
+    try:
+        proc = subprocess.run(argv, capture_output=True, text=True,
+                              timeout=timeout_s)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise AssetError(f"still animation for shot {shot_id!r} "
+                         f"failed: {exc}") from exc
+    if proc.returncode != 0 or not os.path.isfile(output_path):
+        raise AssetError(
+            f"still animation for shot {shot_id!r} failed: "
+            f"{(proc.stderr or '').strip()[:500]}")
+    probe = probe_media_file(output_path, ffprobe=ffprobe)
+    if probe["width"] != 1080 or probe["height"] != 1920:
+        raise AssetError(f"still animation for shot {shot_id!r} "
+                         "produced the wrong geometry "
+                         f"({probe['width']}x{probe['height']}, "
+                         "expected 1080x1920)")
+    if probe["frame_rate"] is None \
+            or abs(probe["frame_rate"] - 30.0) > 0.01:
+        raise AssetError(f"still animation for shot {shot_id!r} "
+                         "produced the wrong frame rate "
+                         f"({probe['frame_rate_rational']}, expected "
+                         "30/1)")
+    if probe["duration_seconds"] is None \
+            or abs(probe["duration_seconds"]
+                   - float(duration_seconds)) > 0.1:
+        raise AssetError(f"still animation for shot {shot_id!r} "
+                         "produced the wrong duration "
+                         f"({probe['duration_seconds']}, expected "
+                         f"{duration_seconds})")
+    try:
+        version_proc = subprocess.run(
+            [ffmpeg, "-version"], capture_output=True, text=True,
+            timeout=30)
+        tool_version = (version_proc.stdout.splitlines()[0].strip()
+                        if version_proc.returncode == 0
+                        and version_proc.stdout else ffmpeg)
+    except OSError:
+        tool_version = ffmpeg
+    out_sha, out_size = hash_file(output_path)
+    record = new_asset_record(
+        asset_id=asset_id, project_id=project_id, shot_id=shot_id,
+        asset_type="video-clip", provider="platform-builtin-image",
+        provider_status="EXERCISED", path=os.path.basename(output_path),
+        mime_type="video/mp4", license_class="original",
+        license_note="Still image generated by the platform's "
+                     "built-in image generation; motion is local "
+                     "FFmpeg zoompan. No third-party material.",
+        privacy_class="internal", transmit_to_provider=False,
+        provenance="INFERRED_FOR_PRODUCTION",
+        generation={"method": "ai-generated-still, locally animated",
+                    "still_provider": "platform-builtin-image",
+                    "still_sha256": sha,
+                    "still_width": still_probe["width"],
+                    "still_height": still_probe["height"],
+                    "animation_tool": "ffmpeg",
+                    "animation_tool_version": tool_version,
+                    "motion": motion,
+                    "motion_rate": motion_rate,
+                    "argv": argv})
+    record["size_bytes"] = out_size
+    record["sha256"] = out_sha
+    record["width"] = probe["width"]
+    record["height"] = probe["height"]
+    record["duration_seconds"] = probe["duration_seconds"]
+    record["frame_rate"] = probe["frame_rate"]
+    record["status"] = "VERIFIED"
+    return record

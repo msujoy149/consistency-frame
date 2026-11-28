@@ -2,8 +2,8 @@
   "schema_version": "2.3",
   "version": "2.4-p0",
   "branch": "feat/cf-p1-004-universal-production-brain",
-  "commit": "2a9e6205a7e33818f9cc626b76e86d263568f2c3",
-  "github_branch_head": "3cff200049aa3f6c5bf64c5e44e0c7e15cd841e0",
+  "commit": "7c39b2f15a3c60f0b92bf54aee70d41beb2b1c4e",
+  "github_branch_head": "5362a8544eb7413edcae742e866f3ced217766bc",
   "files": [
     {
       "path": ".gitattributes",
@@ -22,8 +22,8 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "b290393762ef514152f365620857fa806892ae90b63f4f9a4540d2ba5d3898b4",
-      "bytes": 64464
+      "sha256": "b6d88b9c4d0ee34cf90b8fc97b8f0fdf32e893dec983e3114d2c9c91ee66549e",
+      "bytes": 66924
     },
     {
       "path": "CHANGELOG.md",
@@ -142,8 +142,8 @@
     },
     {
       "path": "docs/architecture/living-architecture-report-v2.4-p0.md",
-      "sha256": "0584b625960fe049b303c7d2605db175b50e0b033ed5879896873a63d521a729",
-      "bytes": 34701
+      "sha256": "dffbb9f3735766d921155bbaeccdd4273729070c821b7cff8e3b852be9c95403",
+      "bytes": 35508
     },
     {
       "path": "docs/implementation/BRAIN_ARCHITECTURE_AUDIT.md",
@@ -152,8 +152,8 @@
     },
     {
       "path": "docs/implementation/BUILD_REPORT_P0.md",
-      "sha256": "1d1bce4718bf2047d93c7a4633b2ef2bde39644767ae019e29e6fc172a8ca87f",
-      "bytes": 71120
+      "sha256": "fa4307fc5ed405a14c13cd35a369ff5f687d9570758e97e261a9d3787ac07acc",
+      "bytes": 72329
     },
     {
       "path": "docs/implementation/CF-WO-P0-001-plan.md",
@@ -251,6 +251,11 @@
       "bytes": 38441
     },
     {
+      "path": "docs/implementation/CF-WO-P1-006-R1-corrections.md",
+      "sha256": "9e5128ef7439e1c9b7ffa69a0e845692e4ff14a20cfd6b6fbe464a3d1186c30d",
+      "bytes": 20397
+    },
+    {
       "path": "docs/implementation/CF-WO-P1-006-corrections.md",
       "sha256": "39666caa46e6958ca92341b102073bbac48c23a32fb778c5c5aa908eae878455",
       "bytes": 13591
@@ -262,8 +267,13 @@
     },
     {
       "path": "docs/implementation/build-report.json",
-      "sha256": "2c54b1abd4b543436ab2359483800bbf78c4dda27609e01f6bed9a41abe2f873",
-      "bytes": 36076
+      "sha256": "6ed106b8b5cc1c0207446a1ebf5f491cb1644305f80cc3dc1f05880efe3e355c",
+      "bytes": 37085
+    },
+    {
+      "path": "docs/runtime/CHARACTER_CONSISTENCY_RUNTIME.md",
+      "sha256": "b70e61986e2394aa7b1837193cbc97faa52bb614925f138bce3dedc800dff72b",
+      "bytes": 8904
     },
     {
       "path": "docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md",
@@ -287,8 +297,8 @@
     },
     {
       "path": "docs/runtime/PROVIDER_ADAPTERS.md",
-      "sha256": "3124f3d8bf786e620c7918ba54e1fbf1c24a78e0282ef2d0949f30e06db85ea7",
-      "bytes": 19439
+      "sha256": "265b8ed2b226bbe9bbf6b3d125d81db9e182371ff222f8e6396aaefdbf7e100c",
+      "bytes": 19926
     },
     {
       "path": "docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md",
@@ -324,6 +334,51 @@
       "path": "evidence/p1005/vs-headers.txt",
       "sha256": "2a186d66dd51f584ff369beb4ec2286441fb5a0bbfa757a93a8db4452b471a60",
       "bytes": 242
+    },
+    {
+      "path": "examples/p1006-r1-character-consistency/README.md",
+      "sha256": "22ec7cf17363d0741f10ce666dfb26468f890fe1a4868105d8bbb3a976384c5d",
+      "bytes": 2718
+    },
+    {
+      "path": "examples/p1006-r1-character-consistency/assembly-config.json",
+      "sha256": "619fe0213e77c7656894495faebc1a6c988e347753bf0c84b476d35a3be3123d",
+      "bytes": 616
+    },
+    {
+      "path": "examples/p1006-r1-character-consistency/character-bible.json",
+      "sha256": "5ebce3c44660a0d3a27ef9f01b4081ca71fdff04be4600cbdc4122fb778f664a",
+      "bytes": 8215
+    },
+    {
+      "path": "examples/p1006-r1-character-consistency/production-analysis.json",
+      "sha256": "f21bb9932f039fdc5c65031c23ef39cba6dbc082fa3860f65bf65e49bee357f8",
+      "bytes": 3173
+    },
+    {
+      "path": "examples/p1006-r1-character-consistency/project.json",
+      "sha256": "9aa56f41fe7dda1754e103bc3a4292d1d042de9d575df1aa5e77f262837af36f",
+      "bytes": 1169
+    },
+    {
+      "path": "examples/p1006-r1-character-consistency/script.md",
+      "sha256": "78f9f9a5c3fdaaf2b7c759a1c07905a3b12584567d734b5e54a913fbce1150a9",
+      "bytes": 1303
+    },
+    {
+      "path": "examples/p1006-r1-character-consistency/shot-list.json",
+      "sha256": "286501a01080265bcd36ccdcc174b5429c1ed00dbfe34ec9e74a60da6b520ea7",
+      "bytes": 7614
+    },
+    {
+      "path": "examples/p1006-r1-character-consistency/sound-plan.json",
+      "sha256": "77046add4b2c5c4eea541590bee50b58904bf2825a7d2cf7f780e82382fd5ffc",
+      "bytes": 1705
+    },
+    {
+      "path": "examples/p1006-r1-character-consistency/voice-config.json",
+      "sha256": "9682ab93ac31b1a528c7ab16493853c88392a2ac67b3b81486af8cc82a9d86bd",
+      "bytes": 1594
     },
     {
       "path": "examples/p1006-vertical-explainer/README.md",
@@ -406,6 +461,11 @@
       "bytes": 13663
     },
     {
+      "path": "runtime/character_consistency.py",
+      "sha256": "1e17d2ece35ebc949104d0de6a7e5e00298c6cbefa26e751a7e5feaa2e7a2a0c",
+      "bytes": 20053
+    },
+    {
       "path": "runtime/execution_orchestrator.py",
       "sha256": "8dd994e647ac4146115c5418bf3cf71470f5a2168b324311e47d388288478540",
       "bytes": 34281
@@ -432,13 +492,13 @@
     },
     {
       "path": "runtime/production_assets.py",
-      "sha256": "570e1117d860151ebd5095d28136d4db09a9696f92ca2e8ad0c88b8f6aa74c56",
-      "bytes": 28695
+      "sha256": "38999486c9635846485f489b9b20ef67df1b325c3d507a445fdb8dfd0575eec1",
+      "bytes": 37378
     },
     {
       "path": "runtime/production_audio.py",
-      "sha256": "23b9b2af9406a1ddd6dbdd097fd6ac22f4f3033b8212320fd747f9ba4e2809d6",
-      "bytes": 43962
+      "sha256": "e3f8bc03338d7cb5a62732992a8c7a81bb59835e62b0250024c11e0004e963e2",
+      "bytes": 44870
     },
     {
       "path": "runtime/production_delivery.py",
@@ -462,8 +522,8 @@
     },
     {
       "path": "runtime/production_timeline.py",
-      "sha256": "1a2a12f8411b50de8e1ac3b530fce032aa2e2c3fb6dd8e0c4c67b36e97af97e0",
-      "bytes": 29085
+      "sha256": "4760b6d73792366e81169f456b083a4222c209e86e03cf6189b75c20eb8c93f3",
+      "bytes": 30525
     },
     {
       "path": "runtime/production_voice.py",
@@ -502,8 +562,8 @@
     },
     {
       "path": "runtime/vertical_production.py",
-      "sha256": "a8fc0861bda799b462baa5d4e5e5f20510f9897216e1ac7133f9f0e360a30aa9",
-      "bytes": 40537
+      "sha256": "67a2d704fee66b511ac73329e52148300aadd50c19f9a7aac8b3f39647e02333",
+      "bytes": 40741
     },
     {
       "path": "schemas/README.md",
@@ -724,6 +784,11 @@
       "path": "scripts/generate-routing-catalog.py",
       "sha256": "a07337538bb669589218a3fced3cce4b8f29e8068aa23d62e179caeef5f3bca4",
       "bytes": 20053
+    },
+    {
+      "path": "scripts/run-p1006-r1-character-render.py",
+      "sha256": "5123221d6de4490897ad5183d8abbc7a5450562fff0c841973d9f10f9d987e9a",
+      "bytes": 28988
     },
     {
       "path": "scripts/run-p1006-reference-render.py",
@@ -1107,13 +1172,13 @@
     },
     {
       "path": "tests/last-run.json",
-      "sha256": "3e7c0f0d028e37da19930f1cee2b04669b4796ceca9013f2060b7730f814c0a1",
-      "bytes": 18492
+      "sha256": "4c01908473910abb05e28fb008dc0d54413e8550a4598362d643b37d2c1c5a0c",
+      "bytes": 18649
     },
     {
       "path": "tests/run-tests.sh",
-      "sha256": "02d86d7367da88b082aedbd73268cc6739e5a6cdbc1a7cbf2c7aff06dd6361b0",
-      "bytes": 11755
+      "sha256": "3071863c408486f2526e1e4881da595950411ed34476c262e26cebffa690ebfe",
+      "bytes": 11829
     },
     {
       "path": "tests/test_atomic_write.py",
@@ -1221,6 +1286,11 @@
       "bytes": 18819
     },
     {
+      "path": "tests/test_p1006_r1_character.py",
+      "sha256": "0568887c3d8386d2ba8ba651aa31dfc7106abcbb3ee5a3b211368647ecf223e9",
+      "bytes": 39536
+    },
+    {
       "path": "tests/test_p1006_timeline.py",
       "sha256": "a9b23747b75e6bbe03e5c0eac859901fcba96c3c6c485dd99155963f9e607765",
       "bytes": 12940
@@ -1282,8 +1352,8 @@
     },
     {
       "path": "tests/test_reports.py",
-      "sha256": "eb8ea1f646e9ac6a8f96f5edf4cca0de5c47c5b8315fa8e37cee562827889d9c",
-      "bytes": 31262
+      "sha256": "9622ba1ebc7727c87a473f441e68b6f7a5d453a95b8e0281ffca61900db799b1",
+      "bytes": 31959
     },
     {
       "path": "tests/test_routing.py",
@@ -1742,6 +1812,10 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-006-R1-CHARACTER",
+      "result": "PASS"
+    },
+    {
       "id": "CF-P1-006-TIMELINE",
       "result": "PASS"
     },
@@ -1770,5 +1844,5 @@
       "result": "PASS"
     }
   ],
-  "generated_at_utc": "2026-11-27T18:14:40Z"
+  "generated_at_utc": "2026-11-27T20:42:10Z"
 }
