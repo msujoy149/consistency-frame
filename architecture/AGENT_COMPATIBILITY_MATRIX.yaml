@@ -8,9 +8,16 @@
 # Do NOT claim universal native Skill support.
 #
 # Statuses:
-#   VERIFIED     — exercised in this account (see evidence).
+#   VERIFIED     — exercised in this account (see evidence). Usage-based:
+#                  it means the knowledge-pack path is actually used in
+#                  this account, NOT that a formal conformance test ran.
+#                  Formal conformance is tracked separately per agent
+#                  (formal_conformance_status); only a formal test
+#                  (CF-P0-ADAPTER-001) can make it VERIFIED.
 #   NOT_TESTED   — no conformance test has been run here.
 # Native skill install values: SUPPORTED / UNSUPPORTED / NOT_TESTED.
+# Media execution is tracked separately per agent (media_execution):
+# a host that only directs companions/providers records "none".
 version: "2.4"
 generated: "2026-11-22"
 principle: One canonical Brain source (this repo). Each host gets a thin
@@ -24,9 +31,14 @@ agents:
     knowledge_pack_path: Clone the repo into the workspace and read skills/ from there; `bash setup.sh` syncs local .agents/skills/ copies and (opt-in) the bundled components. No native custom-SKILL.md install flow is documented by Meta.
     verified: true
     verification_status: VERIFIED
+    verification_basis: usage-exercised-in-account
     verification_evidence: Used daily in this account since 2026-11-12 (repo work, P0 v2.3 + v2.4 implementation, tests, blog). The knowledge-pack path is the path this account actually uses.
+    formal_conformance_status: VERIFIED
+    formal_conformance_test_id: CF-P0-ADAPTER-001
+    formal_conformance_evidence: "CF-P0-ADAPTER-001 passed 2026-11-26 in this environment (tests/test_muse_adapter_conformance.py, 20 checks): knowledge-pack access, router skill identification, canonical contract read, short-form fixture analysis, verbatim dialogue preservation, schema + runtime validation, unsupported media-provider operations identified, no native-install claim."
+    media_execution: none — directs companions/providers only; generates no video or audio itself
     status: verified
-    notes: The Brain's home host. The repo is installed as a versioned knowledge pack, not as a native skill install.
+    notes: The Brain's home host. The repo is installed as a versioned knowledge pack, not as a native skill install. Usage-verified (exercised daily in this account) and formal conformance VERIFIED by CF-P0-ADAPTER-001 (2026-11-26); media execution is none.
   - agent_id: agent-claude-code
     name: Claude Code
     native_skill_install: NOT_TESTED
@@ -35,6 +47,8 @@ agents:
     verified: false
     verification_status: NOT_TESTED
     verification_evidence: none in this account
+    formal_conformance_status: NOT_TESTED
+    media_execution: none evidenced — no record of this host generating media in this account
     status: untested
     notes: Adapter record claims a native plugin-marketplace path; no conformance test has been run.
   - agent_id: agent-codex
@@ -45,6 +59,8 @@ agents:
     verified: false
     verification_status: NOT_TESTED
     verification_evidence: none in this account
+    formal_conformance_status: NOT_TESTED
+    media_execution: none evidenced — no record of this host generating media in this account
     status: untested
     notes: Adapter record claims a native plugin-manifest path; no conformance test has been run.
   - agent_id: agent-claude
@@ -55,6 +71,8 @@ agents:
     verified: false
     verification_status: NOT_TESTED
     verification_evidence: none in this account
+    formal_conformance_status: NOT_TESTED
+    media_execution: none evidenced — no record of this host generating media in this account
     status: untested
     notes: No adapter record exists yet. A knowledge pack is the intended path; it has not been tried.
   - agent_id: agent-gemini-cli
@@ -65,6 +83,8 @@ agents:
     verified: false
     verification_status: NOT_TESTED
     verification_evidence: none in this account
+    formal_conformance_status: NOT_TESTED
+    media_execution: none evidenced — no record of this host generating media in this account
     status: untested
     notes: Adapter record claims a native extension path; no conformance test has been run.
   - agent_id: agent-antigravity
@@ -75,6 +95,8 @@ agents:
     verified: false
     verification_status: NOT_TESTED
     verification_evidence: none in this account
+    formal_conformance_status: NOT_TESTED
+    media_execution: none evidenced — no record of this host generating media in this account
     status: untested
     notes: Packaged path claimed by the adapter record; no conformance test has been run.
   - agent_id: agent-chatgpt
@@ -85,6 +107,8 @@ agents:
     verified: false
     verification_status: NOT_TESTED
     verification_evidence: none in this account (a 2026-11-22 collaboration workflow with ChatGPT was stopped by the user; no skill-install conformance test was run)
+    formal_conformance_status: NOT_TESTED
+    media_execution: none evidenced — no record of this host generating media in this account
     status: untested
     notes: ChatGPT is not an agent host with a native skill runtime in the Brain's sense; the packaged upload path is claimed by the adapter record only. Decisions only — never browser/UI work — per the user's standing rule for ChatGPT collaboration.
   - agent_id: agent-opencode
@@ -95,6 +119,8 @@ agents:
     verified: false
     verification_status: NOT_TESTED
     verification_evidence: none in this account
+    formal_conformance_status: NOT_TESTED
+    media_execution: none evidenced — no record of this host generating media in this account
     status: untested
     notes: Adapter record claims a native path; no conformance test has been run.
   - agent_id: agent-cursor
@@ -105,6 +131,8 @@ agents:
     verified: false
     verification_status: NOT_TESTED
     verification_evidence: none in this account
+    formal_conformance_status: NOT_TESTED
+    media_execution: none evidenced — no record of this host generating media in this account
     status: untested
     notes: No adapter record exists yet. A knowledge pack is the intended path; it has not been tried.
   - agent_id: agent-github-copilot
@@ -115,6 +143,8 @@ agents:
     verified: false
     verification_status: NOT_TESTED
     verification_evidence: none in this account
+    formal_conformance_status: NOT_TESTED
+    media_execution: none evidenced — no record of this host generating media in this account
     status: untested
     notes: No adapter record exists yet. A knowledge pack is the intended path; it has not been tried.
 non_hosts:

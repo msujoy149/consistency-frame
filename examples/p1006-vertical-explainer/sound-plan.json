@@ -1,0 +1,21 @@
+{
+  "schema_version": "2.5",
+  "project_id": "p1006-vertical-explainer",
+  "tracks": [
+    {"track_id": "voice", "kind": "dialogue", "gain_db": 0.0, "source": "voicestudio-omnivoice"},
+    {"track_id": "music-bed", "kind": "music", "gain_db": -18.0, "duck_under_voice_db": -12.0, "fade_in_seconds": 1.0, "fade_out_seconds": 1.5, "source": "synthesized"},
+    {"track_id": "room-tone", "kind": "room-tone", "gain_db": -38.0, "source": "synthesized"},
+    {"track_id": "sfx", "kind": "sfx", "gain_db": -12.0, "source": "synthesized"}
+  ],
+  "cues": [
+    {"cue_id": "sfx-whoosh-s2", "kind": "sfx", "shot_id": "s2", "anchor": "shot-start", "asset": "sfx-whoosh", "duration_seconds": 0.8},
+    {"cue_id": "sfx-whoosh-s3", "kind": "sfx", "shot_id": "s3", "anchor": "shot-start", "asset": "sfx-whoosh", "duration_seconds": 0.8},
+    {"cue_id": "sfx-whoosh-s4", "kind": "sfx", "shot_id": "s4", "anchor": "shot-start", "asset": "sfx-whoosh", "duration_seconds": 0.8},
+    {"cue_id": "sfx-whoosh-s5", "kind": "sfx", "shot_id": "s5", "anchor": "shot-start", "asset": "sfx-whoosh", "duration_seconds": 0.8},
+    {"cue_id": "sfx-whoosh-s6", "kind": "sfx", "shot_id": "s6", "anchor": "shot-start", "asset": "sfx-whoosh", "duration_seconds": 0.8}
+  ],
+  "silences": [
+    {"silence_id": "tail-out", "anchor": "timeline-end", "duration_seconds": 1.5, "intentional": true, "reason": "Music tail-out under the end card; not a defect."}
+  ],
+  "notes": "No licensed music or SFX asset exists for this reference project. The music bed, room tone, and whoosh SFX are synthesized locally with FFmpeg and labelled synthesized in every record. Intentional silence is recorded here and in the QC report so it is never flagged as a defect."
+}

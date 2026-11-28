@@ -464,6 +464,240 @@
       "result": "PASS"
     },
     {
+      "id": "CF-P1-004-ANALYSIS",
+      "command": "python3 tests/test_production_analysis.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-ORCHESTRATOR",
+      "command": "python3 tests/test_production_orchestrator.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-COMPILER",
+      "command": "python3 tests/test_task_compiler.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-STORE",
+      "command": "python3 tests/test_production_store.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-ADAPTER",
+      "command": "python3 tests/test_muse_adapter_conformance.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-RESOLUTION",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-POLICY",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-BINDING",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-VOICE",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-E2E",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-NEWONLY",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-IDENTITY-PRIVACY",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-UNIFIED",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-SELECTION",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-NEWONLY-ADVERSARIAL",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-MULTI",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-LONGSHORT",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-004-R1-F1-PERSISTENT",
+      "command": "python3 tests/test_identity_resolution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-EXECUTION",
+      "command": "python3 tests/test_media_execution.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-FFMPEG",
+      "command": "python3 tests/test_ffmpeg_adapter.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-ADAPTERS",
+      "command": "python3 tests/test_media_adapters.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-DELIVERY",
+      "command": "python3 tests/test_timeline_delivery.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-R4-SEC",
+      "command": "python3 tests/test_provider_url_security.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-R4-CONTRACTS",
+      "command": "python3 tests/test_provider_contracts.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-R4-GEOMETRY",
+      "command": "python3 tests/test_timeline_geometry.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-R4-VOICE",
+      "command": "python3 tests/test_voicestudio_controls.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-005-R4-E2E",
+      "command": "python3 tests/test_e2e_local.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-PROJECT",
+      "command": "python3 tests/test_p1006_project.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-ASSETS",
+      "command": "python3 tests/test_p1006_assets.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-VOICE",
+      "command": "python3 tests/test_p1006_voice.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-AUDIO",
+      "command": "python3 tests/test_p1006_audio.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-TIMELINE",
+      "command": "python3 tests/test_p1006_timeline.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-ASSEMBLY",
+      "command": "python3 tests/test_p1006_assembly.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-QC-DELIVERY",
+      "command": "python3 tests/test_p1006_delivery.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-E2E",
+      "command": "python3 tests/test_p1006_e2e.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-R1-CHARACTER",
+      "command": "python3 tests/test_p1006_r1_character.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-R2-I2V",
+      "command": "python3 tests/test_p1006_r2_image_to_video.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-R2-PREFLIGHT",
+      "command": "python3 tests/test_p1006_r2_preflight.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "id": "CF-P1-006-R2-PREFLIGHT-STORYBOARD",
+      "command": "python3 tests/test_p1006_r2_preflight_storyboard.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
       "id": "P0-DIFF-CHECK",
       "command": "git diff --check",
       "exit_code": 0,

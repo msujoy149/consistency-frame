@@ -104,6 +104,15 @@
         "type": "string"
       }
     },
+    "fixed_prompt_block": {
+      "description": "The fixed identity prompt block for this character (CF-WO-P1-004-R1-ADDENDUM-IDENTITY, Task E): the short stable text block describing the fixed identity (face, height, proportions, defining features), injected into every generation of this character. Machine-readable form of the character-consistency skill's prompt block; optional so every existing record remains valid. Never stored in a voice schema.",
+      "type": "string",
+      "minLength": 1
+    },
+    "generation_seed": {
+      "description": "The fixed generation seed for this character (CF-WO-P1-004-R1-ADDENDUM-IDENTITY, Task E): one seed recorded per character and used in every generation of that character. Machine-readable form of the character-consistency skill's seed; optional so every existing record remains valid.",
+      "type": "integer"
+    },
     "voice_profile_id": {
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9\\-]{2,63}$"

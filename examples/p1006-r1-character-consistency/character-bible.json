@@ -1,0 +1,166 @@
+{
+  "accessories": {
+    "primary": "brass compass pendant on a dark leather cord, worn around the neck, always visible",
+    "provenance": "CONFIRMED",
+    "secondary": "rolled paper map (carried in scenes 1, 2, 4), leather satchel (scenes 2, 5)"
+  },
+  "age_range": {
+    "canonical_age": 28,
+    "max_years": 30,
+    "min_years": 25,
+    "provenance": "CONFIRMED"
+  },
+  "approval_state": "project-level-approved",
+  "approved_by": "project-bible",
+  "asset_provenance": {
+    "method": "ai-generated-still, locally animated",
+    "references": "Reference images are generated with the platform's built-in image generation (platform-builtin-image), chained from the approved front reference; no external provider, no paid call, no credentials. Scene stills are generated the same way. All stills are animated locally with deterministic FFmpeg zoompan; they are labelled locally-animated-stills, never AI-generated video.",
+    "scene_stills": "platform-builtin-image, chained from the front reference, one distinct still per scene",
+    "sound": "locally synthesized, in-process, fixed seed",
+    "status": "EXERCISED for stills; image-to-video NOT_TESTED",
+    "voice": "voicestudio-omnivoice, non-commercial test voice, CC-BY-NC, seed 42"
+  },
+  "body_proportions": {
+    "build": "slim athletic build",
+    "height": "average height",
+    "posture": "upright, energetic stance",
+    "provenance": "CONFIRMED",
+    "shoulders": "narrow shoulders"
+  },
+  "character_id": "DEMO-CHAR-001",
+  "expressions": {
+    "concentration": "brows slightly drawn, lips closed, gaze fixed",
+    "determined": "brows set, lips pressed, chin up",
+    "joy": "broad smile, eyes crinkled at the corners",
+    "neutral": "gentle closed-mouth smile, relaxed eyes",
+    "provenance": "CONFIRMED",
+    "relief": "soft smile, shoulders down, eyes half-closed",
+    "wonder": "eyes wide, eyebrows raised, mouth slightly open"
+  },
+  "face": {
+    "eye_spacing": "wide-set, one eye-width apart",
+    "eyes": "large dark-brown eyes, set wide apart, thick dark lashes, gentle upward curve at the outer corners",
+    "freckles": "light freckle dusting across the nose and cheeks",
+    "mouth": "full lips, gentle closed-mouth smile at rest",
+    "nose": "small straight nose",
+    "provenance": "CONFIRMED",
+    "shape": "round face, soft jawline, full cheeks"
+  },
+  "hair": {
+    "color": "dark auburn",
+    "provenance": "CONFIRMED",
+    "style": "shoulder-length bob with a straight fringe, side part on the left",
+    "texture": "smooth, slight wave at the ends"
+  },
+  "identity_kind": "project-local-demonstration",
+  "is_canonical_user_character": false,
+  "is_registered_in_global_registry": false,
+  "name": "Mara",
+  "negative_constraints": [
+    "No other hair color, length, or style.",
+    "No other jacket color; no dress, no uniform, no costume change.",
+    "No removal of the compass pendant.",
+    "No change of eye color, eye size, or eye spacing.",
+    "No change of skin tone.",
+    "No photorealistic rendering of the character.",
+    "No second character in any scene.",
+    "No text, watermark, or logo inside any scene image."
+  ],
+  "outfit": {
+    "boots": "brown leather ankle boots",
+    "description": "ONE fixed outfit in every scene: deep teal chore jacket with brass buttons, worn open over a cream cotton t-shirt, dark indigo trousers, brown leather boots.",
+    "jacket": "deep teal chore jacket, four brass buttons, two chest pockets, collar worn up at the back",
+    "provenance": "CONFIRMED",
+    "shirt": "cream cotton t-shirt",
+    "trousers": "dark indigo straight-leg trousers"
+  },
+  "project_id": "p1006-r1-character-consistency",
+  "props": {
+    "compass": "the brass compass pendant itself; in scene 1 it rests on the map table",
+    "map": "rolled paper map, cream paper with hand-drawn ink coastlines",
+    "provenance": "CONFIRMED",
+    "satchel": "tan leather satchel with a brass clasp"
+  },
+  "provenance": {
+    "design": "CONFIRMED",
+    "design_source": "CF-WO-P1-006-R1 build coordinator, 2026-11-27; fictional demonstration design, no user-supplied reference",
+    "image_generation": "platform-builtin-image (built-in image generation of this environment; no external provider, no paid call, no credentials)",
+    "image_generation_status": "VERIFIED by generation + visual inspection, 2026-11-27",
+    "inferences": [
+      "Exact hex 0F6B6B for deep teal is a production choice recorded here as CONFIRMED design, not an inference.",
+      "Boot and trouser details not visible in upper-body references are production inferences from the outfit description; they must match the full-body reference once generated.",
+      "Scene environments, lighting, and camera directions are production inferences in the shot list, not bible canon."
+    ]
+  },
+  "references": {
+    "expressions": {
+      "asset_id": "ref-mara-expressions",
+      "file": "work/references/mara-expressions-ref.png",
+      "sha256": "43b5449ebd72841a8a91d77db1ee85cc4db5ef21d17dad6cb012bfdff0e0c5ce",
+      "size_bytes": 2179773,
+      "status": "generated",
+      "view": "one sheet, six labelled expression portraits: neutral, wonder, determined, joy, concentration, relief"
+    },
+    "front": {
+      "asset_id": "ref-mara-front",
+      "file": "work/references/mara-front-ref.png",
+      "sha256": "fc70c9a49e562e3b9b730237a39baff2160102f34b1d36cd9bd93cc382abe72e",
+      "size_bytes": 2365146,
+      "status": "generated",
+      "view": "front, upper body, facing camera, neutral expression"
+    },
+    "full_body": {
+      "asset_id": "ref-mara-full-body",
+      "file": "work/references/mara-full-body-ref.png",
+      "sha256": "3939e5f451bca6139985238598d9a9993f7506d7a01a98513acd0f8e6ad19f0c",
+      "size_bytes": 1339518,
+      "status": "generated",
+      "view": "full body, standing, front, whole outfit visible"
+    },
+    "side": {
+      "asset_id": "ref-mara-side",
+      "file": "work/references/mara-side-ref.png",
+      "sha256": "57898846d8a090dff6c7282c45044b148243ddec58721593e307e949e75438a6",
+      "size_bytes": 1807388,
+      "status": "generated",
+      "view": "side profile, upper body, facing left"
+    },
+    "three_quarter": {
+      "asset_id": "ref-mara-three-quarter",
+      "file": "work/references/mara-three-quarter-ref.png",
+      "sha256": "8826594a8a3253b30ceb8f2ba9be80e34f7e3a80b7f85f4174be61832bd2f194",
+      "size_bytes": 2411153,
+      "status": "generated",
+      "view": "three-quarter, upper body, head turned slightly left"
+    }
+  },
+  "registration_note": "Fictional demonstration identity created for CF-WO-P1-006-R1 only. She is NOT an existing canonical user character, NOT registered in the global character registry, and must never be merged into it. Her data is project-local to examples/p1006-r1-character-consistency/ and the p1006-r1 delivery folder.",
+  "schema_version": "2.5",
+  "signature_color": {
+    "appears_on": "chore jacket (primary), compass cord accent in scene 6 only",
+    "defined_once": true,
+    "hex": "0F6B6B",
+    "name": "deep teal",
+    "note": "Defined once here. Every scene must show the deep teal jacket; no scene may change it to another color.",
+    "provenance": "CONFIRMED"
+  },
+  "skin": {
+    "appearance": "smooth stylized skin, no blemishes, faint blush on the cheeks",
+    "provenance": "CONFIRMED",
+    "tone": "warm light-brown"
+  },
+  "style": {
+    "look": "stylized 3D animation",
+    "note": "Stylized 3D was chosen over photorealism because a simple, distinctive design is more reproducible across independent generations than a photoreal face.",
+    "provenance": "CONFIRMED"
+  },
+  "visual_constraints": [
+    "Face structure never changes: round face, wide-set large dark-brown eyes, small straight nose, freckles.",
+    "Hair never changes: dark auburn shoulder-length bob with straight fringe.",
+    "Outfit never changes: deep teal chore jacket, cream t-shirt, dark indigo trousers, brown boots.",
+    "Brass compass pendant visible in every scene.",
+    "Signature color deep teal (0F6B6B) present in every scene on the jacket.",
+    "Stylized 3D look in every scene; never switch to photorealism or a different style.",
+    "Body proportions constant: slim athletic build, average height."
+  ]
+}

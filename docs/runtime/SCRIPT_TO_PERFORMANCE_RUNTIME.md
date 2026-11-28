@@ -350,3 +350,21 @@ authorization system, or graphical UI. The Brain creates and
 validates instructions and plans — it does not become a
 media-generation server. No permanent records are created in this
 phase.
+
+## Companion: the P1-004 production orchestrator
+
+This runtime's bundles are consumed by the P1-004 production
+orchestrator (`runtime/production_orchestrator.py`, documented in
+`docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md`). The
+orchestrator wraps `build_script_to_performance_bundle` inside
+`build_production_bundle`: it first validates the AI host's
+production-analysis draft (story preservation, decision
+provenance, character resolution, dialogue counts against the
+source script), then builds the Script-to-Performance bundle, and
+only then moves the job from `ANALYZING` to `PLAN_READY`. It
+compiles the bundle into deterministic provider-neutral task
+packets (`runtime/task_compiler.py`), enforces the G1–G6 gates in
+order, records execution results, and builds QC correction tasks
+for defective shots only. The S2P runtime's contracts — verbatim
+dialogue, cross-plan integrity, deterministic assembly — are
+unchanged; the orchestrator adds the job lifecycle around them.

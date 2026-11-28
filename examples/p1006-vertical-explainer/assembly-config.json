@@ -1,0 +1,15 @@
+{
+  "schema_version": "2.5",
+  "project_id": "p1006-vertical-explainer",
+  "render_path": "ffmpeg",
+  "video_codec": "libx264",
+  "crf": 20,
+  "preset": "medium",
+  "pix_fmt": "yuv420p",
+  "audio_codec": "aac",
+  "audio_bitrate": "192k",
+  "audio_sample_rate": 48000,
+  "transition": {"type": "fadeblack", "duration_seconds": 0.3},
+  "deterministic": true,
+  "notes": "Single final rendering path: FFmpeg. OpenMontage production assembly is NOT_TESTED and is not used here."
+}

@@ -127,6 +127,58 @@ run_one "CF-P1-003-R2-PERFORMANCE" python3 tests/test_script_to_performance_runt
 run_one "CF-P1-003-R2-EDITING" python3 tests/test_script_to_performance_runtime.py
 run_one "CF-P1-003-R2-BINDINGS" python3 tests/test_script_to_performance_runtime.py
 run_one "CF-P1-003-R2-BUNDLE" python3 tests/test_script_to_performance_runtime.py
+run_one "CF-P1-004-ANALYSIS" python3 tests/test_production_analysis.py
+run_one "CF-P1-004-ORCHESTRATOR" python3 tests/test_production_orchestrator.py
+run_one "CF-P1-004-COMPILER" python3 tests/test_task_compiler.py
+run_one "CF-P1-004-R1-STORE" python3 tests/test_production_store.py
+run_one "CF-P1-004-R1-ADAPTER" python3 tests/test_muse_adapter_conformance.py
+run_one "CF-P1-004-R1-IDENTITY-RESOLUTION" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-IDENTITY-POLICY" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-IDENTITY-BINDING" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-IDENTITY-VOICE" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-IDENTITY-E2E" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-IDENTITY-NEWONLY" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-IDENTITY-PRIVACY" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-F1-UNIFIED" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-F1-SELECTION" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-F1-NEWONLY-ADVERSARIAL" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-F1-MULTI" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-F1-LONGSHORT" python3 tests/test_identity_resolution.py
+run_one "CF-P1-004-R1-F1-PERSISTENT" python3 tests/test_identity_resolution.py
+
+# Media execution runtime (CF-WO-P1-005): execution state machine +
+# orchestration + pipeline, FFmpeg adapter (real local execution),
+# provider adapters (mock transports only), timeline delivery.
+run_one "CF-P1-005-EXECUTION" python3 tests/test_media_execution.py
+run_one "CF-P1-005-FFMPEG" python3 tests/test_ffmpeg_adapter.py
+run_one "CF-P1-005-ADAPTERS" python3 tests/test_media_adapters.py
+run_one "CF-P1-005-DELIVERY" python3 tests/test_timeline_delivery.py
+
+# R4 (CF-WO-P1-005-R4): provider URL security, provider contracts,
+# timeline geometry, VoiceStudio capability honesty, local
+# end-to-end integration.
+run_one "CF-P1-005-R4-SEC" python3 tests/test_provider_url_security.py
+run_one "CF-P1-005-R4-CONTRACTS" python3 tests/test_provider_contracts.py
+run_one "CF-P1-005-R4-GEOMETRY" python3 tests/test_timeline_geometry.py
+run_one "CF-P1-005-R4-VOICE" python3 tests/test_voicestudio_controls.py
+run_one "CF-P1-005-R4-E2E" python3 tests/test_e2e_local.py
+
+# Vertical production runtime (CF-WO-P1-006): complete production
+# project model, visual assets, voice, sound design, canonical
+# timeline + FFmpeg assembly, QC, delivery, end-to-end reference
+# render through the real driver.
+run_one "CF-P1-006-PROJECT" python3 tests/test_p1006_project.py
+run_one "CF-P1-006-ASSETS" python3 tests/test_p1006_assets.py
+run_one "CF-P1-006-VOICE" python3 tests/test_p1006_voice.py
+run_one "CF-P1-006-AUDIO" python3 tests/test_p1006_audio.py
+run_one "CF-P1-006-TIMELINE" python3 tests/test_p1006_timeline.py
+run_one "CF-P1-006-ASSEMBLY" python3 tests/test_p1006_assembly.py
+run_one "CF-P1-006-QC-DELIVERY" python3 tests/test_p1006_delivery.py
+run_one "CF-P1-006-E2E" python3 tests/test_p1006_e2e.py
+run_one "CF-P1-006-R1-CHARACTER" python3 tests/test_p1006_r1_character.py
+run_one "CF-P1-006-R2-I2V" python3 tests/test_p1006_r2_image_to_video.py
+run_one "CF-P1-006-R2-PREFLIGHT" python3 tests/test_p1006_r2_preflight.py
+run_one "CF-P1-006-R2-PREFLIGHT-STORYBOARD" python3 tests/test_p1006_r2_preflight_storyboard.py
 
 # Whitespace / diff hygiene.
 run_one "P0-DIFF-CHECK" git diff --check

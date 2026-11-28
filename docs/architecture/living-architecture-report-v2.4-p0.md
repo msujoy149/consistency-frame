@@ -1,6 +1,6 @@
 # Living Architecture Report — v2.4 P0 (Brain Architecture Amendment)
 
-**Generated:** 2026-11-26 17:10 UTC — from canonical records (`registry/*.json`,
+**Generated:** 2026-11-28 10:44 UTC — from canonical records (`registry/*.json`,
 `schemas/`, `architecture/*.yaml`, git state, `tests/last-run.json`). Do not edit the inventory
 numbers by hand; regenerate with `python3 scripts/generate-report.py`.
 
@@ -22,9 +22,9 @@ video production/editing). See
 
 **Repository:** https://github.com/msujoy149/consistency-frame
 **Base branch/commit:** `main` / `e1571db68ed87fb973c45960a4a3e27e09ba0d06`
-**Feature branch:** `feat/cf-p1-003-script-to-performance-runtime`
-**Head commit:** `5a3ab7fafc73297bd77425179f48b8cbb0a4983f`
-**GitHub branch head:** `bc9850031d347a9982fd6c05e5693c110d7f7338` (remote head of `feat/cf-p1-003-script-to-performance-runtime` at
+**Feature branch:** `feat/cf-p1-004-universal-production-brain`
+**Head commit:** `df741a2841724f31bc1279ba28f6030c482adf5d`
+**GitHub branch head:** `df741a2841724f31bc1279ba28f6030c482adf5d` (remote head of `feat/cf-p1-004-universal-production-brain` at
 generation time; pushing this regenerated report advances the branch
 head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §12)
 **Architecture/report version:** v2.4 P0 (work order CF-WO-P0-001, revised)
@@ -37,8 +37,8 @@ head by one docs-only commit — see `docs/implementation/BUILD_REPORT_P0.md` §
 | Skills (`registry/skills.json`) | 15 |
 | Features (`registry/features.json`) | 173 |
 | Workflows / intent modes (`registry/workflows.json`) | 13 |
-| Adapters (`registry/adapters.json`) | 12 |
-| JSON Schemas (`schemas/*.json`) | 28 |
+| Adapters (`registry/adapters.json`) | 15 |
+| JSON Schemas (`schemas/*.json`) | 39 |
 | Routing matrix entries (`architecture/SKILL_ROUTING_MATRIX.yaml`) | 15 |
 | Workflow graph nodes / edges (`architecture/WORKFLOW_GRAPH.yaml`) | 15 / 42 |
 | Companion capabilities (`architecture/COMPANION_CAPABILITY_REGISTRY.yaml`) | 20 (3 exercised_recorded_run, 16 present_locally, 1 upstream_inspected_pinned_commit, 0 production_verified) |
@@ -97,16 +97,19 @@ deferred P1 work.
 
 | Adapter | Integration | Native skill install | Conformance | Status |
 |---|---|---|---|---|
-| Muse (Meta) | PACKAGED | UNSUPPORTED | NOT_TESTED | untested |
+| Muse (Meta) | PACKAGED | UNSUPPORTED | VERIFIED | verified |
 | Claude Code | NATIVE | NOT_TESTED | NOT_TESTED | untested |
 | Codex | NATIVE | NOT_TESTED | NOT_TESTED | untested |
 | Gemini CLI | NATIVE | NOT_TESTED | NOT_TESTED | untested |
 | Antigravity | PACKAGED | NOT_TESTED | NOT_TESTED | untested |
 | ChatGPT | PACKAGED | NOT_TESTED | NOT_TESTED | untested |
+| Claude | PACKAGED | NOT_TESTED | NOT_TESTED | untested |
+| Cursor | PACKAGED | NOT_TESTED | NOT_TESTED | untested |
+| GitHub Copilot | PACKAGED | NOT_TESTED | NOT_TESTED | untested |
 | OpenCode | NATIVE | NOT_TESTED | NOT_TESTED | untested |
 | VoiceStudio (bundled component) | HOST_RUNTIME | NOT_TESTED | NOT_TESTED | untested |
-| OpenMontage (bundled component) | HOST_RUNTIME | NOT_TESTED | NOT_TESTED | untested |
-| FFmpeg / ffprobe | HOST_RUNTIME | NOT_TESTED | NOT_TESTED | untested |
+| OpenMontage (bundled component) | HOST_RUNTIME | NOT_TESTED | VERIFIED | verified |
+| FFmpeg / ffprobe | HOST_RUNTIME | NOT_TESTED | VERIFIED | verified |
 | OpenTimelineIO | LIMITED | NOT_TESTED | NOT_TESTED | untested |
 | Adobe Premiere Pro (UXP) | LIMITED | NOT_TESTED | NOT_TESTED | untested |
 
@@ -211,37 +214,123 @@ docs/implementation/CF-WO-P0-015-corrections.md
 docs/implementation/CF-WO-P1-001-corrections.md
 docs/implementation/CF-WO-P1-002-corrections.md
 docs/implementation/CF-WO-P1-003-corrections.md
+docs/implementation/CF-WO-P1-004-corrections.md
+docs/implementation/CF-WO-P1-005-corrections.md
+docs/implementation/CF-WO-P1-006-R1-corrections.md
+docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-corrections.md
+docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-gate-a-checklist.md
+docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-gate-b-authorization.md
+docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-retention-assessment.md
+docs/implementation/CF-WO-P1-006-R2-authorization-request.md
+docs/implementation/CF-WO-P1-006-R2-corrections.md
+docs/implementation/CF-WO-P1-006-corrections.md
 docs/implementation/CHECKSUMS.txt
 docs/implementation/P0_UPDATED_IMPLEMENTATION_PLAN.md
 docs/implementation/build-report.json
+docs/runtime/CHARACTER_CONSISTENCY_RUNTIME.md
+docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md
+docs/runtime/IMAGE_TO_VIDEO_RUNTIME.md
 docs/runtime/LOCAL_SESSION_AND_TRUST_BOUNDARY.md
+docs/runtime/MEDIA_EXECUTION_RUNTIME.md
+docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md
+docs/runtime/PROVIDER_ADAPTERS.md
 docs/runtime/SCRIPT_TO_PERFORMANCE_RUNTIME.md
 docs/runtime/SKILL_ROUTING_RUNTIME.md
+docs/runtime/VERTICAL_PRODUCTION_RUNTIME.md
+evidence/p1005/ci-263-windows-failure-note.md
+evidence/p1005/gap-map.md
+evidence/p1005/local-execution-evidence.md
+evidence/p1005/vs-headers.txt
+examples/p1006-r1-character-consistency/README.md
+examples/p1006-r1-character-consistency/assembly-config.json
+examples/p1006-r1-character-consistency/character-bible.json
+examples/p1006-r1-character-consistency/production-analysis.json
+examples/p1006-r1-character-consistency/project.json
+examples/p1006-r1-character-consistency/script.md
+examples/p1006-r1-character-consistency/shot-list.json
+examples/p1006-r1-character-consistency/sound-plan.json
+examples/p1006-r1-character-consistency/voice-config.json
+examples/p1006-r2-photorealistic-image-to-video/README.md
+examples/p1006-r2-photorealistic-image-to-video/assembly-config.json
+examples/p1006-r2-photorealistic-image-to-video/character-appearance-map.json
+examples/p1006-r2-photorealistic-image-to-video/character-bible.json
+examples/p1006-r2-photorealistic-image-to-video/cost-plan.json
+examples/p1006-r2-photorealistic-image-to-video/cost-plan.md
+examples/p1006-r2-photorealistic-image-to-video/location-coverage.json
+examples/p1006-r2-photorealistic-image-to-video/motion-prompts.md
+examples/p1006-r2-photorealistic-image-to-video/production-analysis.json
+examples/p1006-r2-photorealistic-image-to-video/project.json
+examples/p1006-r2-photorealistic-image-to-video/scene-breakdown.json
+examples/p1006-r2-photorealistic-image-to-video/script-breakdown.md
+examples/p1006-r2-photorealistic-image-to-video/script.md
+examples/p1006-r2-photorealistic-image-to-video/shot-duration-plan.json
+examples/p1006-r2-photorealistic-image-to-video/shot-list.json
+examples/p1006-r2-photorealistic-image-to-video/sound-plan.json
+examples/p1006-r2-photorealistic-image-to-video/story-coverage-report.json
+examples/p1006-r2-photorealistic-image-to-video/voice-config.json
+examples/p1006-vertical-explainer/README.md
+examples/p1006-vertical-explainer/assembly-config.json
+examples/p1006-vertical-explainer/production-analysis.json
+examples/p1006-vertical-explainer/project.json
+examples/p1006-vertical-explainer/script.md
+examples/p1006-vertical-explainer/shot-list.json
+examples/p1006-vertical-explainer/sound-plan.json
+examples/p1006-vertical-explainer/voice-config.json
 registry/adapters.json
 registry/features.json
+registry/providers.json
 registry/routing-catalog.json
 registry/skills.json
 registry/workflows.json
 release-manifest.json
 runtime/__init__.py
 runtime/authorization.py
+runtime/character_consistency.py
+runtime/execution_orchestrator.py
+runtime/identity_resolution.py
+runtime/image_to_video.py
 runtime/local_session.py
+runtime/media_adapters.py
+runtime/media_execution.py
+runtime/production_assets.py
+runtime/production_audio.py
+runtime/production_delivery.py
+runtime/production_orchestrator.py
+runtime/production_qc.py
+runtime/production_store.py
+runtime/production_timeline.py
+runtime/production_voice.py
+runtime/provider_contracts.py
+runtime/provider_url_policy.py
 runtime/script_to_performance.py
 runtime/skill_router.py
+runtime/task_compiler.py
+runtime/timeline_delivery.py
+runtime/vertical_production.py
 schemas/README.md
 schemas/approval.json
 schemas/build-report.json
+schemas/character-design-proposal.json
+schemas/character-identity.json
 schemas/character-registration.json
 schemas/character.json
 schemas/episode-state.json
 schemas/evidence.json
+schemas/execution-record.json
+schemas/gate-state.json
+schemas/human-review-handoff.json
+schemas/identity-selection-policy.json
+schemas/identity-snapshot.json
+schemas/image-to-video-job.json
 schemas/installer-result.json
 schemas/intake-job.json
 schemas/location.json
 schemas/performance-plan.json
+schemas/production-analysis.json
 schemas/production-profile.json
 schemas/project.json
 schemas/prop.json
+schemas/provider-capability.json
 schemas/reference-learning.json
 schemas/reference-review.json
 schemas/release-manifest.json
@@ -253,6 +342,7 @@ schemas/skill-routing-plan.json
 schemas/skill-routing-request.json
 schemas/sound-asset.json
 schemas/story-bible.json
+schemas/task-packet.json
 schemas/timeline-manifest.json
 schemas/visual-style-profile.json
 schemas/voice-profile.json
@@ -263,6 +353,9 @@ scripts/generate-build-report.py
 scripts/generate-registries.py
 scripts/generate-report.py
 scripts/generate-routing-catalog.py
+scripts/run-p1006-r1-character-render.py
+scripts/run-p1006-r2-photorealistic-render.py
+scripts/run-p1006-reference-render.py
 scripts/sync-skills.sh
 scripts/timeline_policy.py
 scripts/validate-repo.py
@@ -281,6 +374,8 @@ skills/production-systems/SKILL.md
 skills/realistic-person/SKILL.md
 skills/video-regeneration/SKILL.md
 skills/voice-consistency/SKILL.md
+tests/fixtures/character-design-proposal-fisherman-approved.json
+tests/fixtures/character-design-proposal-fisherman.json
 tests/fixtures/character-extended-valid.json
 tests/fixtures/character-registration-bird-valid.json
 tests/fixtures/character-registration-invalid-duplicate-id.json
@@ -290,6 +385,8 @@ tests/fixtures/character-registration-valid-human.json
 tests/fixtures/character-registration-valid.json
 tests/fixtures/character-valid-v25-animal.json
 tests/fixtures/character-valid.json
+tests/fixtures/identity-registry.json
+tests/fixtures/identity-voice-registry.json
 tests/fixtures/intake-temporary.json
 tests/fixtures/performance-plan-bird.json
 tests/fixtures/performance-plan-human.json
@@ -297,11 +394,15 @@ tests/fixtures/performance-plan-invalid-bird-human-lips.json
 tests/fixtures/performance-plan-two-person.json
 tests/fixtures/performance-plan-valid-bird.json
 tests/fixtures/performance-plan-valid.json
+tests/fixtures/production-analysis-long.json
+tests/fixtures/production-analysis-missing-character.json
+tests/fixtures/production-analysis-short.json
 tests/fixtures/production-profile-invalid-animation-type.json
 tests/fixtures/production-profile-invalid-digital-human-live-action.json
 tests/fixtures/production-profile-reference-video.json
 tests/fixtures/production-profile-script-only.json
 tests/fixtures/production-profile-valid-digital-human.json
+tests/fixtures/qc-report-test.json
 tests/fixtures/registration-invitation.json
 tests/fixtures/routing-profile-s1-explainer-2d.json
 tests/fixtures/routing-profile-s2-stylized-3d.json
@@ -324,6 +425,7 @@ tests/fixtures/temporary-asset-use.json
 tests/fixtures/timeline-valid-v23.json
 tests/fixtures/timeline-valid-v25-multicharacter.json
 tests/fixtures/visual-style-profile-valid.json
+tests/fixtures/voice-kinds-test.json
 tests/fixtures/voice-profile-ai-generated.json
 tests/fixtures/voice-profile-user-recording.json
 tests/fixtures/voice-profile-valid-ai-generated.json
@@ -333,17 +435,40 @@ tests/last-run.json
 tests/run-tests.sh
 tests/test_atomic_write.py
 tests/test_character_registration.py
+tests/test_e2e_local.py
+tests/test_ffmpeg_adapter.py
+tests/test_identity_resolution.py
 tests/test_installer.sh
 tests/test_installer_manifest_security.sh
 tests/test_installer_metadata_failure.sh
 tests/test_installer_security.sh
 tests/test_installer_status.sh
 tests/test_local_session_runtime.py
+tests/test_media_adapters.py
+tests/test_media_execution.py
 tests/test_modes.py
+tests/test_muse_adapter_conformance.py
+tests/test_p1006_assembly.py
+tests/test_p1006_assets.py
+tests/test_p1006_audio.py
+tests/test_p1006_delivery.py
+tests/test_p1006_e2e.py
+tests/test_p1006_project.py
+tests/test_p1006_r1_character.py
+tests/test_p1006_r2_image_to_video.py
+tests/test_p1006_r2_preflight.py
+tests/test_p1006_r2_preflight_storyboard.py
+tests/test_p1006_timeline.py
+tests/test_p1006_voice.py
 tests/test_performance_semantics.py
 tests/test_private_overlay.py
 tests/test_private_voice_security.py
+tests/test_production_analysis.py
 tests/test_production_direction.py
+tests/test_production_orchestrator.py
+tests/test_production_store.py
+tests/test_provider_contracts.py
+tests/test_provider_url_security.py
 tests/test_registries.py
 tests/test_reports.py
 tests/test_routing.py
@@ -351,7 +476,11 @@ tests/test_schemas.py
 tests/test_script_to_performance_runtime.py
 tests/test_session_authorization.py
 tests/test_skill_router.py
+tests/test_task_compiler.py
+tests/test_timeline_delivery.py
+tests/test_timeline_geometry.py
 tests/test_timeline_manifest.py
+tests/test_voicestudio_controls.py
 ```
 
 ## Tests and CI evidence — status: PASS
@@ -433,6 +562,45 @@ tests/test_timeline_manifest.py
 - `CF-P1-003-R2-EDITING` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
 - `CF-P1-003-R2-BINDINGS` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
 - `CF-P1-003-R2-BUNDLE` — python3 tests/test_script_to_performance_runtime.py — **PASS** (exit 0)
+- `CF-P1-004-ANALYSIS` — python3 tests/test_production_analysis.py — **PASS** (exit 0)
+- `CF-P1-004-ORCHESTRATOR` — python3 tests/test_production_orchestrator.py — **PASS** (exit 0)
+- `CF-P1-004-COMPILER` — python3 tests/test_task_compiler.py — **PASS** (exit 0)
+- `CF-P1-004-R1-STORE` — python3 tests/test_production_store.py — **PASS** (exit 0)
+- `CF-P1-004-R1-ADAPTER` — python3 tests/test_muse_adapter_conformance.py — **PASS** (exit 0)
+- `CF-P1-004-R1-IDENTITY-RESOLUTION` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-IDENTITY-POLICY` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-IDENTITY-BINDING` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-IDENTITY-VOICE` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-IDENTITY-E2E` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-IDENTITY-NEWONLY` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-IDENTITY-PRIVACY` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-F1-UNIFIED` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-F1-SELECTION` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-F1-NEWONLY-ADVERSARIAL` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-F1-MULTI` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-F1-LONGSHORT` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-004-R1-F1-PERSISTENT` — python3 tests/test_identity_resolution.py — **PASS** (exit 0)
+- `CF-P1-005-EXECUTION` — python3 tests/test_media_execution.py — **PASS** (exit 0)
+- `CF-P1-005-FFMPEG` — python3 tests/test_ffmpeg_adapter.py — **PASS** (exit 0)
+- `CF-P1-005-ADAPTERS` — python3 tests/test_media_adapters.py — **PASS** (exit 0)
+- `CF-P1-005-DELIVERY` — python3 tests/test_timeline_delivery.py — **PASS** (exit 0)
+- `CF-P1-005-R4-SEC` — python3 tests/test_provider_url_security.py — **PASS** (exit 0)
+- `CF-P1-005-R4-CONTRACTS` — python3 tests/test_provider_contracts.py — **PASS** (exit 0)
+- `CF-P1-005-R4-GEOMETRY` — python3 tests/test_timeline_geometry.py — **PASS** (exit 0)
+- `CF-P1-005-R4-VOICE` — python3 tests/test_voicestudio_controls.py — **PASS** (exit 0)
+- `CF-P1-005-R4-E2E` — python3 tests/test_e2e_local.py — **PASS** (exit 0)
+- `CF-P1-006-PROJECT` — python3 tests/test_p1006_project.py — **PASS** (exit 0)
+- `CF-P1-006-ASSETS` — python3 tests/test_p1006_assets.py — **PASS** (exit 0)
+- `CF-P1-006-VOICE` — python3 tests/test_p1006_voice.py — **PASS** (exit 0)
+- `CF-P1-006-AUDIO` — python3 tests/test_p1006_audio.py — **PASS** (exit 0)
+- `CF-P1-006-TIMELINE` — python3 tests/test_p1006_timeline.py — **PASS** (exit 0)
+- `CF-P1-006-ASSEMBLY` — python3 tests/test_p1006_assembly.py — **PASS** (exit 0)
+- `CF-P1-006-QC-DELIVERY` — python3 tests/test_p1006_delivery.py — **PASS** (exit 0)
+- `CF-P1-006-E2E` — python3 tests/test_p1006_e2e.py — **PASS** (exit 0)
+- `CF-P1-006-R1-CHARACTER` — python3 tests/test_p1006_r1_character.py — **PASS** (exit 0)
+- `CF-P1-006-R2-I2V` — python3 tests/test_p1006_r2_image_to_video.py — **PASS** (exit 0)
+- `CF-P1-006-R2-PREFLIGHT` — python3 tests/test_p1006_r2_preflight.py — **PASS** (exit 0)
+- `CF-P1-006-R2-PREFLIGHT-STORYBOARD` — python3 tests/test_p1006_r2_preflight_storyboard.py — **PASS** (exit 0)
 - `P0-DIFF-CHECK` — git diff --check — **PASS** (exit 0)
 - `CF-P0-REPORT-001` — python3 tests/test_reports.py — **PASS** (exit 0)
 - `CF-P0-REPORT-002` — python3 tests/test_reports.py — **PASS** (exit 0)
@@ -528,4 +696,4 @@ this branch.
 - Live repo verified: 2026-11-22 (base `e1571db68ed87fb973c45960a4a3e27e09ba0d06`).
 - Handoff package read: 2026-11-22 (all Markdown files + both DOCX
   text-extracted; ZIP snapshot identical to live `main` for tracked files).
-- Report generated: 2026-11-26 17:10 UTC.
+- Report generated: 2026-11-28 10:44 UTC.

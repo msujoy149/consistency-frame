@@ -1,0 +1,223 @@
+{
+  "project_id": "p1006-r2-photorealistic-image-to-video",
+  "work_order": "CF-WO-P1-006-R2-PREFLIGHT",
+  "locations": [
+    {
+      "location_id": "loc-rooftop-terrace",
+      "name": "rooftop terrace",
+      "scenes": [
+        "SC1",
+        "SC6"
+      ],
+      "coverage": {
+        "exterior_establishing": {
+          "covered": true,
+          "shots": [
+            "s1"
+          ],
+          "note": "s1 is the film's first image: the terrace, river and rooftops below are in frame."
+        },
+        "interior_establishing": {
+          "covered": true,
+          "shots": [],
+          "note": "Not applicable — outdoor location; no interior exists."
+        },
+        "wide_environment": {
+          "covered": true,
+          "shots": [
+            "s1",
+            "s6a",
+            "s6b"
+          ],
+          "note": "River and rooftops below in s1; river lights below in s6a/s6b."
+        },
+        "character_arrival": {
+          "covered": true,
+          "shots": [
+            "s1"
+          ],
+          "note": "The film opens on her already at the terrace; no arrival beat exists in the script."
+        },
+        "character_movement_through_location": {
+          "covered": true,
+          "shots": [
+            "s6a"
+          ],
+          "note": "Two-handed overhead lift moves her through the terrace space."
+        },
+        "relevant_objects_spatial_relationships": {
+          "covered": true,
+          "shots": [
+            "s1"
+          ],
+          "note": "Low clay table, potted plant at the left edge, round lantern centred low in frame."
+        },
+        "detail_shots": {
+          "covered": true,
+          "shots": [
+            "s1"
+          ],
+          "note": "Medium shot framing on hands, match and lantern."
+        },
+        "reaction_shots": {
+          "covered": true,
+          "shots": [
+            "s6b"
+          ],
+          "note": "Face watching the lantern rise, smiling."
+        },
+        "closing_departure": {
+          "covered": true,
+          "shots": [
+            "s6b"
+          ],
+          "note": "The film closes here: the lantern rises into the dusk sky."
+        }
+      }
+    },
+    {
+      "location_id": "loc-river",
+      "name": "river (stone steps + water's edge)",
+      "scenes": [
+        "SC2",
+        "SC3"
+      ],
+      "coverage": {
+        "exterior_establishing": {
+          "covered": true,
+          "shots": [
+            "s2"
+          ],
+          "note": "Stone steps receding to the river in a full-body shot."
+        },
+        "interior_establishing": {
+          "covered": true,
+          "shots": [],
+          "note": "Not applicable — outdoor location."
+        },
+        "wide_environment": {
+          "covered": true,
+          "shots": [
+            "s2"
+          ],
+          "note": "Steps, fallen leaves, trees, river behind her."
+        },
+        "character_arrival": {
+          "covered": true,
+          "shots": [
+            "s2",
+            "s3a"
+          ],
+          "note": "s2's walk ends at the water; the cut to s3a kneeling at the edge is the arrival."
+        },
+        "character_movement_through_location": {
+          "covered": true,
+          "shots": [
+            "s2"
+          ],
+          "note": "The full-body walk down the steps is the movement through the location."
+        },
+        "relevant_objects_spatial_relationships": {
+          "covered": true,
+          "shots": [
+            "s3a",
+            "s3b"
+          ],
+          "note": "Floating lantern on the water, ripples, her hands below her chin, lantern at the right of frame."
+        },
+        "detail_shots": {
+          "covered": true,
+          "shots": [
+            "s3a"
+          ],
+          "note": "Close-up on hands setting the lantern afloat."
+        },
+        "reaction_shots": {
+          "covered": true,
+          "shots": [
+            "s3b"
+          ],
+          "note": "Close-up on her hopeful face watching the lantern drift."
+        },
+        "closing_departure": {
+          "covered": true,
+          "shots": [
+            "s3b"
+          ],
+          "note": "Scene closes on the lantern drifting away as she watches."
+        }
+      }
+    },
+    {
+      "location_id": "loc-market-street",
+      "name": "market street",
+      "scenes": [
+        "SC4",
+        "SC5"
+      ],
+      "coverage": {
+        "exterior_establishing": {
+          "covered": true,
+          "shots": [
+            "s4"
+          ],
+          "note": "Established inside s4's medium shot: stall, hanging fabrics, shoppers. No standalone wide — see story-coverage-report.json considered_and_rejected."
+        },
+        "interior_establishing": {
+          "covered": true,
+          "shots": [],
+          "note": "Not applicable — outdoor street."
+        },
+        "wide_environment": {
+          "covered": true,
+          "shots": [
+            "s4",
+            "s5"
+          ],
+          "note": "Established within the medium shots: street receding behind her, stalls and lights softly blurred. No standalone wide shot exists; the script gives no beat for one."
+        },
+        "character_arrival": {
+          "covered": true,
+          "shots": [
+            "s4"
+          ],
+          "note": "Cut-in at the stall; arrival is implied by the cut, as the script jumps from the river to the market with no travel line."
+        },
+        "character_movement_through_location": {
+          "covered": true,
+          "shots": [],
+          "note": "No travel beat in the script for the market: she stands at the stall (s4) and under the umbrella (s5). No movement shot is needed."
+        },
+        "relevant_objects_spatial_relationships": {
+          "covered": true,
+          "shots": [
+            "s4",
+            "s5"
+          ],
+          "note": "Marigold basket on the stall (s4); bamboo umbrella above her head, wet cobblestones below (s5)."
+        },
+        "detail_shots": {
+          "covered": true,
+          "shots": [
+            "s4"
+          ],
+          "note": "Both hands closing around the basket handle and lifting."
+        },
+        "reaction_shots": {
+          "covered": true,
+          "shots": [
+            "s5"
+          ],
+          "note": "Calm face looking into the rain."
+        },
+        "closing_departure": {
+          "covered": true,
+          "shots": [
+            "s5"
+          ],
+          "note": "Departure is the cut to rooftop dusk; the script jumps the time gap with no departure line, so no departure shot is needed."
+        }
+      }
+    }
+  ]
+}

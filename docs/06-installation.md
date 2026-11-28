@@ -261,6 +261,55 @@ The model downloads from the original Hugging Face source
 not use that model for commercial work; use a commercial voice provider
 instead. The notice is kept wherever the model is used.
 
+### Media execution (P1-005) — providers are optional
+
+The core install needs no provider keys: planning, skill routing,
+script-to-performance and timeline work run with no credentials at
+all. Real media execution is layered on top, and each layer is
+opt-in:
+
+- **Local tools need no keys.** FFmpeg/ffprobe (probe, transcode,
+  assembly) and the bundled components work without any provider
+  account. VoiceStudio runs only on loopback (`127.0.0.1:3900`); start
+  it only for voice work and stop it afterwards — never leave the
+  backend running. OpenMontage renders only through its verified
+  entry (`render_demo.py` for a named demo composition); a production
+  pipeline render has no verified entry yet and fails closed.
+- **External providers are optional and keyed by environment
+  variable only — never in a file, never committed.** One variable
+  per provider: `OPENAI_API_KEY` (OpenAI image), `GEMINI_API_KEY`
+  (Gemini image, Lyria music), `VERTEX_ACCESS_TOKEN` (Veo video,
+  OAuth Bearer token), `FAL_KEY` (fal.ai image),
+  `KLING_API_KEY` (Kling video), `LTX_API_KEY` (LTX video),
+  `ELEVENLABS_API_KEY` (ElevenLabs voice). Without its variable the
+  adapter fails closed with `credential-missing`. No paid external
+  call is ever made without explicit authorization for that run.
+  Every external request is built by that provider's exact
+  contract (`runtime/provider_contracts.py`) — no generic payload
+  — and every outbound URL is validated against explicit
+  per-provider origin allowlists (`runtime/provider_url_policy.py`).
+  A completed Kling or LTX job's download currently fails closed
+  until its result-URL host is confirmed in the docs.
+- **FFmpeg is required for the local end-to-end test.** The
+  integration suite (`tests/test_e2e_local.py`) exercises real
+  ffprobe/ffmpeg operations and fails, never skips, when FFmpeg
+  is absent; CI installs a known FFmpeg version in `p0-validate`.
+  Basic planning and handoff work does not need it.
+- **Commercial rules.** The bundled OmniVoice weights are CC-BY-NC
+  (noncommercial) — never use them for commercial or monetized
+  production; the adapter refuses commercial voice tasks outright.
+  Paid providers need their own commercial terms checked before
+  use; Sora is shut down (2026-09-24) and has no adapter.
+- **Real execution limitations.** A compiled task packet is never
+  proof of execution — only a genuine adapter result moves an
+  execution to SUCCEEDED, after the output is independently
+  re-verified (SHA-256, size, probe). An uncertain submission is
+  never auto-resubmitted. Semantic quality (character continuity,
+  face drift, lip-sync, creative intent) always needs a named human
+  reviewer; a technical check alone never passes the delivery gate.
+  See `docs/runtime/MEDIA_EXECUTION_RUNTIME.md` and
+  `docs/runtime/PROVIDER_ADAPTERS.md`.
+
 ### Verifying a local install
 
 ```bash

@@ -1,0 +1,275 @@
+{
+  "project_id": "p1006-r2-photorealistic-image-to-video",
+  "work_order": "CF-WO-P1-006-R2-PREFLIGHT",
+  "script": "Nadia and the River Light",
+  "script_status": "DRAFT — awaiting user approval",
+  "method": "Line-by-line analysis of the complete script: every location, environment, character appearance, action, physical event, prop interaction, emotional reaction, time/place change, narrative reveal, and necessary visual detail was checked against the shot list. Counts are derived from the story, not fixed in advance.",
+  "counts": {
+    "scenes": 6,
+    "scene_ids": [
+      "SC1",
+      "SC2",
+      "SC3",
+      "SC4",
+      "SC5",
+      "SC6"
+    ],
+    "shots": 8,
+    "shot_ids": [
+      "s1",
+      "s2",
+      "s3a",
+      "s3b",
+      "s4",
+      "s5",
+      "s6a",
+      "s6b"
+    ],
+    "keyframes": 8,
+    "clips": 8,
+    "narration_lines": 8,
+    "total_video_seconds": 48
+  },
+  "counts_vs_r2_draft": {
+    "r2_draft": {
+      "scenes": 6,
+      "shots": 8,
+      "keyframes": 8,
+      "clips": 8,
+      "total_video_seconds": 48
+    },
+    "preflight": {
+      "scenes": 6,
+      "shots": 8,
+      "keyframes": 8,
+      "clips": 8,
+      "total_video_seconds": 48
+    },
+    "shots_added": [],
+    "shots_removed": [],
+    "verdict": "Counts UNCHANGED from the R2 draft. The line-by-line analysis confirms the R2 breakdown already covers every story beat: no shot was added and none was removed. The estimate that changes is the COST, not the count — audio on without elements ($0.168/s, $8.06) is replaced by audio off WITH elements ($0.224/s, $10.75) in cost-plan.json. (The earlier preflight figure of audio off without elements, $0.112/s, $5.38, was corrected for the elements tier: every shot uses the Nadia character element, so the with-elements rate applies.) The old 8-clip / 48-second / $8.06 figures are superseded as a cost estimate, not as counts."
+  },
+  "line_coverage": [
+    {
+      "line_id": "l1",
+      "shot_id": "s1",
+      "scene_id": "SC1",
+      "narration_text": "Before the sun wakes the river, Nadia lights the first lantern of the day.",
+      "narrative_purpose": "Establishing action: the light is kindled. Also the film's establishing shot — the rooftop terrace, the river and rooftops below, and the dawn light are all established inside this shot.",
+      "source": "script.md line l1",
+      "covered": true
+    },
+    {
+      "line_id": "l2",
+      "shot_id": "s2",
+      "scene_id": "SC2",
+      "narration_text": "She walks the old stone steps down to the water, carrying the light.",
+      "narrative_purpose": "Journey: the light is carried to the water. Movement through the river-steps location — the full-body walk down the steps, ending at the water.",
+      "source": "script.md line l2",
+      "covered": true
+    },
+    {
+      "line_id": "l3",
+      "shot_id": "s3a",
+      "scene_id": "SC3",
+      "narration_text": "At the river's edge, she sets the lantern on the water and lets it go.",
+      "narrative_purpose": "Giving action — hands, water, release. Detail shot: a single wide shot cannot show both her hands on the lantern and her face, so the hands get their own close-up.",
+      "source": "script.md line l3",
+      "covered": true
+    },
+    {
+      "line_id": "l4",
+      "shot_id": "s3b",
+      "scene_id": "SC3",
+      "narration_text": "The lantern drifts away, and the whole morning holds its breath.",
+      "narrative_purpose": "Reaction: hope on her face as the lantern leaves. A different shot from s3a, not a longer single shot, because the camera cannot be on her hands and her face at once.",
+      "source": "script.md line l4",
+      "covered": true
+    },
+    {
+      "line_id": "l5",
+      "shot_id": "s4",
+      "scene_id": "SC4",
+      "narration_text": "In the market, she gathers marigolds bright as the evening sun.",
+      "narrative_purpose": "Gathering: flowers for the evening. The market street is established inside this shot — stall, hanging fabrics, shoppers — so no standalone market wide is needed.",
+      "source": "script.md line l5",
+      "covered": true
+    },
+    {
+      "line_id": "l6",
+      "shot_id": "s5",
+      "scene_id": "SC5",
+      "narration_text": "Rain comes without asking, and she opens her umbrella over the day.",
+      "narrative_purpose": "Weather endured: the same market street in its rain state. The day is endured, not stopped — the calm reaction in the rain is the beat.",
+      "source": "script.md line l6",
+      "covered": true
+    },
+    {
+      "line_id": "l7",
+      "shot_id": "s6a",
+      "scene_id": "SC6",
+      "narration_text": "At dusk, she lifts the sky lantern high, its flame reaching for the dark.",
+      "narrative_purpose": "The lift — the climax begins in her arms. A separate shot from the release because the lift and the rise are two different movements.",
+      "source": "script.md line l7",
+      "covered": true
+    },
+    {
+      "line_id": "l8",
+      "shot_id": "s6b",
+      "scene_id": "SC6",
+      "narration_text": "She lets it go, and the river light rises to meet the first stars.",
+      "narrative_purpose": "The release — the lantern leaves her hands and rises into the sky. The film's closing shot: she watches it go, smiling.",
+      "source": "script.md line l8",
+      "covered": true
+    }
+  ],
+  "story_beats_checked": [
+    {
+      "beat": "Light kindled (dawn, rooftop)",
+      "shots": [
+        "s1"
+      ],
+      "covered": true
+    },
+    {
+      "beat": "Light carried to the river (stone steps)",
+      "shots": [
+        "s2"
+      ],
+      "covered": true
+    },
+    {
+      "beat": "Lantern given to the water (hands)",
+      "shots": [
+        "s3a"
+      ],
+      "covered": true
+    },
+    {
+      "beat": "Lantern watched drifting (reaction, hope)",
+      "shots": [
+        "s3b"
+      ],
+      "covered": true
+    },
+    {
+      "beat": "Marigolds gathered (market, morning)",
+      "shots": [
+        "s4"
+      ],
+      "covered": true
+    },
+    {
+      "beat": "Rain endured (market, umbrella)",
+      "shots": [
+        "s5"
+      ],
+      "covered": true
+    },
+    {
+      "beat": "Sky lantern lifted (dusk, rooftop)",
+      "shots": [
+        "s6a"
+      ],
+      "covered": true
+    },
+    {
+      "beat": "Sky lantern released and rising (closing)",
+      "shots": [
+        "s6b"
+      ],
+      "covered": true
+    },
+    {
+      "beat": "Time passage dawn -> morning -> golden hour -> morning -> rain -> dusk",
+      "shots": [
+        "s1",
+        "s2",
+        "s3a",
+        "s3b",
+        "s4",
+        "s5",
+        "s6a",
+        "s6b"
+      ],
+      "covered": true,
+      "note": "Each time/place change is carried by the cut between shots plus the lighting and environment change inside the next shot; no separate transition shot is needed."
+    },
+    {
+      "beat": "One day, one lantern's journey mirrored by the sky lantern",
+      "shots": [
+        "s1",
+        "s6b"
+      ],
+      "covered": true
+    }
+  ],
+  "corrections_found_in_analysis": [
+    {
+      "shot_id": "s2",
+      "finding": "Continuity gap in the R2 shot record: script line l2 says Nadia walks down the steps \"carrying the light\", but the R2 s2 record showed her walking empty-handed (one hand lifting her shirt hem) and carried no lantern prop. The lit round table lantern from s1 is the light she carries.",
+      "action": "Shot record corrected to the script (action, motion-prompt subject / hand-prop / body, prop_ids now include prop-lantern-table). The story and narration are unchanged; no new shot was created."
+    }
+  ],
+  "considered_and_rejected": [
+    {
+      "candidate": "Standalone rooftop wide establishing shot before s1",
+      "reason_rejected": "s1 already establishes the terrace with the river and rooftops below inside the shot, and it is the film's first image. A silent wide would have no narration line, breaking the 1:1 line-per-shot coverage, and would add a paid clip with no story beat."
+    },
+    {
+      "candidate": "Standalone market wide establishing shot before s4",
+      "reason_rejected": "s4's medium shot carries the stall, hanging fabrics and shoppers, establishing the market inside the shot. No narration line exists for a standalone wide."
+    },
+    {
+      "candidate": "River-arrival shot between s2 and s3a",
+      "reason_rejected": "s2's full-body walk ends at the water; the cut to s3a kneeling at the edge IS the arrival. A separate arrival shot would repeat the same beat."
+    },
+    {
+      "candidate": "Rain-transition shot between s4 and s5",
+      "reason_rejected": "Same street, weather change only: the cut plus wet cobblestones and falling rain inside s5 carries the change. No story beat is missing."
+    },
+    {
+      "candidate": "Closing wide / end card after s6b",
+      "reason_rejected": "s6b is the closing shot (lantern rising, she watches smiling). An end card would be on-screen text, which the no-text policy forbids."
+    }
+  ],
+  "proposed_shots": [],
+  "proposed_shots_note": "No genuinely missing story beat was found, so no PROPOSED shot is recorded. The five candidates above were considered and rejected with reasons; inventing a shot for any of them would inflate the count without a story need.",
+  "locations": [
+    "rooftop terrace",
+    "river (stone steps + water's edge)",
+    "market street"
+  ],
+  "environments": [
+    "rooftop at dawn",
+    "stone steps in morning light",
+    "river's edge at golden hour",
+    "market street in morning",
+    "market street in rain",
+    "rooftop at dusk"
+  ],
+  "important_objects": [
+    "round table lantern (s1, s2)",
+    "rectangular floating lantern (s3a, s3b)",
+    "woven basket of orange marigolds (s4)",
+    "bamboo oil-paper umbrella (s5)",
+    "cylindrical sky lantern (s6a, s6b)"
+  ],
+  "physical_events": [
+    "flame catching and steadying (s1)",
+    "weight shifting in a walking stride (s2)",
+    "water rippling as the lantern is set afloat (s3a)",
+    "the lantern drifting on the current (s3b)",
+    "the basket rising in both hands (s4)",
+    "rain falling and splashing; the umbrella unfolding (s5)",
+    "the sky lantern lifting away and rising (s6a, s6b)"
+  ],
+  "emotional_reactions": [
+    "concentration (s1, s3a)",
+    "ease and joy (s2)",
+    "hope (s3b)",
+    "warmth (s4)",
+    "calm endurance (s5)",
+    "joy (s6a, s6b)"
+  ]
+}

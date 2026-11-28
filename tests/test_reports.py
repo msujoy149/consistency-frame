@@ -100,7 +100,87 @@ def errors_for(schema, value):
 # docs/04-additional-systems.md, docs/05-humanization-systems.md, and
 # skills/kids-family-animation/SKILL.md). No new tracked file was added;
 # the four added entries are exactly those four files. 182 before.
-MANIFEST_EXPECTED_COUNT = 186
+# 206 since CF-WO-P1-004 (2026-11-26): twenty genuinely new files —
+# five schemas (production-analysis, character-design-proposal,
+# task-packet, gate-state, provider-capability), two runtime modules
+# (production_orchestrator, task_compiler), three test files
+# (test_production_analysis, test_production_orchestrator,
+# test_task_compiler), seven fixtures, registry/providers.json,
+# docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md, and
+# docs/implementation/CF-WO-P1-004-corrections.md. Every other file
+# this round touched was already in the manifest from an earlier round.
+# 216 since the combined CF-WO-P1-004-R1 + ADDENDUM-IDENTITY integration
+# (2026-11-26): ten genuinely new files — three from R1
+# (runtime/production_store.py, tests/test_production_store.py,
+# tests/test_muse_adapter_conformance.py) and seven from the identity
+# addendum (one runtime module, two schemas, two fixtures, one test
+# file, and docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md). Every other
+# file this round touched was already in the manifest from an earlier
+# round.
+# 232 since CF-WO-P1-005 (2026-11-27): sixteen genuinely new files —
+# four runtime modules (media_execution, media_adapters,
+# execution_orchestrator, timeline_delivery), two schemas
+# (execution-record, human-review-handoff), four test files
+# (test_media_execution, test_ffmpeg_adapter, test_media_adapters,
+# test_timeline_delivery), two runtime docs
+# (MEDIA_EXECUTION_RUNTIME, PROVIDER_ADAPTERS), the corrections
+# record (CF-WO-P1-005-corrections), and three evidence records
+# (evidence/p1005/gap-map, evidence/p1005/local-execution-evidence,
+# evidence/p1005/vs-headers). Every other file this round touched
+# was already in the manifest from an earlier round.
+# 233 since CF-WO-P1-005-R1 (2026-11-27): one genuinely new file —
+# the CI run #263 Windows-failure evidence record
+# (evidence/p1005/ci-263-windows-failure-note). The file entered the
+# manifest only once committed: the generator counts committed files,
+# so the pre-commit regen still showed 232. Every other file this
+# round touched was already in the manifest from an earlier round.
+# 240 since CF-WO-P1-005-R4 (2026-11-27): seven genuinely new files —
+# two runtime modules (provider_url_policy, provider_contracts) and
+# five test files (test_provider_url_security,
+# test_provider_contracts, test_timeline_geometry,
+# test_voicestudio_controls, test_e2e_local). Every other file this
+# round touched was already in the manifest from an earlier round.
+# 266 since CF-WO-P1-006 (2026-11-27): twenty-six genuinely new
+# files — seven runtime modules (vertical_production,
+# production_assets, production_voice, production_audio,
+# production_timeline, production_qc, production_delivery), eight
+# test files (test_p1006_project, test_p1006_assets,
+# test_p1006_voice, test_p1006_audio, test_p1006_timeline,
+# test_p1006_assembly, test_p1006_delivery, test_p1006_e2e), the
+# reference driver (scripts/run-p1006-reference-render.py), eight
+# reference-project files (examples/p1006-vertical-explainer), and
+# two docs (CF-WO-P1-006-corrections,
+# VERTICAL_PRODUCTION_RUNTIME). Every other file this round
+# touched was already in the manifest from an earlier round.
+# 280 since CF-WO-P1-006-R1 (2026-11-27): fourteen genuinely
+# new files — one runtime module (character_consistency), one
+# runtime doc (CHARACTER_CONSISTENCY_RUNTIME), one corrections
+# record (CF-WO-P1-006-R1-corrections), the R1 driver
+# (scripts/run-p1006-r1-character-render.py), one test file
+# (test_p1006_r1_character), and nine reference-project files
+# (examples/p1006-r1-character-consistency). Every other file
+# this round touched was already in the manifest from an earlier
+# round; this file itself was already in the diff, so it adds
+# no new entry. (docs/implementation/CHECKSUMS.txt and
+# release-manifest.json are in the diff but intentionally
+# excluded from the manifest.)
+# 312 since CF-WO-P1-006-R2-PREFLIGHT (2026-11-28): sixteen
+# genuinely new files — four preflight records
+# (CF-WO-P1-006-R2-PREFLIGHT-corrections, -gate-a-checklist,
+# -gate-b-authorization, -retention-assessment), two schemas
+# (character-identity, image-to-video-job), two test files
+# (test_p1006_r2_preflight, test_p1006_r2_preflight_storyboard),
+# and eight reference-project files
+# (examples/p1006-r2-photorealistic-image-to-video:
+# story-coverage-report, scene-breakdown, location-coverage,
+# character-appearance-map, shot-duration-plan, cost-plan.json,
+# cost-plan.md, motion-prompts). Every other file this round
+# touched was already in the manifest from an earlier round;
+# this file itself was already in the diff, so it adds
+# no new entry. (docs/implementation/CHECKSUMS.txt and
+# release-manifest.json are in the diff but intentionally
+# excluded from the manifest.)
+MANIFEST_EXPECTED_COUNT = 312
 MANIFEST_EXCLUDED = ("release-manifest.json",
                      "docs/implementation/CHECKSUMS.txt")
 
@@ -393,12 +473,12 @@ def main():
     # the negative cases tamper in-memory copies without touching the
     # committed manifest on disk.
     manifest_errors = verify_manifest_entries(manifest, ROOT)
-    check("CF-P1-003-R2-MANIFEST: all 186 entries verify "
+    check("CF-P1-003-R2-MANIFEST: all 312 entries verify "
           "(existence + SHA-256 + byte count)",
           not manifest_errors, "; ".join(manifest_errors[:5]))
     manifest_paths = [f["path"] for f in manifest.get("files", [])]
     check("CF-P1-003-R2-MANIFEST: manifest scope is exactly the "
-          "186 managed files",
+          "312 managed files",
           len(manifest_paths) == MANIFEST_EXPECTED_COUNT
           and len(set(manifest_paths)) == MANIFEST_EXPECTED_COUNT,
           f"entries={len(manifest_paths)}")

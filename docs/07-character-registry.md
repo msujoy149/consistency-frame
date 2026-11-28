@@ -252,6 +252,18 @@ face, eyes, nose, mouth, hands, feet, proportions, height. If a render
 drifts from the sheet, regenerate against the sheet; do not accept the
 drift and do not quietly update the stored identity to match it.
 
+The fixed prompt block and the generation seed are machine-readable
+in the canonical record: `schemas/character.json` and
+`schemas/character-registration.json` both carry optional
+`fixed_prompt_block` (the exact identity text reused for every
+generation of the character) and `generation_seed` (the fixed seed
+reused for every generation). The runtime reads them from the record
+when it builds an identity snapshot and binds them into the task
+packets, so the anchor travels as data rather than as prose that a
+host might paraphrase. The values are part of the approved identity:
+changing them is a permanent identity change and needs the same
+explicit authorization as changing any other part of the record.
+
 ## Turnaround and Detail Reference Sheet
 
 Every registered character gets one turnaround + detail sheet, built

@@ -2,7 +2,9 @@
   "agents": [
     {
       "agent_id": "agent-antigravity",
+      "formal_conformance_status": "NOT_TESTED",
       "knowledge_pack_path": "PACKAGED (.agents/skills/ + AGENTS.md/GEMINI.md) per adapter record \u2014 not tested.",
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "Antigravity",
       "native_skill_install": "NOT_TESTED",
       "native_skill_install_evidence": "registry/adapters.json adapter-antigravity (integration PACKAGED, .agents/skills/ + AGENTS.md/GEMINI.md); architecture/platform-capabilities.md",
@@ -14,7 +16,9 @@
     },
     {
       "agent_id": "agent-chatgpt",
+      "formal_conformance_status": "NOT_TESTED",
       "knowledge_pack_path": "PACKAGED (upload skills/ via Skills tab) per adapter record \u2014 not tested.",
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "ChatGPT",
       "native_skill_install": "NOT_TESTED",
       "native_skill_install_evidence": "registry/adapters.json adapter-chatgpt (integration PACKAGED, upload skills/ via Skills tab); architecture/platform-capabilities.md",
@@ -26,7 +30,9 @@
     },
     {
       "agent_id": "agent-claude",
+      "formal_conformance_status": "NOT_TESTED",
       "knowledge_pack_path": "Knowledge Pack (Brain Instructions + Skills + Project Context + Workflow Contracts) \u2014 the documented path for hosts without a native install; not tested.",
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "Claude",
       "native_skill_install": "NOT_TESTED",
       "native_skill_install_evidence": "none \u2014 no adapter record in registry/adapters.json for Claude (the app/API host, distinct from Claude Code)",
@@ -38,7 +44,9 @@
     },
     {
       "agent_id": "agent-claude-code",
+      "formal_conformance_status": "NOT_TESTED",
       "knowledge_pack_path": "NATIVE (plugin marketplace) per adapter record \u2014 not tested.",
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "Claude Code",
       "native_skill_install": "NOT_TESTED",
       "native_skill_install_evidence": "registry/adapters.json adapter-claude-code (integration NATIVE, plugin marketplace); architecture/platform-capabilities.md",
@@ -50,7 +58,9 @@
     },
     {
       "agent_id": "agent-codex",
+      "formal_conformance_status": "NOT_TESTED",
       "knowledge_pack_path": "NATIVE (plugin manifest) per adapter record \u2014 not tested.",
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "Codex",
       "native_skill_install": "NOT_TESTED",
       "native_skill_install_evidence": "registry/adapters.json adapter-codex (integration NATIVE, plugin manifest); architecture/platform-capabilities.md",
@@ -62,7 +72,9 @@
     },
     {
       "agent_id": "agent-cursor",
+      "formal_conformance_status": "NOT_TESTED",
       "knowledge_pack_path": "Knowledge Pack (Brain Instructions + Skills + Project Context + Workflow Contracts) \u2014 the documented path for hosts without a native install; not tested.",
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "Cursor",
       "native_skill_install": "NOT_TESTED",
       "native_skill_install_evidence": "none \u2014 no adapter record in registry/adapters.json for Cursor",
@@ -74,7 +86,9 @@
     },
     {
       "agent_id": "agent-gemini-cli",
+      "formal_conformance_status": "NOT_TESTED",
       "knowledge_pack_path": "NATIVE (extension) per adapter record \u2014 not tested.",
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "Gemini CLI",
       "native_skill_install": "NOT_TESTED",
       "native_skill_install_evidence": "registry/adapters.json adapter-gemini-cli (integration NATIVE, extension); architecture/platform-capabilities.md",
@@ -86,7 +100,9 @@
     },
     {
       "agent_id": "agent-github-copilot",
+      "formal_conformance_status": "NOT_TESTED",
       "knowledge_pack_path": "Knowledge Pack (Brain Instructions + Skills + Project Context + Workflow Contracts) \u2014 the documented path for hosts without a native install; not tested.",
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "GitHub Copilot",
       "native_skill_install": "NOT_TESTED",
       "native_skill_install_evidence": "none \u2014 no adapter record in registry/adapters.json for GitHub Copilot",
@@ -98,19 +114,26 @@
     },
     {
       "agent_id": "agent-muse",
+      "formal_conformance_evidence": "CF-P0-ADAPTER-001 passed 2026-11-26 in this environment (tests/test_muse_adapter_conformance.py, 20 checks): knowledge-pack access, router skill identification, canonical contract read, short-form fixture analysis, verbatim dialogue preservation, schema + runtime validation, unsupported media-provider operations identified, no native-install claim.",
+      "formal_conformance_status": "VERIFIED",
+      "formal_conformance_test_id": "CF-P0-ADAPTER-001",
       "knowledge_pack_path": "Clone the repo into the workspace and read skills/ from there; `bash setup.sh` syncs local .agents/skills/ copies and (opt-in) the bundled components. No native custom-SKILL.md install flow is documented by Meta.",
+      "media_execution": "none \u2014 directs companions/providers only; generates no video or audio itself",
       "name": "Muse",
       "native_skill_install": "UNSUPPORTED",
       "native_skill_install_evidence": "architecture/platform-capabilities.md (\"Muse correction (P0, F3)\"); registry/adapters.json adapter-muse",
-      "notes": "The Brain's home host. The repo is installed as a versioned knowledge pack, not as a native skill install.",
+      "notes": "The Brain's home host. The repo is installed as a versioned knowledge pack, not as a native skill install. Usage-verified (exercised daily in this account) and formal conformance VERIFIED by CF-P0-ADAPTER-001 (2026-11-26); media execution is none.",
       "status": "verified",
+      "verification_basis": "usage-exercised-in-account",
       "verification_evidence": "Used daily in this account since 2026-11-12 (repo work, P0 v2.3 + v2.4 implementation, tests, blog). The knowledge-pack path is the path this account actually uses.",
       "verification_status": "VERIFIED",
       "verified": true
     },
     {
       "agent_id": "agent-opencode",
+      "formal_conformance_status": "NOT_TESTED",
       "knowledge_pack_path": "NATIVE (.opencode/skills) per adapter record \u2014 not tested.",
+      "media_execution": "none evidenced \u2014 no record of this host generating media in this account",
       "name": "OpenCode",
       "native_skill_install": "NOT_TESTED",
       "native_skill_install_evidence": "registry/adapters.json adapter-opencode (integration NATIVE, .opencode/skills); architecture/platform-capabilities.md",
@@ -1071,7 +1094,7 @@
   },
   "integrity": {
     "algorithm": "sha256-canonical-json-v1",
-    "fingerprint": "ca8368ca07d6bb63c56f649d3f2cc0d7a3526ebe5ed87ddc26a1bb278f98a36a"
+    "fingerprint": "b70200c7227f55df2f2a86b4f53ff96b8be4c542e2bc57aa0f33703e9243bb1c"
   },
   "intent_modes": {
     "EDIT_EXISTING_MEDIA": {
@@ -2659,11 +2682,11 @@
   ],
   "sources": {
     "architecture/AGENT_COMPATIBILITY_MATRIX.yaml": {
-      "sha256": "48f62000f49829bb246d080c53e0d28ff28879069284419e1ea8092f12300f36",
+      "sha256": "e84c1598548a0ef3a60cb51a10e9201280c4d03e74d21ab037f35226fee15824",
       "version": "2.4"
     },
     "architecture/COMPANION_CAPABILITY_REGISTRY.yaml": {
-      "sha256": "d1520145cd55b14961c9dd6d71d7b07d04777b0687abacc4df94bc19ef6057ea",
+      "sha256": "4c6698a973bc56d64ec70791dbff3b98fb260dd9f68cc4974fe67046683fd418",
       "version": "2.4"
     },
     "architecture/SKILL_ROUTING_MATRIX.yaml": {

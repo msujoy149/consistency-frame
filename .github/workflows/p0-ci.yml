@@ -13,7 +13,14 @@
 # natively on Windows (Python 3.10 and 3.12), including the real
 # multiprocessing first-run race test under the spawn start
 # method. The Windows job produces no last-run.json artefact —
-# its evidence is the job log (the four suites' PASS lines).
+# its evidence is the job log (the suites' PASS lines).
+# (CF-WO-P1-005-R4, E): p0-validate installs FFmpeg/ffprobe
+# (Ubuntu package) so the end-to-end integration test runs for
+# real — it fails, never skips, when FFmpeg is absent. The
+# windows-compat job does not install FFmpeg: the e2e suite
+# does not run there, and the URL-security suite does not run
+# there either (its pinned-TLS group needs the openssl CLI,
+# which is not confirmed on the Windows runner's PATH).
 name: P0 CI
 
 on:
@@ -36,6 +43,20 @@ jobs:
           git --version
       - name: Install PyYAML (needed by scripts/validate-repo.py check 8, tests/test_routing.py and scripts/generate-routing-catalog.py)
         run: python3 -m pip install --quiet pyyaml
+      - name: Install FFmpeg (required by the R4 end-to-end test)
+        # CF-WO-P1-005-R4 (E): the local end-to-end integration
+        # test (tests/test_e2e_local.py) exercises real
+        # FFmpeg/ffprobe operations and FAILS — it never skips —
+        # when they are absent, so skipped FFmpeg tests can never
+        # count as integration coverage. The Ubuntu package is
+        # the known supported build for this job; the step prints
+        # both versions and the test records them in its
+        # evidence record.
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          ffmpeg -version | head -1
+          ffprobe -version | head -1
       - name: Check routing catalog is fresh
         # CF-WO-P1-002: the compiled catalog (registry/routing-catalog.json)
         # must match the canonical routing sources. This step fails the
@@ -50,6 +71,97 @@ jobs:
         with:
           name: p0-test-results
           path: tests/last-run.json
+
+  p1-006-execution:
+    # CF-WO-P1-006 (§14): the real media execution job. Installs a
+    # known FFmpeg, verifies ffmpeg/ffprobe versions, runs the
+    # P1-006 suites, produces the reference render, runs technical
+    # QC, verifies checksums, and uploads a reproducible test
+    # artifact. The reference render here is the CI render: the
+    # same assembly pipeline, locally regenerable assets, and the
+    # same geometry and QC — but deterministic tone narration
+    # instead of VoiceStudio (the runner has no OmniVoice model
+    # and no GPU), recorded in the delivery manifest as
+    # voice_source "synthesized-tone". No paid calls, no model
+    # downloads, no provider execution records.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Install FFmpeg (known Ubuntu build)
+        # Same install as p0-validate: the P1-006 suites exercise
+        # real FFmpeg/ffprobe and fail, never skip, when they are
+        # absent. Versions are printed and recorded by the suites.
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          ffmpeg -version | head -1
+          ffprobe -version | head -1
+      - name: Run P1-006 project suite
+        # One step per suite: a failure in one must not hide the
+        # others.
+        run: python3 tests/test_p1006_project.py
+      - name: Run P1-006 asset suite
+        run: python3 tests/test_p1006_assets.py
+      - name: Run P1-006 voice suite
+        run: python3 tests/test_p1006_voice.py
+      - name: Run P1-006 audio suite
+        run: python3 tests/test_p1006_audio.py
+      - name: Run P1-006 timeline suite
+        run: python3 tests/test_p1006_timeline.py
+      - name: Run P1-006 assembly suite
+        run: python3 tests/test_p1006_assembly.py
+      - name: Run P1-006 QC and delivery suite
+        run: python3 tests/test_p1006_delivery.py
+      - name: Run P1-006 end-to-end suite
+        run: python3 tests/test_p1006_e2e.py
+      - name: Produce the reference render (CI tone narration)
+        # No --voice-dir: the CI render synthesizes deterministic
+        # tone narration at the planned line durations. Same
+        # pipeline, geometry and QC as the local delivery render;
+        # only the voice source differs, and the manifest says so.
+        run: |
+          python3 scripts/run-p1006-reference-render.py \
+            --work-dir "${{ runner.temp }}/p1006-work" \
+            --dist-dir "${{ runner.temp }}/p1006-dist"
+      - name: Verify the reference render independently
+        # The driver already verifies the package and fails on
+        # any mismatch; this step re-proves the MP4 facts and
+        # the checksums from outside the driver.
+        run: |
+          python3 - <<'PYEOF'
+          import json, os, subprocess, sys
+          dist = os.environ["P1006_DIST"]
+          manifest = json.load(open(os.path.join(dist, "delivery-manifest.json")))
+          mp4 = os.path.join(dist, manifest["filename"])
+          probe = json.loads(subprocess.run(
+              ["ffprobe", "-v", "error", "-show_format", "-show_streams",
+               "-of", "json", mp4], capture_output=True, text=True,
+              check=True).stdout)
+          video = next(s for s in probe["streams"] if s["codec_type"] == "video")
+          audio = next(s for s in probe["streams"] if s["codec_type"] == "audio")
+          assert (video["width"], video["height"]) == (1080, 1920), video
+          assert video["avg_frame_rate"] == "30/1", video
+          assert video["codec_name"] == "h264", video
+          assert audio["codec_name"] == "aac", audio
+          duration = float(probe["format"]["duration"])
+          assert 30.0 <= duration <= 60.0, duration
+          assert manifest["voice_source"] == "synthesized-tone", manifest
+          assert manifest["package_purpose"] == "review", manifest
+          print(f"MP4 OK: {manifest['filename']} {manifest['size_bytes']} bytes "
+                f"sha256 {manifest['sha256'][:16]}... duration {duration:.2f}s")
+          PYEOF
+          (cd "${{ runner.temp }}/p1006-dist" && sha256sum -c SHA256SUMS)
+        env:
+          P1006_DIST: ${{ runner.temp }}/p1006-dist
+      - name: Upload reference render
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: p1006-reference-render
+          path: ${{ runner.temp }}/p1006-dist
 
   windows-compat:
     # Native Windows verification of the runtime suites
@@ -129,3 +241,55 @@ jobs:
         # hide the others.
         shell: bash
         run: python tests/test_script_to_performance_runtime.py
+      - name: Run identity resolution suite
+        # CF-WO-P1-005: the identity resolution suite (P1-004-R1)
+        # and the production-store suite (P1-004-R1) are
+        # platform-independent runtime code; both are Windows-safe
+        # in structure (symlink tests catch OSError; POSIX mode
+        # checks are gated on os.name == "posix"). One step per
+        # suite: a failure in one suite must not hide the others.
+        shell: bash
+        run: python tests/test_identity_resolution.py
+      - name: Run production store suite
+        shell: bash
+        run: python tests/test_production_store.py
+      - name: Run media execution suite
+        # CF-WO-P1-005: the media execution state machine, the
+        # adapter suites and the timeline delivery suite are
+        # platform-independent runtime code. The FFmpeg suite and
+        # the pipeline group skip (exit 0, no conformance claimed)
+        # where ffmpeg/ffprobe are absent; the OpenMontage group
+        # skips where the component checkout is absent.
+        shell: bash
+        run: python tests/test_media_execution.py
+      - name: Run FFmpeg adapter suite
+        shell: bash
+        run: python tests/test_ffmpeg_adapter.py
+      - name: Run media adapters suite
+        shell: bash
+        run: python tests/test_media_adapters.py
+      - name: Run timeline delivery suite
+        shell: bash
+        run: python tests/test_timeline_delivery.py
+      - name: Run R4 timeline geometry suite
+        # CF-WO-P1-005-R4 (C): the geometry suite is
+        # platform-independent runtime code; its probe groups
+        # skip where ffmpeg/ffprobe are absent (no conformance
+        # claimed there), like the delivery suite above.
+        shell: bash
+        run: python tests/test_timeline_geometry.py
+      - name: Run R4 VoiceStudio controls suite
+        # CF-WO-P1-005-R4 (D): pure-Python mock-transport suite;
+        # the registry-schema check inside it skips when
+        # jsonschema is not installed.
+        shell: bash
+        run: python tests/test_voicestudio_controls.py
+      - name: Run R4 provider contracts suite
+        # CF-WO-P1-005-R4 (B): pure-Python mock-transport suite;
+        # platform-independent runtime code.
+        shell: bash
+        run: python tests/test_provider_contracts.py
+      # NOT run here (CF-WO-P1-005-R4, E): the URL-security
+      # suite (its pinned-TLS group needs the openssl CLI) and
+      # the end-to-end suite (it requires FFmpeg/ffprobe and
+      # fails without them). Both run in p0-validate.

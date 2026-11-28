@@ -89,10 +89,20 @@ def main():
           f"missing={expected - modes} extra={modes - expected}")
 
     # CF-P0-ADAPTER-001: untested adapters are never marked supported.
+    # A VERIFIED adapter records status "verified" — never
+    # "supported", which is a stronger product claim than a passed
+    # conformance test (see the adapters registry note).
     for ad in adapters["records"]:
-        check(f"CF-P0-ADAPTER-001: {ad['adapter_id']} not marked supported",
-              ad["status"] != "supported"
-              and ad["conformance"]["status"] in ("NOT_TESTED", "NOT RUN"))
+        if ad["conformance"]["status"] in ("NOT_TESTED", "NOT RUN"):
+            check(f"CF-P0-ADAPTER-001: {ad['adapter_id']} not marked supported",
+                  ad["status"] not in ("supported", "implemented"))
+        elif ad["conformance"]["status"] == "VERIFIED":
+            check(f"CF-P0-ADAPTER-001: {ad['adapter_id']} verified records status verified",
+                  ad["status"] == "verified")
+        else:
+            check(f"CF-P0-ADAPTER-001: {ad['adapter_id']} has a known conformance status",
+                  False,
+                  f"status={ad['conformance']['status']!r}")
     muse = [a for a in adapters["records"] if a["adapter_id"] == "adapter-muse"][0]
     check("Muse native skill install is UNSUPPORTED, not claimed",
           muse["native_skill_install"] == "UNSUPPORTED")

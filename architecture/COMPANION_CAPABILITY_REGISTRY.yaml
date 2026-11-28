@@ -273,3 +273,482 @@ companions:
       - All production goes through a pipeline (Rule Zero); the Brain does not improvise outside the pipeline system.
       - No paid provider call without the user's explicit approval and keys.
       - Provider pricing, model availability and terms change; re-probe the provider guide before a production decision.
+
+# ---------------------------------------------------------------------------
+# Providers (P1-004): generic media provider capability records.
+# Separate from reasoning hosts (see architecture/AGENT_COMPATIBILITY_MATRIX.yaml)
+# and from the two companions above (VoiceStudio / OpenMontage), which are
+# also listed here as providers where they execute media work.
+#
+# Conformance vocabulary (matches schemas/provider-capability.json):
+#   VERIFIED   — a formal conformance test passed.
+#   EXERCISED  — the capability was exercised in a recorded run, but no
+#                formal conformance test exists.
+#   NOT_TESTED — no evidence.
+#   FAILED     — a conformance test failed.
+# Matching prefers VERIFIED, then EXERCISED; NOT_TESTED and FAILED are
+# never matched — tasks for them compile as provider-neutral handoffs.
+#
+# Commercial rule: commercial_use_approved is false unless a commercial
+# route was independently cleared. The default OmniVoice weights are
+# CC-BY-NC and must never be routed for monetised or commercial
+# production. A named external provider is not a verified commercial
+# provider until its terms are checked and recorded here.
+# Paid routes: no live paid call was made in this account; every paid
+# route needs the user's explicit approval and keys per call.
+# ---------------------------------------------------------------------------
+providers:
+  - provider_id: provider-voicestudio-omnivoice
+    schema_version: "2.5"
+    provider_type: voice-tts
+    operations: [generate-speech, clone-voice, transcribe]
+    input_constraints: ["text plus a voice profile id", "reference audio for cloning"]
+    output_constraints: ["wav audio", "single speaker per call"]
+    reference_image_capability: false
+    character_reference_capability: false
+    audio_capability: true
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: local-free
+    authorization_required: false
+    privacy_transmission: local-only; no transmission to any provider
+    licence: "CC-BY-NC weights (noncommercial); application AGPL-3.0"
+    commercial_use_approved: false
+    commercial_use_reason: noncommercial_licence
+    # R4-D: voice controls the bundled OmniVoice engine genuinely
+    # forwards (verified against components/voicestudio 2026-11-27).
+    # Only "supported" controls are ever sent; "unsupported" ones
+    # are refused with a precise capability error, never silently
+    # dropped. Instruct carries fixed English tags only; speed is
+    # a number (from a numeric speaking_pace); seed is forwarded.
+    voice_controls:
+      supported: [instruct, speed, seed]
+      unsupported:
+        emotional_delivery: "the bundled OmniVoice engine has no emotion control (supports_emotion is False); the backend accepts an emotion field but it has no effect on this engine"
+        pitch_range: "the /generate endpoint has no pitch field"
+        pauses: "the /generate endpoint has no pauses field"
+        vocal_characteristics: "voice design applies only when no reference audio is used; this adapter always sends profile reference audio, so vocal characteristics cannot be forwarded"
+        pronunciation_preferences: "the backend pronounce flag applies a stored pronunciation dictionary, not per-request free-text preferences"
+    adapter_version: "0.5.8"
+    conformance:
+      status: EXERCISED
+      test_id: ""
+      evidence: "OmniVoice TTS runs via the local API on 127.0.0.1:3900 (Bengali, English, Hindi speech generated 2026-11-12/13); user verdict recorded in the project record. Re-verified 2026-11-27: one Bengali generation via /generate (instruct child/female/high-pitch, seed 11, engine omnivoice), 1.98 s WAV, audio id 1faa2e3e, independently verified (wave probe + SHA-256)."
+      last_verified: "2026-11-27"
+    evidence: "components/voicestudio/backend/main.py; recorded runs 2026-11-12/13"
+  - provider_id: provider-openmontage-assembly
+    schema_version: "2.5"
+    provider_type: editing-rendering
+    operations: [assemble-timeline]
+    input_constraints: ["pipeline definition plus approved assets"]
+    output_constraints: ["rendered video per the pipeline"]
+    reference_image_capability: false
+    character_reference_capability: false
+    audio_capability: true
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: local-free
+    authorization_required: false
+    privacy_transmission: local-only; no transmission to any provider
+    licence: "AGPL-3.0"
+    commercial_use_approved: true
+    commercial_use_reason: "local AGPL-3.0 tool; commercial use of the application is permitted; output commercial status depends on the asset providers"
+    adapter_version: "0.5.8"
+    conformance:
+      status: EXERCISED
+      test_id: ""
+      evidence: "demo composition animated-reel-20s rendered 2026-11-27 via the verified render_demo.py entry (Remotion, 630 frames) and independently validated with ffprobe: 21.056 s, 1920x1080, h264 + aac, SHA-256 b1d5c6cd0f4a0f2e7458ce9cb022f6c73053b593e6028e6d5a55a1bc29d8bbd3; the same render repeated through OpenMontageAdapter.submit and copied into the workspace outputs; make preflight passed 2026-11-27; production pipeline assembly is NOT exercised"
+      last_verified: "2026-11-27"
+    evidence: "components/openmontage/projects/demos/renders/animated-reel-20s.mp4 (rendered 2026-11-27, validated with ffprobe); evidence/p1005/om-adapter-run/outputs/exec-om-test-001.mp4 (adapter submit copy)"
+  - provider_id: provider-ffmpeg
+    schema_version: "2.5"
+    provider_type: local-tool
+    operations: [probe-media, transcode-media, assemble-timeline]
+    input_constraints: ["media files on local disk"]
+    output_constraints: ["probed metadata; transcoded or concatenated media"]
+    reference_image_capability: false
+    character_reference_capability: false
+    audio_capability: true
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: local-free
+    authorization_required: false
+    privacy_transmission: local-only; no transmission to any provider
+    licence: "LGPL/GPL (system binary)"
+    commercial_use_approved: true
+    commercial_use_reason: "local tool; production use permitted; output commercial status depends on the input assets"
+    adapter_version: "8.1.2"
+    conformance:
+      status: EXERCISED
+      test_id: "CF-P1-005-FFMPEG"
+      evidence: "ffmpeg 8.1.2 probe/transcode/assembly exercised by tests/test_ffmpeg_adapter.py (CF-P1-005-FFMPEG) and the end-to-end execution pipeline (CF-P1-005-EXECUTION), 2026-11-27; earlier demo renders 2026-11-12/13"
+      last_verified: "2026-11-27"
+    evidence: "ffmpeg 8.1.2 on this machine; tests/test_ffmpeg_adapter.py; demo renders in ~/workspace/demo-video"
+  - provider_id: provider-opentimelineio
+    schema_version: "2.5"
+    provider_type: local-tool
+    operations: [interchange-timeline]
+    input_constraints: ["timeline data (clips, timing, tracks, transitions, markers)"]
+    output_constraints: ["editorial interchange data; not a render"]
+    reference_image_capability: false
+    character_reference_capability: false
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: local-free
+    authorization_required: false
+    privacy_transmission: local-only; no transmission to any provider
+    licence: "Apache-2.0"
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: ""
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "probed 2026-11-27: not installed in this account (probe_opentimelineio reports unavailable); no adapter built — the canonical timeline manifest covers editorial interchange"
+      last_verified: "2026-11-27"
+    evidence: "probe_opentimelineio in runtime/media_adapters.py; candidate for editorial interchange only"
+  - provider_id: provider-fal-image
+    schema_version: "2.5"
+    provider_type: image-generation
+    operations: [generate-image]
+    input_constraints: ["text prompt; no reference images (reference-part serialization UNCONFIRMED)"]
+    output_constraints: ["image; limits per endpoint"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: "fal Model APIs (queue + direct)"
+    documentation_url: "https://fal.ai/llms-full.txt"
+    documentation_status: "official"
+    api_version: "fal Model APIs (queue + direct)"
+    async_behaviour: "asynchronous queue with polling (direct endpoints synchronous)"
+    cancellation_support: "PUT cancel_url — cancellation supported"
+    output_retrieval: "fal.media CDN URL, available 7 days or more"
+    charge_behaviour: "per output from prepaid credits; server errors (HTTP 500+) never charged; queue-wait time never charged; a 422 may be charged if GPU time was spent; nano-banana-2 $0.08/image (2K 1.5x, 4K 2x, 0.5K 0.75x)"
+    aspect_ratios: ["per-model"]
+    audio_support: false
+    character_reference_limits: "not supported by the contract (see reference_images)"
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "audited against the current official fal.ai docs 2026-11-27 (queue + direct endpoints); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited against the current official fal.ai docs 2026-11-27 (queue + direct endpoints); no live paid call made"
+  - provider_id: provider-fal-video
+    schema_version: "2.5"
+    provider_type: video-generation
+    operations: [generate-video-from-image]
+    input_constraints: ["text prompt (<=2500 chars); start_image_url required (public URL or base64 data URI, <=50 MB, >=300x300 px, aspect 0.40-2.50); optional end_image_url; duration string 3-15 s; generate_audio bool"]
+    output_constraints: ["video/mp4; output follows the start image aspect (9:16 keyframe yields 9:16) at up to 1080p; native audio when generate_audio is true"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: true
+    native_camera_controls: []
+    native_motion_controls: ["prompt-described subject/face/body/hand/prop/hair/cloth/environment/camera motion"]
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: true
+    commercial_use_reason: "Commercial use badge on the official fal.ai model page (read 2026-11-28); fal.ai FAQ: each model has its own license and models marked Commercial use are available for commercial use"
+    adapter_version: "fal Model APIs (queue); Kling Video v3 Pro image-to-video"
+    documentation_url: "https://fal.ai/models/fal-ai/kling-video/v3/pro/image-to-video"
+    documentation_status: "official"
+    api_version: "fal Model APIs (queue); Kling Video v3 Pro image-to-video"
+    async_behaviour: "asynchronous queue with polling (IN_QUEUE / IN_PROGRESS / COMPLETED; result via a second GET on response_url)"
+    cancellation_support: "PUT cancel_url — cancellation supported"
+    output_retrieval: "fal.media CDN URL, available 7 days or more"
+    charge_behaviour: "per second of output from prepaid credits; Kling 3.0 Pro 1080p $0.168/s with audio, $0.112/s without (fal.ai list prices, read 2026-11-28); server errors (HTTP 500+) never charged; a 422 may be charged if GPU time was spent"
+    aspect_ratios: ["follows the start image (9:16 keyframe yields 9:16)"]
+    audio_support: true
+    character_reference_limits: "start image only; elements (extra reference images) refused by the contract"
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "audited against the official fal.ai OpenAPI schema for fal-ai/kling-video/v3/pro/image-to-video, read 2026-11-28; no live paid call made; mock contract tests only (CF-P1-006-R2-I2V)"
+      last_verified: "2026-11-28"
+    evidence: "audited against the official fal.ai OpenAPI schema for fal-ai/kling-video/v3/pro/image-to-video, read 2026-11-28; no live paid call made"
+  - provider_id: provider-openai-image
+    schema_version: "2.5"
+    provider_type: image-generation
+    operations: [generate-image]
+    input_constraints: ["text prompt; optional reference image (up to 16 on edits)"]
+    output_constraints: ["image; sizes 1024x1024 / 1536x1024 / 1024x1536 / auto"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: "Images API (2026)"
+    documentation_url: "https://developers.openai.com/api/reference/ruby/resources/images/methods/generate"
+    documentation_status: "official"
+    api_version: "Images API (2026)"
+    async_behaviour: "synchronous"
+    cancellation_support: "none — synchronous"
+    output_retrieval: "base64 b64_json in the response"
+    charge_behaviour: "per token/request; current per-model pricing UNCONFIRMED (not re-read 2026-11-27)"
+    aspect_ratios: ["1024x1024", "1536x1024", "1024x1536", "auto"]
+    audio_support: false
+    character_reference_limits: "up to 16 reference images on edits"
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "audited against the current official Images API docs 2026-11-27 (gpt-image-1 shut down 2026-10-23; current family gpt-image-1-mini/1.5/2/2.5/2.6); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited against the current official Images API docs 2026-11-27 (gpt-image-1 shut down 2026-10-23; current family gpt-image-1-mini/1.5/2/2.5/2.6); no live paid call made"
+  - provider_id: provider-gemini-image
+    schema_version: "2.5"
+    provider_type: image-generation
+    operations: [generate-image]
+    input_constraints: ["text prompt; optional reference image (up to 14; 2.1/3.1-flash-image: 10 objects + 4 characters; Pro: 6 objects + 5 characters + 3 style)"]
+    output_constraints: ["image; aspect ratios 1:1 to 21:9"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: "Interactions API (Api-Revision 2026-05-20)"
+    documentation_url: "https://aistudio.google.com/docs/image-generation"
+    documentation_status: "official"
+    api_version: "Interactions API (Api-Revision 2026-05-20)"
+    async_behaviour: "synchronous"
+    cancellation_support: "none — synchronous"
+    output_retrieval: "base64 in the response"
+    charge_behaviour: "per image/token; Nano Banana 2.1 ≈ $0.0336 (1K) / $0.0504 (2K) / $0.113 (4K) per image (secondary-quoted)"
+    aspect_ratios: ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]
+    audio_support: false
+    character_reference_limits: "up to 14 reference images (2.1/3.1-flash-image: 10 objects + 4 characters; Pro: 6 objects + 5 characters + 3 style)"
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "audited against the current official image-generation docs 2026-11-27 (Nano Banana / Interactions API); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited against the current official image-generation docs 2026-11-27 (Nano Banana / Interactions API); no live paid call made"
+  - provider_id: provider-veo-video
+    schema_version: "2.5"
+    provider_type: video-generation
+    operations: [generate-video]
+    input_constraints: ["text prompt; optional starting reference image (up to 3 Standard/Fast; Lite image input UNCONFIRMED); Vertex project id in context (vertex_project_id); us-central1 only; image input at most 20 MB"]
+    output_constraints: ["video; 4/6/8 s; 720p/1080p (4K on 8 s Standard; Fast 4K UNCONFIRMED); native audio; 24 fps"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: "Veo 3.1 (Vertex AI / Gemini Enterprise Agent Platform; -001 IDs)"
+    documentation_url: "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/video/generate-videos-from-text"
+    documentation_status: "official"
+    api_version: "Veo 3.1 (Vertex AI / Gemini Enterprise Agent Platform; -001 IDs)"
+    async_behaviour: "asynchronous long-running operation with polling (fetchPredictOperation)"
+    cancellation_support: "none — no cancel operation is documented for Vertex Veo"
+    output_retrieval: "inline video bytes in the fetchPredictOperation response when no storageUri is set; a GCS URI output cannot be downloaded (download origin UNCONFIRMED)"
+    charge_behaviour: "per 1 count (official unit; the pricing page does not define 1 count); per-second pricing is SECONDARY-only and is NOT encoded; Fast 4K UNCONFIRMED (pricing lists it, model page does not)"
+    aspect_ratios: ["16:9", "9:16"]
+    audio_support: true
+    character_reference_limits: "up to 3 reference images (Standard/Fast; Lite image input UNCONFIRMED — Vertex docs conflict: model page says not supported, capabilities row says supported)"
+    duration_limits: {min_seconds: 4, max_seconds: 8}
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "audited against the official Vertex AI Veo docs 2026-11-27 (Gemini Enterprise Agent Platform, -001 IDs; Gemini API preview IDs shut down 2026-10-22); GA-ID retirement wording UNCONFIRMED; no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited against the official Vertex AI Veo docs 2026-11-27 (Gemini Enterprise Agent Platform, -001 IDs; Gemini API preview IDs shut down 2026-10-22); GA-ID retirement wording UNCONFIRMED; no live paid call made"
+  - provider_id: provider-kling-video
+    schema_version: "2.5"
+    provider_type: video-generation
+    operations: [generate-video]
+    input_constraints: ["text prompt; optional starting reference image (image-to-video first/last frame, base64, <= 10 MB)"]
+    output_constraints: ["video; 5 or 10 s (legacy /v1)"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: "Kling AI Open Platform (legacy /v1 design)"
+    documentation_url: "https://app.klingai.com/global/dev/document-api"
+    documentation_status: "secondary-quoting-official"
+    api_version: "Kling AI Open Platform (legacy /v1 design)"
+    async_behaviour: "asynchronous task_id with polling and callback_url"
+    cancellation_support: "none — no cancel endpoint is documented (secondary-quoting-official)"
+    output_retrieval: "result URL, 30 days"
+    charge_behaviour: "prepaid resource packages (units); failed-task charging UNCONFIRMED"
+    aspect_ratios: ["16:9", "9:16", "1:1"]
+    audio_support: true
+    character_reference_limits: "image-to-video first/last frame"
+    duration_limits: {min_seconds: 5, max_seconds: 10}
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "audited 2026-11-27 from sources quoting the official Kling docs (official docs are login/JS-gated and could not be read directly); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited 2026-11-27 from sources quoting the official Kling docs (official docs are login/JS-gated and could not be read directly); no live paid call made"
+  - provider_id: provider-sora-video
+    schema_version: "2.5"
+    provider_type: video-generation
+    operations: [generate-video]
+    input_constraints: ["text prompt; optional starting reference image"]
+    output_constraints: ["video; service shut down 2026-09-24 — no output"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: "Videos API (shut down 2026-09-24)"
+    documentation_url: "https://developers.openai.com/api/docs/models/sora-2-pro"
+    documentation_status: "official"
+    api_version: "Videos API (shut down 2026-09-24)"
+    async_behaviour: "shut down — no execution"
+    cancellation_support: "n/a — service shut down"
+    output_retrieval: "n/a — service shut down"
+    charge_behaviour: "n/a — service shut down"
+    aspect_ratios: []
+    audio_support: false
+    character_reference_limits: "n/a — service shut down"
+    conformance:
+      status: FAILED
+      test_id: ""
+      evidence: "Sora 2 models and the Videos API were shut down 2026-09-24 (OpenAI docs: no longer available, no one-to-one replacement API); no adapter exists and none will be built"
+      last_verified: "2026-11-27"
+    evidence: "Sora 2 models and the Videos API were shut down 2026-09-24 (OpenAI docs: no longer available, no one-to-one replacement API); no adapter exists and none will be built"
+  - provider_id: provider-ltx-video
+    schema_version: "2.5"
+    provider_type: video-generation
+    operations: [generate-video]
+    input_constraints: ["text prompt; optional first-frame image (data URI, <= 7 MB)"]
+    output_constraints: ["video; 6-20 s (Fast); 6/8/10 s (Pro)"]
+    reference_image_capability: true
+    character_reference_capability: true
+    audio_capability: false
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: "LTX API v2 (async; V1 retired 2026-10-26)"
+    documentation_url: "https://docs.ltx.io/welcome"
+    documentation_status: "secondary-quoting-official"
+    api_version: "LTX API v2 (async; V1 retired 2026-10-26)"
+    async_behaviour: "asynchronous only (V2) with job ID polling"
+    cancellation_support: "none found in the official docs (UNCONFIRMED)"
+    output_retrieval: "video_url, available under 24 hours (signed URL expires 1 hour after it is checked)"
+    charge_behaviour: "per second of output video (per second of input audio for audio-to-video); Fast $0.09/s (720p); prepaid credits are reserved before generation and charged only on success — a failed job releases its reservation"
+    aspect_ratios: ["16:9", "9:16", "1:1"]
+    audio_support: true
+    character_reference_limits: "one first-frame image"
+    duration_limits: {min_seconds: 6, max_seconds: 20}
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "audited 2026-11-27 from sources quoting the official LTX docs (direct read not completed); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited 2026-11-27 from sources quoting the official LTX docs (direct read not completed); no live paid call made"
+  - provider_id: provider-elevenlabs-voice
+    schema_version: "2.5"
+    provider_type: voice-tts
+    operations: [generate-speech, clone-voice]
+    input_constraints: ["text plus a voice id; reference audio for cloning"]
+    output_constraints: ["audio (default MP3); single speaker per call"]
+    reference_image_capability: false
+    character_reference_capability: false
+    audio_capability: true
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: "ElevenLabs REST v1"
+    documentation_url: "https://elevenlabs.io/docs/api-reference"
+    documentation_status: "secondary-quoting-official"
+    api_version: "ElevenLabs REST v1"
+    async_behaviour: "synchronous"
+    cancellation_support: "none — synchronous"
+    output_retrieval: "response bytes (audio)"
+    charge_behaviour: "per character: $0.08/1,000 chars (v4/v3/multilingual v2); $0.04/1,000 chars (turbo/flash) (secondary-quoted); free tier 10,000 credits/mo, non-commercial only"
+    aspect_ratios: []
+    audio_support: true
+    character_reference_limits: "n/a (voice sample for cloning)"
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "audited 2026-11-27 from sources quoting the official ElevenLabs docs (direct fetch blocked here); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited 2026-11-27 from sources quoting the official ElevenLabs docs (direct fetch blocked here); no live paid call made"
+  - provider_id: provider-lyria-music
+    schema_version: "2.5"
+    provider_type: music
+    operations: [generate-sound]
+    input_constraints: ["text prompt describing the music"]
+    output_constraints: ["audio; full song up to ~3 minutes (lyria-3.5); 30 s clip (lyria-3-clip-preview)"]
+    reference_image_capability: false
+    character_reference_capability: false
+    audio_capability: true
+    native_camera_controls: []
+    native_motion_controls: []
+    cost_model: paid-per-call
+    authorization_required: true
+    privacy_transmission: transmission-to-provider-requires-authorization
+    licence: proprietary-paid
+    commercial_use_approved: false
+    commercial_use_reason: unverified
+    adapter_version: "Lyria 3.5 via Interactions API (Api-Revision 2026-05-20)"
+    documentation_url: "https://aistudio.google.com/docs/music-generation"
+    documentation_status: "official"
+    api_version: "Lyria 3.5 via Interactions API (Api-Revision 2026-05-20)"
+    async_behaviour: "synchronous"
+    cancellation_support: "none — synchronous"
+    output_retrieval: "base64 MP3 in the response"
+    charge_behaviour: "flat $0.08 per generated song, including failed takes (secondary-quoted)"
+    aspect_ratios: []
+    audio_support: true
+    character_reference_limits: "images as inspiration only (up to 10)"
+    duration_limits: {max_seconds: 180}
+    conformance:
+      status: NOT_TESTED
+      test_id: ""
+      evidence: "audited against the current official music-generation docs 2026-11-27 (Lyria 3.5 + lyria-3-clip-preview, SynthID watermark); no live paid call made"
+      last_verified: "2026-11-27"
+    evidence: "audited against the current official music-generation docs 2026-11-27 (Lyria 3.5 + lyria-3-clip-preview, SynthID watermark); no live paid call made"

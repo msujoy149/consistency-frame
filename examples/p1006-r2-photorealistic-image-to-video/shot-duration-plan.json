@@ -1,0 +1,108 @@
+{
+  "project_id": "p1006-r2-photorealistic-image-to-video",
+  "work_order": "CF-WO-P1-006-R2-PREFLIGHT",
+  "provider_duration_rule": "Duration enum \"3\"-\"15\" (default \"5\"); per-shot multi_prompt duration enum 1-15. This production uses one prompt per clip (multi_prompt is refused by the provider contract) and duration \"6\" for every shot.",
+  "segmentation_note": "Provider duration limits are handled through shot segmentation, not by changing the story: SC3 and SC6 are each two 6-second shots because one shot cannot hold two different camera framings / movements.",
+  "shots": [
+    {
+      "shot_id": "s1",
+      "scene_id": "SC1",
+      "line_id": "l1",
+      "duration_seconds": 6,
+      "duration_provider_enum": "6",
+      "duration_provider_range": "3-15",
+      "duration_within_provider_range": true,
+      "narration_planned_seconds": 5.8,
+      "narration_headroom_seconds": 0.2,
+      "justification": "6 s: the narration line needs 5.8 s, and the strike-cup-light movement needs the full clip; a shorter clip would cut the lighting action."
+    },
+    {
+      "shot_id": "s2",
+      "scene_id": "SC2",
+      "line_id": "l2",
+      "duration_seconds": 6,
+      "duration_provider_enum": "6",
+      "duration_provider_range": "3-15",
+      "duration_within_provider_range": true,
+      "narration_planned_seconds": 5.2,
+      "narration_headroom_seconds": 0.8,
+      "justification": "6 s: the narration line needs 5.2 s, and the walk needs several full strides to read as movement, not a pose."
+    },
+    {
+      "shot_id": "s3a",
+      "scene_id": "SC3",
+      "line_id": "l3",
+      "duration_seconds": 6,
+      "duration_provider_enum": "6",
+      "duration_provider_range": "3-15",
+      "duration_within_provider_range": true,
+      "narration_planned_seconds": 5.2,
+      "narration_headroom_seconds": 0.8,
+      "justification": "6 s: the narration line needs 5.2 s, and the lower, release and first drift need the full clip to read as one continuous action."
+    },
+    {
+      "shot_id": "s3b",
+      "scene_id": "SC3",
+      "line_id": "l4",
+      "duration_seconds": 6,
+      "duration_provider_enum": "6",
+      "duration_provider_range": "3-15",
+      "duration_within_provider_range": true,
+      "narration_planned_seconds": 4.1,
+      "narration_headroom_seconds": 1.9,
+      "justification": "6 s: the narration line needs 4.1 s; the remaining time is the silent watching beat — the lantern drifting while she holds her breath — which is the point of the shot."
+    },
+    {
+      "shot_id": "s4",
+      "scene_id": "SC4",
+      "line_id": "l5",
+      "duration_seconds": 6,
+      "duration_provider_enum": "6",
+      "duration_provider_range": "3-15",
+      "duration_within_provider_range": true,
+      "narration_planned_seconds": 4.1,
+      "narration_headroom_seconds": 1.9,
+      "justification": "6 s: the narration line needs 4.1 s; the reach, grip and lift need the full clip to read as one continuous action."
+    },
+    {
+      "shot_id": "s5",
+      "scene_id": "SC5",
+      "line_id": "l6",
+      "duration_seconds": 6,
+      "duration_provider_enum": "6",
+      "duration_provider_range": "3-15",
+      "duration_within_provider_range": true,
+      "narration_planned_seconds": 4.5,
+      "narration_headroom_seconds": 1.5,
+      "justification": "6 s: the narration line needs 4.5 s; the unfold and the first rain splashes need the full clip."
+    },
+    {
+      "shot_id": "s6a",
+      "scene_id": "SC6",
+      "line_id": "l7",
+      "duration_seconds": 6,
+      "duration_provider_enum": "6",
+      "duration_provider_range": "3-15",
+      "duration_within_provider_range": true,
+      "narration_planned_seconds": 5.2,
+      "narration_headroom_seconds": 0.8,
+      "justification": "6 s: the narration line needs 5.2 s, and the two-handed overhead lift needs the full clip."
+    },
+    {
+      "shot_id": "s6b",
+      "scene_id": "SC6",
+      "line_id": "l8",
+      "duration_seconds": 6,
+      "duration_provider_enum": "6",
+      "duration_provider_range": "3-15",
+      "duration_within_provider_range": true,
+      "narration_planned_seconds": 5.2,
+      "narration_headroom_seconds": 0.8,
+      "justification": "6 s: the narration line needs 5.2 s, and the release plus the first rise need the full clip to close the film."
+    }
+  ],
+  "total_video_seconds": 48,
+  "total_within_target_30_60_seconds": true,
+  "audio_timeline_seconds": 45.3,
+  "audio_timeline_note": "Planned narration 39.3 s + 7 x 0.5 s pauses + 1.0 s lead-in + 1.5 s tail-out = 45.3 s inside 48 s of video; the remaining ~2.7 s is ambient (river, rain, lantern glow, music). The final schedule is computed from MEASURED narration durations at assembly time."
+}

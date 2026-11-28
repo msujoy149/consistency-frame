@@ -1,0 +1,216 @@
+{
+  "project_id": "p1006-r2-photorealistic-image-to-video",
+  "work_order": "CF-WO-P1-006-R2-PREFLIGHT",
+  "characters": [
+    {
+      "character_id": "DEMO-CHAR-002",
+      "name": "Nadia",
+      "kind": "fictional, project-local adult, 27",
+      "style": "photorealistic-digital-human",
+      "appears_in_shots": [
+        "s1",
+        "s2",
+        "s3a",
+        "s3b",
+        "s4",
+        "s5",
+        "s6a",
+        "s6b"
+      ],
+      "shot_count": 8,
+      "reference_plan": {
+        "front": {
+          "asset_id": "ref-nadia-front",
+          "status": "pending-generation-after-script-approval"
+        },
+        "three_quarter": {
+          "asset_id": "ref-nadia-three-quarter",
+          "status": "pending-generation-after-script-approval"
+        },
+        "side": {
+          "asset_id": "ref-nadia-side",
+          "status": "pending-generation-after-script-approval"
+        },
+        "full_body": {
+          "asset_id": "ref-nadia-full-body",
+          "status": "pending-generation-after-script-approval"
+        },
+        "expressions": {
+          "asset_id": "ref-nadia-expressions",
+          "status": "pending-generation-after-script-approval"
+        },
+        "note": "All five reference views are pending generation after script approval; none exists yet. The front reference is generated first and the rest are chained from it."
+      }
+    }
+  ],
+  "appearances": [
+    {
+      "shot_id": "s1",
+      "scene_id": "SC1",
+      "line_id": "l1",
+      "character_id": "DEMO-CHAR-002",
+      "character_name": "Nadia",
+      "present": true,
+      "framing": "medium shot, Nadia leaning over the low clay table, lantern centred low in frame",
+      "expression": "concentration",
+      "outfit_state": "dry: rust-orange linen shirt, dark indigo jeans, brown leather sandals, brass bangle LEFT wrist, gold hoop earrings",
+      "hair_state": "long straight black hair, centre part, loose past the shoulders",
+      "props_held_or_used": [
+        "prop-lantern-table"
+      ],
+      "reference_views_used": [
+        "ref-nadia-front",
+        "ref-nadia-three-quarter"
+      ],
+      "speaks_on_screen": false,
+      "note": "Narrator-only production: Nadia never speaks on screen, so no lip-sync is claimed for any shot."
+    },
+    {
+      "shot_id": "s2",
+      "scene_id": "SC2",
+      "line_id": "l2",
+      "character_id": "DEMO-CHAR-002",
+      "character_name": "Nadia",
+      "present": true,
+      "framing": "full-body shot, Nadia walking toward the camera down the steps, river behind her",
+      "expression": "joyful",
+      "outfit_state": "dry: rust-orange linen shirt, dark indigo jeans, brown leather sandals, brass bangle LEFT wrist, gold hoop earrings",
+      "hair_state": "long straight black hair, centre part, loose past the shoulders",
+      "props_held_or_used": [
+        "prop-lantern-table"
+      ],
+      "reference_views_used": [
+        "ref-nadia-front",
+        "ref-nadia-full-body"
+      ],
+      "speaks_on_screen": false,
+      "note": "Narrator-only production: Nadia never speaks on screen, so no lip-sync is claimed for any shot."
+    },
+    {
+      "shot_id": "s3a",
+      "scene_id": "SC3",
+      "line_id": "l3",
+      "character_id": "DEMO-CHAR-002",
+      "character_name": "Nadia",
+      "present": true,
+      "framing": "close-up on hands and lantern at the water's edge, river filling the frame behind",
+      "expression": "concentration",
+      "outfit_state": "dry: rust-orange linen shirt, dark indigo jeans, brown leather sandals, brass bangle LEFT wrist, gold hoop earrings",
+      "hair_state": "long straight black hair, centre part, loose past the shoulders",
+      "props_held_or_used": [
+        "prop-lantern-floating"
+      ],
+      "reference_views_used": [
+        "ref-nadia-front",
+        "ref-nadia-three-quarter"
+      ],
+      "speaks_on_screen": false,
+      "note": "Narrator-only production: Nadia never speaks on screen, so no lip-sync is claimed for any shot."
+    },
+    {
+      "shot_id": "s3b",
+      "scene_id": "SC3",
+      "line_id": "l4",
+      "character_id": "DEMO-CHAR-002",
+      "character_name": "Nadia",
+      "present": true,
+      "framing": "close-up, face fills the upper two-thirds, lantern glowing on the water at the right",
+      "expression": "hopeful",
+      "outfit_state": "dry: rust-orange linen shirt, dark indigo jeans, brown leather sandals, brass bangle LEFT wrist, gold hoop earrings",
+      "hair_state": "long straight black hair, centre part, loose past the shoulders",
+      "props_held_or_used": [
+        "prop-lantern-floating"
+      ],
+      "reference_views_used": [
+        "ref-nadia-front",
+        "ref-nadia-three-quarter"
+      ],
+      "speaks_on_screen": false,
+      "note": "Narrator-only production: Nadia never speaks on screen, so no lip-sync is claimed for any shot."
+    },
+    {
+      "shot_id": "s4",
+      "scene_id": "SC4",
+      "line_id": "l5",
+      "character_id": "DEMO-CHAR-002",
+      "character_name": "Nadia",
+      "present": true,
+      "framing": "medium shot, Nadia centred, basket held at waist height, stalls softly blurred behind",
+      "expression": "joyful",
+      "outfit_state": "dry: rust-orange linen shirt, dark indigo jeans, brown leather sandals, brass bangle LEFT wrist, gold hoop earrings",
+      "hair_state": "long straight black hair, centre part, loose past the shoulders",
+      "props_held_or_used": [
+        "prop-marigold-basket"
+      ],
+      "reference_views_used": [
+        "ref-nadia-front",
+        "ref-nadia-full-body"
+      ],
+      "speaks_on_screen": false,
+      "note": "Narrator-only production: Nadia never speaks on screen, so no lip-sync is claimed for any shot."
+    },
+    {
+      "shot_id": "s5",
+      "scene_id": "SC5",
+      "line_id": "l6",
+      "character_id": "DEMO-CHAR-002",
+      "character_name": "Nadia",
+      "present": true,
+      "framing": "medium shot, Nadia centred under the umbrella, wet cobblestones and warm shop light behind",
+      "expression": "calm",
+      "outfit_state": "damp hair, wet rust-orange shirt clinging slightly",
+      "hair_state": "long straight black hair, centre part; damp and moving in the wind",
+      "props_held_or_used": [
+        "prop-umbrella"
+      ],
+      "reference_views_used": [
+        "ref-nadia-front",
+        "ref-nadia-full-body"
+      ],
+      "speaks_on_screen": false,
+      "note": "Narrator-only production: Nadia never speaks on screen, so no lip-sync is claimed for any shot."
+    },
+    {
+      "shot_id": "s6a",
+      "scene_id": "SC6",
+      "line_id": "l7",
+      "character_id": "DEMO-CHAR-002",
+      "character_name": "Nadia",
+      "present": true,
+      "framing": "medium shot, Nadia centred, sky lantern held overhead, dusk sky behind",
+      "expression": "joyful",
+      "outfit_state": "dry: rust-orange linen shirt, dark indigo jeans, brown leather sandals, brass bangle LEFT wrist, gold hoop earrings",
+      "hair_state": "long straight black hair, centre part, loose past the shoulders",
+      "props_held_or_used": [
+        "prop-lantern-sky"
+      ],
+      "reference_views_used": [
+        "ref-nadia-front",
+        "ref-nadia-full-body"
+      ],
+      "speaks_on_screen": false,
+      "note": "Narrator-only production: Nadia never speaks on screen, so no lip-sync is claimed for any shot."
+    },
+    {
+      "shot_id": "s6b",
+      "scene_id": "SC6",
+      "line_id": "l8",
+      "character_id": "DEMO-CHAR-002",
+      "character_name": "Nadia",
+      "present": true,
+      "framing": "medium-wide shot, Nadia centred, lantern rising above her into the deep blue sky",
+      "expression": "joyful",
+      "outfit_state": "dry: rust-orange linen shirt, dark indigo jeans, brown leather sandals, brass bangle LEFT wrist, gold hoop earrings",
+      "hair_state": "long straight black hair, centre part, loose past the shoulders",
+      "props_held_or_used": [
+        "prop-lantern-sky"
+      ],
+      "reference_views_used": [
+        "ref-nadia-front",
+        "ref-nadia-full-body"
+      ],
+      "speaks_on_screen": false,
+      "note": "Narrator-only production: Nadia never speaks on screen, so no lip-sync is claimed for any shot."
+    }
+  ]
+}

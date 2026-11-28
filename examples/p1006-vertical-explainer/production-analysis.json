@@ -1,0 +1,32 @@
+{
+  "schema_version": "2.5",
+  "id": "analysis-p1006-vertical-explainer",
+  "project_id": "p1006-vertical-explainer",
+  "script_contract_id": "script-p1006-vertical-explainer",
+  "premise": "A short vertical explainer: Consistency Frame keeps one character the same across every scene and episode by locking the approved design and checking every shot against it.",
+  "narrative_structure": "Hook (same face, every scene) -> problem (redraw drift breaks the story) -> system (lock the design) -> proof (every shot checked) -> scale (scene after scene, episode after episode) -> close (one character, one voice, every scene).",
+  "scenes": [
+    {"scene_id": "SC1", "shot_ids": ["s1"], "description": "Hook: the promise of one unchanging face.", "provenance": "INFERRED_FOR_PRODUCTION"},
+    {"scene_id": "SC2", "shot_ids": ["s2"], "description": "Problem: redraw drift.", "provenance": "INFERRED_FOR_PRODUCTION"},
+    {"scene_id": "SC3", "shot_ids": ["s3"], "description": "System: lock the design.", "provenance": "INFERRED_FOR_PRODUCTION"},
+    {"scene_id": "SC4", "shot_ids": ["s4"], "description": "Proof: every shot checked.", "provenance": "INFERRED_FOR_PRODUCTION"},
+    {"scene_id": "SC5", "shot_ids": ["s5"], "description": "Scale: every scene, every episode.", "provenance": "INFERRED_FOR_PRODUCTION"},
+    {"scene_id": "SC6", "shot_ids": ["s6"], "description": "Close: title card.", "provenance": "INFERRED_FOR_PRODUCTION"}
+  ],
+  "character_resolutions": [],
+  "dialogue_preservation": {"mode": "verbatim", "lines": 6, "rewrites": 0},
+  "pacing": {"beats_per_minute": "measured from real narration durations at assembly time", "pause_after_line_seconds": 0.5},
+  "shot_direction": [
+    {"shot_id": "s1", "direction": "Deep blue gradient, drifting band, keyword centred."},
+    {"shot_id": "s2", "direction": "Teal split gradient, opposing bands, keyword centred."},
+    {"shot_id": "s3", "direction": "Violet gradient, expanding rings, keyword centred."},
+    {"shot_id": "s4", "direction": "Slate gradient, sweeping scan line, keyword centred."},
+    {"shot_id": "s5", "direction": "Green gradient, stacked frames, stepping highlight."},
+    {"shot_id": "s6", "direction": "Near-black blue gradient, title card, slow fade-in."}
+  ],
+  "sound_direction": [
+    {"cue": "Narration leads; music bed ducked beneath speech; room tone throughout; whoosh at each shot boundary after the first; 1.5 s intentional music tail-out."}
+  ],
+  "open_questions": [],
+  "notes": "Narrator-only: no visible character, so character_resolutions is empty and no identity is registered. All six dialogue lines are preserved verbatim; no rewrite was requested."
+}

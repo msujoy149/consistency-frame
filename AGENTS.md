@@ -644,6 +644,149 @@ step-by-step order for every video, in §7).
   Record: corrections doc §12.7.
 - **P1-003 Production Addendum 01 — professional filmmaking workflow (2026-11-26, same branch and PR #4).** Documentation-only integration of the genuinely missing professional filmmaking systems, derived from the work-order specification (the cited 28-page handbook PDF was not received in the workspace — see corrections doc §13.1; cross-check against the PDF is still open): six-stage stage-gate workflow G1–G6 with gate statuses (NOT STARTED / IN PROGRESS / PASS / BLOCKED / WAIVED) and explicit-authorisation waivers; P0–P3 production complexity tiers (a scope hierarchy, explicitly not a replacement for the Part E instruction-precedence hierarchy); director's breakdown, blocking, and selective 12-type coverage plus the 30-degree guideline and playable-action performance direction; Lighting Plan Template (20 fields) and 7 lighting scenarios; capability-aware camera technical profile; 6-step emotional beat progression; 8-step editorial workflow with picture lock and four added cut techniques; 9-step colour workflow with the no-invented-log-profile and no-LUT-hiding rules; 16-field Sound Spotting Template with the intentional-silence clarification; six missing animation principles in kids §4.3; shot-level VFX believability checklist; unified Master Shot Tracker (18 fields) with workspace template and naming convention; QC severity levels (Critical / Major / Minor / Polish) with delivery checklist and post-mortem; genre skill-selection matrix; command-authority integration (10-step operational sequence with G1–G6 gates). No new skill (15 stays 15), no new numbered entries (109/120 unchanged), no runtime or schema change, no new tracked file — the 182-file manifest scope is preserved. Record: corrections doc §13.
 
+## P1-004 Universal AI Production Brain & script-to-production orchestration (2026-11-26)
+
+- **The Brain is universal; the runtime is local.** `runtime/production_orchestrator.py` and `runtime/task_compiler.py` are the fourth and fifth P1 runtime components. The Brain separates five roles — Consistency Frame (Central Brain), AI Reasoning Host, Implementation Agent, Media Execution Providers, Production/Editing Tools — and contains no LLM, no rendering engine, no server, no API backend, and no cloud database. The orchestrator validates, binds, compiles and gates; the reasoning host does creative analysis and fills the production-analysis draft; providers execute media only on evidenced capabilities.
+- **Production analysis is a contract, not a conversation.** `schemas/production-analysis.json` carries premise, narrative structure, scene breakdown, character resolutions, emotional progression, pacing, shot and sound direction, and open questions — every material decision labelled `EXPLICIT_FROM_USER`, `FROM_APPROVED_PROJECT_CANON`, `INFERRED_FOR_PRODUCTION`, or `NEEDS_USER_DECISION`. Story preservation is enforced: dialogue counts are checked against the source script, open questions and needs-decision characters block bundle building, and inferences are never presented as facts.
+- **Character resolution is pure and task-local.** Approved identities always win (and must exist in the registry); a character with no approved identity gets a task-local design proposal (`schemas/character-design-proposal.json`) — design brief, fixed structure, reference preparation — that never registers anything permanently. Permanent registration still needs the existing explicit-authorisation flow.
+- **Job state machine with operation-gated transitions.** `INTAKE → ANALYZING → PLAN_READY → AWAITING_G1_APPROVAL → TEST_READY → AWAITING_G2_APPROVAL → BATCH_PRODUCTION → EDITORIAL_REVIEW → PICTURE_LOCK → FINISHING → FINAL_QC → DELIVERED`, plus `BLOCKED` from any state (resume only to the previous state, only while no gate is BLOCKED). `PLAN_READY` is reachable only via `build_production_bundle`; `TEST_READY` and `BATCH_PRODUCTION` only via a G1/G2 PASS (or a user waiver with a recorded reason) in `evaluate_production_gate` — resuming from BLOCKED to a previous operation-gated state is the exception, because the operation that put the job there already passed the gate. Gates are enforced in order; a blocked gate blocks the job; only the user waives a gate.
+- **Task compilation is deterministic and provider-neutral.** The compiler turns a validated bundle and analysis into task packets (character/reference prep, image, video, voice with exact dialogue text and consent, sound, editing/finishing, QC review) with deterministic hashes. Provider matching uses only evidenced capabilities from `registry/providers.json` (compiled from the `providers:` section of `architecture/COMPANION_CAPABILITY_REGISTRY.yaml`): VERIFIED, then EXERCISED; NOT_TESTED and FAILED never match; commercial jobs never match a provider whose commercial use is not approved (the default OmniVoice weights are CC-BY-NC). An unmatched task compiles as a complete provider-neutral handoff — never a pretended execution.
+- **QC corrects locally.** `build_qc_correction_tasks` compiles regeneration packets only for defective shots (Critical/Major always, Minor only with repair authorisation, Polish never), re-matched as their original task type, preserving approved neighbours.
+- **Muse compatibility is recorded in four dimensions.** Native installation support: UNSUPPORTED. Packaged knowledge-pack support: EXISTS (the repo itself). Actual host conformance: used daily in this account since 2026-11-12, but formal conformance NOT_TESTED (test `CF-P0-ADAPTER-001` still to be run). Media execution: none — Muse directs providers and tools only. All other hosts remain NOT_TESTED. Full record: `docs/implementation/CF-WO-P1-004-corrections.md`, runtime contract in `docs/runtime/PRODUCTION_ORCHESTRATOR_RUNTIME.md`.
+- **Three numbering systems, never confused.** Production Complexity P0–P3 = video-quality scope classification. Engineering milestones P0/P1/P2/P3 = project phases. G1–G6 = production approval gates.
+- **No new skill in P1-004** (15 stays 15); the audit found no gap that needs one. Five new schemas (all v2.5): `production-analysis.json`, `character-design-proposal.json`, `task-packet.json`, `gate-state.json`, `provider-capability.json`. New test suites `CF-P1-004-ANALYSIS`, `CF-P1-004-ORCHESTRATOR`, `CF-P1-004-COMPILER`. The manifest grows beyond 186 — expected for this round, genuinely new files only.
+
+## P1-004-R1 Production contract fidelity, persistent project state & end-to-end planning (2026-11-26)
+
+- **Production analysis is a complete contract.** Scenes carry structured environment intelligence (background design, weather, atmosphere, foreground/midground/background requirements, environment continuity) and `important_props` with design brief, visual/physical requirements, continuity restrictions and provenance; asset references bind scenes to approved assets by stable ids. Sound cues carry a stable cue id, scene/shot/beat ids, a start anchor from the seven-value vocabulary, optional end anchor/offset/duration, distance, perspective, intensity, sync target and mixing priority — relative timing only, never an invented global timecode, and planned timing is never claimed as rendered audio.
+- **Character coverage is exact.** An empty `character_resolutions` array is valid only with genuinely no visible character subjects; otherwise every distinct required identity is resolved exactly once (missing, duplicate and unknown all rejected). A narrator / voice-over is not a visible character (narrator role, or a speaking identity in no scene and no shot). Cross-reference integrity runs against the actual built bundle (`validate_analysis_bundle_references`, called inside `build_production_bundle` and again in `plan_script_to_production`): scene/beat/shot/sound references must resolve, shot-direction entries must not repeat, and unknown references are never silently ignored.
+- **The compiler splits technical from creative.** FFmpeg matches only technical media operations (`media-technical`: probe, assemble, transcode). `creative-editing` and `semantic-qc-review` have no verified provider and always compile as human handoffs. Environment packets carry every validated scene-environment detail plus approved asset ids; prop packets are one per distinct prop (approved props prepared, never redesigned; task-local proposals where no approved prop exists; nothing permanently registered). Sound packets preserve full structured cue timing with `timing_status: "planned"`; intentional silence generates no sound request.
+- **Jobs persist locally, never as authorization.** `runtime/production_store.py` stores production metadata only (never raw media, voice samples or credentials) as JSON envelopes with integrity hashes under an explicit local root, atomic writes, strict path validation and symlink containment, `0o600` files / `0o700` dirs on POSIX. A stored session id is provenance only: resume needs a NEW exact active session, a project/owner/workspace match, stored-job validation and gate revalidation, rebinds the session id, refuses `DELIVERED` jobs, and never auto-resumes paid/external tasks.
+- **One planning entry point.** `plan_script_to_production` runs validate → build bundle → cross-reference check → compile packets → persist (when a store root is given) → return the complete planning result. It does not promote `wf-generate-from-script`: no timeline manifest is produced and no fake media path is invented.
+- **Muse formal conformance is now VERIFIED.** Test `CF-P0-ADAPTER-001` (`tests/test_muse_adapter_conformance.py`, 20 checks) ran in this environment on 2026-11-26 and passed: knowledge-pack access, router skill identification, canonical contract read, short-form fixture analysis, verbatim dialogue preservation, schema + runtime validation, unsupported media-provider operations identified, no native-install claim. The matrix entry (`architecture/AGENT_COMPATIBILITY_MATRIX.yaml`, duplicate keys cleaned) and the adapters registry (`registry/adapters.json`, regenerated from `scripts/generate-registries.py`) record `formal_conformance_status: VERIFIED` / conformance `VERIFIED`, evidence the test file, `last_verified: "2026-11-26"`, status `verified`. Native Muse install stays `UNSUPPORTED`. No claim is made about ChatGPT, Claude or Gemini conformance.
+- **A test-found defect was fixed in this round.** `compile_provider_tasks` keyed proposals into a dict and passed the dict to `compile_task_package`, which iterated it as a list of records and dropped every key — so a task-local proposal passed through the orchestrator was silently lost and compilation failed with "no proposal record was supplied". Proposals now pass through as a list; the long-form end-to-end test (21 packets, fisherman task-local proposal) pins the fix. Record: `docs/implementation/CF-WO-P1-004-corrections.md` §10+.
+
+## P1-004-R1-ADDENDUM-IDENTITY Persistent character & voice identity (2026-11-26)
+
+- **Selection is explicit; identity is frozen.** `runtime/identity_resolution.py` is the sixth P1 runtime component. A job uses registered characters only through an approved identity-selection policy (`SELECTED_REGISTERED_ONLY`, `MIXED_REGISTERED_AND_NEW`, `NEW_ONLY`, `AUTO_MATCH_APPROVED`); the whole registry is never auto-added and `NEW_ONLY` disables registry reuse entirely. The resolved selection is frozen in an identity snapshot on the job (`job["identity_snapshot"]`) — reference asset ids and SHA-256s, model-sheet and fixed-identity references, expression references, wardrobe constraints, voice selections, cast classes, registry snapshot version and hash — and resume revalidates it against the current registries; a later registry change never silently mutates an approved snapshot.
+- **Resolution is exact, never fuzzy.** Unique id is strongest; a unique name resolves only within the authorized owner/workspace scope; duplicate names require the id; name+id mismatch fails closed; no fuzzy matching, no cross-workspace resolution, and errors never leak private registry contents. The cast is classified per character — `VISIBLE_CHARACTER`, `OFF_SCREEN_SPEAKER`, `NARRATOR_OR_VOICE_OVER`, `MENTIONED_ONLY` — so a narrator gets no image task and a mentioned name gets no task at all unless the script requires it.
+- **Packets carry structured bindings.** Image and video packets carry one `identity_bindings` entry per visible character (reference asset ids, primary reference, model sheet, angle-matched and expression references, fixed identity reference, reference SHA-256, wardrobe variation, ownership scope). Voice packets carry a `voice_binding` (voice profile id, dialogue line id, language, accent, vocal characteristics, pitch, pace, pronunciation, emotional delivery, pauses, reference-audio asset id and SHA-256, provider voice id, model/version, seed, ownership/consent reference). A voice profile belongs to exactly one character; several eligible profiles with no default require one clear selection — the first additional profile of a registration is not a default. All P0 voice checks are delegated to `scripts/asset_policy.py`, never reimplemented. Regeneration packets copy the original bindings verbatim.
+- **Fixed prompt block and seed are machine-readable.** `schemas/character.json` and `schemas/character-registration.json` carry optional `fixed_prompt_block` and `generation_seed`; `schemas/project.json` (v2.5, alongside preserved v2.3) links its policy through optional `identity_policy_id`. No new skill; two new schemas (`identity-selection-policy.json`, `identity-snapshot.json`); new test suite `CF-P1-004-R1-IDENTITY-*` (see `docs/runtime/IDENTITY_RESOLUTION_RUNTIME.md`). The snapshot rides in the production job record, so the production store persists it with the job — no second job database.
+
+## P1-004-R1-F1 Unified identity workflow (2026-11-26)
+
+- **One entry point carries identity end to end.** `plan_script_to_production` takes optional keyword-only `identity_policy`, `character_registry`, `voice_registry`, `character_registry_root` and `voice_registry_root` (explicit mapping, then root, then the authorized overlay environment variable; the voice registry defaults to the character registry root). No policy means exactly the pre-F1 behaviour and no registry access. An explicitly supplied registry is scoped to the session inside the snapshot builder, so foreign owner/workspace records are invisible there as at load time.
+- **Selectors are canonical and exact.** The policy's `selected_characters` selects by exact id, exact unique name, or both (both must name the same record); `selected_character_ids` stays valid, and the two lists must agree when both are supplied. `AUTO_MATCH_APPROVED` enriches the analysis first (name-only approved resolutions by exact unique name) and completes the selection from the script cast in the snapshot builder; duplicate names, unknown names and conflicting identifiers fail closed, no fuzzy matching. A resolution ref outside the known set is accepted only when it declares `MENTIONED_ONLY`, and a declared cast class must agree with the classifier's class.
+- **NEW_ONLY is adversarially hardened.** `validate_new_only_inputs` fails closed on any approved registered resolution, any proposal reusing a registered reference asset, or any bundle voice binding naming a registered voice — naming only caller-supplied references. The adversarial test uses the original script/cast references against populated registries and scans the whole package, bundle and snapshot for registered content; old registry records are never modified.
+- **Test-found defect (F5):** the voice binding copied the performance line's `pauses` list verbatim, but the task-packet schema types it as one string — the binding now joins a list with `"; "`. Full record: `docs/implementation/CF-WO-P1-004-corrections.md` §17; regression matrix F1–F6 in `tests/test_identity_resolution.py` (entries `CF-P1-004-R1-F1-*` in `tests/run-tests.sh`).
+
+## P1-005 Real media execution runtime, provider adapters & timeline delivery (2026-11-27)
+
+- **A compiled packet is never proof of execution.** The execution
+  runtime (`runtime/media_execution.py`, `runtime/media_adapters.py`,
+  `runtime/execution_orchestrator.py`, `runtime/timeline_delivery.py`)
+  is the seventh P1 runtime component. Only a genuine adapter result
+  moves an execution to SUCCEEDED, and only after independent
+  re-verification (SHA-256, byte count, ffprobe duration agreement).
+  Execution state rides on the production job (`job["executions"]`)
+  and persists through the existing production store — no second job
+  database.
+- **The state machine is deterministic.** Twelve states
+  (`PLANNED` → … → `SUCCEEDED` / `FAILED` / `CANCELLED` /
+  `NEEDS_USER_ACTION` / `BLOCKED`); SUCCEEDED only from
+  `VALIDATING_OUTPUT` with a validated artifact; FAILED always
+  carries a failure classification; terminal records never
+  transition; `BLOCKED` resumes to its previous state. Stable
+  execution ids + idempotency keys
+  (SHA-256 of `job_id|task_id|provider_id|packet_hash|attempt`); a
+  retry is an explicit new attempt; an uncertain submission goes to
+  `NEEDS_USER_ACTION` and is never auto-resubmitted.
+- **Authorization and identity locks gate every submission.**
+  Provider matching reuses the P1-004 rule (VERIFIED then EXERCISED;
+  NOT_TESTED and FAILED never match); authorizations are explicit
+  per-task approvals (`{task_id: True}`, nothing implicit); packet
+  bindings are checked against the frozen identity snapshot before
+  submitting. One task failing never aborts the others.
+- **Technical QC is deterministic; semantic QC is human.**
+  Technical checks (readability, corrupt frames, fps, resolution,
+  codec, duration, audio presence, peak levels) carry Critical /
+  Major / Minor / Polish and pass only with no Critical or Major —
+  but a passing technical report is NOT a G6 PASS. Semantic checks
+  need a named human reviewer through a handoff that is never
+  auto-approved (`automated` is refused).
+- **Only validated artifacts enter the timeline.** The delivery
+  manifest is built from SUCCEEDED executions only, re-verifying
+  every artifact against the real file; no fabricated path or
+  placeholder output. Format is always `editor_neutral_v1`;
+  resolution comes from the first delivered video artifact when
+  probed, otherwise 1920x1080 (the production format profile
+  carries no media geometry).
+- **Local providers, exercised 2026-11-27.** FFmpeg 8.1.2
+  (probe/transcode/assembly, `CF-P1-005-FFMPEG`); VoiceStudio /
+  OmniVoice (one real Bengali generation, 1.98 s, audio id
+  `1faa2e3e`; CC-BY-NC — commercial voice tasks are refused);
+  OpenMontage (demo `animated-reel-20s` rendered and validated;
+  production assembly NOT exercised). OpenTimelineIO is not
+  installed and has no adapter — the canonical timeline manifest
+  covers interchange.
+- **External providers: eight live specs, all NOT_TESTED, Sora
+  FAILED.** OpenAI / Gemini / fal.ai image, Veo / Kling / LTX
+  video, ElevenLabs voice, Lyria music — spec-driven HTTP adapters
+  over mock transports in tests; no live paid call without explicit
+  user authorization. Sora was shut down 2026-09-24 (no
+  replacement API). Credentials come only from allow-listed
+  environment variables; never in Git, logs, reports or packets.
+  Full matrix: `docs/runtime/PROVIDER_ADAPTERS.md`.
+- **Test-found defects (P1-005):** `load_schema` called without
+  `.json`; `validate_instance` called with the wrong arity;
+  `VALIDATING_OUTPUT` dropped the output artifact; `SUCCEEDED`
+  was unreachable (missing transition-table entry); a sync
+  completion with a provider job id stalled in RUNNING; the
+  delivery manifest used schema-invalid defaults; ffprobe JSON was
+  truncated by error-text redaction; the HTTP adapter did not
+  resolve output paths; `duration_limits` was a string where the
+  schema wants an object; a re-render was invisible to the
+  OpenMontage adapter; schemas used explicit nulls the repo
+  validator rejects; `registry_from_job` built invalid ownership;
+  the VoiceStudio adapter could never warm a cold backend. Full
+  record: `docs/implementation/CF-WO-P1-005-corrections.md`;
+  suites `CF-P1-005-EXECUTION` (85), `CF-P1-005-FFMPEG` (28),
+  `CF-P1-005-ADAPTERS` (56), `CF-P1-005-DELIVERY` (26).
+- **R1 Windows fix (2026-11-27):** the first CI run on the P1-005
+  head failed both `windows-compat` jobs in the identity suite's
+  e2e group — `scripts/atomic_write.py` called `os.fchmod`
+  unconditionally, which does not exist on Windows Python
+  3.10-3.12. P1-001-R2 had fixed the same hole in
+  `runtime/local_session.py` but left this helper untouched. The
+  helper now capability-checks `os.fchmod` (same pattern); the
+  store suite pins it with a Windows simulation (hide the
+  attribute, write through the store and the helper directly,
+  verify the record validates and no temp file is left on
+  failure). Full record: corrections doc §9.
+- **R2 Windows path fix (2026-11-27):** the CI run on the R1 head
+  failed both `windows-compat` jobs again, this time in the
+  timeline delivery suite — one check,
+  `artifact-absolute-refused`: the delivery validator rejected
+  absolute paths with a POSIX-only `startswith("/")` test, which
+  accepts `D:\...` on Windows. The same pattern existed in the
+  execution-artifact validator (its test used `/tmp/...`, so it
+  passed on Windows while the hole stayed open). Both validators
+  now share one host-independent predicate,
+  `is_safe_relative_path` (`ntpath.splitdrive` + `ntpath.isabs`
+  + `..` under either separator), pinned by Windows-style path
+  cases that fail pre-fix on Linux too. Full record: corrections
+  doc §10.
+- **R3 Python 3.13 `ntpath.isabs` fix (2026-11-27):** the CI run
+  on the R2 head passed both `windows-compat` jobs but failed
+  `p0-validate` on exactly three leading-slash cases — the R2
+  predicate relied on `ntpath.isabs()`, which since Python 3.13
+  (GH-44626) returns False for a path starting with exactly one
+  (back)slash, and the CI runner uses Python 3.14.4 while local
+  Python is 3.12.3. The predicate now refuses a leading `/` or
+  `\` explicitly, before consulting `ntpath` at all, and the fix
+  was verified locally under a simulated 3.13+ `ntpath.isabs`.
+  Full record: corrections doc §11.
+
 ## Rules that always apply
 
 - A character's identity (face, eyes, nose, mouth, hands, feet) is
@@ -657,6 +800,232 @@ step-by-step order for every video, in §7).
   `characters/README.md`).
 - Never claim a check you did not perform. Run the QC checklist
   (`skills/production-systems/`) before delivering.
+
+## P1-006 First complete vertical video production & delivery (2026-11-27)
+
+- **One workflow, intake to delivery.** The vertical production
+  runtime (`runtime/vertical_production.py`,
+  `runtime/production_assets.py`, `runtime/production_voice.py`,
+  `runtime/production_audio.py`, `runtime/production_timeline.py`,
+  `runtime/production_qc.py`, `runtime/production_delivery.py`)
+  is the eighth P1 runtime component. It connects project
+  validation, visual assets, voice, sound design, canonical
+  timeline, FFmpeg assembly, QC and delivery into one
+  reproducible job, on the P1-001 session, P1-004 orchestrator /
+  store / identity workflow, and P1-005 execution runtime. The
+  reference driver is `scripts/run-p1006-reference-render.py`;
+  the reference project is
+  `examples/p1006-vertical-explainer/` (source only — no media
+  binaries are committed; generated media lives in the delivery
+  archive with hashes).
+- **The state machine is strictly linear.** `INTAKE →
+  PROJECT_VALIDATED → ASSETS_PENDING → ASSETS_READY →
+  VOICE_PENDING → VOICE_READY → SOUND_PENDING → SOUND_READY →
+  TIMELINE_READY → ASSEMBLY_RUNNING → ASSEMBLY_COMPLETED →
+  QC_RUNNING → QC_PASSED → DELIVERY_READY → DELIVERED`, plus
+  `FAILED` / `CANCELLED` / `NEEDS_USER_DECISION` / `BLOCKED`.
+  Each state transitions only from its immediate predecessor.
+  Stages are idempotent via input-hash checkpoints
+  (`stage_checkpoint` / `stage_is_done`); mid-render
+  cancellation is not supported (a closed session refuses to
+  start assembly).
+- **One rendering path: FFmpeg.** The canonical timeline
+  (`editor_neutral_v1`) is assembled by FFmpeg only; OpenMontage
+  production assembly stays NOT_TESTED and is refused. Geometry
+  comes from the validated output profile, never hardcoded. The
+  reference render is 9:16, 1080x1920, 30 FPS, H.264/AAC, MP4,
+  30–60 s.
+- **Voice is real VoiceStudio/OmniVoice, non-commercial.**
+  Narration is generated locally, seed-fixed, line by line, each
+  WAV verified; only `instruct` / `speed` / `seed` are forwarded.
+  The valid instruct tag for the reference narrator is
+  `middle-aged, moderate pitch` — `narrator` is not in
+  OmniVoice's fixed vocabulary and the backend rejects it. The
+  CI render synthesizes deterministic tone narration at the
+  planned line durations (same pipeline, geometry and QC) and
+  records `voice_source: synthesized-tone`.
+- **QC blocks delivery; the review package is honest.** Technical
+  QC (ffprobe, exact geometry, rational frame rate, full decode,
+  black/freeze detection), visual QC (contact sheet, keyframes,
+  human review always required) and audio QC (loudness, true
+  peak, clipping, silence) must pass, and `DELIVERY_READY`
+  needs a named human reviewer — `automated` is refused. A
+  review package (`review_package=True`) is built while that
+  approval is still missing; its manifest records the true
+  decision (`BLOCKED`), the reasons, and `package_purpose:
+  review`, and never claims `DELIVERY_READY`. Full record:
+  `docs/implementation/CF-WO-P1-006-corrections.md`, runtime
+  contract in `docs/runtime/VERTICAL_PRODUCTION_RUNTIME.md`.
+
+## P1-006-R1 Character consistency, real visual production & human-gated delivery (2026-11-27)
+
+- **One character, six scenes, one honest verdict.** The R1
+  runtime (`runtime/character_consistency.py`) proves a
+  project-local fictional adult demonstration character (Mara,
+  DEMO-CHAR-001 — never Sarena, never any canonical user
+  character, never registered) stays the same character across
+  six independently produced scenes. The bible
+  (`examples/p1006-r1-character-consistency/character-bible.json`)
+  is the single source of truth: signature colour defined ONCE,
+  one outfit, one hairstyle, one accessory; CONFIRMED design
+  details distinguished from production inferences. The
+  consistency verdict is rule-based, never a numeric score:
+  any fail or unexplained change → `drift-found`; else any
+  review → `needs-human-review`; else `consistent`. Automated
+  evaluation is not editorial approval — `human_approval`
+  stays empty and the delivery manifest stays `BLOCKED`.
+- **AI stills, honestly labelled.** Scene visuals are
+  platform-built-in-image stills (EXERCISED for stills)
+  animated with deterministic FFmpeg zoompan
+  (`generate_still_clip`, `ai-still` recipe kind) — labelled
+  `ai-generated-still, locally animated`, never AI-generated
+  video. Image-to-video is NOT_TESTED; OpenMontage production
+  assembly stays NOT_TESTED. Reference and scene images are
+  media: never committed, delivery folder only, referenced by
+  path + SHA-256 + byte size.
+- **The audio-mix bug, found and fixed.** The P1-006 audio
+  mixer consumed the voice bus label twice (sidechaincompress
+  sidechain + final amix), starving the mix after the first
+  voice clip. Fix: explicit `asplit=2` before ducking. The same
+  defect is present in the already-delivered P1-006 MP4
+  (narration audible only for line 1); it is disclosed in
+  `docs/implementation/CF-WO-P1-006-R1-corrections.md` §12 and
+  in the R1 report — the P1-006 evidence itself is never
+  silently altered. A regression test covers the mix.
+- **Dialogue coverage is validated.** Every voice line must map
+  to exactly one shot and every shot to exactly one line
+  (`validate_dialogue_coverage` in
+  `runtime/production_timeline.py`); the R1 driver refuses to
+  render on any error. Full record:
+  `docs/implementation/CF-WO-P1-006-R1-corrections.md`, runtime
+  contract in `docs/runtime/CHARACTER_CONSISTENCY_RUNTIME.md`,
+  provider row in `docs/runtime/PROVIDER_ADAPTERS.md`.
+
+## P1-006-R2 Mandatory photorealistic image-to-video & real motion (2026-11-27/28)
+
+- **Script-first, no fixed counts.** The addendum removed the
+  fixed six-scene plan: counts come from the script analysis
+  only (`runtime/image_to_video.py::derive_project_counts`).
+  The script "Nadia and the River Light" is a DRAFT awaiting
+  user approval — no reference image, keyframe, or voice
+  recording has been generated from it, and none may be until
+  he approves it. Ten draft images generated under the original
+  brief were deleted; prompts and verdicts are preserved in the
+  delivery folder's `work/superseded-draft-keyframes.md`.
+- **Selected provider: fal.ai Kling Video v3 Pro
+  image-to-video** (`fal-ai/kling-video/v3/pro/image-to-video`,
+  provider id `provider-fal-video`, 14 providers now). I2V
+  confirmed against the official OpenAPI schema (read
+  2026-11-28); 9:16 via the start image's aspect; 3–15 s clips;
+  native audio; Commercial-use badge; 1080p $0.168/s with
+  audio, $0.112/s without. The R2 plan (8 clips × 6 s) estimates
+  $8.06. Runner-up: fal.ai Veo 3.1 Fast.
+- **The I2V runtime** (`runtime/image_to_video.py`) validates
+  the source image (hash, codec, size, aspect), gates every
+  paid submission on an explicit authorization record (exact
+  provider/model/operation, generation budget, scope covering
+  every transmitted asset, expiry), never auto-resubmits an
+  uncertain submission, verifies the returned clip (MP4, H.264,
+  duration ±1.0 s, geometry), and motion-validates it by frame
+  sampling (static and camera-only rejected; only
+  subject-motion/mixed pass). Text overlay is prohibited by all
+  six flags False plus a prohibition clause in every prompt;
+  text detection is human review only, never OCR. Motion
+  prompts carry seven fields (subject/face/body/hand/prop/
+  hair/cloth/environment/camera); camera alone is never motion.
+- **No still animation is ever an I2V substitute.**
+  `VISUAL_RECIPE_KINDS` gained `"i2v-clip"`, and
+  `visual_argv` refuses it outright — the local asset stage
+  never generates it. `validate_scene_binding` takes
+  `motion_kind="i2v"` (structured motion prompt via the
+  canonical validator, kind must be `i2v-clip`, no still
+  motion); default still behaviour is unchanged. The R2 driver
+  (`scripts/run-p1006-r2-photorealistic-render.py`) fails
+  closed: plan BLOCKED, no provider call, no MP4, exit 2.
+  The voice script (`work/voice/generate-r2-voice.py`) refuses
+  to run while the script is DRAFT. The R1 audio-mix fix
+  (explicit `asplit=2`) is preserved.
+- **Known limitation, stated plainly:** pixel-diff motion
+  classification cannot reliably distinguish every zoom from
+  subject motion; the architectural guards (local refusal,
+  provider-only execution, human review) carry that case.
+  Full record: `docs/implementation/CF-WO-P1-006-R2-corrections.md`,
+  runtime contract in `docs/runtime/IMAGE_TO_VIDEO_RUNTIME.md`,
+  authorization request in
+  `docs/implementation/CF-WO-P1-006-R2-authorization-request.md`.
+  Suite `CF-P1-006-R2-I2V` (90 checks).
+
+## P1-006-R2-PREFLIGHT Final storyboard, character-reference conditioning, provider security & cost authorization preparation (2026-11-28)
+
+- **No paid call, no credential, no generation.** This round prepares
+  the generation plan only. No provider request was submitted, no
+  API key was read or used, no image/video/voice was generated, and
+  the real I2V capability remains NOT_TESTED. Two human gates stand
+  between this round and any generation: Gate A (story/visual plan)
+  and Gate B (paid generation authorization).
+- **Contract revalidated live (2026-11-28).** Kling V3 Pro I2V:
+  `start_image_url` required; `duration` enum "3"–"15"; `prompt`
+  XOR `multi_prompt`; `elements` list of character/object elements,
+  referenced in the prompt as `@Element1`, `@Element2`, …;
+  `generate_audio` default true; `shot_type` customize/intelligent;
+  `negative_prompt` default "blur, distort, and low quality";
+  `cfg_scale` default 0.5. The official output example is a Google
+  Cloud Storage URL (`storage.googleapis.com/falserverless/...`) —
+  not the fal CDN. `multi_prompt` is an intentional design
+  restriction (one shot = one generation), not a provider gap.
+- **Character references via `elements`.** Each element carries
+  `frontal_image_url` (required, main frontal view) plus
+  `reference_image_urls` (1–3 additional angles, at least one
+  required); `video_url` and `voice_id` are refused for this
+  production. The scene keyframe (`start_image_url`) stays
+  separate — it is composition/scene context; the element is
+  identity preservation, the same approved references on every
+  shot containing that character, none on a shot without her. A
+  missing or pending reference BLOCKS the plan; nothing is
+  silently substituted. No perfect identity preservation is
+  claimed; drift review is a human-review record for real frames.
+- **GCS output retrieval is provider-specific, not a global
+  allow.** For `provider-fal-video` + `fal-ai/kling-video/v3/pro/image-to-video`
+  only: `storage.googleapis.com` with path prefix `/falserverless/`
+  and the fal CDN v3 origin where actually used. Every other GCS
+  bucket/path, every other host, localhost/private/link-local/
+  reserved/metadata, HTTP downgrades, and unvalidated redirects
+  are rejected. No authorization header reaches a download URL.
+  Downloads are validated as `video/mp4` (content type + `ftyp`
+  magic); HTML error pages are refused. Result URLs are recorded
+  redacted (query stripped). Full record:
+  `docs/implementation/CF-WO-P1-006-R2-PREFLIGHT-corrections.md`.
+- **Retention, truthfully.** `X-Fal-Store-IO: 0` disables
+  request-history payload storage (otherwise 90 days) — it is
+  NOT ZDR. `X-Fal-Object-Lifecycle-Preference` controls CDN
+  expiration + initial ACL, but applies to fal CDN v3 outputs
+  only — it does NOT protect a GCS output URL. GCS outputs are
+  public-by-link. ZDR is UNCONFIRMED for this endpoint (not
+  enabled by default; needs sales-team confirmation). The
+  generation operation is therefore BLOCKED until the owner
+  accepts public-by-link outputs in writing (Gate B).
+- **Storyboard unchanged by analysis, cost changed by audio.**
+  Line-by-line analysis of all 8 narration lines confirms the R2
+  breakdown already covers every story beat: 6 scenes, 8 shots,
+  8 keyframes, 8 clips, 48 s — no shot added or removed. One
+  continuity correction: shot s2 now shows Nadia carrying the
+  lit lantern, as line l2 says. Five candidate extra shots were
+  considered and rejected with written reasons. **Cost is now
+  audio-off with elements: 48 s × $0.224 = $10.75** (the R2 $8.06 audio-on
+  figure is superseded, and so is the earlier preflight $5.38
+  figure, which priced every shot at the without-elements
+  $0.112/s rate — the elements tier was missed); keyframes $0 billed; retry budget max
+  $10.75 (one retry per failed shot, no second retry without new
+  approval); worst case $21.50; taxes/fees UNCONFIRMED.
+- **Gates.** Gate A checklist (14 unchecked items, evidence paths,
+  nothing approved) and Gate B authorization sheet (audio off,
+  with elements, $10.75, GCS public-by-link acceptance in the decision box) are
+  separate documents; the R2 authorization request is marked
+  SUPERSEDED with its full original text kept. The runtime
+  requires explicit, project-specific, task-level authorization
+  before any submission; no approval is inferred from any earlier
+  work order. Suites `CF-P1-006-R2-PREFLIGHT` (99 checks) and
+  `CF-P1-006-R2-PREFLIGHT-STORYBOARD` (55 checks).
 
 ## Docs
 
